@@ -1,0 +1,11 @@
+.image_block {
+  width: 33dvw;
+  height: 20dvw;
+}
+
+@media (max-width: 1280px) {
+  .image_block {
+    width: 50dvw;
+    height: 30dvw;
+  }
+}

@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+}
+
+model Data {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model MapMarker {
+  id          String   @id @default(uuid())
+  position    Json
+  title       String
+  description String
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id])
+}
+
+model Location {
+  id        String      @id @default(uuid())
+  address   String
+  city      String
+  phone     String?
+  website   String?
+  markers   MapMarker[]
+  companies Company[] // Relation field
+}
+
+model Category {
+  id            String     @id @default(uuid())
+  name          String
+  description   String?
+  parentId      String?
+  parent        Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
+  subcategories Category[] @relation("CategoryToSubcategory")
+  companies     Company[] // Relation field
+}
+
+model BussinessType {
+  id        String    @id @default(uuid())
+  name      String
+  companies Company[] // Relation field
+}
+
+model TypeOfActivity {
+  id        String    @id @default(uuid())
+  name      String
+  companies Company[] // Relation field
+}
+
+model Image {
+  id             String        @id @default(uuid())
+  url            String
+  isLogo         Boolean       @default(false)
+  companyId      String?
+  company        Company?      @relation(fields: [companyId], references: [id])
+  retailObjectId String?
+  retailObject   RetailObject? @relation(fields: [retailObjectId], references: [id])
+  createdAt      DateTime      @default(now())
+}
+
+model RetailObject {
+  id               String   @id @default(uuid())
+  name             String
+  address          String
+  city             String
+  retailObjectType String
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id])
+  images           Image[] // Relation field
+  createdAt        DateTime @default(now())
+}
+
+model Company {
+  id             String         @id @default(uuid())
+  name           String
+  address        String
+  city           String
+  phone          String?
+  website        String?
+  locationId     String
+  location       Location       @relation(fields: [locationId], references: [id])
+  categoryId     String
+  category       Category       @relation(fields: [categoryId], references: [id])
+  businessTypeId String
+  businessType   BussinessType  @relation(fields: [businessTypeId], references: [id])
+  activityTypeId String
+  activityType   TypeOfActivity @relation(fields: [activityTypeId], references: [id])
+  retailObjects  RetailObject[]
+  images         Image[]
+  createdAt      DateTime       @default(now())
+}
