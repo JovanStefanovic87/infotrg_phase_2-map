@@ -32,77 +32,53 @@ model MapMarker {
 }
 
 model Location {
-  id        String      @id @default(uuid())
-  address   String
-  city      String
-  phone     String?
-  website   String?
-  markers   MapMarker[]
-  companies Company[] // Relation field
+  id      String      @id @default(uuid())
+  address String
+  city    String
+  phone   String?
+  website String?
+  markers MapMarker[]
+}
+
+model Language {
+  id          Int           @id @default(autoincrement())
+  code        String        @unique
+  name        String
+  createdAt   DateTime      @default(now())
+  Translation Translation[]
 }
 
 model Category {
-  id            String     @id @default(uuid())
-  name          String
-  description   String?
-  parentId      String?
-  parent        Category?  @relation("CategoryToSubcategory", fields: [parentId], references: [id])
-  subcategories Category[] @relation("CategoryToSubcategory")
-  companies     Company[]
-  synonyms      String[]
+  id            Int        @id @default(autoincrement())
+  parentId      Int?
+  parent        Category?  @relation("Subcategories", fields: [parentId], references: [id])
+  subcategories Category[] @relation("Subcategories")
+  labelId       Int        @default(1)
+  createdAt     DateTime   @default(now())
 }
 
-model BussinessType {
-  id        String    @id @default(uuid())
-  name      String
-  companies Company[] // Relation field
+model Label {
+  id           Int           @id @default(autoincrement())
+  name         String?
+  translations Translation[]
+  createdAt    DateTime      @default(now())
 }
 
-model TypeOfActivity {
-  id        String    @id @default(uuid())
-  name      String
-  companies Company[] // Relation field
+model Translation {
+  id          Int       @id @default(autoincrement())
+  labelId     Int
+  Label       Label     @relation(fields: [labelId], references: [id])
+  languageId  Int
+  Language    Language  @relation(fields: [languageId], references: [id])
+  translation String
+  Synonym     Synonym[]
+  createdAt   DateTime  @default(now())
 }
 
-model Image {
-  id             String        @id @default(uuid())
-  url            String
-  isLogo         Boolean       @default(false)
-  companyId      String?
-  company        Company?      @relation(fields: [companyId], references: [id])
-  retailObjectId String?
-  retailObject   RetailObject? @relation(fields: [retailObjectId], references: [id])
-  createdAt      DateTime      @default(now())
-}
-
-model RetailObject {
-  id               String   @id @default(uuid())
-  name             String
-  address          String
-  city             String
-  retailObjectType String
-  companyId        String
-  company          Company  @relation(fields: [companyId], references: [id])
-  images           Image[] // Relation field
-  createdAt        DateTime @default(now())
-}
-
-model Company {
-  id             String         @id @default(uuid())
-  name           String
-  address        String
-  city           String
-  phone          String?
-  website        String?
-  locationId     String
-  location       Location       @relation(fields: [locationId], references: [id])
-  categoryId     String
-  category       Category       @relation(fields: [categoryId], references: [id])
-  businessTypeId String
-  businessType   BussinessType  @relation(fields: [businessTypeId], references: [id])
-  activityTypeId String
-  activityType   TypeOfActivity @relation(fields: [activityTypeId], references: [id])
-  retailObjects  RetailObject[]
-  images         Image[]
-  createdAt      DateTime       @default(now())
+model Synonym {
+  id            Int         @id @default(autoincrement())
+  translationId Int
+  translation   Translation @relation(fields: [translationId], references: [id])
+  synonym       String
+  createdAt     DateTime    @default(now())
 }
