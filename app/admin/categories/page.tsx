@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import FileUploadButton from '@/app/components/buttons/FileUploadButton';
 
 interface Translation {
 	id: number;
@@ -86,15 +87,14 @@ const AddCategoryPage: React.FC = () => {
 
 			// Upload the icon first if it exists
 			if (icon) {
-				const uploadResponse = await axios.post(
-					'/api/upload',
-					{ icon },
-					{
-						headers: {
-							'Content-Type': 'multipart/form-data',
-						},
-					}
-				);
+				const formData = new FormData();
+				formData.append('icon', icon);
+
+				const uploadResponse = await axios.post('/api/upload', formData, {
+					headers: {
+						'Content-Type': 'multipart/form-data',
+					},
+				});
 				iconUrl = uploadResponse.data.filePath; // Get the URL/path of the uploaded icon
 			}
 
@@ -139,6 +139,14 @@ const AddCategoryPage: React.FC = () => {
 				setError('An unexpected error occurred.');
 			}
 		}
+	};
+
+	const handleFileChange = (file: File | null) => {
+		setIcon(file);
+	};
+
+	const resetFileName = () => {
+		setIcon(null); // Clear the file input
 	};
 
 	return (
@@ -196,12 +204,7 @@ const AddCategoryPage: React.FC = () => {
 					<label htmlFor='icon' className='block mb-2'>
 						Icon (optional):
 					</label>
-					<input
-						type='file'
-						id='icon'
-						onChange={e => e.target.files && setIcon(e.target.files[0])}
-						className='border p-2 w-full'
-					/>
+					<FileUploadButton onFileChange={handleFileChange} resetFileName={resetFileName} />
 				</div>
 				<button type='submit' className='bg-green-500 text-white p-2 rounded'>
 					Submit
