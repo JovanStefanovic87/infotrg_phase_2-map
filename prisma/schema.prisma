@@ -53,7 +53,8 @@ model Category {
   parentId      Int?
   parent        Category?  @relation("Subcategories", fields: [parentId], references: [id])
   subcategories Category[] @relation("Subcategories")
-  labelId       Int        @default(1)
+  labelId       Int
+  iconUrl       String?
   createdAt     DateTime   @default(now())
 }
 
@@ -62,6 +63,13 @@ model Label {
   name         String?
   translations Translation[]
   createdAt    DateTime      @default(now())
+}
+
+model Icon {
+  id        Int      @id @default(autoincrement())
+  name      String
+  url       String // e.g., 'icon.png'
+  createdAt DateTime @default(now())
 }
 
 model Translation {

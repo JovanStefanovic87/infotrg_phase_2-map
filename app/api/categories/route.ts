@@ -1,5 +1,4 @@
-// app/api/categories/route.ts
-
+//app/api/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
@@ -14,54 +13,69 @@ export async function GET(request: NextRequest) {
 		});
 		return NextResponse.json(categories);
 	} catch (error) {
-		console.error('Error fetching categories:', error);
+		console.error(error);
 		return NextResponse.error();
 	}
 }
 
 export async function POST(request: NextRequest) {
-	const data = await request.json();
-	const { parentId, labelId } = data;
-
-	// Log the received parentId and labelId
-	console.log('Received parentId:', parentId);
-	console.log('Received labelId:', labelId);
-
 	try {
-		// Validate parentId
-		if (parentId) {
-			const parentCategoryId = parseInt(parentId, 10);
-			if (isNaN(parentCategoryId)) {
-				return new NextResponse('Invalid parentId', { status: 400 });
-			}
+		const { parentId, labelId, iconUrl } = await request.json(); // Accept iconUrl from the request
 
-			const parentCategory = await prisma.category.findUnique({
-				where: { id: parentCategoryId },
-			});
-			if (!parentCategory) {
-				return new NextResponse('Parent category not found', { status: 404 });
-			}
-		}
-
-		// Validate labelId
-		const label = await prisma.label.findUnique({
-			where: { id: labelId },
-		});
-		if (!label) {
-			return new NextResponse('Label not found', { status: 404 });
-		}
-
-		// Create new category
-		const newCategory = await prisma.category.create({
+		const category = await prisma.category.create({
 			data: {
-				parentId: parentId ? parseInt(parentId, 10) : null,
+				parentId,
 				labelId,
+				iconUrl,
+				createdAt: new Date(),
 			},
 		});
 
-		return new NextResponse(JSON.stringify(newCategory), { status: 201 });
+		return NextResponse.json(category);
 	} catch (error) {
 		console.error('Error creating category:', error);
-		return new NextResponse('Error creating category', { status: 500 });
+		return NextResponse.error();
 	}
 }
+
+/* const handleSubmit = async (event: React.FormEvent) => {
+	event.preventDefault();
+
+	try {
+		const labelResponse = await axios.post('/api/labels', { name });
+		const newLabelId = labelResponse.data.id;
+
+		if (!newLabelId) {
+			throw new Error('Failed to create label');
+		}
+
+		const categoryResponse = await axios.post('/api/categories', {
+			parentId,
+			labelId: newLabelId,
+		});
+
+		if (!categoryResponse.data) {
+			throw new Error('Failed to create category');
+		}
+
+		if (languageId) {
+			await axios.post('/api/translation', {
+				labelId: newLabelId,
+				languageId,
+				translation: name,
+			});
+		}
+
+		setName('');
+		setParentId(null);
+		setLanguageId('');
+		setIcon(null);
+		setError('');
+	} catch (err) {
+		if (err instanceof Error) {
+			setError(`Submission Error: ${err.message}`);
+		} else {
+			setError('An unexpected error occurred.');
+		}
+	}
+}; */

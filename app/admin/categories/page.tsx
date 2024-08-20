@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -27,10 +26,9 @@ const AddCategoryPage: React.FC = () => {
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [translations, setTranslations] = useState<Translation[]>([]);
-	const [labelId, setLabelId] = useState<number | null>(null); // You may not need this
+	const [icon, setIcon] = useState<File | null>(null);
 
 	useEffect(() => {
-		// Fetch available languages
 		const fetchLanguages = async () => {
 			try {
 				const response = await axios.get('/api/languages');
@@ -47,14 +45,7 @@ const AddCategoryPage: React.FC = () => {
 		if (languageId) {
 			const fetchLabels = async () => {
 				try {
-					const response = await axios.get('/api/labels', {
-						params: { languageId },
-					});
-
-					// Log the response data to check its structure
-					console.log('Labels response:', response.data);
-
-					// Ensure the response data is an array
+					const response = await axios.get('/api/labels', { params: { languageId } });
 					const labels = Array.isArray(response.data) ? response.data : [];
 
 					const fetchTranslations = async () => {
@@ -70,8 +61,6 @@ const AddCategoryPage: React.FC = () => {
 									return response.data;
 								})
 							);
-
-							// Flatten the translations array
 							const allTranslations = translationResponses.flat();
 							setTranslations(allTranslations);
 						} catch (err) {
@@ -93,7 +82,23 @@ const AddCategoryPage: React.FC = () => {
 		event.preventDefault();
 
 		try {
-			// Create the label with prefix
+			let iconUrl = '';
+
+			// Upload the icon first if it exists
+			if (icon) {
+				const uploadResponse = await axios.post(
+					'/api/upload',
+					{ icon },
+					{
+						headers: {
+							'Content-Type': 'multipart/form-data',
+						},
+					}
+				);
+				iconUrl = uploadResponse.data.filePath; // Get the URL/path of the uploaded icon
+			}
+
+			// Create the label
 			const labelResponse = await axios.post('/api/labels', { name });
 			const newLabelId = labelResponse.data.id;
 
@@ -101,17 +106,18 @@ const AddCategoryPage: React.FC = () => {
 				throw new Error('Failed to create label');
 			}
 
-			// Create the category with the new labelId
+			// Create the category with the iconUrl
 			const categoryResponse = await axios.post('/api/categories', {
 				parentId,
 				labelId: newLabelId,
+				iconUrl, // Include iconUrl in the request
 			});
 
 			if (!categoryResponse.data) {
 				throw new Error('Failed to create category');
 			}
 
-			// Create translation entry for the category name
+			// Handle translations if needed
 			if (languageId) {
 				await axios.post('/api/translation', {
 					labelId: newLabelId,
@@ -120,14 +126,17 @@ const AddCategoryPage: React.FC = () => {
 				});
 			}
 
-			// Handle successful form submission (e.g., redirect or show a success message)
+			// Reset form fields
+			setName('');
+			setParentId(null);
+			setLanguageId('');
+			setIcon(null);
+			setError('');
 		} catch (err) {
 			if (err instanceof Error) {
 				setError(`Submission Error: ${err.message}`);
-				console.error('Submission Error:', err.message);
 			} else {
 				setError('An unexpected error occurred.');
-				console.error('Unexpected Error:', err);
 			}
 		}
 	};
@@ -182,6 +191,17 @@ const AddCategoryPage: React.FC = () => {
 							</option>
 						))}
 					</select>
+				</div>
+				<div>
+					<label htmlFor='icon' className='block mb-2'>
+						Icon (optional):
+					</label>
+					<input
+						type='file'
+						id='icon'
+						onChange={e => e.target.files && setIcon(e.target.files[0])}
+						className='border p-2 w-full'
+					/>
 				</div>
 				<button type='submit' className='bg-green-500 text-white p-2 rounded'>
 					Submit
