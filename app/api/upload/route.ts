@@ -30,7 +30,8 @@ export const uploadFile = async (file: File, uploadDirectory: string): Promise<s
 	const fileStream = file.stream();
 	const nodeStream = readableStreamToNodeStream(fileStream);
 
-	const finalFilePath = path.join(uploadDirectory, file.name);
+	const fileName = file.name;
+	const finalFilePath = path.join(uploadDirectory, fileName);
 
 	// Convert the file stream to a buffer to check its size
 	const chunks: Buffer[] = [];
@@ -53,7 +54,11 @@ export const uploadFile = async (file: File, uploadDirectory: string): Promise<s
 		await fs.promises.writeFile(finalFilePath, fileBuffer);
 	}
 
-	return finalFilePath;
+	// Return a relative URL instead of the file system path
+	const relativeFilePath = path.relative(process.cwd(), finalFilePath);
+	const urlPath = `/icons/articles/${relativeFilePath.replace(/\\/g, '/')}`;
+
+	return urlPath;
 };
 
 // API route handler
@@ -68,8 +73,8 @@ export async function POST(request: NextRequest) {
 	const uploadDirectory = path.join(process.cwd(), 'public/icons/articles'); // Ensure this path exists and is writable
 
 	try {
-		const finalFilePath = await uploadFile(file, uploadDirectory);
-		return NextResponse.json({ message: 'File uploaded successfully', filePath: finalFilePath });
+		const relativeUrl = await uploadFile(file, uploadDirectory);
+		return NextResponse.json({ message: 'File uploaded successfully', filePath: relativeUrl });
 	} catch (error) {
 		console.error('File upload error:', error);
 		return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });

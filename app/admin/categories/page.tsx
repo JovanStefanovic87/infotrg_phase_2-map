@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import FileUploadButton from '@/app/components/buttons/FileUploadButton';
 
@@ -24,10 +24,13 @@ const AddCategoryPage: React.FC = () => {
 	const [languageId, setLanguageId] = useState<number | ''>('');
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [translations, setTranslations] = useState<Translation[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
+
+	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
 	useEffect(() => {
 		const fetchLanguages = async () => {
@@ -132,11 +135,19 @@ const AddCategoryPage: React.FC = () => {
 			setLanguageId('');
 			setIcon(null);
 			setError('');
+			setSuccessMessage('Podaci uspešno sačuvani.');
+
+			// Trigger file name reset
+			if (fileUploadButtonRef.current.resetFileName) {
+				fileUploadButtonRef.current.resetFileName();
+			}
 		} catch (err) {
 			if (err instanceof Error) {
 				setError(`Submission Error: ${err.message}`);
+				setSuccessMessage(null); // Clear success message on error
 			} else {
 				setError('An unexpected error occurred.');
+				setSuccessMessage(null); // Clear success message on error
 			}
 		}
 	};
@@ -145,14 +156,18 @@ const AddCategoryPage: React.FC = () => {
 		setIcon(file);
 	};
 
-	const resetFileName = () => {
-		setIcon(null); // Clear the file input
+	const handleResetFileName = () => {
+		// This callback will be triggered to reset the file name
+		if (fileUploadButtonRef.current.resetFileName) {
+			fileUploadButtonRef.current.resetFileName();
+		}
 	};
 
 	return (
 		<div className='p-4'>
 			<h1 className='text-xl font-bold mb-4'>Add New Category</h1>
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
+			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div>
 					<label htmlFor='name' className='block mb-2'>
@@ -204,7 +219,11 @@ const AddCategoryPage: React.FC = () => {
 					<label htmlFor='icon' className='block mb-2'>
 						Icon (optional):
 					</label>
-					<FileUploadButton onFileChange={handleFileChange} resetFileName={resetFileName} />
+					<FileUploadButton
+						onFileChange={handleFileChange}
+						resetFileName={handleResetFileName}
+						ref={fileUploadButtonRef}
+					/>
 				</div>
 				<button type='submit' className='bg-green-500 text-white p-2 rounded'>
 					Submit
