@@ -58,7 +58,7 @@ var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, P
                     where: { parentId: parentId },
                     include: {
                         subcategories: true,
-                        parent: true
+                        icon: true
                     }
                 })];
             case 1:

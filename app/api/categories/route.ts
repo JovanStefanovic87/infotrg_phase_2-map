@@ -5,7 +5,7 @@ interface Category {
 	id: number;
 	parentId: number | null;
 	labelId: number;
-	iconId: number | null; // Changed from iconUrl to iconId
+	iconId: number | null;
 	subcategories: Category[];
 }
 
@@ -13,8 +13,8 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 	const categories = await prisma.category.findMany({
 		where: { parentId },
 		include: {
-			subcategories: true,
-			parent: true,
+			subcategories: true, // Correctly set based on your schema
+			icon: true, // Include the icon if needed
 		},
 	});
 

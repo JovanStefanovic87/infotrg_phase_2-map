@@ -12,7 +12,7 @@ interface Category {
 	subcategories: Category[];
 }
 
-export interface Translation {
+interface Translation {
 	id: number;
 	labelId: number;
 	languageId: number;
@@ -33,7 +33,7 @@ interface Icon {
 
 const AddCategoryPage: React.FC = () => {
 	const [parentId, setParentId] = useState<number | null>(null);
-	const [languageId, setLanguageId] = useState<number | ''>(1);
+	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -171,7 +171,7 @@ const AddCategoryPage: React.FC = () => {
 			// Reset form fields
 			setName('');
 			setParentId(null);
-			setLanguageId('');
+			setLanguageId(1);
 			setIcon(null);
 			setError('');
 			setSuccessMessage('Podaci uspešno sačuvani.');
@@ -254,7 +254,12 @@ const AddCategoryPage: React.FC = () => {
 				</div>
 			</form>
 			<div className='mt-8'>
-				<CategoryList categories={categories} translations={translations} icons={icons} />
+				<CategoryList
+					categories={categories}
+					translations={translations}
+					icons={icons}
+					languageId={languageId}
+				/>
 			</div>
 		</div>
 	);

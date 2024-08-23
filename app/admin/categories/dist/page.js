@@ -231,7 +231,7 @@ var AddCategoryPage = function () {
                     // Reset form fields
                     setName('');
                     setParentId(null);
-                    setLanguageId('');
+                    setLanguageId(1);
                     setIcon(null);
                     setError('');
                     setSuccessMessage('Podaci uspešno sačuvani.');
@@ -283,6 +283,6 @@ var AddCategoryPage = function () {
             react_1["default"].createElement("div", null,
                 react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white px-4 py-2' }, "Save"))),
         react_1["default"].createElement("div", { className: 'mt-8' },
-            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons }))));
+            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languageId: languageId }))));
 };
 exports["default"] = AddCategoryPage;
