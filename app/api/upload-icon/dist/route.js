@@ -50,7 +50,6 @@ var path_1 = require("path");
 var sharp_1 = require("sharp");
 var stream_1 = require("stream");
 var server_1 = require("next/server");
-var prisma_1 = require("@/app/lib/prisma"); // Adjust the path to your Prisma client
 // Helper function to convert ReadableStream to Node.js Readable
 var readableStreamToNodeStream = function (readableStream) {
     var reader = readableStream.getReader();
@@ -74,7 +73,7 @@ var readableStreamToNodeStream = function (readableStream) {
 };
 // Utility function to handle file upload
 exports.uploadFile = function (file, uploadDirectory) { return __awaiter(void 0, void 0, Promise, function () {
-    var fileStream, nodeStream, fileName, finalFilePath, chunks, nodeStream_1, nodeStream_1_1, chunk, e_1_1, fileBuffer, fileSize, shouldResize, relativeFilePath, urlPath, icon;
+    var fileStream, nodeStream, fileName, finalFilePath, chunks, nodeStream_1, nodeStream_1_1, chunk, e_1_1, fileBuffer, fileSize, shouldResize, urlPath;
     var e_1, _a;
     return __generator(this, function (_b) {
         switch (_b.label) {
@@ -134,24 +133,15 @@ exports.uploadFile = function (file, uploadDirectory) { return __awaiter(void 0,
                 _b.sent();
                 _b.label = 16;
             case 16:
-                relativeFilePath = path_1["default"].relative(process.cwd(), finalFilePath);
-                urlPath = "/icons/articles/" + relativeFilePath.replace(/\\/g, '/');
-                return [4 /*yield*/, prisma_1.prisma.icon.create({
-                        data: {
-                            name: fileName,
-                            url: urlPath
-                        }
-                    })];
-            case 17:
-                icon = _b.sent();
-                return [2 /*return*/, icon.id];
+                urlPath = "/icons/articles/" + fileName;
+                return [2 /*return*/, urlPath];
         }
     });
 }); };
 // API route handler
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var formData, file, uploadDirectory, iconId, error_1;
+        var formData, file, uploadDirectory, relativeUrl, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, request.formData()];
@@ -167,8 +157,8 @@ function POST(request) {
                     _a.trys.push([2, 4, , 5]);
                     return [4 /*yield*/, exports.uploadFile(file, uploadDirectory)];
                 case 3:
-                    iconId = _a.sent();
-                    return [2 /*return*/, server_1.NextResponse.json({ message: 'File uploaded successfully', iconId: iconId })];
+                    relativeUrl = _a.sent();
+                    return [2 /*return*/, server_1.NextResponse.json({ message: 'File uploaded successfully', filePath: relativeUrl })];
                 case 4:
                     error_1 = _a.sent();
                     console.error('File upload error:', error_1);

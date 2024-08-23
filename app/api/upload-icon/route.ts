@@ -4,7 +4,6 @@ import path from 'path';
 import sharp from 'sharp';
 import { Readable } from 'stream';
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma'; // Adjust the path to your Prisma client
 
 // Helper function to convert ReadableStream to Node.js Readable
 const readableStreamToNodeStream = (readableStream: ReadableStream<Uint8Array>): Readable => {
@@ -27,7 +26,7 @@ const readableStreamToNodeStream = (readableStream: ReadableStream<Uint8Array>):
 };
 
 // Utility function to handle file upload
-export const uploadFile = async (file: File, uploadDirectory: string): Promise<number> => {
+export const uploadFile = async (file: File, uploadDirectory: string): Promise<string> => {
 	const fileStream = file.stream();
 	const nodeStream = readableStreamToNodeStream(fileStream);
 
@@ -55,17 +54,10 @@ export const uploadFile = async (file: File, uploadDirectory: string): Promise<n
 		await fs.promises.writeFile(finalFilePath, fileBuffer);
 	}
 
-	const relativeFilePath = path.relative(process.cwd(), finalFilePath);
-	const urlPath = `/icons/articles/${relativeFilePath.replace(/\\/g, '/')}`;
+	// Construct the relative URL directly
+	const urlPath = `/icons/articles/${fileName}`;
 
-	const icon = await prisma.icon.create({
-		data: {
-			name: fileName,
-			url: urlPath,
-		},
-	});
-
-	return icon.id;
+	return urlPath;
 };
 
 // API route handler
@@ -80,8 +72,8 @@ export async function POST(request: NextRequest) {
 	const uploadDirectory = path.join(process.cwd(), 'public/icons/articles'); // Ensure this path exists and is writable
 
 	try {
-		const iconId = await uploadFile(file, uploadDirectory);
-		return NextResponse.json({ message: 'File uploaded successfully', iconId });
+		const relativeUrl = await uploadFile(file, uploadDirectory);
+		return NextResponse.json({ message: 'File uploaded successfully', filePath: relativeUrl });
 	} catch (error) {
 		console.error('File upload error:', error);
 		return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });

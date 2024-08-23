@@ -1,81 +1,44 @@
-//app/api/categories/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextResponse } from 'next/server';
+import { prisma } from '@/app/lib/prisma';
 
-const prisma = new PrismaClient();
-
-export async function GET(request: NextRequest) {
-	try {
-		const categories = await prisma.category.findMany({
-			select: {
-				id: true,
-			},
-		});
-		return NextResponse.json(categories);
-	} catch (error) {
-		console.error(error);
-		return NextResponse.error();
-	}
+interface Category {
+	id: number;
+	parentId: number | null;
+	labelId: number;
+	iconId: number | null; // Changed from iconUrl to iconId
+	subcategories: Category[];
 }
 
-export async function POST(request: NextRequest) {
-	try {
-		const { parentId, labelId, iconUrl } = await request.json(); // Accept iconUrl from the request
+const buildCategoryTree = async (parentId: number | null): Promise<Category[]> => {
+	const categories = await prisma.category.findMany({
+		where: { parentId },
+		include: {
+			subcategories: true,
+			parent: true,
+		},
+	});
 
-		const category = await prisma.category.create({
-			data: {
-				parentId,
-				labelId,
-				iconUrl,
-				createdAt: new Date(),
-			},
-		});
+	return Promise.all(
+		categories.map(async category => ({
+			...category,
+			subcategories: await buildCategoryTree(category.id),
+		}))
+	);
+};
 
-		return NextResponse.json(category);
-	} catch (error) {
-		console.error('Error creating category:', error);
-		return NextResponse.error();
-	}
+export async function GET() {
+	const topLevelCategories: Category[] = await buildCategoryTree(null);
+	return NextResponse.json(topLevelCategories);
 }
 
-/* const handleSubmit = async (event: React.FormEvent) => {
-	event.preventDefault();
-
-	try {
-		const labelResponse = await axios.post('/api/labels', { name });
-		const newLabelId = labelResponse.data.id;
-
-		if (!newLabelId) {
-			throw new Error('Failed to create label');
-		}
-
-		const categoryResponse = await axios.post('/api/categories', {
+export async function POST(request: Request) {
+	const { parentId, labelId, iconId } = await request.json();
+	const newCategory = await prisma.category.create({
+		data: {
 			parentId,
-			labelId: newLabelId,
-		});
-
-		if (!categoryResponse.data) {
-			throw new Error('Failed to create category');
-		}
-
-		if (languageId) {
-			await axios.post('/api/translation', {
-				labelId: newLabelId,
-				languageId,
-				translation: name,
-			});
-		}
-
-		setName('');
-		setParentId(null);
-		setLanguageId('');
-		setIcon(null);
-		setError('');
-	} catch (err) {
-		if (err instanceof Error) {
-			setError(`Submission Error: ${err.message}`);
-		} else {
-			setError('An unexpected error occurred.');
-		}
-	}
-}; */
+			labelId,
+			iconId,
+		},
+	});
+	return NextResponse.json(newCategory);
+}

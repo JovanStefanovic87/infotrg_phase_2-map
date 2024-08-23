@@ -2,15 +2,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import FileUploadButton from '@/app/components/buttons/FileUploadButton';
-
-interface Translation {
-	id: number;
-	translation: string;
-}
+import CategoryList from './CategoryList';
 
 interface Category {
 	id: number;
-	name: string;
+	labelId: number;
+	parentId: number | null;
+	iconId: number | null;
+	subcategories: Category[];
+}
+
+export interface Translation {
+	id: number;
+	labelId: number;
+	languageId: number;
+	translation: string;
 }
 
 interface Language {
@@ -19,18 +25,38 @@ interface Language {
 	name: string;
 }
 
+interface Icon {
+	id: number;
+	name: string;
+	url: string;
+}
+
 const AddCategoryPage: React.FC = () => {
 	const [parentId, setParentId] = useState<number | null>(null);
-	const [languageId, setLanguageId] = useState<number | ''>('');
+	const [languageId, setLanguageId] = useState<number | ''>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [translations, setTranslations] = useState<Translation[]>([]);
+	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
+
+	useEffect(() => {
+		const fetchCategories = async () => {
+			try {
+				const response = await axios.get('/api/categories');
+				setCategories(response.data);
+			} catch (err) {
+				console.error('Failed to fetch categories', err);
+			}
+		};
+
+		fetchCategories();
+	}, []);
 
 	useEffect(() => {
 		const fetchLanguages = async () => {
@@ -82,23 +108,36 @@ const AddCategoryPage: React.FC = () => {
 		}
 	}, [languageId]);
 
+	useEffect(() => {
+		const fetchIcons = async () => {
+			try {
+				const response = await axios.get('/api/icons'); // Ensure this endpoint returns icon data
+				setIcons(response.data);
+			} catch (err) {
+				console.error('Failed to fetch icons', err);
+			}
+		};
+
+		fetchIcons();
+	}, []);
+
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 
 		try {
-			let iconUrl = '';
+			let iconId = 0;
 
 			// Upload the icon first if it exists
 			if (icon) {
 				const formData = new FormData();
 				formData.append('icon', icon);
 
-				const uploadResponse = await axios.post('/api/upload', formData, {
+				const uploadResponse = await axios.post('/api/icons', formData, {
 					headers: {
 						'Content-Type': 'multipart/form-data',
 					},
 				});
-				iconUrl = uploadResponse.data.filePath; // Get the URL/path of the uploaded icon
+				iconId = uploadResponse.data.iconId; // Get the iconId from the response
 			}
 
 			// Create the label
@@ -109,11 +148,11 @@ const AddCategoryPage: React.FC = () => {
 				throw new Error('Failed to create label');
 			}
 
-			// Create the category with the iconUrl
+			// Create the category with the iconId
 			const categoryResponse = await axios.post('/api/categories', {
 				parentId,
 				labelId: newLabelId,
-				iconUrl, // Include iconUrl in the request
+				iconId, // Include iconId in the request
 			});
 
 			if (!categoryResponse.data) {
@@ -199,25 +238,8 @@ const AddCategoryPage: React.FC = () => {
 					</select>
 				</div>
 				<div>
-					<label htmlFor='languageId' className='block mb-2'>
-						Language:
-					</label>
-					<select
-						id='languageId'
-						value={languageId !== '' ? languageId : ''}
-						onChange={e => setLanguageId(e.target.value ? +e.target.value : '')}
-						className='border p-2 w-full text-black'>
-						<option value=''>Select Language</option>
-						{languages.map(lang => (
-							<option key={lang.id} value={lang.id} className='text-black'>
-								{lang.name} ({lang.code})
-							</option>
-						))}
-					</select>
-				</div>
-				<div>
 					<label htmlFor='icon' className='block mb-2'>
-						Icon (optional):
+						Icon:
 					</label>
 					<FileUploadButton
 						onFileChange={handleFileChange}
@@ -225,10 +247,15 @@ const AddCategoryPage: React.FC = () => {
 						ref={fileUploadButtonRef}
 					/>
 				</div>
-				<button type='submit' className='bg-green-500 text-white p-2 rounded'>
-					Submit
-				</button>
+				<div>
+					<button type='submit' className='bg-blue-500 text-white px-4 py-2'>
+						Save
+					</button>
+				</div>
 			</form>
+			<div className='mt-8'>
+				<CategoryList categories={categories} translations={translations} icons={icons} />
+			</div>
 		</div>
 	);
 };

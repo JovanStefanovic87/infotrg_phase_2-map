@@ -45,7 +45,9 @@ model Language {
   code        String        @unique
   name        String
   createdAt   DateTime      @default(now())
-  Translation Translation[]
+  Translation Translation[] @relation("LanguageTranslations")
+
+  @@index([code])
 }
 
 model Category {
@@ -54,39 +56,52 @@ model Category {
   parent        Category?  @relation("Subcategories", fields: [parentId], references: [id])
   subcategories Category[] @relation("Subcategories")
   labelId       Int
-  iconUrl       String?
+  iconId        Int?
+  icon          Icon?      @relation(fields: [iconId], references: [id])
   createdAt     DateTime   @default(now())
+
+  @@index([parentId])
+  @@index([labelId])
 }
 
 model Label {
   id           Int           @id @default(autoincrement())
-  name         String?
-  translations Translation[]
+  name         String // Assuming name should always be present
+  translations Translation[] @relation("LabelTranslations")
   createdAt    DateTime      @default(now())
+
+  @@index([name])
 }
 
 model Icon {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
   url       String // e.g., 'icon.png'
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  Category  Category[]
+
+  @@index([name])
 }
 
 model Translation {
   id          Int       @id @default(autoincrement())
   labelId     Int
-  Label       Label     @relation(fields: [labelId], references: [id])
+  Label       Label     @relation("LabelTranslations", fields: [labelId], references: [id], onDelete: Cascade)
   languageId  Int
-  Language    Language  @relation(fields: [languageId], references: [id])
+  Language    Language  @relation("LanguageTranslations", fields: [languageId], references: [id], onDelete: Cascade)
   translation String
-  Synonym     Synonym[]
+  synonyms    Synonym[] // Ensure this matches the TypeScript code
   createdAt   DateTime  @default(now())
+
+  @@unique([labelId, languageId]) // Composite unique constraint
 }
 
 model Synonym {
   id            Int         @id @default(autoincrement())
   translationId Int
-  translation   Translation @relation(fields: [translationId], references: [id])
+  Translation   Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
   synonym       String
   createdAt     DateTime    @default(now())
+
+  @@index([translationId])
 }

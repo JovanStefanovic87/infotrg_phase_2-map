@@ -43,14 +43,15 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
 exports.__esModule = true;
-exports.POST = exports.uploadFile = void 0;
-// app/api/upload/route.ts
+exports.POST = exports.GET = void 0;
+var server_1 = require("next/server");
+var client_1 = require("@prisma/client");
 var fs_1 = require("fs");
 var path_1 = require("path");
 var sharp_1 = require("sharp");
 var stream_1 = require("stream");
-var server_1 = require("next/server");
-var prisma_1 = require("@/app/lib/prisma"); // Adjust the path to your Prisma client
+// Initialize Prisma Client
+var prisma = new client_1.PrismaClient();
 // Helper function to convert ReadableStream to Node.js Readable
 var readableStreamToNodeStream = function (readableStream) {
     var reader = readableStream.getReader();
@@ -73,7 +74,7 @@ var readableStreamToNodeStream = function (readableStream) {
     return nodeStream;
 };
 // Utility function to handle file upload
-exports.uploadFile = function (file, uploadDirectory) { return __awaiter(void 0, void 0, Promise, function () {
+var uploadFile = function (file, uploadDirectory) { return __awaiter(void 0, void 0, Promise, function () {
     var fileStream, nodeStream, fileName, finalFilePath, chunks, nodeStream_1, nodeStream_1_1, chunk, e_1_1, fileBuffer, fileSize, shouldResize, relativeFilePath, urlPath, icon;
     var e_1, _a;
     return __generator(this, function (_b) {
@@ -135,8 +136,8 @@ exports.uploadFile = function (file, uploadDirectory) { return __awaiter(void 0,
                 _b.label = 16;
             case 16:
                 relativeFilePath = path_1["default"].relative(process.cwd(), finalFilePath);
-                urlPath = "/icons/articles/" + relativeFilePath.replace(/\\/g, '/');
-                return [4 /*yield*/, prisma_1.prisma.icon.create({
+                urlPath = "/icons/articles/" + path_1["default"].basename(relativeFilePath);
+                return [4 /*yield*/, prisma.icon.create({
                         data: {
                             name: fileName,
                             url: urlPath
@@ -148,10 +149,33 @@ exports.uploadFile = function (file, uploadDirectory) { return __awaiter(void 0,
         }
     });
 }); };
-// API route handler
+// GET method to fetch all icons
+function GET(request) {
+    return __awaiter(this, void 0, void 0, function () {
+        var icons, error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    return [4 /*yield*/, prisma.icon.findMany()];
+                case 1:
+                    icons = _a.sent();
+                    // Return the icons data
+                    return [2 /*return*/, server_1.NextResponse.json(icons)];
+                case 2:
+                    error_1 = _a.sent();
+                    console.error('Error fetching icons:', error_1);
+                    return [2 /*return*/, server_1.NextResponse.error()];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.GET = GET;
+// POST method to upload a new icon
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var formData, file, uploadDirectory, iconId, error_1;
+        var formData, file, uploadDirectory, iconId, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, request.formData()];
@@ -165,13 +189,13 @@ function POST(request) {
                     _a.label = 2;
                 case 2:
                     _a.trys.push([2, 4, , 5]);
-                    return [4 /*yield*/, exports.uploadFile(file, uploadDirectory)];
+                    return [4 /*yield*/, uploadFile(file, uploadDirectory)];
                 case 3:
                     iconId = _a.sent();
                     return [2 /*return*/, server_1.NextResponse.json({ message: 'File uploaded successfully', iconId: iconId })];
                 case 4:
-                    error_1 = _a.sent();
-                    console.error('File upload error:', error_1);
+                    error_2 = _a.sent();
+                    console.error('File upload error:', error_2);
                     return [2 /*return*/, server_1.NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })];
                 case 5: return [2 /*return*/];
             }

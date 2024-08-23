@@ -40,20 +40,44 @@ exports.__esModule = true;
 var react_1 = require("react");
 var axios_1 = require("axios");
 var FileUploadButton_1 = require("@/app/components/buttons/FileUploadButton");
+var CategoryList_1 = require("./CategoryList");
 var AddCategoryPage = function () {
     var _a = react_1.useState(null), parentId = _a[0], setParentId = _a[1];
-    var _b = react_1.useState(''), languageId = _b[0], setLanguageId = _b[1];
+    var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
     var _c = react_1.useState(''), name = _c[0], setName = _c[1];
     var _d = react_1.useState(''), error = _d[0], setError = _d[1];
     var _e = react_1.useState(null), successMessage = _e[0], setSuccessMessage = _e[1];
     var _f = react_1.useState([]), categories = _f[0], setCategories = _f[1];
     var _g = react_1.useState([]), languages = _g[0], setLanguages = _g[1];
     var _h = react_1.useState([]), translations = _h[0], setTranslations = _h[1];
-    var _j = react_1.useState(null), icon = _j[0], setIcon = _j[1];
+    var _j = react_1.useState([]), icons = _j[0], setIcons = _j[1];
+    var _k = react_1.useState(null), icon = _k[0], setIcon = _k[1];
     var fileUploadButtonRef = react_1.useRef({});
     react_1.useEffect(function () {
-        var fetchLanguages = function () { return __awaiter(void 0, void 0, void 0, function () {
+        var fetchCategories = function () { return __awaiter(void 0, void 0, void 0, function () {
             var response, err_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/categories')];
+                    case 1:
+                        response = _a.sent();
+                        setCategories(response.data);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        err_1 = _a.sent();
+                        console.error('Failed to fetch categories', err_1);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchCategories();
+    }, []);
+    react_1.useEffect(function () {
+        var fetchLanguages = function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response, err_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -64,8 +88,8 @@ var AddCategoryPage = function () {
                         setLanguages(response.data);
                         return [3 /*break*/, 3];
                     case 2:
-                        err_1 = _a.sent();
-                        console.error('Failed to fetch languages', err_1);
+                        err_2 = _a.sent();
+                        console.error('Failed to fetch languages', err_2);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -76,7 +100,7 @@ var AddCategoryPage = function () {
     react_1.useEffect(function () {
         if (languageId) {
             var fetchLabels = function () { return __awaiter(void 0, void 0, void 0, function () {
-                var response, labels_1, fetchTranslations, err_2;
+                var response, labels_1, fetchTranslations, err_3;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -86,7 +110,7 @@ var AddCategoryPage = function () {
                             response = _a.sent();
                             labels_1 = Array.isArray(response.data) ? response.data : [];
                             fetchTranslations = function () { return __awaiter(void 0, void 0, void 0, function () {
-                                var translationResponses, allTranslations, err_3;
+                                var translationResponses, allTranslations, err_4;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -113,8 +137,8 @@ var AddCategoryPage = function () {
                                             setTranslations(allTranslations);
                                             return [3 /*break*/, 3];
                                         case 2:
-                                            err_3 = _a.sent();
-                                            console.error('Failed to fetch translation', err_3);
+                                            err_4 = _a.sent();
+                                            console.error('Failed to fetch translation', err_4);
                                             return [3 /*break*/, 3];
                                         case 3: return [2 /*return*/];
                                     }
@@ -123,8 +147,8 @@ var AddCategoryPage = function () {
                             fetchTranslations();
                             return [3 /*break*/, 3];
                         case 2:
-                            err_2 = _a.sent();
-                            console.error('Failed to fetch labels', err_2);
+                            err_3 = _a.sent();
+                            console.error('Failed to fetch labels', err_3);
                             return [3 /*break*/, 3];
                         case 3: return [2 /*return*/];
                     }
@@ -133,8 +157,30 @@ var AddCategoryPage = function () {
             fetchLabels();
         }
     }, [languageId]);
+    react_1.useEffect(function () {
+        var fetchIcons = function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response, err_5;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/icons')];
+                    case 1:
+                        response = _a.sent();
+                        setIcons(response.data);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        err_5 = _a.sent();
+                        console.error('Failed to fetch icons', err_5);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchIcons();
+    }, []);
     var handleSubmit = function (event) { return __awaiter(void 0, void 0, void 0, function () {
-        var iconUrl, formData, uploadResponse, labelResponse, newLabelId, categoryResponse, err_4;
+        var iconId, formData, uploadResponse, labelResponse, newLabelId, categoryResponse, err_6;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -142,18 +188,18 @@ var AddCategoryPage = function () {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 8, , 9]);
-                    iconUrl = '';
+                    iconId = 0;
                     if (!icon) return [3 /*break*/, 3];
                     formData = new FormData();
                     formData.append('icon', icon);
-                    return [4 /*yield*/, axios_1["default"].post('/api/upload', formData, {
+                    return [4 /*yield*/, axios_1["default"].post('/api/icons', formData, {
                             headers: {
                                 'Content-Type': 'multipart/form-data'
                             }
                         })];
                 case 2:
                     uploadResponse = _a.sent();
-                    iconUrl = uploadResponse.data.filePath; // Get the URL/path of the uploaded icon
+                    iconId = uploadResponse.data.iconId; // Get the iconId from the response
                     _a.label = 3;
                 case 3: return [4 /*yield*/, axios_1["default"].post('/api/labels', { name: name })];
                 case 4:
@@ -165,7 +211,7 @@ var AddCategoryPage = function () {
                     return [4 /*yield*/, axios_1["default"].post('/api/categories', {
                             parentId: parentId,
                             labelId: newLabelId,
-                            iconUrl: iconUrl
+                            iconId: iconId
                         })];
                 case 5:
                     categoryResponse = _a.sent();
@@ -195,9 +241,9 @@ var AddCategoryPage = function () {
                     }
                     return [3 /*break*/, 9];
                 case 8:
-                    err_4 = _a.sent();
-                    if (err_4 instanceof Error) {
-                        setError("Submission Error: " + err_4.message);
+                    err_6 = _a.sent();
+                    if (err_6 instanceof Error) {
+                        setError("Submission Error: " + err_6.message);
                         setSuccessMessage(null); // Clear success message on error
                     }
                     else {
@@ -232,17 +278,11 @@ var AddCategoryPage = function () {
                     react_1["default"].createElement("option", { value: '' }, "None"),
                     translations.map(function (translation) { return (react_1["default"].createElement("option", { key: translation.id, value: translation.id, className: 'text-black' }, translation.translation)); }))),
             react_1["default"].createElement("div", null,
-                react_1["default"].createElement("label", { htmlFor: 'languageId', className: 'block mb-2' }, "Language:"),
-                react_1["default"].createElement("select", { id: 'languageId', value: languageId !== '' ? languageId : '', onChange: function (e) { return setLanguageId(e.target.value ? +e.target.value : ''); }, className: 'border p-2 w-full text-black' },
-                    react_1["default"].createElement("option", { value: '' }, "Select Language"),
-                    languages.map(function (lang) { return (react_1["default"].createElement("option", { key: lang.id, value: lang.id, className: 'text-black' },
-                        lang.name,
-                        " (",
-                        lang.code,
-                        ")")); }))),
-            react_1["default"].createElement("div", null,
-                react_1["default"].createElement("label", { htmlFor: 'icon', className: 'block mb-2' }, "Icon (optional):"),
+                react_1["default"].createElement("label", { htmlFor: 'icon', className: 'block mb-2' }, "Icon:"),
                 react_1["default"].createElement(FileUploadButton_1["default"], { onFileChange: handleFileChange, resetFileName: handleResetFileName, ref: fileUploadButtonRef })),
-            react_1["default"].createElement("button", { type: 'submit', className: 'bg-green-500 text-white p-2 rounded' }, "Submit"))));
+            react_1["default"].createElement("div", null,
+                react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white px-4 py-2' }, "Save"))),
+        react_1["default"].createElement("div", { className: 'mt-8' },
+            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons }))));
 };
 exports["default"] = AddCategoryPage;
