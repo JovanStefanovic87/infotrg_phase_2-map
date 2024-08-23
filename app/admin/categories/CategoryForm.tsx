@@ -1,106 +1,109 @@
-import { useState, SyntheticEvent, useEffect } from 'react';
-import Select from 'react-select';
-import { Category, CategoryData } from '@/utils/helpers/types';
-import FormDefaultButton from '@/app/components/buttons/FormDefaultButton';
-import CloseButton from '@/app/components/buttons/CloseButton';
-import InputDefault from '@/app/components/input/InputDefault';
-import { formatCategoryOptions } from '@/utils/helpers/universalFunctions';
+'use client';
+import React, { useState, useRef, useEffect } from 'react';
+import FileUploadButton from '@/app/components/buttons/FileUploadButton';
+import { Category, Icon, Translation } from '@/utils/helpers/types';
 
-interface CategoryFormProps {
-	categoryData: CategoryData;
+interface Props {
+	parentId: number | null;
+	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
+	languageId: number;
+	name: string;
+	setName: React.Dispatch<React.SetStateAction<string>>;
 	categories: Category[];
-	onSubmit: (categoryData: CategoryData) => void;
-	onClose: () => void;
-	editingCategory: Category | null;
+	translations: Translation[];
+	icons: Icon[];
+	setError: React.Dispatch<React.SetStateAction<string>>;
+	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
+	onSubmit: () => void;
+	visible: boolean;
 }
 
-const CategoryForm: React.FC<CategoryFormProps> = ({
-	categoryData,
-	categories,
+const CategoryForm: React.FC<Props> = ({
+	parentId,
+	setParentId,
+	languageId,
+	name,
+	setName,
+	translations,
+	setError,
+	setSuccessMessage,
 	onSubmit,
-	onClose,
-	editingCategory,
+	visible,
 }) => {
-	const [category, setCategory] = useState(categoryData.name);
-	const [description, setDescription] = useState(categoryData.description || '');
-	const [parentId, setParentId] = useState<string | null>(categoryData.parentId || null);
-	const [synonyms, setSynonyms] = useState(categoryData.synonyms.join(', ') || '');
-	const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
-	const [searchTerm, setSearchTerm] = useState('');
+	const [icon, setIcon] = useState<File | null>(null);
+	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
 	useEffect(() => {
-		const delayDebounceFn = setTimeout(() => {
-			const filtered = formatCategoryOptions(categories, searchTerm);
-			setFilteredCategories(filtered);
-		}, 300); // Debounce delay
+		if (!visible) {
+			setName('');
+			setParentId(null);
+			setIcon(null);
+			setError('');
+			setSuccessMessage(null);
+			if (fileUploadButtonRef.current.resetFileName) {
+				fileUploadButtonRef.current.resetFileName();
+			}
+		}
+	}, [visible, setName, setParentId, setError, setSuccessMessage]);
 
-		return () => clearTimeout(delayDebounceFn);
-	}, [searchTerm, categories]);
-
-	const handleSubmit = (e: SyntheticEvent<HTMLButtonElement>) => {
-		e.preventDefault();
-		const newCategoryData: CategoryData = {
-			name: category,
-			description,
-			parentId,
-			synonyms: synonyms.split(',').map(s => s.trim()),
-		};
-		onSubmit(newCategoryData);
+	const handleFileChange = (file: File | null) => {
+		setIcon(file);
 	};
 
+	const handleSubmit = async (event: React.FormEvent) => {
+		event.preventDefault();
+		onSubmit();
+	};
+
+	if (!visible) return null;
+
 	return (
-		<div className='fixed inset-0 flex justify-center items-center z-50'>
-			<div className='absolute inset-0 bg-black bg-opacity-75' onClick={onClose} />
-			<div
-				className='relative bg-white p-6 rounded-lg shadow-md w-full max-w-md'
-				onClick={e => e.stopPropagation()}>
-				<h2 className='text-2xl font-semibold mb-4 text-gray-800'>
-					{editingCategory ? 'Izmenite kategoriju' : 'Dodajte novu kategoriju'}
-				</h2>
-				<InputDefault
-					value={category}
-					onChange={e => setCategory(e.target.value)}
-					placeholder='Naziv kategorije'
-				/>
-				<textarea
-					placeholder='Opis kategorije (opciono)'
-					value={description}
-					onChange={e => setDescription(e.target.value)}
-					className='block w-full mb-4 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
+		<form onSubmit={handleSubmit} className='space-y-4'>
+			<div>
+				<label htmlFor='name' className='block mb-2'>
+					Category Name:
+				</label>
 				<input
 					type='text'
-					value={searchTerm}
-					onChange={e => setSearchTerm(e.target.value)}
-					placeholder='Pretraži kategorije'
-					className='block w-full mb-4 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+					id='name'
+					value={name}
+					onChange={e => setName(e.target.value)}
+					className='border p-2 w-full text-black'
 				/>
-				<Select
-					options={formatCategoryOptions(categories, searchTerm)}
-					value={
-						parentId
-							? {
-									value: parentId,
-									label: categories.find(cat => cat.id === parentId)?.name || '',
-							  }
-							: null
-					}
-					onChange={option => setParentId(option?.value || null)}
-					className='mb-4'
-					placeholder='Nadkategorija (opciono)'
-				/>
-
-				<InputDefault
-					value={synonyms}
-					onChange={e => setSynonyms(e.target.value)}
-					placeholder='Sinonimi (odvojene zarezom / opciono)'
-				/>
-				<div className='flex justify-end space-x-2'>
-					<FormDefaultButton onClick={handleSubmit} />
-					<CloseButton onClose={onClose} />
-				</div>
 			</div>
-		</div>
+			<div>
+				<label htmlFor='parentId' className='block mb-2'>
+					Parent Category (optional):
+				</label>
+				<select
+					id='parentId'
+					value={parentId !== null ? parentId : ''}
+					onChange={e => setParentId(e.target.value ? +e.target.value : null)}
+					className='border p-2 w-full text-black'>
+					<option value=''>None</option>
+					{translations.map(translation => (
+						<option key={translation.id} value={translation.id} className='text-black'>
+							{translation.translation}
+						</option>
+					))}
+				</select>
+			</div>
+			<div>
+				<label htmlFor='icon' className='block mb-2'>
+					Icon:
+				</label>
+				<FileUploadButton
+					onFileChange={handleFileChange}
+					resetFileName={fileUploadButtonRef.current.resetFileName}
+					ref={fileUploadButtonRef}
+				/>
+			</div>
+			<div>
+				<button type='submit' className='bg-blue-500 text-white px-4 py-2'>
+					Save
+				</button>
+			</div>
+		</form>
 	);
 };
 

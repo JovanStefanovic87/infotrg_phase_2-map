@@ -3,33 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import FileUploadButton from '@/app/components/buttons/FileUploadButton';
 import CategoryList from './CategoryList';
-
-interface Category {
-	id: number;
-	labelId: number;
-	parentId: number | null;
-	iconId: number | null;
-	subcategories: Category[];
-}
-
-interface Translation {
-	id: number;
-	labelId: number;
-	languageId: number;
-	translation: string;
-}
-
-interface Language {
-	id: number;
-	code: string;
-	name: string;
-}
-
-interface Icon {
-	id: number;
-	name: string;
-	url: string;
-}
+import { Category, Language, Translation, Icon } from '@/utils/helpers/types';
 
 const AddCategoryPage: React.FC = () => {
 	const [parentId, setParentId] = useState<number | null>(null);

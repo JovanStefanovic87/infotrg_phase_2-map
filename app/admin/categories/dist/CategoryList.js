@@ -17,7 +17,7 @@ var CategoryList = function (_a) {
                 if (category.id === parentId) {
                     return category;
                 }
-                var foundInSubcategories = findCategory(category.subcategories, parentId);
+                var foundInSubcategories = findCategory(category.subcategories || [], parentId);
                 if (foundInSubcategories) {
                     return foundInSubcategories;
                 }
@@ -40,14 +40,13 @@ var CategoryList = function (_a) {
                 getParentCategoryName(category.parentId, languageId)),
             react_1["default"].createElement("div", null, category.iconId ? (iconUrl ? (react_1["default"].createElement(image_1["default"], { src: iconUrl, alt: 'Category Icon', width: 50, height: 50 })) : (react_1["default"].createElement("p", null, "Icon not available"))) : (react_1["default"].createElement("p", null, "No icon")))));
     };
-    console.log(categories);
     var renderCategories = function (categories, parentId) {
         var subcategories = categories.filter(function (c) { return c.parentId === parentId; });
         if (subcategories.length === 0)
             return null;
         return (react_1["default"].createElement("div", { className: 'ml-4' }, subcategories.map(function (category) { return (react_1["default"].createElement("div", { key: category.id },
             renderCategory(category),
-            renderCategories(category.subcategories, category.id))); })));
+            renderCategories(category.subcategories || [], category.id))); })));
     };
     return react_1["default"].createElement("div", null, renderCategories(categories, null));
 };

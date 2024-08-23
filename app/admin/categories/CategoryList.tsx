@@ -1,25 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-
-interface Category {
-	id: number;
-	labelId: number;
-	parentId: number | null;
-	iconId: number | null;
-	subcategories: Category[];
-}
-
-interface Icon {
-	id: number;
-	url: string;
-}
-
-interface Translation {
-	id: number;
-	labelId: number;
-	languageId: number;
-	translation: string;
-}
+import { Category, Icon, Translation } from '@/utils/helpers/types';
 
 interface CategoryListProps {
 	categories: Category[];
@@ -49,7 +30,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				if (category.id === parentId) {
 					return category;
 				}
-				const foundInSubcategories = findCategory(category.subcategories, parentId);
+				const foundInSubcategories = findCategory(category.subcategories || [], parentId);
 				if (foundInSubcategories) {
 					return foundInSubcategories;
 				}
@@ -87,8 +68,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		);
 	};
 
-	console.log(categories);
-
 	const renderCategories = (categories: Category[], parentId: number | null) => {
 		const subcategories = categories.filter(c => c.parentId === parentId);
 
@@ -99,7 +78,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				{subcategories.map(category => (
 					<div key={category.id}>
 						{renderCategory(category)}
-						{renderCategories(category.subcategories, category.id)}
+						{renderCategories(category.subcategories || [], category.id)}
 					</div>
 				))}
 			</div>

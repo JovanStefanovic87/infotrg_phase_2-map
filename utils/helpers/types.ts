@@ -170,13 +170,40 @@ export interface ImageBlockLinkData {
 	[key: string]: ImageBlockLink[];
 }
 
-export interface Category {
+/* export interface Category {
 	id: string;
 	name: string;
 	description?: string;
 	parentId?: string | null;
 	subcategories: Category[];
 	synonyms?: string[];
+} */
+
+export interface Language {
+	id: number;
+	name: string;
+}
+
+export interface Category {
+	id: number;
+	parentId: number | null;
+	name: string;
+	iconId: number | null;
+	labelId: number;
+	subcategories: Category[] | null;
+}
+
+export interface Translation {
+	id: number;
+	labelId: number;
+	languageId: number;
+	translation: string;
+}
+
+export interface Icon {
+	id: number;
+	name?: string;
+	url: string;
 }
 
 export interface CategoryData {
