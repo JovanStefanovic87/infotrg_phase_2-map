@@ -41,6 +41,8 @@ var react_1 = require("react");
 var axios_1 = require("axios");
 var FileUploadButton_1 = require("@/app/components/buttons/FileUploadButton");
 var CategoryList_1 = require("./CategoryList");
+var CustomCombobox_1 = require("@/app/components/input/CustomCombobox");
+var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var AddCategoryPage = function () {
     var _a = react_1.useState(null), parentId = _a[0], setParentId = _a[1];
     var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
@@ -52,6 +54,10 @@ var AddCategoryPage = function () {
     var _h = react_1.useState([]), translations = _h[0], setTranslations = _h[1];
     var _j = react_1.useState([]), icons = _j[0], setIcons = _j[1];
     var _k = react_1.useState(null), icon = _k[0], setIcon = _k[1];
+    var _l = react_1.useState(false), loadingCategories = _l[0], setLoadingCategories = _l[1];
+    var _m = react_1.useState(false), loadingLanguages = _m[0], setLoadingLanguages = _m[1];
+    var _o = react_1.useState(false), loadingTranslations = _o[0], setLoadingTranslations = _o[1];
+    var _p = react_1.useState(false), loadingIcons = _p[0], setLoadingIcons = _p[1];
     var fileUploadButtonRef = react_1.useRef({});
     react_1.useEffect(function () {
         var fetchCategories = function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -59,17 +65,23 @@ var AddCategoryPage = function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, axios_1["default"].get('/api/categories')];
+                        setLoadingCategories(true);
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, 4, 5]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/categories')];
+                    case 2:
                         response = _a.sent();
                         setCategories(response.data);
-                        return [3 /*break*/, 3];
-                    case 2:
+                        return [3 /*break*/, 5];
+                    case 3:
                         err_1 = _a.sent();
                         console.error('Failed to fetch categories', err_1);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 4:
+                        setLoadingCategories(false);
+                        return [7 /*endfinally*/];
+                    case 5: return [2 /*return*/];
                 }
             });
         }); };
@@ -81,17 +93,23 @@ var AddCategoryPage = function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, axios_1["default"].get('/api/languages')];
+                        setLoadingLanguages(true);
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, 4, 5]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/languages')];
+                    case 2:
                         response = _a.sent();
                         setLanguages(response.data);
-                        return [3 /*break*/, 3];
-                    case 2:
+                        return [3 /*break*/, 5];
+                    case 3:
                         err_2 = _a.sent();
                         console.error('Failed to fetch languages', err_2);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 4:
+                        setLoadingLanguages(false);
+                        return [7 /*endfinally*/];
+                    case 5: return [2 /*return*/];
                 }
             });
         }); };
@@ -104,9 +122,12 @@ var AddCategoryPage = function () {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            _a.trys.push([0, 2, , 3]);
-                            return [4 /*yield*/, axios_1["default"].get('/api/labels', { params: { languageId: languageId } })];
+                            setLoadingTranslations(true);
+                            _a.label = 1;
                         case 1:
+                            _a.trys.push([1, 3, , 4]);
+                            return [4 /*yield*/, axios_1["default"].get('/api/labels', { params: { languageId: languageId } })];
+                        case 2:
                             response = _a.sent();
                             labels_1 = Array.isArray(response.data) ? response.data : [];
                             fetchTranslations = function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -114,7 +135,7 @@ var AddCategoryPage = function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
-                                            _a.trys.push([0, 2, , 3]);
+                                            _a.trys.push([0, 2, 3, 4]);
                                             return [4 /*yield*/, Promise.all(labels_1.map(function (label) { return __awaiter(void 0, void 0, void 0, function () {
                                                     var response;
                                                     return __generator(this, function (_a) {
@@ -135,22 +156,26 @@ var AddCategoryPage = function () {
                                             translationResponses = _a.sent();
                                             allTranslations = translationResponses.flat();
                                             setTranslations(allTranslations);
-                                            return [3 /*break*/, 3];
+                                            return [3 /*break*/, 4];
                                         case 2:
                                             err_4 = _a.sent();
                                             console.error('Failed to fetch translation', err_4);
-                                            return [3 /*break*/, 3];
-                                        case 3: return [2 /*return*/];
+                                            return [3 /*break*/, 4];
+                                        case 3:
+                                            setLoadingTranslations(false);
+                                            return [7 /*endfinally*/];
+                                        case 4: return [2 /*return*/];
                                     }
                                 });
                             }); };
                             fetchTranslations();
-                            return [3 /*break*/, 3];
-                        case 2:
+                            return [3 /*break*/, 4];
+                        case 3:
                             err_3 = _a.sent();
                             console.error('Failed to fetch labels', err_3);
-                            return [3 /*break*/, 3];
-                        case 3: return [2 /*return*/];
+                            setLoadingTranslations(false);
+                            return [3 /*break*/, 4];
+                        case 4: return [2 /*return*/];
                     }
                 });
             }); };
@@ -163,17 +188,23 @@ var AddCategoryPage = function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, axios_1["default"].get('/api/icons')];
+                        setLoadingIcons(true);
+                        _a.label = 1;
                     case 1:
+                        _a.trys.push([1, 3, 4, 5]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/icons')];
+                    case 2:
                         response = _a.sent();
                         setIcons(response.data);
-                        return [3 /*break*/, 3];
-                    case 2:
+                        return [3 /*break*/, 5];
+                    case 3:
                         err_5 = _a.sent();
                         console.error('Failed to fetch icons', err_5);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 4:
+                        setLoadingIcons(false);
+                        return [7 /*endfinally*/];
+                    case 5: return [2 /*return*/];
                 }
             });
         }); };
@@ -264,7 +295,9 @@ var AddCategoryPage = function () {
             fileUploadButtonRef.current.resetFileName();
         }
     };
-    return (react_1["default"].createElement("div", { className: 'p-4' },
+    if (loadingCategories || loadingIcons)
+        return react_1["default"].createElement("p", null, "Loading...");
+    return (react_1["default"].createElement(PageContainer_1["default"], null,
         react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
@@ -274,15 +307,15 @@ var AddCategoryPage = function () {
                 react_1["default"].createElement("input", { type: 'text', id: 'name', value: name, onChange: function (e) { return setName(e.target.value); }, className: 'border p-2 w-full text-black' })),
             react_1["default"].createElement("div", null,
                 react_1["default"].createElement("label", { htmlFor: 'parentId', className: 'block mb-2' }, "Parent Category (optional):"),
-                react_1["default"].createElement("select", { id: 'parentId', value: parentId !== null ? parentId : '', onChange: function (e) { return setParentId(e.target.value ? +e.target.value : null); }, className: 'border p-2 w-full text-black' },
-                    react_1["default"].createElement("option", { value: '' }, "None"),
-                    translations.map(function (translation) { return (react_1["default"].createElement("option", { key: translation.id, value: translation.id, className: 'text-black' }, translation.translation)); }))),
+                react_1["default"].createElement(CustomCombobox_1["default"], { options: translations, onSelect: function (selectedOption) {
+                        setParentId(selectedOption ? selectedOption.labelId : null);
+                    }, placeholder: 'Select Parent Category' })),
             react_1["default"].createElement("div", null,
                 react_1["default"].createElement("label", { htmlFor: 'icon', className: 'block mb-2' }, "Icon:"),
                 react_1["default"].createElement(FileUploadButton_1["default"], { onFileChange: handleFileChange, resetFileName: handleResetFileName, ref: fileUploadButtonRef })),
             react_1["default"].createElement("div", null,
                 react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white px-4 py-2' }, "Save"))),
         react_1["default"].createElement("div", { className: 'mt-8' },
-            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languageId: languageId }))));
+            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languages: languages, languageId: languageId }))));
 };
 exports["default"] = AddCategoryPage;

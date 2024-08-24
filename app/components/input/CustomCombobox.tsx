@@ -1,33 +1,58 @@
+'use client';
 import React, { useState } from 'react';
-
-interface Category {
-	id: string;
-	name: string;
-	synonyms?: string[];
-}
+import { Translation } from '@/utils/helpers/types';
 
 interface ComboboxProps {
-	options: Category[];
-	onSelect: (selectedOption: Category | null) => void;
+	options: Translation[];
+	onSelect: (selectedOption: Translation | null) => void;
 	placeholder?: string;
 }
 
 const Combobox: React.FC<ComboboxProps> = ({ options, onSelect, placeholder = 'Select...' }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState('');
-	const [selectedOption, setSelectedOption] = useState<Category | null>(null);
+
+	const getCommonCharacterCount = (str1: string, str2: string) => {
+		const charCount1 = Array.from(str1).reduce((acc, char) => {
+			acc[char] = (acc[char] || 0) + 1;
+			return acc;
+		}, {} as Record<string, number>);
+
+		const charCount2 = Array.from(str2).reduce((acc, char) => {
+			acc[char] = (acc[char] || 0) + 1;
+			return acc;
+		}, {} as Record<string, number>);
+
+		return Object.keys(charCount1).reduce((acc, char) => {
+			if (charCount2[char]) {
+				acc += Math.min(charCount1[char], charCount2[char]);
+			}
+			return acc;
+		}, 0);
+	};
 
 	const filterOptions = (searchTerm: string) => {
 		const lowercasedSearch = searchTerm.trim().toLowerCase();
-		return options.filter(cat => {
-			const name = cat.name?.trim().toLowerCase() || '';
-			const nameMatches = name.includes(lowercasedSearch);
+		const exactMatches = options.filter(translation =>
+			translation.translation.trim().toLowerCase().includes(lowercasedSearch)
+		);
 
-			const synonyms = cat.synonyms ? cat.synonyms.map(s => s.trim().toLowerCase()) : [];
-			const synonymsMatch = synonyms.some(synonym => synonym.includes(lowercasedSearch));
+		if (exactMatches.length > 0) {
+			return exactMatches.sort((a, b) => a.translation.localeCompare(b.translation));
+		}
 
-			return nameMatches || synonymsMatch;
-		});
+		const closeMatches = options
+			.map(translation => ({
+				...translation,
+				commonChars: getCommonCharacterCount(
+					lowercasedSearch,
+					translation.translation.trim().toLowerCase()
+				),
+			}))
+			.filter(translation => translation.commonChars > 0)
+			.sort((a, b) => b.commonChars - a.commonChars);
+
+		return closeMatches;
 	};
 
 	const filteredOptions = filterOptions(inputValue);
@@ -37,11 +62,14 @@ const Combobox: React.FC<ComboboxProps> = ({ options, onSelect, placeholder = 'S
 		setIsOpen(true);
 	};
 
-	const handleOptionClick = (option: Category) => {
-		setSelectedOption(option);
-		setInputValue(option.name);
+	const handleOptionClick = (option: Translation) => {
+		setInputValue(option.translation);
 		setIsOpen(false);
 		onSelect(option);
+	};
+
+	const handleInputClick = () => {
+		setIsOpen(true);
 	};
 
 	const handleClickOutside = (e: MouseEvent) => {
@@ -62,6 +90,7 @@ const Combobox: React.FC<ComboboxProps> = ({ options, onSelect, placeholder = 'S
 			<input
 				type='text'
 				value={inputValue}
+				onClick={handleInputClick}
 				onChange={handleInputChange}
 				placeholder={placeholder}
 				className='block w-full p-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -73,7 +102,7 @@ const Combobox: React.FC<ComboboxProps> = ({ options, onSelect, placeholder = 'S
 							key={option.id}
 							onClick={() => handleOptionClick(option)}
 							className='cursor-pointer p-2 hover:bg-gray-200 text-black'>
-							{option.name}
+							{option.translation}
 						</div>
 					))}
 				</div>
