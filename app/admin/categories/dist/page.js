@@ -230,7 +230,7 @@ var AddCategoryPage = function () {
                         })];
                 case 2:
                     uploadResponse = _a.sent();
-                    iconId = uploadResponse.data.iconId; // Get the iconId from the response
+                    iconId = uploadResponse.data.iconId;
                     _a.label = 3;
                 case 3: return [4 /*yield*/, axios_1["default"].post('/api/labels', { name: name })];
                 case 4:
@@ -259,14 +259,12 @@ var AddCategoryPage = function () {
                     _a.sent();
                     _a.label = 7;
                 case 7:
-                    // Reset form fields
                     setName('');
                     setParentId(null);
                     setLanguageId(1);
                     setIcon(null);
                     setError('');
                     setSuccessMessage('Podaci uspešno sačuvani.');
-                    // Trigger file name reset
                     if (fileUploadButtonRef.current.resetFileName) {
                         fileUploadButtonRef.current.resetFileName();
                     }
@@ -275,11 +273,11 @@ var AddCategoryPage = function () {
                     err_6 = _a.sent();
                     if (err_6 instanceof Error) {
                         setError("Submission Error: " + err_6.message);
-                        setSuccessMessage(null); // Clear success message on error
+                        setSuccessMessage(null);
                     }
                     else {
                         setError('An unexpected error occurred.');
-                        setSuccessMessage(null); // Clear success message on error
+                        setSuccessMessage(null);
                     }
                     return [3 /*break*/, 9];
                 case 9: return [2 /*return*/];
@@ -290,7 +288,6 @@ var AddCategoryPage = function () {
         setIcon(file);
     };
     var handleResetFileName = function () {
-        // This callback will be triggered to reset the file name
         if (fileUploadButtonRef.current.resetFileName) {
             fileUploadButtonRef.current.resetFileName();
         }

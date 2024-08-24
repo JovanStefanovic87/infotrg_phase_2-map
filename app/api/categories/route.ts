@@ -1,3 +1,4 @@
+// api/categories
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 
@@ -41,4 +42,15 @@ export async function POST(request: Request) {
 		},
 	});
 	return NextResponse.json(newCategory);
+}
+
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+	const { id } = params;
+	const { parentId, labelId, iconId } = await request.json();
+
+	const updatedCategory = await prisma.category.update({
+		where: { id: Number(id) },
+		data: { parentId, labelId, iconId },
+	});
+	return NextResponse.json(updatedCategory);
 }

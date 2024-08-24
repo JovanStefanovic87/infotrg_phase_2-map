@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
-import { FiChevronDown, FiChevronUp } from 'react-icons/fi'; // Import icons
+import { FiChevronDown, FiChevronUp, FiEdit, FiTrash } from 'react-icons/fi';
+import axios from 'axios';
 
 interface CategoryListProps {
 	categories: Category[];
 	translations: Translation[];
 	icons: Icon[];
-	languages: Language[]; // Add languages to props
+	languages: Language[];
 	languageId: number;
 }
 
@@ -16,7 +17,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	categories,
 	translations,
 	icons,
-	languages, // Destructure languages
+	languages,
 	languageId,
 }) => {
 	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
@@ -74,6 +75,34 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		return translations.filter(t => t.labelId === labelId);
 	};
 
+	const handleEdit = async (id: number) => {
+		const newName = prompt('Enter new category name:');
+		if (newName === null) return;
+
+		try {
+			const response = await axios.put(`/api/categories/${id}`, {
+				name: newName, // Updated field name
+				// Add other fields if necessary
+			});
+			console.log('Category updated:', response.data);
+			// Optionally, refresh or update the local category list here
+		} catch (error) {
+			console.error('Failed to update category', error);
+		}
+	};
+
+	const handleDelete = async (id: number) => {
+		if (confirm('Are you sure you want to delete this category?')) {
+			try {
+				const response = await axios.delete(`/api/categories/${id}`);
+				console.log('Category deleted:', response.data);
+				// Optionally, refresh or update the local category list here
+			} catch (error) {
+				console.error('Failed to delete category', error);
+			}
+		}
+	};
+
 	const CategoryItem: React.FC<{ category: Category }> = ({ category }) => {
 		const iconUrl = getCategoryIconUrl(category.iconId);
 		const isOpen = openCategories.has(category.id);
@@ -82,7 +111,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		const languagesList = categoryTranslations.map(t => getLanguageName(t.languageId)).join(', ');
 
 		return (
-			<div key={category.id} className='border p-4 mb-4 rounded-lg shadow-md'>
+			<div className='border p-4 mb-4 rounded-lg shadow-md'>
 				<div className='flex items-center justify-between'>
 					<h3 className='text-lg font-semibold'>{getCategoryName(category.labelId, languageId)}</h3>
 					{category.subcategories && category.subcategories.length > 0 && (
@@ -94,22 +123,37 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						</button>
 					)}
 				</div>
-				<p className='mt-2 text-gray-400'>
-					<strong>Nadkategorija:</strong> {getParentCategoryName(category.parentId, languageId)}
-				</p>
+
 				<div className='mt-2'>
 					{category.iconId ? (
 						iconUrl ? (
 							<Image src={iconUrl} alt='Category Icon' width={50} height={50} />
 						) : (
-							<p>Icon not available</p>
+							<p>Slika nije izabrana</p>
 						)
 					) : (
-						<p>No icon</p>
+						<p>Ne postoji slika</p>
 					)}
 				</div>
+				<p className='mt-2 text-gray-400'>
+					<strong>Nadkategorija:</strong> {getParentCategoryName(category.parentId, languageId)}
+				</p>
 				<div className='mt-2'>
 					<strong>Languages:</strong> {languagesList}
+				</div>
+				<div className='flex gap-4 mt-2 justify-end'>
+					<button
+						className='text-blue-500 hover:text-blue-700 flex items-center'
+						onClick={() => handleEdit(category.id)}>
+						<FiEdit size={20} />
+						<span className='ml-1'>Izmeni</span>
+					</button>
+					<button
+						className='text-red-500 hover:text-red-700 flex items-center'
+						onClick={() => handleDelete(category.id)}>
+						<FiTrash size={20} />
+						<span className='ml-1'>Obriši</span>
+					</button>
 				</div>
 			</div>
 		);

@@ -103,7 +103,7 @@ const AddCategoryPage: React.FC = () => {
 		const fetchIcons = async () => {
 			setLoadingIcons(true);
 			try {
-				const response = await axios.get('/api/icons'); // Ensure this endpoint returns icon data
+				const response = await axios.get('/api/icons');
 				setIcons(response.data);
 			} catch (err) {
 				console.error('Failed to fetch icons', err);
@@ -121,7 +121,6 @@ const AddCategoryPage: React.FC = () => {
 		try {
 			let iconId = 0;
 
-			// Upload the icon first if it exists
 			if (icon) {
 				const formData = new FormData();
 				formData.append('icon', icon);
@@ -131,10 +130,9 @@ const AddCategoryPage: React.FC = () => {
 						'Content-Type': 'multipart/form-data',
 					},
 				});
-				iconId = uploadResponse.data.iconId; // Get the iconId from the response
+				iconId = uploadResponse.data.iconId;
 			}
 
-			// Create the label
 			const labelResponse = await axios.post('/api/labels', { name });
 			const newLabelId = labelResponse.data.id;
 
@@ -142,18 +140,16 @@ const AddCategoryPage: React.FC = () => {
 				throw new Error('Failed to create label');
 			}
 
-			// Create the category with the iconId
 			const categoryResponse = await axios.post('/api/categories', {
 				parentId,
 				labelId: newLabelId,
-				iconId, // Include iconId in the request
+				iconId,
 			});
 
 			if (!categoryResponse.data) {
 				throw new Error('Failed to create category');
 			}
 
-			// Handle translations if needed
 			if (languageId) {
 				await axios.post('/api/translation', {
 					labelId: newLabelId,
@@ -162,7 +158,6 @@ const AddCategoryPage: React.FC = () => {
 				});
 			}
 
-			// Reset form fields
 			setName('');
 			setParentId(null);
 			setLanguageId(1);
@@ -170,17 +165,16 @@ const AddCategoryPage: React.FC = () => {
 			setError('');
 			setSuccessMessage('Podaci uspešno sačuvani.');
 
-			// Trigger file name reset
 			if (fileUploadButtonRef.current.resetFileName) {
 				fileUploadButtonRef.current.resetFileName();
 			}
 		} catch (err) {
 			if (err instanceof Error) {
 				setError(`Submission Error: ${err.message}`);
-				setSuccessMessage(null); // Clear success message on error
+				setSuccessMessage(null);
 			} else {
 				setError('An unexpected error occurred.');
-				setSuccessMessage(null); // Clear success message on error
+				setSuccessMessage(null);
 			}
 		}
 	};
@@ -190,7 +184,6 @@ const AddCategoryPage: React.FC = () => {
 	};
 
 	const handleResetFileName = () => {
-		// This callback will be triggered to reset the file name
 		if (fileUploadButtonRef.current.resetFileName) {
 			fileUploadButtonRef.current.resetFileName();
 		}
