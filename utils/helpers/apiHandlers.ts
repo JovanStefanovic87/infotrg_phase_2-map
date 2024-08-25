@@ -1,20 +1,7 @@
 'use client';
 import { useEffect, useState, SyntheticEvent } from 'react';
-import { Category, CategoryData, HandleAddCategoryProps } from '@/utils/helpers/types';
-
-export const fetchCategories = async (): Promise<Category[]> => {
-	try {
-		const response = await fetch('/api/categories');
-		if (!response.ok) {
-			throw new Error('Network response was not ok');
-		}
-		const result = await response.json();
-		return result;
-	} catch (error) {
-		console.error('Failed to fetch categories:', error);
-		return [];
-	}
-};
+import { Category, CategoryData, HandleAddCategoryProps, Language } from '@/utils/helpers/types';
+import axios from 'axios';
 
 export const handleAddCategory = (
 	getCategoryData: () => CategoryData,
@@ -84,5 +71,35 @@ export const handleDeleteCategory = async (
 		} catch (error) {
 			console.error('Failed to delete category:', error);
 		}
+	}
+};
+
+export const fetchLanguages = async (): Promise<Language[]> => {
+	try {
+		const response = await axios.get('/api/languages');
+		return response.data;
+	} catch (err) {
+		console.error('Failed to fetch languages', err);
+		throw err;
+	}
+};
+
+export const fetchIcons = async () => {
+	try {
+		const response = await axios.get('/api/icons');
+		return response.data;
+	} catch (err) {
+		console.error('Failed to fetch icons', err);
+		throw err;
+	}
+};
+
+export const fetchCategories = async (): Promise<Category[]> => {
+	try {
+		const response = await axios.get('/api/categories');
+		return response.data;
+	} catch (err) {
+		console.error('Failed to fetch categories', err);
+		throw new Error('Failed to fetch categories');
 	}
 };

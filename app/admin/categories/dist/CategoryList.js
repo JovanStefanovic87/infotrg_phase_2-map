@@ -40,11 +40,14 @@ exports.__esModule = true;
 var react_1 = require("react");
 var image_1 = require("next/image");
 var fi_1 = require("react-icons/fi");
-var axios_1 = require("axios");
 var CategoryList = function (_a) {
-    var categories = _a.categories, translations = _a.translations, icons = _a.icons, languages = _a.languages, languageId = _a.languageId;
+    var categories = _a.categories, translations = _a.translations, icons = _a.icons, languages = _a.languages, languageId = _a.languageId, refetchCategories = _a.refetchCategories, onEditCategory = _a.onEditCategory, onDeleteCategory = _a.onDeleteCategory;
     var _b = react_1.useState(new Set()), openCategories = _b[0], setOpenCategories = _b[1];
-    var toggleCategory = function (id) {
+    react_1.useEffect(function () {
+        // This ensures the component updates correctly when categories or translations change
+        setOpenCategories(new Set());
+    }, [categories, translations]);
+    var toggleCategory = react_1.useCallback(function (id) {
         setOpenCategories(function (prev) {
             var newOpenCategories = new Set(prev);
             if (newOpenCategories.has(id)) {
@@ -55,16 +58,16 @@ var CategoryList = function (_a) {
             }
             return newOpenCategories;
         });
-    };
-    var getCategoryName = function (labelId, languageId) {
+    }, []);
+    var getCategoryName = react_1.useCallback(function (labelId, languageId) {
         var translation = translations.find(function (t) { return t.labelId === labelId && t.languageId === languageId; });
         return translation ? translation.translation : 'Unknown';
-    };
-    var getLanguageName = function (languageId) {
+    }, [translations, languageId]);
+    var getLanguageName = react_1.useCallback(function (languageId) {
         var language = languages.find(function (l) { return l.id === languageId; });
         return language ? language.name : 'Unknown';
-    };
-    var getParentCategoryName = function (parentId, languageId) {
+    }, [languages]);
+    var getParentCategoryName = react_1.useCallback(function (parentId, languageId) {
         if (parentId === null)
             return 'Ovo je glavna nadkategorija';
         var findCategory = function (categories, parentId) {
@@ -82,16 +85,16 @@ var CategoryList = function (_a) {
         };
         var parentCategory = findCategory(categories, parentId);
         return parentCategory ? getCategoryName(parentCategory.labelId, languageId) : 'Unknown';
-    };
-    var getCategoryIconUrl = function (iconId) {
+    }, [categories, getCategoryName]);
+    var getCategoryIconUrl = react_1.useCallback(function (iconId) {
         var icon = icons.find(function (icon) { return icon.id === iconId; });
         return icon ? icon.url : '';
-    };
-    var getCategoryTranslations = function (labelId) {
+    }, [icons]);
+    var getCategoryTranslations = react_1.useCallback(function (labelId) {
         return translations.filter(function (t) { return t.labelId === labelId; });
-    };
-    var handleEdit = function (id) { return __awaiter(void 0, void 0, void 0, function () {
-        var newName, response, error_1;
+    }, [translations]);
+    var handleEdit = react_1.useCallback(function (id) { return __awaiter(void 0, void 0, void 0, function () {
+        var newName, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -100,44 +103,46 @@ var CategoryList = function (_a) {
                         return [2 /*return*/];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"].put("/api/categories/" + id, {
-                            name: newName
-                        })];
+                    _a.trys.push([1, 4, , 5]);
+                    return [4 /*yield*/, onEditCategory(id, newName)];
                 case 2:
-                    response = _a.sent();
-                    console.log('Category updated:', response.data);
-                    return [3 /*break*/, 4];
+                    _a.sent();
+                    return [4 /*yield*/, refetchCategories()];
                 case 3:
-                    error_1 = _a.sent();
-                    console.error('Failed to update category', error_1);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    _a.sent(); // Refetch categories after editing
+                    return [3 /*break*/, 5];
+                case 4:
+                    err_1 = _a.sent();
+                    console.error('Failed to edit category', err_1);
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
-    }); };
-    var handleDelete = function (id) { return __awaiter(void 0, void 0, void 0, function () {
-        var response, error_2;
+    }); }, [onEditCategory, refetchCategories]);
+    var handleDelete = react_1.useCallback(function (id) { return __awaiter(void 0, void 0, void 0, function () {
+        var err_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!confirm('Are you sure you want to delete this category?')) return [3 /*break*/, 4];
+                    if (!confirm('Are you sure you want to delete this category?')) return [3 /*break*/, 5];
                     _a.label = 1;
                 case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"]["delete"]("/api/categories/" + id)];
+                    _a.trys.push([1, 4, , 5]);
+                    return [4 /*yield*/, onDeleteCategory(id)];
                 case 2:
-                    response = _a.sent();
-                    console.log('Category deleted:', response.data);
-                    return [3 /*break*/, 4];
+                    _a.sent();
+                    return [4 /*yield*/, refetchCategories()];
                 case 3:
-                    error_2 = _a.sent();
-                    console.error('Failed to delete category', error_2);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    _a.sent(); // Refetch categories after deleting
+                    return [3 /*break*/, 5];
+                case 4:
+                    err_2 = _a.sent();
+                    console.error('Failed to delete category', err_2);
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
-    }); };
+    }); }, [onDeleteCategory, refetchCategories]);
     var CategoryItem = function (_a) {
         var category = _a.category;
         var iconUrl = getCategoryIconUrl(category.iconId);

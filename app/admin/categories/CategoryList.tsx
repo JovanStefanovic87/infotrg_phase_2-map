@@ -1,9 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
 import { FiChevronDown, FiChevronUp, FiEdit, FiTrash } from 'react-icons/fi';
-import axios from 'axios';
 
 interface CategoryListProps {
 	categories: Category[];
@@ -11,6 +10,9 @@ interface CategoryListProps {
 	icons: Icon[];
 	languages: Language[];
 	languageId: number;
+	refetchCategories: () => Promise<void>;
+	onEditCategory: (id: number, newName: string) => Promise<void>;
+	onDeleteCategory: (id: number) => Promise<void>;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -19,10 +21,18 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	icons,
 	languages,
 	languageId,
+	refetchCategories,
+	onEditCategory,
+	onDeleteCategory,
 }) => {
 	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
 
-	const toggleCategory = (id: number) => {
+	useEffect(() => {
+		// This ensures the component updates correctly when categories or translations change
+		setOpenCategories(new Set());
+	}, [categories, translations]);
+
+	const toggleCategory = useCallback((id: number) => {
 		setOpenCategories(prev => {
 			const newOpenCategories = new Set(prev);
 			if (newOpenCategories.has(id)) {
@@ -32,76 +42,91 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			}
 			return newOpenCategories;
 		});
-	};
+	}, []);
 
-	const getCategoryName = (labelId: number, languageId: number) => {
-		const translation = translations.find(
-			t => t.labelId === labelId && t.languageId === languageId
-		);
-		return translation ? translation.translation : 'Unknown';
-	};
+	const getCategoryName = useCallback(
+		(labelId: number, languageId: number) => {
+			const translation = translations.find(
+				t => t.labelId === labelId && t.languageId === languageId
+			);
+			return translation ? translation.translation : 'Unknown';
+		},
+		[translations, languageId]
+	);
 
-	const getLanguageName = (languageId: number) => {
-		const language = languages.find(l => l.id === languageId);
-		return language ? language.name : 'Unknown';
-	};
+	const getLanguageName = useCallback(
+		(languageId: number) => {
+			const language = languages.find(l => l.id === languageId);
+			return language ? language.name : 'Unknown';
+		},
+		[languages]
+	);
 
-	const getParentCategoryName = (parentId: number | null, languageId: number): string => {
-		if (parentId === null) return 'Ovo je glavna nadkategorija';
+	const getParentCategoryName = useCallback(
+		(parentId: number | null, languageId: number): string => {
+			if (parentId === null) return 'Ovo je glavna nadkategorija';
 
-		const findCategory = (categories: Category[], parentId: number): Category | undefined => {
-			for (const category of categories) {
-				if (category.id === parentId) {
-					return category;
+			const findCategory = (categories: Category[], parentId: number): Category | undefined => {
+				for (const category of categories) {
+					if (category.id === parentId) {
+						return category;
+					}
+					const foundInSubcategories = findCategory(category.subcategories || [], parentId);
+					if (foundInSubcategories) {
+						return foundInSubcategories;
+					}
 				}
-				const foundInSubcategories = findCategory(category.subcategories || [], parentId);
-				if (foundInSubcategories) {
-					return foundInSubcategories;
-				}
-			}
-			return undefined;
-		};
+				return undefined;
+			};
 
-		const parentCategory = findCategory(categories, parentId);
-		return parentCategory ? getCategoryName(parentCategory.labelId, languageId) : 'Unknown';
-	};
+			const parentCategory = findCategory(categories, parentId);
+			return parentCategory ? getCategoryName(parentCategory.labelId, languageId) : 'Unknown';
+		},
+		[categories, getCategoryName]
+	);
 
-	const getCategoryIconUrl = (iconId: number | null) => {
-		const icon = icons.find(icon => icon.id === iconId);
-		return icon ? icon.url : '';
-	};
+	const getCategoryIconUrl = useCallback(
+		(iconId: number | null) => {
+			const icon = icons.find(icon => icon.id === iconId);
+			return icon ? icon.url : '';
+		},
+		[icons]
+	);
 
-	const getCategoryTranslations = (labelId: number) => {
-		return translations.filter(t => t.labelId === labelId);
-	};
+	const getCategoryTranslations = useCallback(
+		(labelId: number) => {
+			return translations.filter(t => t.labelId === labelId);
+		},
+		[translations]
+	);
 
-	const handleEdit = async (id: number) => {
-		const newName = prompt('Enter new category name:');
-		if (newName === null) return;
-
-		try {
-			const response = await axios.put(`/api/categories/${id}`, {
-				name: newName, // Updated field name
-				// Add other fields if necessary
-			});
-			console.log('Category updated:', response.data);
-			// Optionally, refresh or update the local category list here
-		} catch (error) {
-			console.error('Failed to update category', error);
-		}
-	};
-
-	const handleDelete = async (id: number) => {
-		if (confirm('Are you sure you want to delete this category?')) {
+	const handleEdit = useCallback(
+		async (id: number) => {
+			const newName = prompt('Enter new category name:');
+			if (newName === null) return;
 			try {
-				const response = await axios.delete(`/api/categories/${id}`);
-				console.log('Category deleted:', response.data);
-				// Optionally, refresh or update the local category list here
-			} catch (error) {
-				console.error('Failed to delete category', error);
+				await onEditCategory(id, newName);
+				await refetchCategories(); // Refetch categories after editing
+			} catch (err) {
+				console.error('Failed to edit category', err);
 			}
-		}
-	};
+		},
+		[onEditCategory, refetchCategories]
+	);
+
+	const handleDelete = useCallback(
+		async (id: number) => {
+			if (confirm('Are you sure you want to delete this category?')) {
+				try {
+					await onDeleteCategory(id);
+					await refetchCategories(); // Refetch categories after deleting
+				} catch (err) {
+					console.error('Failed to delete category', err);
+				}
+			}
+		},
+		[onDeleteCategory, refetchCategories]
+	);
 
 	const CategoryItem: React.FC<{ category: Category }> = ({ category }) => {
 		const iconUrl = getCategoryIconUrl(category.iconId);

@@ -1,11 +1,10 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import FileUploadButton from '@/app/components/buttons/FileUploadButton';
 import CategoryList from './CategoryList';
 import { Category, Language, Translation, Icon } from '@/utils/helpers/types';
-import Combobox from '@/app/components/input/CustomCombobox';
 import PageContainer from '@/app/components/containers/PageContainer';
+import CategoryForm from './CategoryForm';
 
 const AddCategoryPage: React.FC = () => {
 	const [parentId, setParentId] = useState<number | null>(null);
@@ -26,28 +25,88 @@ const AddCategoryPage: React.FC = () => {
 
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
-	useEffect(() => {
-		const fetchCategories = async () => {
-			setLoadingCategories(true);
-			try {
-				const response = await axios.get('/api/categories');
-				setCategories(response.data);
-			} catch (err) {
-				console.error('Failed to fetch categories', err);
-			} finally {
-				setLoadingCategories(false);
-			}
-		};
+	const fetchCategories = async (): Promise<Category[]> => {
+		try {
+			const response = await fetch('/api/categories');
+			const data = await response.json();
+			return data;
+		} catch (error) {
+			console.error('Error fetching categories:', error);
+			return [];
+		}
+	};
 
-		fetchCategories();
-	}, []);
+	const fetchLanguages = async (): Promise<Language[]> => {
+		try {
+			const response = await axios.get('/api/languages');
+			return response.data;
+		} catch (err) {
+			console.error('Failed to fetch languages', err);
+			throw err;
+		}
+	};
+
+	const fetchIcons = async (): Promise<Icon[]> => {
+		try {
+			const response = await axios.get('/api/icons');
+			return response.data;
+		} catch (err) {
+			console.error('Failed to fetch icons', err);
+			throw err;
+		}
+	};
+
+	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
+		try {
+			const labelsResponse = await axios.get('/api/labels', { params: { languageId } });
+			const labels = Array.isArray(labelsResponse.data) ? labelsResponse.data : [];
+
+			const translationsPromises = labels.map(async (label: { id: number }) => {
+				const translationResponse = await axios.get('/api/translation', {
+					params: { languageId, labelId: label.id },
+				});
+				return translationResponse.data;
+			});
+
+			return (await Promise.all(translationsPromises)).flat();
+		} catch (err) {
+			console.error('Failed to fetch translations', err);
+			throw err;
+		}
+	};
+
+	const refetchCategories = useCallback(async () => {
+		setLoadingCategories(true);
+		setLoadingTranslations(true);
+		setLoadingIcons(true);
+		try {
+			const [categoriesData, translationsData, iconsData] = await Promise.all([
+				fetchCategories(),
+				fetchTranslations(languageId),
+				fetchIcons(),
+			]);
+			setCategories(categoriesData);
+			setTranslations(translationsData);
+			setIcons(iconsData);
+		} catch (error) {
+			console.error('Failed to refetch data', error);
+		} finally {
+			setLoadingCategories(false);
+			setLoadingTranslations(false);
+			setLoadingIcons(false);
+		}
+	}, [languageId]);
 
 	useEffect(() => {
-		const fetchLanguages = async () => {
+		refetchCategories();
+	}, [refetchCategories]);
+
+	useEffect(() => {
+		const fetchLanguagesData = async () => {
 			setLoadingLanguages(true);
 			try {
-				const response = await axios.get('/api/languages');
-				setLanguages(response.data);
+				const data = await fetchLanguages();
+				setLanguages(data);
 			} catch (err) {
 				console.error('Failed to fetch languages', err);
 			} finally {
@@ -55,65 +114,26 @@ const AddCategoryPage: React.FC = () => {
 			}
 		};
 
-		fetchLanguages();
+		fetchLanguagesData();
 	}, []);
 
 	useEffect(() => {
 		if (languageId) {
-			const fetchLabels = async () => {
+			const fetchTranslationsData = async () => {
 				setLoadingTranslations(true);
 				try {
-					const response = await axios.get('/api/labels', { params: { languageId } });
-					const labels = Array.isArray(response.data) ? response.data : [];
-
-					const fetchTranslations = async () => {
-						try {
-							const translationResponses = await Promise.all(
-								labels.map(async (label: { id: number }) => {
-									const response = await axios.get('/api/translation', {
-										params: {
-											languageId,
-											labelId: label.id,
-										},
-									});
-									return response.data;
-								})
-							);
-							const allTranslations = translationResponses.flat();
-							setTranslations(allTranslations);
-						} catch (err) {
-							console.error('Failed to fetch translation', err);
-						} finally {
-							setLoadingTranslations(false);
-						}
-					};
-
-					fetchTranslations();
+					const data = await fetchTranslations(languageId);
+					setTranslations(data);
 				} catch (err) {
-					console.error('Failed to fetch labels', err);
+					console.error('Failed to fetch translations', err);
+				} finally {
 					setLoadingTranslations(false);
 				}
 			};
 
-			fetchLabels();
+			fetchTranslationsData();
 		}
 	}, [languageId]);
-
-	useEffect(() => {
-		const fetchIcons = async () => {
-			setLoadingIcons(true);
-			try {
-				const response = await axios.get('/api/icons');
-				setIcons(response.data);
-			} catch (err) {
-				console.error('Failed to fetch icons', err);
-			} finally {
-				setLoadingIcons(false);
-			}
-		};
-
-		fetchIcons();
-	}, []);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -126,9 +146,7 @@ const AddCategoryPage: React.FC = () => {
 				formData.append('icon', icon);
 
 				const uploadResponse = await axios.post('/api/icons', formData, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-					},
+					headers: { 'Content-Type': 'multipart/form-data' },
 				});
 				iconId = uploadResponse.data.iconId;
 			}
@@ -158,30 +176,23 @@ const AddCategoryPage: React.FC = () => {
 				});
 			}
 
-			setName('');
-			setParentId(null);
-			setLanguageId(1);
-			setIcon(null);
-			setError('');
+			resetForm();
 			setSuccessMessage('Podaci uspešno sačuvani.');
 
 			if (fileUploadButtonRef.current.resetFileName) {
 				fileUploadButtonRef.current.resetFileName();
 			}
+
+			await refetchCategories(); // Refetch categories, translations, and icons after successful submission
 		} catch (err) {
-			if (err instanceof Error) {
-				setError(`Submission Error: ${err.message}`);
-				setSuccessMessage(null);
-			} else {
-				setError('An unexpected error occurred.');
-				setSuccessMessage(null);
-			}
+			setError(
+				err instanceof Error ? `Submission Error: ${err.message}` : 'An unexpected error occurred.'
+			);
+			setSuccessMessage(null);
 		}
 	};
 
-	const handleFileChange = (file: File | null) => {
-		setIcon(file);
-	};
+	const handleFileChange = (file: File | null) => setIcon(file);
 
 	const handleResetFileName = () => {
 		if (fileUploadButtonRef.current.resetFileName) {
@@ -189,54 +200,33 @@ const AddCategoryPage: React.FC = () => {
 		}
 	};
 
-	if (loadingCategories || loadingIcons) return <p>Loading...</p>;
+	const resetForm = () => {
+		setName('');
+		setParentId(null);
+		setLanguageId(1);
+		setIcon(null);
+		setError('');
+	};
+
+	if (loadingCategories || loadingIcons || loadingTranslations) return <p>Loading...</p>;
 
 	return (
 		<PageContainer>
 			<h1 className='text-xl font-bold mb-4'>Add New Category</h1>
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
 			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
-			<form onSubmit={handleSubmit} className='space-y-4'>
-				<div>
-					<label htmlFor='name' className='block mb-2'>
-						Category Name:
-					</label>
-					<input
-						type='text'
-						id='name'
-						value={name}
-						onChange={e => setName(e.target.value)}
-						className='border p-2 w-full text-black'
-					/>
-				</div>
-				<div>
-					<label htmlFor='parentId' className='block mb-2'>
-						Parent Category (optional):
-					</label>
-					<Combobox
-						options={translations}
-						onSelect={selectedOption => {
-							setParentId(selectedOption ? selectedOption.labelId : null);
-						}}
-						placeholder='Select Parent Category'
-					/>
-				</div>
-				<div>
-					<label htmlFor='icon' className='block mb-2'>
-						Icon:
-					</label>
-					<FileUploadButton
-						onFileChange={handleFileChange}
-						resetFileName={handleResetFileName}
-						ref={fileUploadButtonRef}
-					/>
-				</div>
-				<div>
-					<button type='submit' className='bg-blue-500 text-white px-4 py-2'>
-						Save
-					</button>
-				</div>
-			</form>
+			<CategoryForm
+				name={name}
+				setName={setName}
+				parentId={parentId}
+				setParentId={setParentId}
+				translations={translations}
+				icon={icon}
+				onFileChange={file => setIcon(file)}
+				onFileReset={() => setIcon(null)}
+				onSubmit={handleSubmit}
+			/>
+
 			<div className='mt-8'>
 				<CategoryList
 					categories={categories}
@@ -244,6 +234,23 @@ const AddCategoryPage: React.FC = () => {
 					icons={icons}
 					languages={languages}
 					languageId={languageId}
+					refetchCategories={refetchCategories}
+					onEditCategory={async (id, newName) => {
+						try {
+							await axios.put(`/api/categories/${id}`, { name: newName });
+							await refetchCategories(); // Refetch data after editing
+						} catch (err) {
+							console.error('Failed to edit category', err);
+						}
+					}}
+					onDeleteCategory={async id => {
+						try {
+							await axios.delete(`/api/categories/${id}`);
+							await refetchCategories(); // Refetch data after deleting
+						} catch (err) {
+							console.error('Failed to delete category', err);
+						}
+					}}
 				/>
 			</div>
 		</PageContainer>
