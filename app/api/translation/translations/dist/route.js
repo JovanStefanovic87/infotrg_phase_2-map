@@ -36,40 +36,49 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var react_1 = require("react");
-var apiHandlers_1 = require("@/utils/helpers/apiHandlers");
-var useFetchCategories = function () {
-    var _a = react_1.useState([]), categories = _a[0], setCategories = _a[1];
-    var _b = react_1.useState(false), loading = _b[0], setLoading = _b[1];
-    var _c = react_1.useState(''), error = _c[0], setError = _c[1];
-    react_1.useEffect(function () {
-        var loadCategories = function () { return __awaiter(void 0, void 0, void 0, function () {
-            var data, _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        setLoading(true);
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, 3, 4, 5]);
-                        return [4 /*yield*/, apiHandlers_1.fetchCategories()];
-                    case 2:
-                        data = _b.sent();
-                        setCategories(data);
-                        return [3 /*break*/, 5];
-                    case 3:
-                        _a = _b.sent();
-                        setError('Failed to fetch categories.');
-                        return [3 /*break*/, 5];
-                    case 4:
-                        setLoading(false);
-                        return [7 /*endfinally*/];
-                    case 5: return [2 /*return*/];
-                }
-            });
-        }); };
-        loadCategories();
-    }, []);
-    return { categories: categories, loading: loading, error: error };
-};
-exports["default"] = useFetchCategories;
+exports.PUT = void 0;
+//app\api\translation\translations\route.ts
+var server_1 = require("next/server");
+var client_1 = require("@prisma/client");
+var prisma = new client_1.PrismaClient();
+function PUT(request) {
+    return __awaiter(this, void 0, void 0, function () {
+        var data, translations, _i, translations_1, translation, error_1;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 6, , 7]);
+                    return [4 /*yield*/, request.json()];
+                case 1:
+                    data = _a.sent();
+                    translations = data.translations;
+                    console.log(data);
+                    _i = 0, translations_1 = translations;
+                    _a.label = 2;
+                case 2:
+                    if (!(_i < translations_1.length)) return [3 /*break*/, 5];
+                    translation = translations_1[_i];
+                    return [4 /*yield*/, prisma.translation.update({
+                            where: { id: translation.translationId },
+                            data: {
+                                languageId: translation.languageId,
+                                translation: translation.translation
+                            }
+                        })];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4:
+                    _i++;
+                    return [3 /*break*/, 2];
+                case 5: return [2 /*return*/, server_1.NextResponse.json({ success: true })];
+                case 6:
+                    error_1 = _a.sent();
+                    console.error('Error updating translations:', error_1);
+                    return [2 /*return*/, server_1.NextResponse.json({ error: 'Failed to update translations' }, { status: 500 })];
+                case 7: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.PUT = PUT;

@@ -47,7 +47,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.PUT = exports.POST = exports.GET = void 0;
+exports.POST = exports.GET = void 0;
 // api/categories
 var server_1 = require("next/server");
 var prisma_1 = require("@/app/lib/prisma");
@@ -116,26 +116,3 @@ function POST(request) {
     });
 }
 exports.POST = POST;
-function PUT(request, _a) {
-    var params = _a.params;
-    return __awaiter(this, void 0, void 0, function () {
-        var id, _b, parentId, labelId, iconId, updatedCategory;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
-                case 0:
-                    id = params.id;
-                    return [4 /*yield*/, request.json()];
-                case 1:
-                    _b = _c.sent(), parentId = _b.parentId, labelId = _b.labelId, iconId = _b.iconId;
-                    return [4 /*yield*/, prisma_1.prisma.category.update({
-                            where: { id: Number(id) },
-                            data: { parentId: parentId, labelId: labelId, iconId: iconId }
-                        })];
-                case 2:
-                    updatedCategory = _c.sent();
-                    return [2 /*return*/, server_1.NextResponse.json(updatedCategory)];
-            }
-        });
-    });
-}
-exports.PUT = PUT;

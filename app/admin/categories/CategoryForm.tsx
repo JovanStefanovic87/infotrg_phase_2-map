@@ -29,7 +29,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 	<form onSubmit={onSubmit} className='space-y-4'>
 		<div>
 			<label htmlFor='name' className='block mb-2'>
-				Category Name:
+				Naziv kategrorije:
 			</label>
 			<input
 				type='text'
@@ -37,16 +37,17 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 				value={name}
 				onChange={e => setName(e.target.value)}
 				className='border p-2 w-full text-black'
+				placeholder='Unesite naziv'
 			/>
 		</div>
 		<div>
 			<label htmlFor='parentId' className='block mb-2'>
-				Parent Category (optional):
+				Naziv natkategorije (opciono):
 			</label>
 			<Combobox
 				options={translations}
 				onSelect={selectedOption => setParentId(selectedOption ? selectedOption.labelId : null)}
-				placeholder='Select Parent Category'
+				placeholder='Izaberite natkategoriju'
 			/>
 		</div>
 		<div>

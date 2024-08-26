@@ -1,8 +1,9 @@
-'use client';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
 import { FiChevronDown, FiChevronUp, FiEdit, FiTrash } from 'react-icons/fi';
+import CustomModal from '@/app/components/modals/CustomModal';
+import axios from 'axios';
 
 interface CategoryListProps {
 	categories: Category[];
@@ -11,8 +12,24 @@ interface CategoryListProps {
 	languages: Language[];
 	languageId: number;
 	refetchCategories: () => Promise<void>;
-	onEditCategory: (id: number, newName: string) => Promise<void>;
+	onEditCategory: (
+		id: number,
+		data: {
+			translations: {
+				translationId: number;
+				languageId: number;
+				translation: string;
+			}[];
+			icon?: File | null;
+		}
+	) => Promise<void>;
 	onDeleteCategory: (id: number) => Promise<void>;
+}
+
+interface TranslationUpdate {
+	translationId: number;
+	languageId: number;
+	translation: string;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -26,9 +43,13 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	onDeleteCategory,
 }) => {
 	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
+	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
+	const [translationsByLanguage, setTranslationsByLanguage] = useState<Record<number, string>>({});
+	const [newIcon, setNewIcon] = useState<File | null>(null);
+	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 
 	useEffect(() => {
-		// This ensures the component updates correctly when categories or translations change
 		setOpenCategories(new Set());
 	}, [categories, translations]);
 
@@ -51,7 +72,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			);
 			return translation ? translation.translation : 'Unknown';
 		},
-		[translations, languageId]
+		[translations]
 	);
 
 	const getLanguageName = useCallback(
@@ -64,7 +85,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	const getParentCategoryName = useCallback(
 		(parentId: number | null, languageId: number): string => {
-			if (parentId === null) return 'Ovo je glavna nadkategorija';
+			if (parentId === null) return 'This is a main category';
 
 			const findCategory = (categories: Category[], parentId: number): Category | undefined => {
 				for (const category of categories) {
@@ -100,26 +121,105 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[translations]
 	);
 
-	const handleEdit = useCallback(
-		async (id: number) => {
-			const newName = prompt('Enter new category name:');
-			if (newName === null) return;
+	const handleOpenEditModal = useCallback(
+		async (category: Category) => {
+			setCurrentEditCategory(category);
+
 			try {
-				await onEditCategory(id, newName);
-				await refetchCategories(); // Refetch categories after editing
+				const { data: categoryTranslations } = await axios.get<Translation[]>(
+					`/api/translation/labels/${category.labelId}`
+				);
+
+				const translationsMap = languages.reduce<Record<number, string>>((acc, lang) => {
+					const translation = categoryTranslations.find(
+						(t: Translation) => t.languageId === lang.id
+					);
+					acc[lang.id] = translation ? translation.translation : '';
+					return acc;
+				}, {});
+
+				setTranslationsByLanguage(translationsMap);
+
+				// Initialize `newTranslations` with existing translations
+				const existingTranslations = categoryTranslations.map(t => ({
+					translationId: t.id,
+					languageId: t.languageId,
+					translation: t.translation,
+				}));
+
+				setNewTranslations(existingTranslations);
+			} catch (error) {
+				console.error('Failed to fetch category translations', error);
+			}
+
+			setNewIcon(null);
+			setIsModalOpen(true);
+		},
+		[languages]
+	);
+
+	const handleSubmitEdit = useCallback(
+		async (event: React.FormEvent) => {
+			event.preventDefault();
+			if (!currentEditCategory) return;
+
+			try {
+				let iconId: number | undefined = undefined;
+
+				// Upload new icon if provided
+				if (newIcon) {
+					const formData = new FormData();
+					formData.append('icon', newIcon);
+					const { data: iconData } = await axios.post('/api/icons', formData, {
+						headers: { 'Content-Type': 'multipart/form-data' },
+					});
+					iconId = iconData.id;
+				}
+
+				// Prepare translations update
+				const translationUpdates = newTranslations.map(
+					({ translationId, languageId, translation }) => ({
+						translationId,
+						languageId,
+						translation,
+					})
+				);
+
+				// Batch update translations
+				await axios.put('/api/translation/translations', {
+					translations: translationUpdates,
+				});
+
+				// Call the edit category API
+				await onEditCategory(currentEditCategory.id, {
+					translations: translationUpdates,
+					icon: newIcon,
+				});
+
+				setIsModalOpen(false);
+				await refetchCategories();
 			} catch (err) {
 				console.error('Failed to edit category', err);
+				// Display an error message to the user
 			}
 		},
-		[onEditCategory, refetchCategories]
+		[currentEditCategory, newTranslations, newIcon, onEditCategory, refetchCategories]
 	);
+
+	const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		if (e.target.files && e.target.files[0]) {
+			setNewIcon(e.target.files[0]);
+		} else {
+			setNewIcon(null);
+		}
+	}, []);
 
 	const handleDelete = useCallback(
 		async (id: number) => {
 			if (confirm('Are you sure you want to delete this category?')) {
 				try {
 					await onDeleteCategory(id);
-					await refetchCategories(); // Refetch categories after deleting
+					await refetchCategories();
 				} catch (err) {
 					console.error('Failed to delete category', err);
 				}
@@ -144,7 +244,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 							className='text-blue-500 hover:text-blue-700 focus:outline-none flex items-center'
 							onClick={() => toggleCategory(category.id)}>
 							{isOpen ? <FiChevronUp size={24} /> : <FiChevronDown size={24} />}
-							<span className='ml-2'>Potkategorije</span>
+							<span className='ml-2'>Subcategories</span>
 						</button>
 					)}
 				</div>
@@ -154,55 +254,98 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						iconUrl ? (
 							<Image src={iconUrl} alt='Category Icon' width={50} height={50} />
 						) : (
-							<p>Slika nije izabrana</p>
+							<p>No image selected</p>
 						)
 					) : (
-						<p>Ne postoji slika</p>
+						<p>No image available</p>
 					)}
 				</div>
-				<p className='mt-2 text-gray-400'>
-					<strong>Nadkategorija:</strong> {getParentCategoryName(category.parentId, languageId)}
+				<p className='mt-2 text-gray-600'>
+					Parent Category: {getParentCategoryName(category.parentId, languageId)}
 				</p>
-				<div className='mt-2'>
-					<strong>Languages:</strong> {languagesList}
-				</div>
-				<div className='flex gap-4 mt-2 justify-end'>
+				<p className='mt-2 text-gray-600'>Languages: {languagesList}</p>
+
+				<div className='mt-4 flex space-x-2'>
 					<button
-						className='text-blue-500 hover:text-blue-700 flex items-center'
-						onClick={() => handleEdit(category.id)}>
-						<FiEdit size={20} />
-						<span className='ml-1'>Izmeni</span>
+						className='bg-blue-500 text-white px-4 py-2 rounded'
+						onClick={() => handleOpenEditModal(category)}>
+						Edit
 					</button>
 					<button
-						className='text-red-500 hover:text-red-700 flex items-center'
+						className='bg-red-500 text-white px-4 py-2 rounded'
 						onClick={() => handleDelete(category.id)}>
-						<FiTrash size={20} />
-						<span className='ml-1'>Obriši</span>
+						Delete
 					</button>
 				</div>
-			</div>
-		);
-	};
 
-	const renderCategories = (categories: Category[], parentId: number | null) => {
-		const subcategories = categories.filter(c => c.parentId === parentId);
-
-		if (subcategories.length === 0) return null;
-
-		return (
-			<div className='ml-4'>
-				{subcategories.map(category => (
-					<div key={category.id}>
-						<CategoryItem category={category} />
-						{openCategories.has(category.id) &&
-							renderCategories(category.subcategories || [], category.id)}
+				{category.subcategories && isOpen && (
+					<div className='mt-4 pl-4'>
+						{category.subcategories.map(subCategory => (
+							<CategoryItem key={subCategory.id} category={subCategory} />
+						))}
 					</div>
-				))}
+				)}
 			</div>
 		);
 	};
 
-	return <div className='space-y-4'>{renderCategories(categories, null)}</div>;
+	return (
+		<div>
+			{categories.map(category => (
+				<CategoryItem key={category.id} category={category} />
+			))}
+
+			{isModalOpen && currentEditCategory && (
+				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
+					{currentEditCategory && (
+						<form onSubmit={handleSubmitEdit} className='space-y-4'>
+							<div className='flex flex-col'>
+								<label htmlFor='icon' className='font-semibold'>
+									Icon
+								</label>
+								<input
+									type='file'
+									id='icon'
+									className='text-black'
+									name='icon'
+									accept='image/*'
+									onChange={handleFileChange}
+								/>
+							</div>
+
+							{languages.map(language => (
+								<div key={language.id} className='flex flex-col'>
+									<label htmlFor={`translation-${language.id}`} className='font-semibold'>
+										{language.name}
+									</label>
+									<input
+										type='text'
+										id={`translation-${language.id}`}
+										className='text-black'
+										value={
+											newTranslations.find(t => t.languageId === language.id)?.translation || ''
+										}
+										onChange={e => {
+											const translation = e.target.value;
+											setNewTranslations(prevTranslations =>
+												prevTranslations.map(t =>
+													t.languageId === language.id ? { ...t, translation } : t
+												)
+											);
+										}}
+									/>
+								</div>
+							))}
+
+							<button type='submit' className='bg-blue-500 text-white py-2 px-4 rounded'>
+								Save Changes
+							</button>
+						</form>
+					)}
+				</CustomModal>
+			)}
+		</div>
+	);
 };
 
 export default CategoryList;

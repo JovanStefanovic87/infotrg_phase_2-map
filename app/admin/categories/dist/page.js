@@ -36,12 +36,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var axios_1 = require("axios");
 var CategoryList_1 = require("./CategoryList");
 var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var CategoryForm_1 = require("./CategoryForm");
+var apiClient_1 = require("@/utils/helpers/apiClient");
 var AddCategoryPage = function () {
     var _a = react_1.useState(null), parentId = _a[0], setParentId = _a[1];
     var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
@@ -53,109 +61,39 @@ var AddCategoryPage = function () {
     var _h = react_1.useState([]), translations = _h[0], setTranslations = _h[1];
     var _j = react_1.useState([]), icons = _j[0], setIcons = _j[1];
     var _k = react_1.useState(null), icon = _k[0], setIcon = _k[1];
-    var _l = react_1.useState(false), loadingCategories = _l[0], setLoadingCategories = _l[1];
-    var _m = react_1.useState(false), loadingLanguages = _m[0], setLoadingLanguages = _m[1];
-    var _o = react_1.useState(false), loadingTranslations = _o[0], setLoadingTranslations = _o[1];
-    var _p = react_1.useState(false), loadingIcons = _p[0], setLoadingIcons = _p[1];
+    var _l = react_1.useState(false), loading = _l[0], setLoading = _l[1];
     var fileUploadButtonRef = react_1.useRef({});
-    var fetchCategories = function () { return __awaiter(void 0, void 0, Promise, function () {
-        var response, data, error_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 3, , 4]);
-                    return [4 /*yield*/, fetch('/api/categories')];
-                case 1:
-                    response = _a.sent();
-                    return [4 /*yield*/, response.json()];
-                case 2:
-                    data = _a.sent();
-                    return [2 /*return*/, data];
-                case 3:
-                    error_1 = _a.sent();
-                    console.error('Error fetching categories:', error_1);
-                    return [2 /*return*/, []];
-                case 4: return [2 /*return*/];
-            }
-        });
-    }); };
-    var fetchLanguages = function () { return __awaiter(void 0, void 0, Promise, function () {
-        var response, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, axios_1["default"].get('/api/languages')];
-                case 1:
-                    response = _a.sent();
-                    return [2 /*return*/, response.data];
-                case 2:
-                    err_1 = _a.sent();
-                    console.error('Failed to fetch languages', err_1);
-                    throw err_1;
-                case 3: return [2 /*return*/];
-            }
-        });
-    }); };
-    var fetchIcons = function () { return __awaiter(void 0, void 0, Promise, function () {
-        var response, err_2;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, axios_1["default"].get('/api/icons')];
-                case 1:
-                    response = _a.sent();
-                    return [2 /*return*/, response.data];
-                case 2:
-                    err_2 = _a.sent();
-                    console.error('Failed to fetch icons', err_2);
-                    throw err_2;
-                case 3: return [2 /*return*/];
-            }
-        });
-    }); };
+    var fetchCategories = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/categories' }); };
+    var fetchLanguages = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/languages' }); };
+    var fetchIcons = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/icons' }); };
     var fetchTranslations = function (languageId) { return __awaiter(void 0, void 0, Promise, function () {
-        var labelsResponse, labels, translationsPromises, err_3;
+        var labels, translationsPromises;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"].get('/api/labels', { params: { languageId: languageId } })];
+                case 0: return [4 /*yield*/, apiClient_1["default"]({
+                        method: 'GET',
+                        url: "/api/labels?languageId=" + languageId
+                    })];
                 case 1:
-                    labelsResponse = _a.sent();
-                    labels = Array.isArray(labelsResponse.data) ? labelsResponse.data : [];
-                    translationsPromises = labels.map(function (label) { return __awaiter(void 0, void 0, void 0, function () {
-                        var translationResponse;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, axios_1["default"].get('/api/translation', {
-                                        params: { languageId: languageId, labelId: label.id }
-                                    })];
-                                case 1:
-                                    translationResponse = _a.sent();
-                                    return [2 /*return*/, translationResponse.data];
-                            }
+                    labels = _a.sent();
+                    translationsPromises = labels.map(function (_a) {
+                        var id = _a.id;
+                        return apiClient_1["default"]({
+                            method: 'GET',
+                            url: "/api/translation?languageId=" + languageId + "&labelId=" + id
                         });
-                    }); });
+                    });
                     return [4 /*yield*/, Promise.all(translationsPromises)];
-                case 2: return [2 /*return*/, (_a.sent()).flat()];
-                case 3:
-                    err_3 = _a.sent();
-                    console.error('Failed to fetch translations', err_3);
-                    throw err_3;
-                case 4: return [2 /*return*/];
+                case 2: return [2 /*return*/, (_a.sent()).map(function (res) { return res; })];
             }
         });
     }); };
-    var refetchCategories = react_1.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
-        var _a, categoriesData, translationsData, iconsData, error_2;
+    var refetchData = react_1.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
+        var _a, categoriesData, translationsData, iconsData, error_1;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    setLoadingCategories(true);
-                    setLoadingTranslations(true);
-                    setLoadingIcons(true);
+                    setLoading(true);
                     _b.label = 1;
                 case 1:
                     _b.trys.push([1, 3, 4, 5]);
@@ -171,28 +109,26 @@ var AddCategoryPage = function () {
                     setIcons(iconsData);
                     return [3 /*break*/, 5];
                 case 3:
-                    error_2 = _b.sent();
-                    console.error('Failed to refetch data', error_2);
+                    error_1 = _b.sent();
+                    console.error('Failed to refetch data', error_1);
                     return [3 /*break*/, 5];
                 case 4:
-                    setLoadingCategories(false);
-                    setLoadingTranslations(false);
-                    setLoadingIcons(false);
+                    setLoading(false);
                     return [7 /*endfinally*/];
                 case 5: return [2 /*return*/];
             }
         });
     }); }, [languageId]);
     react_1.useEffect(function () {
-        refetchCategories();
-    }, [refetchCategories]);
+        refetchData();
+    }, [refetchData]);
     react_1.useEffect(function () {
         var fetchLanguagesData = function () { return __awaiter(void 0, void 0, void 0, function () {
-            var data, err_4;
+            var data, err_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        setLoadingLanguages(true);
+                        setLoading(true);
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, 4, 5]);
@@ -202,11 +138,11 @@ var AddCategoryPage = function () {
                         setLanguages(data);
                         return [3 /*break*/, 5];
                     case 3:
-                        err_4 = _a.sent();
-                        console.error('Failed to fetch languages', err_4);
+                        err_1 = _a.sent();
+                        console.error('Failed to fetch languages', err_1);
                         return [3 /*break*/, 5];
                     case 4:
-                        setLoadingLanguages(false);
+                        setLoading(false);
                         return [7 /*endfinally*/];
                     case 5: return [2 /*return*/];
                 }
@@ -217,11 +153,11 @@ var AddCategoryPage = function () {
     react_1.useEffect(function () {
         if (languageId) {
             var fetchTranslationsData = function () { return __awaiter(void 0, void 0, void 0, function () {
-                var data, err_5;
+                var data, err_2;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
-                            setLoadingTranslations(true);
+                            setLoading(true);
                             _a.label = 1;
                         case 1:
                             _a.trys.push([1, 3, 4, 5]);
@@ -231,11 +167,11 @@ var AddCategoryPage = function () {
                             setTranslations(data);
                             return [3 /*break*/, 5];
                         case 3:
-                            err_5 = _a.sent();
-                            console.error('Failed to fetch translations', err_5);
+                            err_2 = _a.sent();
+                            console.error('Failed to fetch translations', err_2);
                             return [3 /*break*/, 5];
                         case 4:
-                            setLoadingTranslations(false);
+                            setLoading(false);
                             return [7 /*endfinally*/];
                         case 5: return [2 /*return*/];
                     }
@@ -245,7 +181,7 @@ var AddCategoryPage = function () {
         }
     }, [languageId]);
     var handleSubmit = function (event) { return __awaiter(void 0, void 0, void 0, function () {
-        var iconId, formData, uploadResponse, labelResponse, newLabelId, categoryResponse, err_6;
+        var iconId, formData, data, labelData, newLabelId_1, categoryData, translationsArray, err_3;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -261,48 +197,54 @@ var AddCategoryPage = function () {
                             headers: { 'Content-Type': 'multipart/form-data' }
                         })];
                 case 2:
-                    uploadResponse = _a.sent();
-                    iconId = uploadResponse.data.iconId;
+                    data = (_a.sent()).data;
+                    iconId = data.iconId;
                     _a.label = 3;
                 case 3: return [4 /*yield*/, axios_1["default"].post('/api/labels', { name: name })];
                 case 4:
-                    labelResponse = _a.sent();
-                    newLabelId = labelResponse.data.id;
-                    if (!newLabelId) {
+                    labelData = (_a.sent()).data;
+                    newLabelId_1 = labelData.id;
+                    if (!newLabelId_1)
                         throw new Error('Failed to create label');
-                    }
                     return [4 /*yield*/, axios_1["default"].post('/api/categories', {
                             parentId: parentId,
-                            labelId: newLabelId,
+                            labelId: newLabelId_1,
                             iconId: iconId
                         })];
                 case 5:
-                    categoryResponse = _a.sent();
-                    if (!categoryResponse.data) {
+                    categoryData = (_a.sent()).data;
+                    if (!categoryData)
                         throw new Error('Failed to create category');
-                    }
-                    if (!languageId) return [3 /*break*/, 7];
-                    return [4 /*yield*/, axios_1["default"].post('/api/translation', {
-                            labelId: newLabelId,
+                    translationsArray = __spreadArrays([
+                        {
+                            labelId: newLabelId_1,
                             languageId: languageId,
                             translation: name
-                        })];
+                        }
+                    ], languages
+                        .filter(function (lang) { return lang.id !== languageId; }) // Exclude the current language
+                        .map(function (lang) { return ({
+                        labelId: newLabelId_1,
+                        languageId: lang.id,
+                        translation: null
+                    }); }));
+                    if (!translationsArray.length) return [3 /*break*/, 7];
+                    return [4 /*yield*/, axios_1["default"].post('/api/translation', { translations: translationsArray })];
                 case 6:
                     _a.sent();
                     _a.label = 7;
                 case 7:
                     resetForm();
-                    setSuccessMessage('Podaci uspešno sačuvani.');
-                    if (fileUploadButtonRef.current.resetFileName) {
+                    setSuccessMessage('Data saved successfully.');
+                    if (fileUploadButtonRef.current.resetFileName)
                         fileUploadButtonRef.current.resetFileName();
-                    }
-                    return [4 /*yield*/, refetchCategories()];
+                    return [4 /*yield*/, refetchData()];
                 case 8:
-                    _a.sent(); // Refetch categories, translations, and icons after successful submission
+                    _a.sent();
                     return [3 /*break*/, 10];
                 case 9:
-                    err_6 = _a.sent();
-                    setError(err_6 instanceof Error ? "Submission Error: " + err_6.message : 'An unexpected error occurred.');
+                    err_3 = _a.sent();
+                    setError("Submission Error: " + (err_3 instanceof Error ? err_3.message : 'An unexpected error occurred.'));
                     setSuccessMessage(null);
                     return [3 /*break*/, 10];
                 case 10: return [2 /*return*/];
@@ -311,9 +253,7 @@ var AddCategoryPage = function () {
     }); };
     var handleFileChange = function (file) { return setIcon(file); };
     var handleResetFileName = function () {
-        if (fileUploadButtonRef.current.resetFileName) {
-            fileUploadButtonRef.current.resetFileName();
-        }
+        return fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
     };
     var resetForm = function () {
         setName('');
@@ -322,36 +262,63 @@ var AddCategoryPage = function () {
         setIcon(null);
         setError('');
     };
-    if (loadingCategories || loadingIcons || loadingTranslations)
-        return react_1["default"].createElement("p", null, "Loading...");
+    var handleEditCategory = react_1.useCallback(function (id, data) { return __awaiter(void 0, void 0, void 0, function () {
+        var translations, newIcon, iconId, formData, iconData, translationsArray, err_4;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    translations = data.translations, newIcon = data.icon;
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 6, , 7]);
+                    iconId = undefined;
+                    if (!newIcon) return [3 /*break*/, 3];
+                    formData = new FormData();
+                    formData.append('icon', newIcon);
+                    return [4 /*yield*/, axios_1["default"].post('/api/icons', formData, {
+                            headers: { 'Content-Type': 'multipart/form-data' }
+                        })];
+                case 2:
+                    iconData = (_a.sent()).data;
+                    iconId = iconData.iconId;
+                    _a.label = 3;
+                case 3: 
+                // Update category with new icon
+                return [4 /*yield*/, axios_1["default"].put("/api/categories/" + id, { iconId: iconId })];
+                case 4:
+                    // Update category with new icon
+                    _a.sent();
+                    translationsArray = translations.map(function (translation) {
+                        var _a;
+                        return ({
+                            labelId: id,
+                            languageId: translation.languageId,
+                            translation: (_a = translation.translation) !== null && _a !== void 0 ? _a : null
+                        });
+                    });
+                    setSuccessMessage('Category updated successfully.');
+                    return [4 /*yield*/, refetchData()];
+                case 5:
+                    _a.sent();
+                    return [3 /*break*/, 7];
+                case 6:
+                    err_4 = _a.sent();
+                    console.error('Failed to update category', err_4);
+                    setError("Update Error: " + (err_4 instanceof Error ? err_4.message : 'An unexpected error occurred.'));
+                    setSuccessMessage(null);
+                    return [3 /*break*/, 7];
+                case 7: return [2 /*return*/];
+            }
+        });
+    }); }, [refetchData]);
     return (react_1["default"].createElement(PageContainer_1["default"], null,
         react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
-        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentId: parentId, setParentId: setParentId, translations: translations, icon: icon, onFileChange: function (file) { return setIcon(file); }, onFileReset: function () { return setIcon(null); }, onSubmit: handleSubmit }),
+        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentId: parentId, setParentId: setParentId, translations: translations, icon: icon, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit }),
         react_1["default"].createElement("div", { className: 'mt-8' },
-            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languages: languages, languageId: languageId, refetchCategories: refetchCategories, onEditCategory: function (id, newName) { return __awaiter(void 0, void 0, void 0, function () {
-                    var err_7;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                _a.trys.push([0, 3, , 4]);
-                                return [4 /*yield*/, axios_1["default"].put("/api/categories/" + id, { name: newName })];
-                            case 1:
-                                _a.sent();
-                                return [4 /*yield*/, refetchCategories()];
-                            case 2:
-                                _a.sent(); // Refetch data after editing
-                                return [3 /*break*/, 4];
-                            case 3:
-                                err_7 = _a.sent();
-                                console.error('Failed to edit category', err_7);
-                                return [3 /*break*/, 4];
-                            case 4: return [2 /*return*/];
-                        }
-                    });
-                }); }, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
-                    var err_8;
+            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languages: languages, languageId: languageId, refetchCategories: refetchData, onEditCategory: handleEditCategory, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
+                    var err_5;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
@@ -359,13 +326,13 @@ var AddCategoryPage = function () {
                                 return [4 /*yield*/, axios_1["default"]["delete"]("/api/categories/" + id)];
                             case 1:
                                 _a.sent();
-                                return [4 /*yield*/, refetchCategories()];
+                                return [4 /*yield*/, refetchData()];
                             case 2:
-                                _a.sent(); // Refetch data after deleting
+                                _a.sent();
                                 return [3 /*break*/, 4];
                             case 3:
-                                err_8 = _a.sent();
-                                console.error('Failed to delete category', err_8);
+                                err_5 = _a.sent();
+                                console.error('Failed to delete category', err_5);
                                 return [3 /*break*/, 4];
                             case 4: return [2 /*return*/];
                         }

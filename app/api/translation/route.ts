@@ -40,13 +40,40 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-	const { labelId, languageId, translation } = await request.json();
-	const newTranslation = await prisma.translation.create({
-		data: {
-			labelId,
-			languageId,
-			translation,
-		},
-	});
-	return NextResponse.json(newTranslation);
+	try {
+		const { translations } = await request.json();
+
+		if (!Array.isArray(translations)) {
+			return NextResponse.json(
+				{ error: 'Invalid request body. Must be an array.' },
+				{ status: 400 }
+			);
+		}
+
+		const createdTranslations = [];
+
+		for (const translation of translations) {
+			const { labelId, languageId, translation: translationText } = translation;
+
+			if (typeof labelId !== 'number' || typeof languageId !== 'number') {
+				// Ensure labelId and languageId are numbers
+				continue;
+			}
+
+			const newTranslation = await prisma.translation.create({
+				data: {
+					labelId,
+					languageId,
+					translation: typeof translationText === 'string' ? translationText : '', // Ensure translationText is a string
+				},
+			});
+
+			createdTranslations.push(newTranslation);
+		}
+
+		return NextResponse.json(createdTranslations);
+	} catch (error) {
+		console.error('Error in POST /api/translation:', error);
+		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+	}
 }

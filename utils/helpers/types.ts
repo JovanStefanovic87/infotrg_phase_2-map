@@ -193,11 +193,19 @@ export interface Category {
 	subcategories: Category[] | null;
 }
 
+export interface Synonym {
+	id: number;
+	translationId: number;
+	synonym: string;
+}
+
 export interface Translation {
 	id: number;
 	labelId: number;
 	languageId: number;
 	translation: string;
+	createdAt: Date;
+	synonyms: Synonym[];
 }
 
 export interface Icon {
