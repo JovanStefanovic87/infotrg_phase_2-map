@@ -1,4 +1,3 @@
-// app\components\input\CustomCombobox.tsx
 'use client';
 "use strict";
 var __assign = (this && this.__assign) || function () {
@@ -12,17 +11,10 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __spreadArrays = (this && this.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
 exports.__esModule = true;
 var react_1 = require("react");
 var Combobox = function (_a) {
-    var options = _a.options, selectedOptions = _a.selectedOptions, onSelect = _a.onSelect, _b = _a.placeholder, placeholder = _b === void 0 ? 'Select...' : _b;
+    var options = _a.options, onSelect = _a.onSelect, _b = _a.placeholder, placeholder = _b === void 0 ? 'Select...' : _b;
     var _c = react_1.useState(false), isOpen = _c[0], setIsOpen = _c[1];
     var _d = react_1.useState(''), inputValue = _d[0], setInputValue = _d[1];
     var getCommonCharacterCount = function (str1, str2) {
@@ -61,19 +53,9 @@ var Combobox = function (_a) {
         setIsOpen(true);
     };
     var handleOptionClick = function (option) {
-        var alreadySelected = selectedOptions.find(function (opt) { return opt.labelId === option.labelId; });
-        var newSelectedOptions;
-        if (alreadySelected) {
-            // Remove from selected
-            newSelectedOptions = selectedOptions.filter(function (opt) { return opt.labelId !== option.labelId; });
-        }
-        else {
-            // Add to selected
-            newSelectedOptions = __spreadArrays(selectedOptions, [option]);
-        }
-        setInputValue(''); // Clear the input field after selection
+        setInputValue(option.translation);
         setIsOpen(false);
-        onSelect(newSelectedOptions); // Pass updated selections back to parent
+        onSelect(option);
     };
     var handleInputClick = function () {
         setIsOpen(true);
@@ -91,8 +73,6 @@ var Combobox = function (_a) {
     }, []);
     return (react_1["default"].createElement("div", { className: 'relative combobox' },
         react_1["default"].createElement("input", { type: 'text', value: inputValue, onClick: handleInputClick, onChange: handleInputChange, placeholder: placeholder, className: 'block w-full p-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500' }),
-        isOpen && filteredOptions.length > 0 && (react_1["default"].createElement("div", { className: 'absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto' }, filteredOptions.map(function (option) { return (react_1["default"].createElement("div", { key: option.id, onClick: function () { return handleOptionClick(option); }, className: "cursor-pointer p-2 hover:bg-gray-200 text-black " + (selectedOptions.some(function (selected) { return selected.labelId === option.labelId; })
-                ? 'bg-gray-100'
-                : '') }, option.translation)); })))));
+        isOpen && filteredOptions.length > 0 && (react_1["default"].createElement("div", { className: 'absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto' }, filteredOptions.map(function (option) { return (react_1["default"].createElement("div", { key: option.id, onClick: function () { return handleOptionClick(option); }, className: 'cursor-pointer p-2 hover:bg-gray-200 text-black' }, option.translation)); })))));
 };
 exports["default"] = Combobox;

@@ -1,3 +1,4 @@
+'use client';
 "use strict";
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
@@ -83,25 +84,13 @@ var CategoryList = function (_a) {
         var language = languages.find(function (l) { return l.id === languageId; });
         return language ? language.name : 'Unknown';
     }, [languages]);
-    var getParentCategoryName = react_1.useCallback(function (parentId, languageId) {
-        if (parentId === null)
+    // Updated to handle multiple parent categories
+    var getParentCategoryNames = react_1.useCallback(function (parents, languageId) {
+        if (parents.length === 0)
             return 'This is a main category';
-        var findCategory = function (categories, parentId) {
-            for (var _i = 0, categories_1 = categories; _i < categories_1.length; _i++) {
-                var category = categories_1[_i];
-                if (category.id === parentId) {
-                    return category;
-                }
-                var foundInSubcategories = findCategory(category.subcategories || [], parentId);
-                if (foundInSubcategories) {
-                    return foundInSubcategories;
-                }
-            }
-            return undefined;
-        };
-        var parentCategory = findCategory(categories, parentId);
-        return parentCategory ? getCategoryName(parentCategory.labelId, languageId) : 'Unknown';
-    }, [categories, getCategoryName]);
+        // Map through parent categories and get their names
+        return parents.map(function (parent) { return getCategoryName(parent.labelId, languageId); }).join(', ');
+    }, [getCategoryName]);
     var getCategoryIconUrl = react_1.useCallback(function (iconId) {
         var icon = icons.find(function (icon) { return icon.id === iconId; });
         return icon ? icon.url : '';
@@ -245,20 +234,20 @@ var CategoryList = function (_a) {
         return (react_1["default"].createElement("div", { className: 'border p-4 mb-4 rounded-lg shadow-md' },
             react_1["default"].createElement("div", { className: 'flex items-center justify-between' },
                 react_1["default"].createElement("h3", { className: 'text-lg font-semibold' }, getCategoryName(category.labelId, languageId)),
-                category.subcategories && category.subcategories.length > 0 && (react_1["default"].createElement("button", { className: 'text-blue-500 hover:text-blue-700 focus:outline-none flex items-center', onClick: function () { return toggleCategory(category.id); } },
+                category.children && category.children.length > 0 && (react_1["default"].createElement("button", { className: 'text-blue-500 hover:text-blue-700 focus:outline-none flex items-center', onClick: function () { return toggleCategory(category.id); } },
                     isOpen ? react_1["default"].createElement(fi_1.FiChevronUp, { size: 24 }) : react_1["default"].createElement(fi_1.FiChevronDown, { size: 24 }),
                     react_1["default"].createElement("span", { className: 'ml-2' }, "Subcategories")))),
             react_1["default"].createElement("div", { className: 'mt-2' }, category.iconId ? (iconUrl ? (react_1["default"].createElement(image_1["default"], { src: iconUrl, alt: 'Category Icon', width: 50, height: 50 })) : (react_1["default"].createElement("p", null, "No image selected"))) : (react_1["default"].createElement("p", null, "No image available"))),
             react_1["default"].createElement("p", { className: 'mt-2 text-gray-600' },
-                "Parent Category: ",
-                getParentCategoryName(category.parentId, languageId)),
+                "Parent Categories: ",
+                getParentCategoryNames(category.parents, languageId)),
             react_1["default"].createElement("p", { className: 'mt-2 text-gray-600' },
                 "Languages: ",
                 languagesList),
             react_1["default"].createElement("div", { className: 'mt-4 flex space-x-2' },
                 react_1["default"].createElement("button", { className: 'bg-blue-500 text-white px-4 py-2 rounded', onClick: function () { return handleOpenEditModal(category); } }, "Edit"),
                 react_1["default"].createElement("button", { className: 'bg-red-500 text-white px-4 py-2 rounded', onClick: function () { return handleDelete(category.id); } }, "Delete")),
-            category.subcategories && isOpen && (react_1["default"].createElement("div", { className: 'mt-4 pl-4' }, category.subcategories.map(function (subCategory) { return (react_1["default"].createElement(CategoryItem, { key: subCategory.id, category: subCategory })); })))));
+            category.children && isOpen && (react_1["default"].createElement("div", { className: 'mt-4 pl-4' }, category.children.map(function (subCategory) { return (react_1["default"].createElement(CategoryItem, { key: subCategory.id, category: subCategory })); })))));
     };
     return (react_1["default"].createElement("div", null,
         categories.map(function (category) { return (react_1["default"].createElement(CategoryItem, { key: category.id, category: category })); }),

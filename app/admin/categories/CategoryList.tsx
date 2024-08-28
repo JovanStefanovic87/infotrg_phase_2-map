@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
@@ -83,27 +84,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[languages]
 	);
 
-	const getParentCategoryName = useCallback(
-		(parentId: number | null, languageId: number): string => {
-			if (parentId === null) return 'This is a main category';
+	// Updated to handle multiple parent categories
+	const getParentCategoryNames = useCallback(
+		(parents: Category[], languageId: number): string => {
+			if (parents.length === 0) return 'This is a main category';
 
-			const findCategory = (categories: Category[], parentId: number): Category | undefined => {
-				for (const category of categories) {
-					if (category.id === parentId) {
-						return category;
-					}
-					const foundInSubcategories = findCategory(category.subcategories || [], parentId);
-					if (foundInSubcategories) {
-						return foundInSubcategories;
-					}
-				}
-				return undefined;
-			};
-
-			const parentCategory = findCategory(categories, parentId);
-			return parentCategory ? getCategoryName(parentCategory.labelId, languageId) : 'Unknown';
+			// Map through parent categories and get their names
+			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
 		},
-		[categories, getCategoryName]
+		[getCategoryName]
 	);
 
 	const getCategoryIconUrl = useCallback(
@@ -239,7 +228,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			<div className='border p-4 mb-4 rounded-lg shadow-md'>
 				<div className='flex items-center justify-between'>
 					<h3 className='text-lg font-semibold'>{getCategoryName(category.labelId, languageId)}</h3>
-					{category.subcategories && category.subcategories.length > 0 && (
+					{category.children && category.children.length > 0 && (
 						<button
 							className='text-blue-500 hover:text-blue-700 focus:outline-none flex items-center'
 							onClick={() => toggleCategory(category.id)}>
@@ -261,7 +250,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					)}
 				</div>
 				<p className='mt-2 text-gray-600'>
-					Parent Category: {getParentCategoryName(category.parentId, languageId)}
+					Parent Categories: {getParentCategoryNames(category.parents, languageId)}
 				</p>
 				<p className='mt-2 text-gray-600'>Languages: {languagesList}</p>
 
@@ -278,9 +267,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					</button>
 				</div>
 
-				{category.subcategories && isOpen && (
+				{category.children && isOpen && (
 					<div className='mt-4 pl-4'>
-						{category.subcategories.map(subCategory => (
+						{category.children.map(subCategory => (
 							<CategoryItem key={subCategory.id} category={subCategory} />
 						))}
 					</div>

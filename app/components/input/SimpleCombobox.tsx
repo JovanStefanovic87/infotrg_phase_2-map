@@ -1,21 +1,14 @@
-// app\components\input\CustomCombobox.tsx
 'use client';
 import React, { useState } from 'react';
 import { Translation } from '@/utils/helpers/types';
 
 interface ComboboxProps {
 	options: Translation[];
-	selectedOptions: Translation[]; // New prop to keep track of selected options
-	onSelect: (selectedOptions: Translation[]) => void; // Updated to handle multiple selections
+	onSelect: (selectedOption: Translation | null) => void;
 	placeholder?: string;
 }
 
-const Combobox: React.FC<ComboboxProps> = ({
-	options,
-	selectedOptions,
-	onSelect,
-	placeholder = 'Select...',
-}) => {
+const Combobox: React.FC<ComboboxProps> = ({ options, onSelect, placeholder = 'Select...' }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState('');
 
@@ -70,19 +63,9 @@ const Combobox: React.FC<ComboboxProps> = ({
 	};
 
 	const handleOptionClick = (option: Translation) => {
-		const alreadySelected = selectedOptions.find(opt => opt.labelId === option.labelId);
-		let newSelectedOptions;
-		if (alreadySelected) {
-			// Remove from selected
-			newSelectedOptions = selectedOptions.filter(opt => opt.labelId !== option.labelId);
-		} else {
-			// Add to selected
-			newSelectedOptions = [...selectedOptions, option];
-		}
-
-		setInputValue(''); // Clear the input field after selection
+		setInputValue(option.translation);
 		setIsOpen(false);
-		onSelect(newSelectedOptions); // Pass updated selections back to parent
+		onSelect(option);
 	};
 
 	const handleInputClick = () => {
@@ -118,11 +101,7 @@ const Combobox: React.FC<ComboboxProps> = ({
 						<div
 							key={option.id}
 							onClick={() => handleOptionClick(option)}
-							className={`cursor-pointer p-2 hover:bg-gray-200 text-black ${
-								selectedOptions.some(selected => selected.labelId === option.labelId)
-									? 'bg-gray-100'
-									: ''
-							}`}>
+							className='cursor-pointer p-2 hover:bg-gray-200 text-black'>
 							{option.translation}
 						</div>
 					))}

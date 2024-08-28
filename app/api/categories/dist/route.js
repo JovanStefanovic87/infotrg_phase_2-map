@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -51,28 +40,50 @@ exports.POST = exports.GET = void 0;
 // api/categories
 var server_1 = require("next/server");
 var prisma_1 = require("@/app/lib/prisma");
+// Function to build the category tree
 var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, Promise, function () {
     var categories;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, prisma_1.prisma.category.findMany({
-                    where: { parentId: parentId },
                     include: {
-                        subcategories: true,
-                        icon: true
-                    }
+                        icon: true,
+                        childCategories: {
+                            include: {
+                                child: true
+                            }
+                        }
+                    },
+                    where: parentId === null
+                        ? { NOT: { childCategories: { some: {} } } }
+                        : { childCategories: { some: { parentId: parentId } } }
                 })];
             case 1:
                 categories = _a.sent();
+                // Recursively build the tree structure
                 return [2 /*return*/, Promise.all(categories.map(function (category) { return __awaiter(void 0, void 0, void 0, function () {
-                        var _a, _b;
-                        return __generator(this, function (_c) {
-                            switch (_c.label) {
+                        var _a;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
                                 case 0:
-                                    _a = [__assign({}, category)];
-                                    _b = {};
+                                    _a = {
+                                        id: category.id,
+                                        name: '',
+                                        iconId: category.iconId,
+                                        labelId: category.labelId,
+                                        parents: []
+                                    };
                                     return [4 /*yield*/, buildCategoryTree(category.id)];
-                                case 1: return [2 /*return*/, (__assign.apply(void 0, _a.concat([(_b.subcategories = _c.sent(), _b)])))];
+                                case 1: return [2 /*return*/, (_a.children = _b.sent(),
+                                        _a.icon = category.icon
+                                            ? {
+                                                id: category.icon.id,
+                                                name: category.icon.name,
+                                                url: category.icon.url,
+                                                createdAt: category.icon.createdAt
+                                            }
+                                            : null,
+                                        _a)];
                             }
                         });
                     }); }))];
@@ -95,22 +106,31 @@ function GET() {
 exports.GET = GET;
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var _a, parentId, labelId, iconId, newCategory;
+        var _a, parentIds, labelId, iconId, newCategory;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, request.json()];
                 case 1:
-                    _a = _b.sent(), parentId = _a.parentId, labelId = _a.labelId, iconId = _a.iconId;
+                    _a = _b.sent(), parentIds = _a.parentIds, labelId = _a.labelId, iconId = _a.iconId;
                     return [4 /*yield*/, prisma_1.prisma.category.create({
                             data: {
-                                parentId: parentId,
                                 labelId: labelId,
                                 iconId: iconId
                             }
                         })];
                 case 2:
                     newCategory = _b.sent();
-                    return [2 /*return*/, server_1.NextResponse.json(newCategory)];
+                    if (!(parentIds && parentIds.length > 0)) return [3 /*break*/, 4];
+                    return [4 /*yield*/, prisma_1.prisma.parentCategory.createMany({
+                            data: parentIds.map(function (parentId) { return ({
+                                parentId: parentId,
+                                childId: newCategory.id
+                            }); })
+                        })];
+                case 3:
+                    _b.sent();
+                    _b.label = 4;
+                case 4: return [2 /*return*/, server_1.NextResponse.json(newCategory)];
             }
         });
     });

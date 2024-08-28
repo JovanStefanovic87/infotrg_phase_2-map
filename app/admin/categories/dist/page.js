@@ -51,7 +51,7 @@ var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var CategoryForm_1 = require("./CategoryForm");
 var apiClient_1 = require("@/utils/helpers/apiClient");
 var AddCategoryPage = function () {
-    var _a = react_1.useState(null), parentId = _a[0], setParentId = _a[1];
+    var _a = react_1.useState([]), parentIds = _a[0], setParentIds = _a[1]; // Changed to handle multiple parentIds
     var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
     var _c = react_1.useState(''), name = _c[0], setName = _c[1];
     var _d = react_1.useState(''), error = _d[0], setError = _d[1];
@@ -207,7 +207,7 @@ var AddCategoryPage = function () {
                     if (!newLabelId_1)
                         throw new Error('Failed to create label');
                     return [4 /*yield*/, axios_1["default"].post('/api/categories', {
-                            parentId: parentId,
+                            parentIds: parentIds,
                             labelId: newLabelId_1,
                             iconId: iconId
                         })];
@@ -257,7 +257,7 @@ var AddCategoryPage = function () {
     };
     var resetForm = function () {
         setName('');
-        setParentId(null);
+        setParentIds([]); // Reset parentIds to an empty array
         setLanguageId(1);
         setIcon(null);
         setError('');
@@ -315,7 +315,7 @@ var AddCategoryPage = function () {
         react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
-        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentId: parentId, setParentId: setParentId, translations: translations, icon: icon, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit }),
+        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentIds: parentIds, setParentIds: setParentIds, translations: translations, icon: icon, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit }),
         react_1["default"].createElement("div", { className: 'mt-8' },
             react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languages: languages, languageId: languageId, refetchCategories: refetchData, onEditCategory: handleEditCategory, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
                     var err_5;

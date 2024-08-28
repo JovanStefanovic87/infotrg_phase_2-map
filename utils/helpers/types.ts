@@ -186,11 +186,11 @@ export interface Language {
 
 export interface Category {
 	id: number;
-	parentId: number | null;
 	name: string;
 	iconId: number | null;
 	labelId: number;
-	subcategories: Category[] | null;
+	parents: Category[]; // Array of parent categories
+	children: Category[]; // Array of child categories
 }
 
 export interface Synonym {
@@ -217,7 +217,7 @@ export interface Icon {
 export interface CategoryData {
 	name: string;
 	description: string;
-	parentId: string | null;
+	parentIds: string[]; // Updated to handle multiple parent IDs
 	synonyms: string[];
 }
 

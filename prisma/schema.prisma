@@ -51,17 +51,23 @@ model Language {
 }
 
 model Category {
-  id            Int        @id @default(autoincrement())
-  parentId      Int?
-  parent        Category?  @relation("Subcategories", fields: [parentId], references: [id])
-  subcategories Category[] @relation("Subcategories")
-  labelId       Int
-  iconId        Int?
-  icon          Icon?      @relation(fields: [iconId], references: [id])
-  createdAt     DateTime   @default(now())
+  id               Int              @id @default(autoincrement())
+  labelId          Int
+  iconId           Int?
+  icon             Icon?            @relation(fields: [iconId], references: [id])
+  createdAt        DateTime         @default(now())
+  parentCategories ParentCategory[] @relation("Parent")
+  childCategories  ParentCategory[] @relation("Child")
+}
 
-  @@index([parentId])
-  @@index([labelId])
+model ParentCategory {
+  parentId Int
+  childId  Int
+
+  parent Category @relation("Parent", fields: [parentId], references: [id], onDelete: Cascade)
+  child  Category @relation("Child", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@id([parentId, childId]) // Composite primary key to ensure unique parent-child pairs
 }
 
 model Label {

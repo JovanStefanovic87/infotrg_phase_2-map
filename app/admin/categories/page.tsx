@@ -8,7 +8,7 @@ import CategoryForm from './CategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 
 const AddCategoryPage: React.FC = () => {
-	const [parentId, setParentId] = useState<number | null>(null);
+	const [parentIds, setParentIds] = useState<number[]>([]); // Changed to handle multiple parentIds
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
@@ -18,9 +18,7 @@ const AddCategoryPage: React.FC = () => {
 	const [translations, setTranslations] = useState<Translation[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
-
 	const [loading, setLoading] = useState<boolean>(false);
-
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
 	const fetchCategories = () => apiClient<Category[]>({ method: 'GET', url: '/api/categories' });
@@ -111,7 +109,7 @@ const AddCategoryPage: React.FC = () => {
 
 			if (!newLabelId) throw new Error('Failed to create label');
 			const { data: categoryData } = await axios.post('/api/categories', {
-				parentId,
+				parentIds, // Update to use parentIds array
 				labelId: newLabelId,
 				iconId,
 			});
@@ -155,7 +153,7 @@ const AddCategoryPage: React.FC = () => {
 		fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
 	const resetForm = () => {
 		setName('');
-		setParentId(null);
+		setParentIds([]); // Reset parentIds to an empty array
 		setLanguageId(1);
 		setIcon(null);
 		setError('');
@@ -215,8 +213,8 @@ const AddCategoryPage: React.FC = () => {
 			<CategoryForm
 				name={name}
 				setName={setName}
-				parentId={parentId}
-				setParentId={setParentId}
+				parentIds={parentIds} // Updated to handle multiple parents
+				setParentIds={setParentIds} // Function to set multiple parents
 				translations={translations}
 				icon={icon}
 				onFileChange={handleFileChange}
