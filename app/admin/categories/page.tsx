@@ -165,12 +165,13 @@ const AddCategoryPage: React.FC = () => {
 			data: {
 				translations: { translationId: number | null; languageId: number; translation: string }[];
 				icon?: File | null;
+				parentIds: number[]; // Include parentIds to update parent categories
 			}
 		) => {
-			const { translations, icon: newIcon } = data;
+			const { translations, icon: newIcon, parentIds } = data;
 
 			try {
-				let iconId: number | undefined = undefined;
+				let iconId: number | null = null;
 
 				// Handle icon upload
 				if (newIcon) {
@@ -182,15 +183,20 @@ const AddCategoryPage: React.FC = () => {
 					iconId = iconData.iconId;
 				}
 
-				// Update category with new icon
-				await axios.put(`/api/categories/${id}`, { iconId });
-
 				// Prepare translations for update
 				const translationsArray = translations.map(translation => ({
-					labelId: id,
+					translationId: translation.translationId,
 					languageId: translation.languageId,
-					translation: translation.translation ?? null, // Handle null values
+					translation: translation.translation ?? '', // Ensure it defaults to empty string if null
 				}));
+
+				// Update category with new icon, translations, and parentIds
+				await axios.put(`/api/categories/${id}`, {
+					iconId,
+					parentIds,
+					translations: translationsArray,
+					labelId: id, // Assuming labelId is the same as the category id
+				});
 
 				setSuccessMessage('Category updated successfully.');
 				await refetchData();

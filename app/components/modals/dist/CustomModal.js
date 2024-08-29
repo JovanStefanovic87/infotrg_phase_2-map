@@ -12,6 +12,6 @@ var CustomModal = function (_a) {
         }
     };
     return (react_1["default"].createElement("div", { className: 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50', onClick: handleOverlayClick },
-        react_1["default"].createElement("div", { className: 'bg-white p-6 rounded-lg shadow-lg' }, children)));
+        react_1["default"].createElement("div", { className: 'bg-slate-400 p-6 rounded-lg shadow-lg' }, children)));
 };
 exports["default"] = CustomModal;

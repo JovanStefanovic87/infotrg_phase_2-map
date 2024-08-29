@@ -22,6 +22,7 @@ interface CategoryListProps {
 				translation: string;
 			}[];
 			icon?: File | null;
+			parentIds: number[];
 		}
 	) => Promise<void>;
 	onDeleteCategory: (id: number) => Promise<void>;
@@ -49,10 +50,41 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [translationsByLanguage, setTranslationsByLanguage] = useState<Record<number, string>>({});
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
+	const [parentIds, setParentIds] = useState<number[]>([]);
+	const [allCategories, setAllCategories] = useState<Category[]>([]);
 
 	useEffect(() => {
 		setOpenCategories(new Set());
+
+		const fetchAllCategories = async () => {
+			try {
+				const response = await axios.get<Category[]>('/api/categories');
+				const flattenedCategories = flattenCategories(response.data); // Flatten the category hierarchy
+				setAllCategories(flattenedCategories);
+			} catch (error) {
+				console.error('Failed to fetch all categories', error);
+			}
+		};
+
+		fetchAllCategories();
 	}, [categories, translations]);
+
+	// Function to flatten category hierarchy
+	const flattenCategories = (categories: Category[]): Category[] => {
+		const flatCategories: Category[] = [];
+
+		const traverse = (catArray: Category[]) => {
+			catArray.forEach(cat => {
+				flatCategories.push(cat);
+				if (cat.children.length > 0) {
+					traverse(cat.children); // Recursively traverse children
+				}
+			});
+		};
+
+		traverse(categories);
+		return flatCategories;
+	};
 
 	const toggleCategory = useCallback((id: number) => {
 		setOpenCategories(prev => {
@@ -84,12 +116,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[languages]
 	);
 
-	// Updated to handle multiple parent categories
 	const getParentCategoryNames = useCallback(
 		(parents: Category[], languageId: number): string => {
 			if (parents.length === 0) return 'This is a main category';
-
-			// Map through parent categories and get their names
 			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
 		},
 		[getCategoryName]
@@ -113,6 +142,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const handleOpenEditModal = useCallback(
 		async (category: Category) => {
 			setCurrentEditCategory(category);
+			setParentIds(category.parents.map(parent => parent.id));
 
 			try {
 				const { data: categoryTranslations } = await axios.get<Translation[]>(
@@ -129,7 +159,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 				setTranslationsByLanguage(translationsMap);
 
-				// Initialize `newTranslations` with existing translations
 				const existingTranslations = categoryTranslations.map(t => ({
 					translationId: t.id,
 					languageId: t.languageId,
@@ -155,7 +184,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			try {
 				let iconId: number | undefined = undefined;
 
-				// Upload new icon if provided
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
@@ -165,7 +193,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					iconId = iconData.id;
 				}
 
-				// Prepare translations update
 				const translationUpdates = newTranslations.map(
 					({ translationId, languageId, translation }) => ({
 						translationId,
@@ -174,25 +201,23 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					})
 				);
 
-				// Batch update translations
 				await axios.put('/api/translation/translations', {
 					translations: translationUpdates,
 				});
 
-				// Call the edit category API
 				await onEditCategory(currentEditCategory.id, {
 					translations: translationUpdates,
 					icon: newIcon,
+					parentIds,
 				});
 
 				setIsModalOpen(false);
 				await refetchCategories();
 			} catch (err) {
 				console.error('Failed to edit category', err);
-				// Display an error message to the user
 			}
 		},
-		[currentEditCategory, newTranslations, newIcon, onEditCategory, refetchCategories]
+		[currentEditCategory, newTranslations, newIcon, onEditCategory, parentIds, refetchCategories]
 	);
 
 	const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +241,33 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		},
 		[onDeleteCategory, refetchCategories]
 	);
+
+	const handleAddParent = useCallback(
+		(parentId: number) => {
+			if (!parentIds.includes(parentId)) {
+				setParentIds(prev => [...prev, parentId]);
+			}
+		},
+		[parentIds]
+	);
+
+	const handleRemoveParent = useCallback((parentId: number) => {
+		setParentIds(prev => prev.filter(id => id !== parentId));
+	}, []);
+
+	// Helper function to recursively find all children of a category
+	const findAllChildren = (category: Category): number[] => {
+		let children = category.children.map(child => child.id);
+		category.children.forEach(child => {
+			children = children.concat(findAllChildren(child)); // Recursively add children of children
+		});
+		return children;
+	};
+
+	// Helper function to find all parents of a category
+	const findAllParents = (category: Category): number[] => {
+		return category.parents.map(parent => parent.id);
+	};
 
 	const CategoryItem: React.FC<{ category: Category }> = ({ category }) => {
 		const iconUrl = getCategoryIconUrl(category.iconId);
@@ -278,6 +330,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		);
 	};
 
+	console.log(JSON.stringify(allCategories));
+
 	return (
 		<div>
 			{categories.map(category => (
@@ -325,6 +379,64 @@ const CategoryList: React.FC<CategoryListProps> = ({
 									/>
 								</div>
 							))}
+
+							<div>
+								<label className='font-semibold'>Current Parent Categories:</label>
+								<ul>
+									{parentIds.map(parentId => (
+										<li key={parentId}>
+											{getCategoryName(
+												allCategories.find(cat => cat.id === parentId)?.labelId || 0,
+												languageId
+											)}
+											<button
+												type='button'
+												onClick={() => handleRemoveParent(parentId)}
+												className='text-red-500 ml-2'>
+												Remove
+											</button>
+										</li>
+									))}
+								</ul>
+								<select
+									onChange={e => handleAddParent(Number(e.target.value))}
+									value=''
+									className='mt-2 text-black'>
+									<option value='' disabled>
+										Add Parent Category
+									</option>
+									{allCategories
+										.filter(cat => {
+											// Exclude the category being edited
+											if (currentEditCategory && cat.id === currentEditCategory.id) {
+												return false;
+											}
+
+											// Exclude all children of the category being edited
+											if (
+												currentEditCategory &&
+												findAllChildren(currentEditCategory).includes(cat.id)
+											) {
+												return false;
+											}
+
+											// Exclude all parents of the category being edited
+											if (
+												currentEditCategory &&
+												findAllParents(currentEditCategory).includes(cat.id)
+											) {
+												return false;
+											}
+
+											return true;
+										})
+										.map(cat => (
+											<option key={cat.id} value={cat.id}>
+												{getCategoryName(cat.labelId, languageId)}
+											</option>
+										))}
+								</select>
+							</div>
 
 							<button type='submit' className='bg-blue-500 text-white py-2 px-4 rounded'>
 								Save Changes

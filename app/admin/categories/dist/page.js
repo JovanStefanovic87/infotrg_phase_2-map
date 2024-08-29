@@ -263,15 +263,15 @@ var AddCategoryPage = function () {
         setError('');
     };
     var handleEditCategory = react_1.useCallback(function (id, data) { return __awaiter(void 0, void 0, void 0, function () {
-        var translations, newIcon, iconId, formData, iconData, translationsArray, err_4;
+        var translations, newIcon, parentIds, iconId, formData, iconData, translationsArray, err_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    translations = data.translations, newIcon = data.icon;
+                    translations = data.translations, newIcon = data.icon, parentIds = data.parentIds;
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 6, , 7]);
-                    iconId = undefined;
+                    iconId = null;
                     if (!newIcon) return [3 /*break*/, 3];
                     formData = new FormData();
                     formData.append('icon', newIcon);
@@ -282,20 +282,25 @@ var AddCategoryPage = function () {
                     iconData = (_a.sent()).data;
                     iconId = iconData.iconId;
                     _a.label = 3;
-                case 3: 
-                // Update category with new icon
-                return [4 /*yield*/, axios_1["default"].put("/api/categories/" + id, { iconId: iconId })];
-                case 4:
-                    // Update category with new icon
-                    _a.sent();
+                case 3:
                     translationsArray = translations.map(function (translation) {
                         var _a;
                         return ({
-                            labelId: id,
+                            translationId: translation.translationId,
                             languageId: translation.languageId,
-                            translation: (_a = translation.translation) !== null && _a !== void 0 ? _a : null
+                            translation: (_a = translation.translation) !== null && _a !== void 0 ? _a : ''
                         });
                     });
+                    // Update category with new icon, translations, and parentIds
+                    return [4 /*yield*/, axios_1["default"].put("/api/categories/" + id, {
+                            iconId: iconId,
+                            parentIds: parentIds,
+                            translations: translationsArray,
+                            labelId: id
+                        })];
+                case 4:
+                    // Update category with new icon, translations, and parentIds
+                    _a.sent();
                     setSuccessMessage('Category updated successfully.');
                     return [4 /*yield*/, refetchData()];
                 case 5:

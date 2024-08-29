@@ -159,64 +159,55 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 	try {
 		const body = await request.json();
 
-		// Log the incoming request body for debugging
 		console.log('PUT /api/categories/:id - Request body:', body);
 
-		const { parentIds, labelId, iconId, languageId, translation } = body;
+		const { parentIds, labelId, iconId } = body;
 
 		if (!Array.isArray(parentIds)) {
 			return NextResponse.json({ error: 'parentIds should be an array' }, { status: 400 });
 		}
 
-		// Ensure labelId is a valid number
 		if (labelId === undefined || typeof labelId !== 'number') {
 			return NextResponse.json({ error: 'Invalid labelId' }, { status: 400 });
 		}
 
-		// Ensure iconId is either null or a number
 		if (iconId !== null && typeof iconId !== 'number') {
 			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
 		}
 
-		// Update the category information
-		const updatedCategory = await prisma.category.update({
-			where: { id: Number(id) },
-			data: {
-				labelId,
-				iconId,
-				parentCategories: {
-					/* deleteMany: {}, // Remove all previous parents */
-					create: parentIds.map((parentId: number) => ({
-						parentId,
-						childId: Number(id), // Use the current category ID as childId
-					})), // Add new parents
-				},
-			},
-		});
-
-		// Update or create the translation if provided
-		/* if (languageId && translation) {
-			await prisma.translation.upsert({
-				where: {
-					labelId_languageId: {
-						labelId: labelId,
-						languageId: languageId,
-					},
-				},
-				update: { translation },
-				create: {
+		// Start a transaction to handle multiple queries safely
+		const updatedCategory = await prisma.$transaction(async prisma => {
+			// Update the category's basic info first
+			const category = await prisma.category.update({
+				where: { id: Number(id) },
+				data: {
 					labelId,
-					languageId,
-					translation,
+					iconId,
 				},
 			});
-		} */
+
+			// Remove all previous parent-child relationships for the current category
+			await prisma.parentCategory.deleteMany({
+				where: {
+					childId: Number(id),
+				},
+			});
+
+			// Recreate the parent-child relationships for the current category
+			await prisma.parentCategory.createMany({
+				data: parentIds.map((parentId: number) => ({
+					parentId: parentId,
+					childId: Number(id),
+				})),
+			});
+
+			return category;
+		});
 
 		return NextResponse.json(updatedCategory);
 	} catch (error) {
 		console.error('Error updating category:', error);
 		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			// Handle known Prisma errors
 			return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
 		}
 		return NextResponse.json({ error: 'Error updating category' }, { status: 500 });

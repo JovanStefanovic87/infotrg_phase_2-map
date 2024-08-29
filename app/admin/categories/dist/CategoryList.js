@@ -47,6 +47,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 exports.__esModule = true;
 var react_1 = require("react");
 var image_1 = require("next/image");
@@ -61,9 +68,46 @@ var CategoryList = function (_a) {
     var _e = react_1.useState({}), translationsByLanguage = _e[0], setTranslationsByLanguage = _e[1];
     var _f = react_1.useState(null), newIcon = _f[0], setNewIcon = _f[1];
     var _g = react_1.useState([]), newTranslations = _g[0], setNewTranslations = _g[1];
+    var _h = react_1.useState([]), parentIds = _h[0], setParentIds = _h[1];
+    var _j = react_1.useState([]), allCategories = _j[0], setAllCategories = _j[1];
     react_1.useEffect(function () {
         setOpenCategories(new Set());
+        var fetchAllCategories = function () { return __awaiter(void 0, void 0, void 0, function () {
+            var response, flattenedCategories, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, axios_1["default"].get('/api/categories')];
+                    case 1:
+                        response = _a.sent();
+                        flattenedCategories = flattenCategories(response.data);
+                        setAllCategories(flattenedCategories);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_1 = _a.sent();
+                        console.error('Failed to fetch all categories', error_1);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
+        fetchAllCategories();
     }, [categories, translations]);
+    // Function to flatten category hierarchy
+    var flattenCategories = function (categories) {
+        var flatCategories = [];
+        var traverse = function (catArray) {
+            catArray.forEach(function (cat) {
+                flatCategories.push(cat);
+                if (cat.children.length > 0) {
+                    traverse(cat.children); // Recursively traverse children
+                }
+            });
+        };
+        traverse(categories);
+        return flatCategories;
+    };
     var toggleCategory = react_1.useCallback(function (id) {
         setOpenCategories(function (prev) {
             var newOpenCategories = new Set(prev);
@@ -84,11 +128,9 @@ var CategoryList = function (_a) {
         var language = languages.find(function (l) { return l.id === languageId; });
         return language ? language.name : 'Unknown';
     }, [languages]);
-    // Updated to handle multiple parent categories
     var getParentCategoryNames = react_1.useCallback(function (parents, languageId) {
         if (parents.length === 0)
             return 'This is a main category';
-        // Map through parent categories and get their names
         return parents.map(function (parent) { return getCategoryName(parent.labelId, languageId); }).join(', ');
     }, [getCategoryName]);
     var getCategoryIconUrl = react_1.useCallback(function (iconId) {
@@ -99,11 +141,12 @@ var CategoryList = function (_a) {
         return translations.filter(function (t) { return t.labelId === labelId; });
     }, [translations]);
     var handleOpenEditModal = react_1.useCallback(function (category) { return __awaiter(void 0, void 0, void 0, function () {
-        var categoryTranslations_1, translationsMap, existingTranslations, error_1;
+        var categoryTranslations_1, translationsMap, existingTranslations, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     setCurrentEditCategory(category);
+                    setParentIds(category.parents.map(function (parent) { return parent.id; }));
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
@@ -124,8 +167,8 @@ var CategoryList = function (_a) {
                     setNewTranslations(existingTranslations);
                     return [3 /*break*/, 4];
                 case 3:
-                    error_1 = _a.sent();
-                    console.error('Failed to fetch category translations', error_1);
+                    error_2 = _a.sent();
+                    console.error('Failed to fetch category translations', error_2);
                     return [3 /*break*/, 4];
                 case 4:
                     setNewIcon(null);
@@ -165,20 +208,17 @@ var CategoryList = function (_a) {
                             translation: translation
                         });
                     });
-                    // Batch update translations
                     return [4 /*yield*/, axios_1["default"].put('/api/translation/translations', {
                             translations: translationUpdates
                         })];
                 case 4:
-                    // Batch update translations
                     _a.sent();
-                    // Call the edit category API
                     return [4 /*yield*/, onEditCategory(currentEditCategory.id, {
                             translations: translationUpdates,
-                            icon: newIcon
+                            icon: newIcon,
+                            parentIds: parentIds
                         })];
                 case 5:
-                    // Call the edit category API
                     _a.sent();
                     setIsModalOpen(false);
                     return [4 /*yield*/, refetchCategories()];
@@ -192,7 +232,7 @@ var CategoryList = function (_a) {
                 case 8: return [2 /*return*/];
             }
         });
-    }); }, [currentEditCategory, newTranslations, newIcon, onEditCategory, refetchCategories]);
+    }); }, [currentEditCategory, newTranslations, newIcon, onEditCategory, parentIds, refetchCategories]);
     var handleFileChange = react_1.useCallback(function (e) {
         if (e.target.files && e.target.files[0]) {
             setNewIcon(e.target.files[0]);
@@ -225,6 +265,26 @@ var CategoryList = function (_a) {
             }
         });
     }); }, [onDeleteCategory, refetchCategories]);
+    var handleAddParent = react_1.useCallback(function (parentId) {
+        if (!parentIds.includes(parentId)) {
+            setParentIds(function (prev) { return __spreadArrays(prev, [parentId]); });
+        }
+    }, [parentIds]);
+    var handleRemoveParent = react_1.useCallback(function (parentId) {
+        setParentIds(function (prev) { return prev.filter(function (id) { return id !== parentId; }); });
+    }, []);
+    // Helper function to recursively find all children of a category
+    var findAllChildren = function (category) {
+        var children = category.children.map(function (child) { return child.id; });
+        category.children.forEach(function (child) {
+            children = children.concat(findAllChildren(child)); // Recursively add children of children
+        });
+        return children;
+    };
+    // Helper function to find all parents of a category
+    var findAllParents = function (category) {
+        return category.parents.map(function (parent) { return parent.id; });
+    };
     var CategoryItem = function (_a) {
         var category = _a.category;
         var iconUrl = getCategoryIconUrl(category.iconId);
@@ -249,6 +309,7 @@ var CategoryList = function (_a) {
                 react_1["default"].createElement("button", { className: 'bg-red-500 text-white px-4 py-2 rounded', onClick: function () { return handleDelete(category.id); } }, "Delete")),
             category.children && isOpen && (react_1["default"].createElement("div", { className: 'mt-4 pl-4' }, category.children.map(function (subCategory) { return (react_1["default"].createElement(CategoryItem, { key: subCategory.id, category: subCategory })); })))));
     };
+    console.log(JSON.stringify(allCategories));
     return (react_1["default"].createElement("div", null,
         categories.map(function (category) { return (react_1["default"].createElement(CategoryItem, { key: category.id, category: category })); }),
         isModalOpen && currentEditCategory && (react_1["default"].createElement(CustomModal_1["default"], { isOpen: isModalOpen, onRequestClose: function () { return setIsModalOpen(false); } }, currentEditCategory && (react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'space-y-4' },
@@ -268,6 +329,35 @@ var CategoryList = function (_a) {
                             });
                         } })));
             }),
+            react_1["default"].createElement("div", null,
+                react_1["default"].createElement("label", { className: 'font-semibold' }, "Current Parent Categories:"),
+                react_1["default"].createElement("ul", null, parentIds.map(function (parentId) {
+                    var _a;
+                    return (react_1["default"].createElement("li", { key: parentId },
+                        getCategoryName(((_a = allCategories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 0, languageId),
+                        react_1["default"].createElement("button", { type: 'button', onClick: function () { return handleRemoveParent(parentId); }, className: 'text-red-500 ml-2' }, "Remove")));
+                })),
+                react_1["default"].createElement("select", { onChange: function (e) { return handleAddParent(Number(e.target.value)); }, value: '', className: 'mt-2 text-black' },
+                    react_1["default"].createElement("option", { value: '', disabled: true }, "Add Parent Category"),
+                    allCategories
+                        .filter(function (cat) {
+                        // Exclude the category being edited
+                        if (currentEditCategory && cat.id === currentEditCategory.id) {
+                            return false;
+                        }
+                        // Exclude all children of the category being edited
+                        if (currentEditCategory &&
+                            findAllChildren(currentEditCategory).includes(cat.id)) {
+                            return false;
+                        }
+                        // Exclude all parents of the category being edited
+                        if (currentEditCategory &&
+                            findAllParents(currentEditCategory).includes(cat.id)) {
+                            return false;
+                        }
+                        return true;
+                    })
+                        .map(function (cat) { return (react_1["default"].createElement("option", { key: cat.id, value: cat.id }, getCategoryName(cat.labelId, languageId))); }))),
             react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white py-2 px-4 rounded' }, "Save Changes")))))));
 };
 exports["default"] = CategoryList;
