@@ -186,7 +186,6 @@ export interface Language {
 
 export interface Category {
 	id: number;
-	name: string;
 	iconId: number | null;
 	labelId: number;
 	parents: Category[]; // Array of parent categories

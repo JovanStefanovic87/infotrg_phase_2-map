@@ -1,28 +1,48 @@
+//app\api\categories\[id]\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-
-interface Category {
-	id: number;
-	parentId: number | null;
-	labelId: number;
-	iconId: number | null;
-	subcategories: Category[];
-}
+import { Category } from '@/utils/helpers/types';
+import { Prisma } from '@prisma/client';
 
 const buildCategoryTree = async (parentId: number | null): Promise<Category[]> => {
 	const categories = await prisma.category.findMany({
-		where: { parentId },
+		where:
+			parentId === null
+				? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
+				: { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
 		include: {
-			subcategories: true,
-			icon: true,
+			parentCategories: { include: { parent: true } }, // Fetch parent categories to get parents
+			childCategories: { include: { child: true } }, // Fetch child categories to get children
+			icon: true, // Include icon details if any
 		},
 	});
 
 	return Promise.all(
-		categories.map(async category => ({
-			...category,
-			subcategories: await buildCategoryTree(category.id),
-		}))
+		categories.map(async category => {
+			const children = await buildCategoryTree(category.id); // Recursively fetch children
+
+			return {
+				id: category.id,
+				iconId: category.iconId,
+				labelId: category.labelId,
+				icon: category.icon
+					? {
+							id: category.icon.id,
+							name: category.icon.name,
+							url: category.icon.url,
+							createdAt: category.icon.createdAt,
+					  }
+					: null,
+				parents: category.parentCategories.map(pc => ({
+					id: pc.parent.id,
+					iconId: pc.parent.iconId,
+					labelId: pc.parent.labelId,
+					parents: [], // To avoid recursion loop
+					children: [], // To avoid recursion loop
+				})),
+				children,
+			} as Category;
+		})
 	);
 };
 
@@ -30,13 +50,44 @@ export async function GET(request: Request, { params }: { params: { id: string }
 	const { id } = params;
 	try {
 		if (id === 'all') {
-			const categories = await prisma.category.findMany();
+			const categories = await buildCategoryTree(null); // Fetch the whole tree structure
 			return NextResponse.json(categories);
 		} else {
 			const category = await prisma.category.findUnique({
 				where: { id: Number(id) },
+				include: {
+					parentCategories: { include: { parent: true } }, // Fetch parent details
+					childCategories: { include: { child: true } }, // Fetch child details
+					// No need to include icon details if you are only using iconId
+				},
 			});
-			return NextResponse.json(category);
+
+			if (!category) {
+				return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+			}
+
+			// Transform the fetched data to match the Category interface without icon details
+			const transformedCategory: Category = {
+				id: category.id,
+				iconId: category.iconId, // Keep only iconId
+				labelId: category.labelId,
+				parents: category.parentCategories.map(pc => ({
+					id: pc.parent.id,
+					iconId: pc.parent.iconId,
+					labelId: pc.parent.labelId,
+					parents: [],
+					children: [],
+				})),
+				children: category.childCategories.map(cc => ({
+					id: cc.child.id,
+					iconId: cc.child.iconId,
+					labelId: cc.child.labelId,
+					parents: [],
+					children: [],
+				})),
+			};
+
+			return NextResponse.json(transformedCategory);
 		}
 	} catch (error) {
 		console.error('Error fetching category:', error);
@@ -56,8 +107,9 @@ export async function DELETE(request: Request) {
 		const categoryId = Number(id);
 
 		const deleteCategoryAndRelatedData = async (id: number) => {
+			// Recursively find and delete child categories
 			const subcategories = await prisma.category.findMany({
-				where: { parentId: id },
+				where: { childCategories: { some: { parentId: id } } }, // Fetch child categories
 			});
 
 			for (const subcategory of subcategories) {
@@ -103,19 +155,47 @@ export async function DELETE(request: Request) {
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;
-	const { parentId, labelId, iconId, languageId, translation } = await request.json();
 
 	try {
+		const body = await request.json();
+
+		// Log the incoming request body for debugging
+		console.log('PUT /api/categories/:id - Request body:', body);
+
+		const { parentIds, labelId, iconId, languageId, translation } = body;
+
+		if (!Array.isArray(parentIds)) {
+			return NextResponse.json({ error: 'parentIds should be an array' }, { status: 400 });
+		}
+
+		// Ensure labelId is a valid number
+		if (labelId === undefined || typeof labelId !== 'number') {
+			return NextResponse.json({ error: 'Invalid labelId' }, { status: 400 });
+		}
+
+		// Ensure iconId is either null or a number
+		if (iconId !== null && typeof iconId !== 'number') {
+			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
+		}
+
+		// Update the category information
 		const updatedCategory = await prisma.category.update({
 			where: { id: Number(id) },
 			data: {
-				parentId,
 				labelId,
 				iconId,
+				parentCategories: {
+					/* deleteMany: {}, // Remove all previous parents */
+					create: parentIds.map((parentId: number) => ({
+						parentId,
+						childId: Number(id), // Use the current category ID as childId
+					})), // Add new parents
+				},
 			},
 		});
 
-		if (languageId && translation) {
+		// Update or create the translation if provided
+		/* if (languageId && translation) {
 			await prisma.translation.upsert({
 				where: {
 					labelId_languageId: {
@@ -130,11 +210,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					translation,
 				},
 			});
-		}
+		} */
 
 		return NextResponse.json(updatedCategory);
 	} catch (error) {
 		console.error('Error updating category:', error);
+		if (error instanceof Prisma.PrismaClientKnownRequestError) {
+			// Handle known Prisma errors
+			return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
+		}
 		return NextResponse.json({ error: 'Error updating category' }, { status: 500 });
 	}
 }
