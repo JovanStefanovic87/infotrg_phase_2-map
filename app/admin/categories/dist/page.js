@@ -50,6 +50,7 @@ var CategoryList_1 = require("./CategoryList");
 var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var CategoryForm_1 = require("./CategoryForm");
 var apiClient_1 = require("@/utils/helpers/apiClient");
+var ImagePicker_1 = require("./ImagePicker");
 var AddCategoryPage = function () {
     var _a = react_1.useState([]), parentIds = _a[0], setParentIds = _a[1]; // Changed to handle multiple parentIds
     var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
@@ -61,9 +62,11 @@ var AddCategoryPage = function () {
     var _h = react_1.useState([]), translations = _h[0], setTranslations = _h[1];
     var _j = react_1.useState([]), icons = _j[0], setIcons = _j[1];
     var _k = react_1.useState(null), icon = _k[0], setIcon = _k[1];
-    var _l = react_1.useState(false), loading = _l[0], setLoading = _l[1];
+    var _l = react_1.useState(false), isIconPickerOpen = _l[0], setIsIconPickerOpen = _l[1];
+    var _m = react_1.useState(false), loading = _m[0], setLoading = _m[1];
     var fileUploadButtonRef = react_1.useRef({});
-    var _m = react_1.useState({ iconId: null, iconUrl: null }), currentIcon = _m[0], setCurrentIcon = _m[1];
+    var _o = react_1.useState({ iconId: null, iconUrl: null }), currentIcon = _o[0], setCurrentIcon = _o[1];
+    console.log('currentIcon', currentIcon);
     var fetchCategories = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/categories' }); };
     var fetchLanguages = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/languages' }); };
     var fetchIcons = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/icons' }); };
@@ -190,7 +193,7 @@ var AddCategoryPage = function () {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 9, , 10]);
-                    iconId = 0;
+                    iconId = currentIcon.iconId;
                     if (!icon) return [3 /*break*/, 3];
                     formData = new FormData();
                     formData.append('icon', icon);
@@ -321,7 +324,7 @@ var AddCategoryPage = function () {
         react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
-        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentIds: parentIds, setParentIds: setParentIds, translations: translations, icon: icon, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit }),
+        react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentIds: parentIds, setParentIds: setParentIds, translations: translations, icons: icons, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit, isIconPickerOpen: isIconPickerOpen, setIsIconPickerOpen: setIsIconPickerOpen }),
         react_1["default"].createElement("div", { className: 'mt-8' },
             react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, currentIcon: currentIcon, setCurrentIcon: setCurrentIcon, languages: languages, languageId: languageId, refetchCategories: refetchData, onEditCategory: handleEditCategory, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
                     var err_5;
@@ -343,6 +346,7 @@ var AddCategoryPage = function () {
                             case 4: return [2 /*return*/];
                         }
                     });
-                }); } }))));
+                }); }, isIconPickerOpen: isIconPickerOpen, setIsIconPickerOpen: setIsIconPickerOpen })),
+        react_1["default"].createElement(ImagePicker_1["default"], { icons: icons, isOpen: isIconPickerOpen, onSelect: setCurrentIcon, onClose: function () { return setIsIconPickerOpen(false); } })));
 };
 exports["default"] = AddCategoryPage;

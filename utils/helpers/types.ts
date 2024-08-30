@@ -209,7 +209,7 @@ export interface Translation {
 
 export interface Icon {
 	id: number;
-	name?: string;
+	name: string;
 	url: string;
 }
 

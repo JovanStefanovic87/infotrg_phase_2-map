@@ -5,7 +5,7 @@ var react_1 = require("react");
 var FileUploadButton_1 = require("@/app/components/buttons/FileUploadButton");
 var CustomCombobox_1 = require("@/app/components/input/CustomCombobox");
 var CategoryForm = function (_a) {
-    var name = _a.name, setName = _a.setName, parentIds = _a.parentIds, setParentIds = _a.setParentIds, translations = _a.translations, icon = _a.icon, onFileChange = _a.onFileChange, onFileReset = _a.onFileReset, onSubmit = _a.onSubmit;
+    var name = _a.name, setName = _a.setName, parentIds = _a.parentIds, setParentIds = _a.setParentIds, translations = _a.translations, icons = _a.icons, onFileChange = _a.onFileChange, onFileReset = _a.onFileReset, onSubmit = _a.onSubmit, isIconPickerOpen = _a.isIconPickerOpen, setIsIconPickerOpen = _a.setIsIconPickerOpen;
     // Convert parentIds to selected translations for Combobox
     var selectedParents = translations.filter(function (t) { return parentIds.includes(t.labelId); });
     return (react_1["default"].createElement("form", { onSubmit: onSubmit, className: 'space-y-4' },
@@ -20,7 +20,11 @@ var CategoryForm = function (_a) {
                 }, placeholder: 'Izaberite natkategoriju' })),
         react_1["default"].createElement("div", null,
             react_1["default"].createElement("label", { htmlFor: 'icon', className: 'block mb-2' }, "Icon:"),
-            react_1["default"].createElement(FileUploadButton_1["default"], { onFileChange: onFileChange, resetFileName: onFileReset })),
+            react_1["default"].createElement(FileUploadButton_1["default"], { onFileChange: onFileChange, resetFileName: onFileReset }),
+            react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () {
+                    setIsIconPickerOpen(true);
+                    icons;
+                } }, "Choose from existing icons")),
         react_1["default"].createElement("div", null,
             react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white px-4 py-2' }, "Save"))));
 };

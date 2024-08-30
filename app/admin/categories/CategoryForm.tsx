@@ -2,7 +2,7 @@
 import React from 'react';
 import FileUploadButton from '@/app/components/buttons/FileUploadButton';
 import Combobox from '@/app/components/input/CustomCombobox';
-import { Translation } from '@/utils/helpers/types';
+import { Translation, Icon } from '@/utils/helpers/types';
 
 interface CategoryFormProps {
 	name: string;
@@ -10,10 +10,12 @@ interface CategoryFormProps {
 	parentIds: number[];
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
 	translations: Translation[];
-	icon: File | null;
+	icons: Icon[];
 	onFileChange: (file: File | null) => void;
 	onFileReset: () => void;
 	onSubmit: (event: React.FormEvent) => Promise<void>;
+	isIconPickerOpen: boolean;
+	setIsIconPickerOpen: (isOpen: boolean) => void;
 }
 
 const CategoryForm: React.FC<CategoryFormProps> = ({
@@ -22,10 +24,12 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 	parentIds,
 	setParentIds,
 	translations,
-	icon,
+	icons,
 	onFileChange,
 	onFileReset,
 	onSubmit,
+	isIconPickerOpen,
+	setIsIconPickerOpen,
 }) => {
 	// Convert parentIds to selected translations for Combobox
 	const selectedParents = translations.filter(t => parentIds.includes(t.labelId));
@@ -64,6 +68,15 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 					Icon:
 				</label>
 				<FileUploadButton onFileChange={onFileChange} resetFileName={onFileReset} />
+				<button
+					type='button'
+					className='text-blue-500 mt-2'
+					onClick={() => {
+						setIsIconPickerOpen(true);
+						icons;
+					}}>
+					Choose from existing icons
+				</button>
 			</div>
 			<div>
 				<button type='submit' className='bg-blue-500 text-white px-4 py-2'>

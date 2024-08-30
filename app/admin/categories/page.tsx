@@ -6,6 +6,7 @@ import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/help
 import PageContainer from '@/app/components/containers/PageContainer';
 import CategoryForm from './CategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
+import ImagePicker from './ImagePicker';
 
 const AddCategoryPage: React.FC = () => {
 	const [parentIds, setParentIds] = useState<number[]>([]); // Changed to handle multiple parentIds
@@ -18,9 +19,12 @@ const AddCategoryPage: React.FC = () => {
 	const [translations, setTranslations] = useState<Translation[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
+	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
+
+	console.log('currentIcon', currentIcon);
 
 	const fetchCategories = () => apiClient<Category[]>({ method: 'GET', url: '/api/categories' });
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
@@ -96,7 +100,7 @@ const AddCategoryPage: React.FC = () => {
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 		try {
-			let iconId = 0;
+			let iconId = currentIcon.iconId;
 			if (icon) {
 				const formData = new FormData();
 				formData.append('icon', icon);
@@ -217,16 +221,19 @@ const AddCategoryPage: React.FC = () => {
 			<h1 className='text-xl font-bold mb-4'>Add New Category</h1>
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
 			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
+
 			<CategoryForm
 				name={name}
 				setName={setName}
 				parentIds={parentIds} // Updated to handle multiple parents
 				setParentIds={setParentIds} // Function to set multiple parents
 				translations={translations}
-				icon={icon}
+				icons={icons}
 				onFileChange={handleFileChange}
 				onFileReset={handleResetFileName}
 				onSubmit={handleSubmit}
+				isIconPickerOpen={isIconPickerOpen}
+				setIsIconPickerOpen={setIsIconPickerOpen}
 			/>
 			<div className='mt-8'>
 				<CategoryList
@@ -247,8 +254,16 @@ const AddCategoryPage: React.FC = () => {
 							console.error('Failed to delete category', err);
 						}
 					}}
+					isIconPickerOpen={isIconPickerOpen}
+					setIsIconPickerOpen={setIsIconPickerOpen}
 				/>
 			</div>
+			<ImagePicker
+				icons={icons}
+				isOpen={isIconPickerOpen}
+				onSelect={setCurrentIcon}
+				onClose={() => setIsIconPickerOpen(false)}
+			/>
 		</PageContainer>
 	);
 };

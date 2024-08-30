@@ -157,31 +157,57 @@ function GET() {
 exports.GET = GET;
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var _a, parentIds, labelId, iconId, newCategory;
+        var _a, parentIds, labelId, iconId, newIcon, categoryIconId, createdIcon, error_1, newCategory_1, error_2;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, request.json()];
                 case 1:
-                    _a = _b.sent(), parentIds = _a.parentIds, labelId = _a.labelId, iconId = _a.iconId;
+                    _a = _b.sent(), parentIds = _a.parentIds, labelId = _a.labelId, iconId = _a.iconId, newIcon = _a.newIcon;
+                    categoryIconId = iconId;
+                    console.log(iconId);
+                    if (!newIcon) return [3 /*break*/, 5];
+                    _b.label = 2;
+                case 2:
+                    _b.trys.push([2, 4, , 5]);
+                    return [4 /*yield*/, prisma_1.prisma.icon.create({
+                            data: {
+                                name: newIcon.name,
+                                url: newIcon.url
+                            }
+                        })];
+                case 3:
+                    createdIcon = _b.sent();
+                    categoryIconId = createdIcon.id; // Update iconId to the newly created icon
+                    return [3 /*break*/, 5];
+                case 4:
+                    error_1 = _b.sent();
+                    return [2 /*return*/, server_1.NextResponse.json({ error: 'Failed to create icon.' }, { status: 500 })];
+                case 5:
+                    _b.trys.push([5, 9, , 10]);
                     return [4 /*yield*/, prisma_1.prisma.category.create({
                             data: {
                                 labelId: labelId,
-                                iconId: iconId
+                                iconId: categoryIconId
                             }
                         })];
-                case 2:
-                    newCategory = _b.sent();
-                    if (!(parentIds && parentIds.length > 0)) return [3 /*break*/, 4];
+                case 6:
+                    newCategory_1 = _b.sent();
+                    if (!(parentIds && parentIds.length > 0)) return [3 /*break*/, 8];
                     return [4 /*yield*/, prisma_1.prisma.parentCategory.createMany({
                             data: parentIds.map(function (parentId) { return ({
                                 parentId: parentId,
-                                childId: newCategory.id
+                                childId: newCategory_1.id
                             }); })
                         })];
-                case 3:
+                case 7:
                     _b.sent();
-                    _b.label = 4;
-                case 4: return [2 /*return*/, server_1.NextResponse.json(newCategory)];
+                    _b.label = 8;
+                case 8: return [2 /*return*/, server_1.NextResponse.json(newCategory_1)];
+                case 9:
+                    error_2 = _b.sent();
+                    console.error('Failed to create category', error_2);
+                    return [2 /*return*/, server_1.NextResponse.json({ error: 'Failed to create category.' }, { status: 500 })];
+                case 10: return [2 /*return*/];
             }
         });
     });

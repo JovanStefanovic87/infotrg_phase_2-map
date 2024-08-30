@@ -80,25 +80,48 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-	const { parentIds, labelId, iconId } = await request.json();
+	const { parentIds, labelId, iconId, newIcon } = await request.json();
 
-	// Create a new category
-	const newCategory = await prisma.category.create({
-		data: {
-			labelId,
-			iconId,
-		},
-	});
+	let categoryIconId = iconId;
+	console.log(iconId);
+	// If a new icon is being uploaded, save it first
+	if (newIcon) {
+		try {
+			const createdIcon = await prisma.icon.create({
+				data: {
+					name: newIcon.name,
+					url: newIcon.url,
+				},
+			});
 
-	// Create entries in ParentCategory join table for each parentId
-	if (parentIds && parentIds.length > 0) {
-		await prisma.parentCategory.createMany({
-			data: parentIds.map((parentId: number) => ({
-				parentId,
-				childId: newCategory.id,
-			})),
-		});
+			categoryIconId = createdIcon.id; // Update iconId to the newly created icon
+		} catch (error) {
+			return NextResponse.json({ error: 'Failed to create icon.' }, { status: 500 });
+		}
 	}
 
-	return NextResponse.json(newCategory);
+	try {
+		// Create a new category with either an existing iconId or the newly created iconId
+		const newCategory = await prisma.category.create({
+			data: {
+				labelId,
+				iconId: categoryIconId,
+			},
+		});
+
+		// Create entries in ParentCategory join table for each parentId
+		if (parentIds && parentIds.length > 0) {
+			await prisma.parentCategory.createMany({
+				data: parentIds.map((parentId: number) => ({
+					parentId,
+					childId: newCategory.id,
+				})),
+			});
+		}
+
+		return NextResponse.json(newCategory);
+	} catch (error) {
+		console.error('Failed to create category', error);
+		return NextResponse.json({ error: 'Failed to create category.' }, { status: 500 });
+	}
 }

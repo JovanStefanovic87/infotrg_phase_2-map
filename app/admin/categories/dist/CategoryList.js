@@ -61,58 +61,13 @@ var fi_1 = require("react-icons/fi");
 var CustomModal_1 = require("@/app/components/modals/CustomModal");
 var axios_1 = require("axios");
 var CategoryList = function (_a) {
-    var categories = _a.categories, translations = _a.translations, icons = _a.icons, currentIcon = _a.currentIcon, setCurrentIcon = _a.setCurrentIcon, languages = _a.languages, languageId = _a.languageId, refetchCategories = _a.refetchCategories, onEditCategory = _a.onEditCategory, onDeleteCategory = _a.onDeleteCategory;
+    var categories = _a.categories, translations = _a.translations, icons = _a.icons, currentIcon = _a.currentIcon, setCurrentIcon = _a.setCurrentIcon, languages = _a.languages, languageId = _a.languageId, refetchCategories = _a.refetchCategories, onEditCategory = _a.onEditCategory, onDeleteCategory = _a.onDeleteCategory, setIsIconPickerOpen = _a.setIsIconPickerOpen;
     var _b = react_1.useState(new Set()), openCategories = _b[0], setOpenCategories = _b[1];
     var _c = react_1.useState(false), isModalOpen = _c[0], setIsModalOpen = _c[1];
     var _d = react_1.useState(null), currentEditCategory = _d[0], setCurrentEditCategory = _d[1];
     var _e = react_1.useState(null), newIcon = _e[0], setNewIcon = _e[1];
-    var _f = react_1.useState(false), isIconPickerOpen = _f[0], setIsIconPickerOpen = _f[1];
-    var _g = react_1.useState([]), availableIcons = _g[0], setAvailableIcons = _g[1];
-    var _h = react_1.useState({}), translationsByLanguage = _h[0], setTranslationsByLanguage = _h[1];
-    var _j = react_1.useState([]), newTranslations = _j[0], setNewTranslations = _j[1];
-    var _k = react_1.useState([]), parentIds = _k[0], setParentIds = _k[1];
-    var _l = react_1.useState([]), allCategories = _l[0], setAllCategories = _l[1];
-    var _m = react_1.useState(null), initialIconId = _m[0], setInitialIconId = _m[1];
-    console.log('translationsByLanguage:', translationsByLanguage);
-    console.log('languages:', languages);
-    react_1.useEffect(function () {
-        setOpenCategories(new Set());
-        var fetchAllCategories = function () { return __awaiter(void 0, void 0, void 0, function () {
-            var response, flattenedCategories, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, axios_1["default"].get('/api/categories')];
-                    case 1:
-                        response = _a.sent();
-                        flattenedCategories = flattenCategories(response.data);
-                        setAllCategories(flattenedCategories);
-                        return [3 /*break*/, 3];
-                    case 2:
-                        error_1 = _a.sent();
-                        console.error('Failed to fetch all categories', error_1);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
-                }
-            });
-        }); };
-        fetchAllCategories();
-    }, [categories, translations]);
-    // Function to flatten category hierarchy
-    var flattenCategories = function (categories) {
-        var flatCategories = [];
-        var traverse = function (catArray) {
-            catArray.forEach(function (cat) {
-                flatCategories.push(cat);
-                if (cat.children.length > 0) {
-                    traverse(cat.children); // Recursively traverse children
-                }
-            });
-        };
-        traverse(categories);
-        return flatCategories;
-    };
+    var _f = react_1.useState([]), newTranslations = _f[0], setNewTranslations = _f[1];
+    var _g = react_1.useState([]), parentIds = _g[0], setParentIds = _g[1];
     var toggleCategory = react_1.useCallback(function (id) {
         setOpenCategories(function (prev) {
             var newOpenCategories = new Set(prev);
@@ -146,26 +101,19 @@ var CategoryList = function (_a) {
         return translations.filter(function (t) { return t.labelId === labelId; });
     }, [translations]);
     var handleOpenEditModal = react_1.useCallback(function (category) { return __awaiter(void 0, void 0, void 0, function () {
-        var categoryTranslations_1, translationsMap, existingTranslations, iconId, iconUrl, error_2;
+        var categoryTranslations, existingTranslations, iconId, iconUrl, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     setCurrentEditCategory(category);
                     setParentIds(category.parents.map(function (parent) { return parent.id; }));
-                    setInitialIconId(category.iconId); // Set the initial icon ID
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
                     return [4 /*yield*/, axios_1["default"].get("/api/translation/labels/" + category.labelId)];
                 case 2:
-                    categoryTranslations_1 = (_a.sent()).data;
-                    translationsMap = languages.reduce(function (acc, lang) {
-                        var translation = categoryTranslations_1.find(function (t) { return t.languageId === lang.id; });
-                        acc[lang.id] = translation ? translation.translation : '';
-                        return acc;
-                    }, {});
-                    setTranslationsByLanguage(translationsMap);
-                    existingTranslations = categoryTranslations_1.map(function (t) { return ({
+                    categoryTranslations = (_a.sent()).data;
+                    existingTranslations = categoryTranslations.map(function (t) { return ({
                         translationId: t.id,
                         languageId: t.languageId,
                         translation: t.translation
@@ -179,8 +127,8 @@ var CategoryList = function (_a) {
                     });
                     return [3 /*break*/, 4];
                 case 3:
-                    error_2 = _a.sent();
-                    console.error('Failed to fetch category translations', error_2);
+                    error_1 = _a.sent();
+                    console.error('Failed to fetch category translations', error_1);
                     return [3 /*break*/, 4];
                 case 4:
                     setNewIcon(null);
@@ -259,25 +207,6 @@ var CategoryList = function (_a) {
             setNewIcon(event.target.files[0]);
         }
     };
-    var fetchIcons = react_1.useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
-        var data, error_3;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, axios_1["default"].get('/api/icons')];
-                case 1:
-                    data = (_a.sent()).data;
-                    setAvailableIcons(data);
-                    return [3 /*break*/, 3];
-                case 2:
-                    error_3 = _a.sent();
-                    console.error('Error fetching icons:', error_3);
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
-            }
-        });
-    }); }, []);
     var handleDelete = react_1.useCallback(function (id) { return __awaiter(void 0, void 0, void 0, function () {
         var err_2;
         return __generator(this, function (_a) {
@@ -324,7 +253,7 @@ var CategoryList = function (_a) {
         if (ancestors === void 0) { ancestors = new Set(); }
         category.parents.forEach(function (parent) {
             ancestors.add(parent.id);
-            var parentCategory = allCategories.find(function (cat) { return cat.id === parent.id; });
+            var parentCategory = categories.find(function (cat) { return cat.id === parent.id; });
             if (parentCategory) {
                 getAncestors(parentCategory, ancestors);
             }
@@ -344,13 +273,13 @@ var CategoryList = function (_a) {
     // Function to filter categories for select input
     var filterCategoriesForSelect = react_1.useCallback(function () {
         if (!currentEditCategory)
-            return allCategories;
+            return categories;
         var completeBranch = getCompleteBranch(currentEditCategory);
-        var uniqueCategories = allCategories.filter(function (cat) { return !completeBranch.has(cat.id); });
+        var uniqueCategories = categories.filter(function (cat) { return !completeBranch.has(cat.id); });
         // Convert to a Set and back to an array to ensure uniqueness
         var uniqueCategoriesSet = new Set(uniqueCategories.map(function (cat) { return cat.id; }));
-        return Array.from(uniqueCategoriesSet).map(function (id) { return allCategories.find(function (cat) { return cat.id === id; }); });
-    }, [allCategories, currentEditCategory]);
+        return Array.from(uniqueCategoriesSet).map(function (id) { return categories.find(function (cat) { return cat.id === id; }); });
+    }, [categories, currentEditCategory]);
     var CategoryItem = function (_a) {
         var category = _a.category;
         var iconUrl = getCategoryIconUrl(category.iconId);
@@ -384,18 +313,13 @@ var CategoryList = function (_a) {
                     react_1["default"].createElement(image_1["default"], { src: currentIcon.iconUrl, alt: 'Current Icon', width: 50, height: 50 }),
                     react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () {
                             setIsIconPickerOpen(true);
-                            fetchIcons();
+                            icons;
                         } }, "Choose from existing icons"))) : (react_1["default"].createElement("div", { className: 'mt-2' },
                     react_1["default"].createElement("p", { className: 'text-gray-500' }, "No icon selected"),
                     react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () {
                             setIsIconPickerOpen(true);
-                            fetchIcons();
+                            icons;
                         } }, "Choose from existing icons"))),
-                isIconPickerOpen && (react_1["default"].createElement("div", { className: 'mt-2' }, availableIcons.map(function (icon) { return (react_1["default"].createElement("div", { key: icon.id, className: 'inline-block p-2' },
-                    react_1["default"].createElement(image_1["default"], { src: icon.url, alt: icon.name || 'Icon', width: 50, height: 50, onClick: function () {
-                            setCurrentIcon({ iconId: icon.id, iconUrl: icon.url });
-                            setIsIconPickerOpen(false);
-                        } }))); }))),
                 react_1["default"].createElement("input", { type: 'file', id: 'icon', className: 'text-black', name: 'icon', accept: 'image/*', onChange: handleFileChange })),
             languages.map(function (language) {
                 var _a;
@@ -415,7 +339,7 @@ var CategoryList = function (_a) {
                 react_1["default"].createElement("ul", null, __spreadArrays(new Set(parentIds)).map(function (parentId) {
                     var _a;
                     return (react_1["default"].createElement("li", { key: "parent-" + parentId },
-                        getCategoryName(((_a = allCategories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 0, languageId),
+                        getCategoryName(((_a = categories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 0, languageId),
                         react_1["default"].createElement("button", { type: 'button', onClick: function () { return handleRemoveParent(parentId); }, className: 'text-red-500 ml-2' }, "Remove")));
                 })),
                 react_1["default"].createElement("select", { onChange: function (e) { return handleAddParent(Number(e.target.value)); }, value: '', className: 'mt-2 text-black' },
