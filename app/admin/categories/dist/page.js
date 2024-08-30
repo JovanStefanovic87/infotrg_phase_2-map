@@ -63,6 +63,7 @@ var AddCategoryPage = function () {
     var _k = react_1.useState(null), icon = _k[0], setIcon = _k[1];
     var _l = react_1.useState(false), loading = _l[0], setLoading = _l[1];
     var fileUploadButtonRef = react_1.useRef({});
+    var _m = react_1.useState({ iconId: null, iconUrl: null }), currentIcon = _m[0], setCurrentIcon = _m[1];
     var fetchCategories = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/categories' }); };
     var fetchLanguages = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/languages' }); };
     var fetchIcons = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/icons' }); };
@@ -271,7 +272,7 @@ var AddCategoryPage = function () {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 6, , 7]);
-                    iconId = null;
+                    iconId = currentIcon.iconId;
                     if (!newIcon) return [3 /*break*/, 3];
                     formData = new FormData();
                     formData.append('icon', newIcon);
@@ -280,7 +281,7 @@ var AddCategoryPage = function () {
                         })];
                 case 2:
                     iconData = (_a.sent()).data;
-                    iconId = iconData.iconId;
+                    iconId = iconData.iconId; // Update to the new icon ID
                     _a.label = 3;
                 case 3:
                     translationsArray = translations.map(function (translation) {
@@ -315,14 +316,14 @@ var AddCategoryPage = function () {
                 case 7: return [2 /*return*/];
             }
         });
-    }); }, [refetchData]);
+    }); }, [currentIcon, refetchData]);
     return (react_1["default"].createElement(PageContainer_1["default"], null,
         react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
         react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentIds: parentIds, setParentIds: setParentIds, translations: translations, icon: icon, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit }),
         react_1["default"].createElement("div", { className: 'mt-8' },
-            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, languages: languages, languageId: languageId, refetchCategories: refetchData, onEditCategory: handleEditCategory, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
+            react_1["default"].createElement(CategoryList_1["default"], { categories: categories, translations: translations, icons: icons, currentIcon: currentIcon, setCurrentIcon: setCurrentIcon, languages: languages, languageId: languageId, refetchCategories: refetchData, onEditCategory: handleEditCategory, onDeleteCategory: function (id) { return __awaiter(void 0, void 0, void 0, function () {
                     var err_5;
                     return __generator(this, function (_a) {
                         switch (_a.label) {

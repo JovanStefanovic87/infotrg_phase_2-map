@@ -94,9 +94,14 @@ export async function POST(request: NextRequest) {
 		return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
 	}
 
+	// Define the upload directory path
 	const uploadDirectory = path.join(process.cwd(), 'public/icons/articles'); // Ensure this path exists and is writable
 
+	// Ensure the upload directory exists
+	await fs.promises.mkdir(uploadDirectory, { recursive: true });
+
 	try {
+		// Upload the file and save icon data to the database
 		const iconId = await uploadFile(file, uploadDirectory);
 		return NextResponse.json({ message: 'File uploaded successfully', iconId });
 	} catch (error) {

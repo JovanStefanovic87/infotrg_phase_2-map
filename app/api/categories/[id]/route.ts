@@ -158,10 +158,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 	try {
 		const body = await request.json();
-
-		console.log('PUT /api/categories/:id - Request body:', body);
-
 		const { parentIds, labelId, iconId } = body;
+		console.log('iconId:', iconId);
 
 		if (!Array.isArray(parentIds)) {
 			return NextResponse.json({ error: 'parentIds should be an array' }, { status: 400 });
@@ -171,29 +169,27 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Invalid labelId' }, { status: 400 });
 		}
 
-		if (iconId !== null && typeof iconId !== 'number') {
+		if (iconId !== null && iconId !== undefined && typeof iconId !== 'number') {
 			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
 		}
 
-		// Start a transaction to handle multiple queries safely
 		const updatedCategory = await prisma.$transaction(async prisma => {
-			// Update the category's basic info first
+			const dataToUpdate: { labelId: number; iconId?: number | null } = { labelId };
+
+			if (iconId !== undefined) {
+				// Only update iconId if it's explicitly provided
+				dataToUpdate.iconId = iconId;
+			}
+
 			const category = await prisma.category.update({
 				where: { id: Number(id) },
-				data: {
-					labelId,
-					iconId,
-				},
+				data: dataToUpdate,
 			});
 
-			// Remove all previous parent-child relationships for the current category
 			await prisma.parentCategory.deleteMany({
-				where: {
-					childId: Number(id),
-				},
+				where: { childId: Number(id) },
 			});
 
-			// Recreate the parent-child relationships for the current category
 			await prisma.parentCategory.createMany({
 				data: parentIds.map((parentId: number) => ({
 					parentId: parentId,
@@ -207,9 +203,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 		return NextResponse.json(updatedCategory);
 	} catch (error) {
 		console.error('Error updating category:', error);
-		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			return NextResponse.json({ error: `Database error: ${error.message}` }, { status: 500 });
-		}
 		return NextResponse.json({ error: 'Error updating category' }, { status: 500 });
 	}
 }

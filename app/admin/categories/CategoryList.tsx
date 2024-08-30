@@ -10,6 +10,11 @@ interface CategoryListProps {
 	categories: Category[];
 	translations: Translation[];
 	icons: Icon[];
+	currentIcon: {
+		iconId: number | null;
+		iconUrl: string | null;
+	};
+	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
 	languages: Language[];
 	languageId: number;
 	refetchCategories: () => Promise<void>;
@@ -22,6 +27,7 @@ interface CategoryListProps {
 				translation: string;
 			}[];
 			icon?: File | null;
+			iconId?: number | null; // Make iconId optional here
 			parentIds: number[];
 		}
 	) => Promise<void>;
@@ -38,6 +44,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	categories,
 	translations,
 	icons,
+	currentIcon,
+	setCurrentIcon,
 	languages,
 	languageId,
 	refetchCategories,
@@ -47,11 +55,17 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
-	const [translationsByLanguage, setTranslationsByLanguage] = useState<Record<number, string>>({});
 	const [newIcon, setNewIcon] = useState<File | null>(null);
+	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+	const [availableIcons, setAvailableIcons] = useState<Icon[]>([]);
+	const [translationsByLanguage, setTranslationsByLanguage] = useState<Record<number, string>>({});
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [allCategories, setAllCategories] = useState<Category[]>([]);
+	const [initialIconId, setInitialIconId] = useState<number | null>(null);
+
+	console.log('translationsByLanguage:', translationsByLanguage);
+	console.log('languages:', languages);
 
 	useEffect(() => {
 		setOpenCategories(new Set());
@@ -143,6 +157,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		async (category: Category) => {
 			setCurrentEditCategory(category);
 			setParentIds(category.parents.map(parent => parent.id));
+			setInitialIconId(category.iconId); // Set the initial icon ID
 
 			try {
 				const { data: categoryTranslations } = await axios.get<Translation[]>(
@@ -166,6 +181,14 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				}));
 
 				setNewTranslations(existingTranslations);
+
+				// Set the current icon URL based on the category's iconId
+				const iconId = category.iconId || null;
+				const iconUrl = getCategoryIconUrl(iconId); // Make sure this function works correctly
+				setCurrentIcon({
+					iconId,
+					iconUrl,
+				});
 			} catch (error) {
 				console.error('Failed to fetch category translations', error);
 			}
@@ -173,7 +196,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			setNewIcon(null);
 			setIsModalOpen(true);
 		},
-		[languages]
+		[getCategoryIconUrl, languages]
 	);
 
 	const handleSubmitEdit = useCallback(
@@ -182,7 +205,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			if (!currentEditCategory) return;
 
 			try {
-				let iconId: number | undefined = undefined;
+				let iconId: number | null = currentIcon.iconId; // Use currentIcon.iconId
 
 				if (newIcon) {
 					const formData = new FormData();
@@ -190,7 +213,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					const { data: iconData } = await axios.post('/api/icons', formData, {
 						headers: { 'Content-Type': 'multipart/form-data' },
 					});
-					iconId = iconData.id;
+					iconId = iconData.id; // Set iconId to new icon id
 				}
 
 				const translationUpdates = newTranslations.map(
@@ -205,11 +228,21 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					translations: translationUpdates,
 				});
 
-				await onEditCategory(currentEditCategory.id, {
+				const updateData: {
+					translations: {
+						translationId: number;
+						languageId: number;
+						translation: string;
+					}[];
+					iconId: number | null; // Ensure iconId is always included
+					parentIds: number[];
+				} = {
 					translations: translationUpdates,
-					icon: newIcon,
+					iconId: iconId ?? null, // Always include iconId, even if it's null
 					parentIds,
-				});
+				};
+
+				await onEditCategory(currentEditCategory.id, updateData);
 
 				setIsModalOpen(false);
 				await refetchCategories();
@@ -217,14 +250,29 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				console.error('Failed to edit category', err);
 			}
 		},
-		[currentEditCategory, newTranslations, newIcon, onEditCategory, parentIds, refetchCategories]
+		[
+			currentEditCategory,
+			newTranslations,
+			newIcon,
+			onEditCategory,
+			parentIds,
+			refetchCategories,
+			currentIcon, // include this dependency
+		]
 	);
 
-	const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			setNewIcon(e.target.files[0]);
-		} else {
-			setNewIcon(null);
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files) {
+			setNewIcon(event.target.files[0]);
+		}
+	};
+
+	const fetchIcons = useCallback(async () => {
+		try {
+			const { data } = await axios.get('/api/icons');
+			setAvailableIcons(data);
+		} catch (error) {
+			console.error('Error fetching icons:', error);
 		}
 	}, []);
 
@@ -255,19 +303,52 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		setParentIds(prev => prev.filter(id => id !== parentId));
 	}, []);
 
-	// Helper function to recursively find all children of a category
-	const findAllChildren = (category: Category): number[] => {
-		let children = category.children.map(child => child.id);
+	// Helper function to get all descendants of a category
+	const getDescendants = (
+		category: Category,
+		descendants: Set<number> = new Set()
+	): Set<number> => {
 		category.children.forEach(child => {
-			children = children.concat(findAllChildren(child)); // Recursively add children of children
+			descendants.add(child.id);
+			getDescendants(child, descendants);
 		});
-		return children;
+		return descendants;
 	};
 
-	// Helper function to find all parents of a category
-	const findAllParents = (category: Category): number[] => {
-		return category.parents.map(parent => parent.id);
+	// Helper function to get all ancestors of a category
+	const getAncestors = (category: Category, ancestors: Set<number> = new Set()): Set<number> => {
+		category.parents.forEach(parent => {
+			ancestors.add(parent.id);
+			const parentCategory = allCategories.find(cat => cat.id === parent.id);
+			if (parentCategory) {
+				getAncestors(parentCategory, ancestors);
+			}
+		});
+		return ancestors;
 	};
+
+	// Helper function to get the complete branch (all descendants and ancestors) of a category
+	const getCompleteBranch = (category: Category): Set<number> => {
+		const branch = new Set<number>();
+		branch.add(category.id); // Add the category itself
+		const descendants = getDescendants(category);
+		const ancestors = getAncestors(category);
+		descendants.forEach(id => branch.add(id));
+		ancestors.forEach(id => branch.add(id));
+		return branch;
+	};
+
+	// Function to filter categories for select input
+	const filterCategoriesForSelect = useCallback(() => {
+		if (!currentEditCategory) return allCategories;
+
+		const completeBranch = getCompleteBranch(currentEditCategory);
+		const uniqueCategories = allCategories.filter(cat => !completeBranch.has(cat.id));
+
+		// Convert to a Set and back to an array to ensure uniqueness
+		const uniqueCategoriesSet = new Set(uniqueCategories.map(cat => cat.id));
+		return Array.from(uniqueCategoriesSet).map(id => allCategories.find(cat => cat.id === id));
+	}, [allCategories, currentEditCategory]);
 
 	const CategoryItem: React.FC<{ category: Category }> = ({ category }) => {
 		const iconUrl = getCategoryIconUrl(category.iconId);
@@ -330,8 +411,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		);
 	};
 
-	console.log(JSON.stringify(allCategories));
-
 	return (
 		<div>
 			{categories.map(category => (
@@ -346,6 +425,51 @@ const CategoryList: React.FC<CategoryListProps> = ({
 								<label htmlFor='icon' className='font-semibold'>
 									Icon
 								</label>
+								{currentIcon.iconUrl && !newIcon ? (
+									<div className='mt-2'>
+										<Image src={currentIcon.iconUrl} alt='Current Icon' width={50} height={50} />
+										<button
+											type='button'
+											className='text-blue-500 mt-2'
+											onClick={() => {
+												setIsIconPickerOpen(true);
+												fetchIcons();
+											}}>
+											Choose from existing icons
+										</button>
+									</div>
+								) : (
+									<div className='mt-2'>
+										<p className='text-gray-500'>No icon selected</p>
+										<button
+											type='button'
+											className='text-blue-500 mt-2'
+											onClick={() => {
+												setIsIconPickerOpen(true);
+												fetchIcons();
+											}}>
+											Choose from existing icons
+										</button>
+									</div>
+								)}
+								{isIconPickerOpen && (
+									<div className='mt-2'>
+										{availableIcons.map(icon => (
+											<div key={icon.id} className='inline-block p-2'>
+												<Image
+													src={icon.url}
+													alt={icon.name || 'Icon'}
+													width={50}
+													height={50}
+													onClick={() => {
+														setCurrentIcon({ iconId: icon.id, iconUrl: icon.url });
+														setIsIconPickerOpen(false);
+													}}
+												/>
+											</div>
+										))}
+									</div>
+								)}
 								<input
 									type='file'
 									id='icon'
@@ -383,8 +507,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 							<div>
 								<label className='font-semibold'>Current Parent Categories:</label>
 								<ul>
-									{parentIds.map(parentId => (
-										<li key={parentId}>
+									{[...new Set(parentIds)].map(parentId => (
+										<li key={`parent-${parentId}`}>
 											{getCategoryName(
 												allCategories.find(cat => cat.id === parentId)?.labelId || 0,
 												languageId
@@ -405,36 +529,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 									<option value='' disabled>
 										Add Parent Category
 									</option>
-									{allCategories
-										.filter(cat => {
-											// Exclude the category being edited
-											if (currentEditCategory && cat.id === currentEditCategory.id) {
-												return false;
-											}
+									{filterCategoriesForSelect().map(cat => {
+										if (!cat) return null; // Ensure `cat` is defined before using its properties
 
-											// Exclude all children of the category being edited
-											if (
-												currentEditCategory &&
-												findAllChildren(currentEditCategory).includes(cat.id)
-											) {
-												return false;
-											}
-
-											// Exclude all parents of the category being edited
-											if (
-												currentEditCategory &&
-												findAllParents(currentEditCategory).includes(cat.id)
-											) {
-												return false;
-											}
-
-											return true;
-										})
-										.map(cat => (
-											<option key={cat.id} value={cat.id}>
+										return (
+											<option key={`select-${cat.id}`} value={cat.id}>
 												{getCategoryName(cat.labelId, languageId)}
 											</option>
-										))}
+										);
+									})}
 								</select>
 							</div>
 

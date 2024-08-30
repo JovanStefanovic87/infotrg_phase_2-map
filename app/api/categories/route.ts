@@ -3,6 +3,39 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { Category } from '@/utils/helpers/types';
 
+// Function to fetch parent categories
+const fetchParents = async (childId: number): Promise<Category[]> => {
+	const parentCategories = await prisma.parentCategory.findMany({
+		where: { childId },
+		include: {
+			parent: {
+				include: {
+					icon: true,
+				},
+			},
+		},
+	});
+
+	return Promise.all(
+		parentCategories.map(async ({ parent }) => ({
+			id: parent.id,
+			name: '', // Fetch or provide the name for each parent category
+			iconId: parent.iconId,
+			labelId: parent.labelId,
+			parents: await fetchParents(parent.id), // Recursively fetch parent categories
+			children: [], // This is not required here
+			icon: parent.icon
+				? {
+						id: parent.icon.id,
+						name: parent.icon.name,
+						url: parent.icon.url,
+						createdAt: parent.icon.createdAt,
+				  }
+				: null,
+		}))
+	);
+};
+
 // Function to build the category tree
 const buildCategoryTree = async (parentId: number | null): Promise<Category[]> => {
 	const categories = await prisma.category.findMany({
@@ -10,7 +43,7 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 			icon: true,
 			childCategories: {
 				include: {
-					child: true, // This will fetch the child category details
+					child: true,
 				},
 			},
 		},
@@ -24,10 +57,10 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 	return Promise.all(
 		categories.map(async category => ({
 			id: category.id,
-			name: '', // You need to fetch or provide the name for each category
+			name: '', // Fetch or provide the name for each category
 			iconId: category.iconId,
 			labelId: category.labelId,
-			parents: [], // This should be populated as needed, possibly via another query
+			parents: await fetchParents(category.id), // Fetch and populate parents
 			children: await buildCategoryTree(category.id), // Recursively build children
 			icon: category.icon
 				? {

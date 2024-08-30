@@ -40,6 +40,55 @@ exports.POST = exports.GET = void 0;
 // api/categories
 var server_1 = require("next/server");
 var prisma_1 = require("@/app/lib/prisma");
+// Function to fetch parent categories
+var fetchParents = function (childId) { return __awaiter(void 0, void 0, Promise, function () {
+    var parentCategories;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, prisma_1.prisma.parentCategory.findMany({
+                    where: { childId: childId },
+                    include: {
+                        parent: {
+                            include: {
+                                icon: true
+                            }
+                        }
+                    }
+                })];
+            case 1:
+                parentCategories = _a.sent();
+                return [2 /*return*/, Promise.all(parentCategories.map(function (_a) {
+                        var parent = _a.parent;
+                        return __awaiter(void 0, void 0, void 0, function () {
+                            var _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
+                                    case 0:
+                                        _b = {
+                                            id: parent.id,
+                                            name: '',
+                                            iconId: parent.iconId,
+                                            labelId: parent.labelId
+                                        };
+                                        return [4 /*yield*/, fetchParents(parent.id)];
+                                    case 1: return [2 /*return*/, (_b.parents = _c.sent(),
+                                            _b.children = [],
+                                            _b.icon = parent.icon
+                                                ? {
+                                                    id: parent.icon.id,
+                                                    name: parent.icon.name,
+                                                    url: parent.icon.url,
+                                                    createdAt: parent.icon.createdAt
+                                                }
+                                                : null,
+                                            _b)];
+                                }
+                            });
+                        });
+                    }))];
+        }
+    });
+}); };
 // Function to build the category tree
 var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, Promise, function () {
     var categories;
@@ -70,11 +119,13 @@ var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, P
                                         id: category.id,
                                         name: '',
                                         iconId: category.iconId,
-                                        labelId: category.labelId,
-                                        parents: []
+                                        labelId: category.labelId
                                     };
+                                    return [4 /*yield*/, fetchParents(category.id)];
+                                case 1:
+                                    _a.parents = _b.sent();
                                     return [4 /*yield*/, buildCategoryTree(category.id)];
-                                case 1: return [2 /*return*/, (_a.children = _b.sent(),
+                                case 2: return [2 /*return*/, (_a.children = _b.sent(),
                                         _a.icon = category.icon
                                             ? {
                                                 id: category.icon.id,

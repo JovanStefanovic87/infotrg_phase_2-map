@@ -213,6 +213,11 @@ export interface Icon {
 	url: string;
 }
 
+export interface CurrentIcon {
+	iconId: number | null;
+	iconUrl: string | null;
+}
+
 export interface CategoryData {
 	name: string;
 	description: string;

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import CategoryList from './CategoryList';
-import { Category, Language, Translation, Icon } from '@/utils/helpers/types';
+import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
 import CategoryForm from './CategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
@@ -20,6 +20,7 @@ const AddCategoryPage: React.FC = () => {
 	const [icon, setIcon] = useState<File | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
+	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 
 	const fetchCategories = () => apiClient<Category[]>({ method: 'GET', url: '/api/categories' });
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
@@ -165,34 +166,34 @@ const AddCategoryPage: React.FC = () => {
 			data: {
 				translations: { translationId: number | null; languageId: number; translation: string }[];
 				icon?: File | null;
-				parentIds: number[]; // Include parentIds to update parent categories
+				parentIds: number[];
 			}
 		) => {
 			const { translations, icon: newIcon, parentIds } = data;
 
 			try {
-				let iconId: number | null = null;
+				let iconId: number | null = currentIcon.iconId; // Start with the current iconId
 
-				// Handle icon upload
+				// Handle icon upload if a new icon is provided
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
 					const { data: iconData } = await axios.post('/api/icons', formData, {
 						headers: { 'Content-Type': 'multipart/form-data' },
 					});
-					iconId = iconData.iconId;
+					iconId = iconData.iconId; // Update to the new icon ID
 				}
 
 				// Prepare translations for update
 				const translationsArray = translations.map(translation => ({
 					translationId: translation.translationId,
 					languageId: translation.languageId,
-					translation: translation.translation ?? '', // Ensure it defaults to empty string if null
+					translation: translation.translation ?? '', // Ensure it defaults to an empty string if null
 				}));
 
 				// Update category with new icon, translations, and parentIds
 				await axios.put(`/api/categories/${id}`, {
-					iconId,
+					iconId, // Always include iconId, whether new or from existing
 					parentIds,
 					translations: translationsArray,
 					labelId: id, // Assuming labelId is the same as the category id
@@ -208,7 +209,7 @@ const AddCategoryPage: React.FC = () => {
 				setSuccessMessage(null);
 			}
 		},
-		[refetchData]
+		[currentIcon, refetchData]
 	);
 
 	return (
@@ -232,6 +233,8 @@ const AddCategoryPage: React.FC = () => {
 					categories={categories}
 					translations={translations}
 					icons={icons}
+					currentIcon={currentIcon}
+					setCurrentIcon={setCurrentIcon}
 					languages={languages}
 					languageId={languageId}
 					refetchCategories={refetchData}
