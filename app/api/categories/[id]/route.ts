@@ -158,8 +158,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 	try {
 		const body = await request.json();
-		const { parentIds, labelId, iconId } = body;
-		console.log('iconId:', iconId);
+		const { parentIds, labelId, iconId, translations } = body;
 
 		if (!Array.isArray(parentIds)) {
 			return NextResponse.json({ error: 'parentIds should be an array' }, { status: 400 });
@@ -173,19 +172,25 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
 		}
 
+		// Validate translations and synonyms
+		if (!Array.isArray(translations)) {
+			return NextResponse.json({ error: 'Translations should be an array' }, { status: 400 });
+		}
+
 		const updatedCategory = await prisma.$transaction(async prisma => {
 			const dataToUpdate: { labelId: number; iconId?: number | null } = { labelId };
 
 			if (iconId !== undefined) {
-				// Only update iconId if it's explicitly provided
 				dataToUpdate.iconId = iconId;
 			}
 
+			// Update the category
 			const category = await prisma.category.update({
 				where: { id: Number(id) },
 				data: dataToUpdate,
 			});
 
+			// Update parent categories
 			await prisma.parentCategory.deleteMany({
 				where: { childId: Number(id) },
 			});
@@ -196,6 +201,37 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					childId: Number(id),
 				})),
 			});
+
+			// Update translations and synonyms
+			for (const translation of translations) {
+				const { translationId, languageId, translation: translationText, synonyms } = translation;
+
+				// Update translation
+				await prisma.translation.upsert({
+					where: { id: translationId },
+					update: { translation: translationText },
+					create: {
+						labelId,
+						languageId,
+						translation: translationText,
+					},
+				});
+
+				// Delete existing synonyms for the translation
+				await prisma.synonym.deleteMany({
+					where: { translationId },
+				});
+
+				// Insert new synonyms
+				if (Array.isArray(synonyms)) {
+					await prisma.synonym.createMany({
+						data: synonyms.map((synonym: string) => ({
+							translationId,
+							synonym,
+						})),
+					});
+				}
+			}
 
 			return category;
 		});

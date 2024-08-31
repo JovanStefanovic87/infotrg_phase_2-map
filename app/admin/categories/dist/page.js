@@ -66,7 +66,6 @@ var AddCategoryPage = function () {
     var _m = react_1.useState(false), loading = _m[0], setLoading = _m[1];
     var fileUploadButtonRef = react_1.useRef({});
     var _o = react_1.useState({ iconId: null, iconUrl: null }), currentIcon = _o[0], setCurrentIcon = _o[1];
-    console.log('currentIcon', currentIcon);
     var fetchCategories = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/categories' }); };
     var fetchLanguages = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/languages' }); };
     var fetchIcons = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/icons' }); };

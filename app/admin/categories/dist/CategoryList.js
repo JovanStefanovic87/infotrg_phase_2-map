@@ -116,7 +116,8 @@ var CategoryList = function (_a) {
                     existingTranslations = categoryTranslations.map(function (t) { return ({
                         translationId: t.id,
                         languageId: t.languageId,
-                        translation: t.translation
+                        translation: t.translation,
+                        synonyms: t.synonyms.map(function (s) { return s.synonym; })
                     }); });
                     setNewTranslations(existingTranslations);
                     iconId = category.iconId || null;
@@ -138,16 +139,16 @@ var CategoryList = function (_a) {
         });
     }); }, [getCategoryIconUrl, languages]);
     var handleSubmitEdit = react_1.useCallback(function (event) { return __awaiter(void 0, void 0, void 0, function () {
-        var iconId, formData, iconData, translationUpdates, updateData, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var iconId, formData, iconData, translationUpdates, _i, translationUpdates_1, _a, translationId, synonyms, err_1;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     event.preventDefault();
                     if (!currentEditCategory)
                         return [2 /*return*/];
-                    _a.label = 1;
+                    _b.label = 1;
                 case 1:
-                    _a.trys.push([1, 7, , 8]);
+                    _b.trys.push([1, 10, , 11]);
                     iconId = currentIcon.iconId;
                     if (!newIcon) return [3 /*break*/, 3];
                     formData = new FormData();
@@ -156,41 +157,55 @@ var CategoryList = function (_a) {
                             headers: { 'Content-Type': 'multipart/form-data' }
                         })];
                 case 2:
-                    iconData = (_a.sent()).data;
-                    iconId = iconData.id; // Set iconId to new icon id
-                    _a.label = 3;
+                    iconData = (_b.sent()).data;
+                    iconId = iconData.id;
+                    _b.label = 3;
                 case 3:
+                    console.log('newTranslations before submit:', newTranslations);
                     translationUpdates = newTranslations.map(function (_a) {
-                        var translationId = _a.translationId, languageId = _a.languageId, translation = _a.translation;
+                        var translationId = _a.translationId, languageId = _a.languageId, translation = _a.translation, synonyms = _a.synonyms;
                         return ({
                             translationId: translationId,
                             languageId: languageId,
-                            translation: translation
+                            translation: translation,
+                            synonyms: synonyms || []
                         });
                     });
-                    return [4 /*yield*/, axios_1["default"].put('/api/translation/translations', {
-                            translations: translationUpdates
+                    return [4 /*yield*/, axios_1["default"].put("/api/categories/" + currentEditCategory.id, {
+                            iconId: iconId,
+                            parentIds: parentIds,
+                            translations: translationUpdates,
+                            labelId: currentEditCategory.labelId
                         })];
                 case 4:
-                    _a.sent();
-                    updateData = {
-                        translations: translationUpdates,
-                        iconId: iconId !== null && iconId !== void 0 ? iconId : null,
-                        parentIds: parentIds
-                    };
-                    return [4 /*yield*/, onEditCategory(currentEditCategory.id, updateData)];
+                    _b.sent();
+                    _i = 0, translationUpdates_1 = translationUpdates;
+                    _b.label = 5;
                 case 5:
-                    _a.sent();
+                    if (!(_i < translationUpdates_1.length)) return [3 /*break*/, 8];
+                    _a = translationUpdates_1[_i], translationId = _a.translationId, synonyms = _a.synonyms;
+                    console.log('synonyms-fe', synonyms);
+                    return [4 /*yield*/, axios_1["default"].post('/api/synonyms', {
+                            translationId: translationId,
+                            synonyms: synonyms
+                        })];
+                case 6:
+                    _b.sent();
+                    _b.label = 7;
+                case 7:
+                    _i++;
+                    return [3 /*break*/, 5];
+                case 8:
                     setIsModalOpen(false);
                     return [4 /*yield*/, refetchCategories()];
-                case 6:
-                    _a.sent();
-                    return [3 /*break*/, 8];
-                case 7:
-                    err_1 = _a.sent();
+                case 9:
+                    _b.sent();
+                    return [3 /*break*/, 11];
+                case 10:
+                    err_1 = _b.sent();
                     console.error('Failed to edit category', err_1);
-                    return [3 /*break*/, 8];
-                case 8: return [2 /*return*/];
+                    return [3 /*break*/, 11];
+                case 11: return [2 /*return*/];
             }
         });
     }); }, [
@@ -239,6 +254,30 @@ var CategoryList = function (_a) {
     var handleRemoveParent = react_1.useCallback(function (parentId) {
         setParentIds(function (prev) { return prev.filter(function (id) { return id !== parentId; }); });
     }, []);
+    var handleAddSynonym = function (languageId, synonym) {
+        setNewTranslations(function (prevTranslations) {
+            return prevTranslations.map(function (t) {
+                return t.languageId === languageId ? __assign(__assign({}, t), { synonyms: __spreadArrays((t.synonyms || []), [synonym]) }) : t;
+            });
+        });
+    };
+    var handleRemoveSynonym = function (languageId, index) {
+        setNewTranslations(function (prevTranslations) {
+            return prevTranslations.map(function (t) {
+                var _a;
+                return t.languageId === languageId
+                    ? __assign(__assign({}, t), { synonyms: (_a = t.synonyms) === null || _a === void 0 ? void 0 : _a.filter(function (_, i) { return i !== index; }) }) : t;
+            });
+        });
+    };
+    // Helper function to filter categories for select input
+    var filterCategoriesForSelect = react_1.useCallback(function () {
+        if (!currentEditCategory)
+            return categories;
+        var completeBranch = getCompleteBranch(currentEditCategory);
+        var uniqueCategories = categories.filter(function (cat) { return !completeBranch.has(cat.id); });
+        return uniqueCategories;
+    }, [categories, currentEditCategory]);
     // Helper function to get all descendants of a category
     var getDescendants = function (category, descendants) {
         if (descendants === void 0) { descendants = new Set(); }
@@ -270,16 +309,6 @@ var CategoryList = function (_a) {
         ancestors.forEach(function (id) { return branch.add(id); });
         return branch;
     };
-    // Function to filter categories for select input
-    var filterCategoriesForSelect = react_1.useCallback(function () {
-        if (!currentEditCategory)
-            return categories;
-        var completeBranch = getCompleteBranch(currentEditCategory);
-        var uniqueCategories = categories.filter(function (cat) { return !completeBranch.has(cat.id); });
-        // Convert to a Set and back to an array to ensure uniqueness
-        var uniqueCategoriesSet = new Set(uniqueCategories.map(function (cat) { return cat.id; }));
-        return Array.from(uniqueCategoriesSet).map(function (id) { return categories.find(function (cat) { return cat.id === id; }); });
-    }, [categories, currentEditCategory]);
     var CategoryItem = function (_a) {
         var category = _a.category;
         var iconUrl = getCategoryIconUrl(category.iconId);
@@ -296,9 +325,6 @@ var CategoryList = function (_a) {
             react_1["default"].createElement("p", { className: 'mt-2 text-gray-600' },
                 "Parent Categories: ",
                 getParentCategoryNames(category.parents, languageId)),
-            react_1["default"].createElement("p", { className: 'mt-2 text-gray-600' },
-                "Languages: ",
-                languagesList),
             react_1["default"].createElement("div", { className: 'mt-4 flex space-x-2' },
                 react_1["default"].createElement("button", { className: 'bg-blue-500 text-white px-4 py-2 rounded', onClick: function () { return handleOpenEditModal(category); } }, "Edit"),
                 react_1["default"].createElement("button", { className: 'bg-red-500 text-white px-4 py-2 rounded', onClick: function () { return handleDelete(category.id); } }, "Delete")),
@@ -306,49 +332,49 @@ var CategoryList = function (_a) {
     };
     return (react_1["default"].createElement("div", null,
         categories.map(function (category) { return (react_1["default"].createElement(CategoryItem, { key: category.id, category: category })); }),
-        isModalOpen && currentEditCategory && (react_1["default"].createElement(CustomModal_1["default"], { isOpen: isModalOpen, onRequestClose: function () { return setIsModalOpen(false); } }, currentEditCategory && (react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'space-y-4' },
-            react_1["default"].createElement("div", { className: 'flex flex-col' },
-                react_1["default"].createElement("label", { htmlFor: 'icon', className: 'font-semibold' }, "Icon"),
-                currentIcon.iconUrl && !newIcon ? (react_1["default"].createElement("div", { className: 'mt-2' },
-                    react_1["default"].createElement(image_1["default"], { src: currentIcon.iconUrl, alt: 'Current Icon', width: 50, height: 50 }),
-                    react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () {
-                            setIsIconPickerOpen(true);
-                            icons;
-                        } }, "Choose from existing icons"))) : (react_1["default"].createElement("div", { className: 'mt-2' },
-                    react_1["default"].createElement("p", { className: 'text-gray-500' }, "No icon selected"),
-                    react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () {
-                            setIsIconPickerOpen(true);
-                            icons;
-                        } }, "Choose from existing icons"))),
-                react_1["default"].createElement("input", { type: 'file', id: 'icon', className: 'text-black', name: 'icon', accept: 'image/*', onChange: handleFileChange })),
-            languages.map(function (language) {
-                var _a;
-                return (react_1["default"].createElement("div", { key: language.id, className: 'flex flex-col' },
-                    react_1["default"].createElement("label", { htmlFor: "translation-" + language.id, className: 'font-semibold' }, language.name),
-                    react_1["default"].createElement("input", { type: 'text', id: "translation-" + language.id, className: 'text-black', value: ((_a = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _a === void 0 ? void 0 : _a.translation) || '', onChange: function (e) {
-                            var translation = e.target.value;
-                            setNewTranslations(function (prevTranslations) {
-                                return prevTranslations.map(function (t) {
-                                    return t.languageId === language.id ? __assign(__assign({}, t), { translation: translation }) : t;
+        isModalOpen && currentEditCategory && (react_1["default"].createElement(CustomModal_1["default"], { isOpen: isModalOpen, onRequestClose: function () { return setIsModalOpen(false); } },
+            react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'space-y-4 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto' },
+                react_1["default"].createElement("div", { className: 'flex flex-col items-center' },
+                    react_1["default"].createElement("label", { htmlFor: 'icon', className: 'font-semibold mb-2' }, "Icon"),
+                    currentIcon.iconUrl && !newIcon ? (react_1["default"].createElement("div", { className: 'mb-4' },
+                        react_1["default"].createElement(image_1["default"], { src: currentIcon.iconUrl, alt: 'Current Icon', width: 50, height: 50 }),
+                        react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () { return setIsIconPickerOpen(true); } }, "Choose from existing icons"))) : (react_1["default"].createElement("p", { className: 'text-gray-500' }, "No icon selected")),
+                    react_1["default"].createElement("input", { type: 'file', id: 'icon', className: 'text-black mb-4', name: 'icon', accept: 'image/*', onChange: handleFileChange })),
+                languages.map(function (language) {
+                    var _a, _b;
+                    return (react_1["default"].createElement("div", { key: language.id, className: 'flex flex-col mb-4' },
+                        react_1["default"].createElement("label", { htmlFor: "translation-" + language.id, className: 'font-semibold mb-1' }, language.name),
+                        react_1["default"].createElement("input", { type: 'text', id: "translation-" + language.id, className: 'border p-2 rounded w-full mb-2', value: ((_a = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _a === void 0 ? void 0 : _a.translation) || '', onChange: function (e) {
+                                var translation = e.target.value;
+                                setNewTranslations(function (prevTranslations) {
+                                    return prevTranslations.map(function (t) {
+                                        return t.languageId === language.id ? __assign(__assign({}, t), { translation: translation }) : t;
+                                    });
                                 });
-                            });
-                        } })));
-            }),
-            react_1["default"].createElement("div", null,
-                react_1["default"].createElement("label", { className: 'font-semibold' }, "Current Parent Categories:"),
-                react_1["default"].createElement("ul", null, __spreadArrays(new Set(parentIds)).map(function (parentId) {
-                    var _a;
-                    return (react_1["default"].createElement("li", { key: "parent-" + parentId },
-                        getCategoryName(((_a = categories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 0, languageId),
-                        react_1["default"].createElement("button", { type: 'button', onClick: function () { return handleRemoveParent(parentId); }, className: 'text-red-500 ml-2' }, "Remove")));
-                })),
-                react_1["default"].createElement("select", { onChange: function (e) { return handleAddParent(Number(e.target.value)); }, value: '', className: 'mt-2 text-black' },
-                    react_1["default"].createElement("option", { value: '', disabled: true }, "Add Parent Category"),
-                    filterCategoriesForSelect().map(function (cat) {
-                        if (!cat)
-                            return null; // Ensure `cat` is defined before using its properties
-                        return (react_1["default"].createElement("option", { key: "select-" + cat.id, value: cat.id }, getCategoryName(cat.labelId, languageId)));
-                    }))),
-            react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white py-2 px-4 rounded' }, "Save Changes")))))));
+                            } }),
+                        react_1["default"].createElement("input", { type: 'text', placeholder: 'Add synonyms, separated by commas...', className: 'border p-2 rounded w-full', value: ((_b = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _b === void 0 ? void 0 : _b.synonyms.join(', ')) ||
+                                '', onChange: function (e) {
+                                var synonyms = e.target.value.split(',').map(function (synonym) { return synonym.trim(); });
+                                setNewTranslations(function (prevTranslations) {
+                                    return prevTranslations.map(function (t) {
+                                        return t.languageId === language.id ? __assign(__assign({}, t), { synonyms: synonyms }) : t;
+                                    });
+                                });
+                            } })));
+                }),
+                react_1["default"].createElement("div", { className: 'mb-4' },
+                    react_1["default"].createElement("label", { className: 'font-semibold mb-2' }, "Current Parent Categories:"),
+                    react_1["default"].createElement("ul", { className: 'list-disc pl-5' }, __spreadArrays(new Set(parentIds)).map(function (parentId) {
+                        var _a;
+                        return (react_1["default"].createElement("li", { key: "parent-" + parentId, className: 'flex items-center' },
+                            react_1["default"].createElement("span", null, ((_a = categories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 'Unknown'),
+                            react_1["default"].createElement("button", { type: 'button', onClick: function () { return setParentIds(parentIds.filter(function (id) { return id !== parentId; })); }, className: 'text-red-500 ml-2' }, "Remove")));
+                    })),
+                    react_1["default"].createElement("select", { onChange: function (e) { return setParentIds(__spreadArrays(parentIds, [Number(e.target.value)])); }, value: '', className: 'mt-2 text-black border p-2 rounded w-full' },
+                        react_1["default"].createElement("option", { value: '', disabled: true }, "Add Parent Category"),
+                        categories
+                            .filter(function (cat) { return !parentIds.includes(cat.id); })
+                            .map(function (cat) { return (react_1["default"].createElement("option", { key: "select-" + cat.id, value: cat.id }, cat.labelId)); }))),
+                react_1["default"].createElement("button", { type: 'submit', className: 'bg-blue-500 text-white py-2 px-4 rounded w-full' }, "Save Changes"))))));
 };
 exports["default"] = CategoryList;

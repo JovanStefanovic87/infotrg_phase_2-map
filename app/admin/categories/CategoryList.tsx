@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
+import { Category, Icon, Translation, Language, Synonym } from '@/utils/helpers/types';
 import { FiChevronDown, FiChevronUp, FiEdit, FiTrash } from 'react-icons/fi';
 import CustomModal from '@/app/components/modals/CustomModal';
 import axios from 'axios';
@@ -25,6 +25,7 @@ interface CategoryListProps {
 				translationId: number;
 				languageId: number;
 				translation: string;
+				synonyms: string[];
 			}[];
 			icon?: File | null;
 			iconId?: number | null; // Make iconId optional here
@@ -40,6 +41,7 @@ interface TranslationUpdate {
 	translationId: number;
 	languageId: number;
 	translation: string;
+	synonyms: string[];
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -129,6 +131,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					translationId: t.id,
 					languageId: t.languageId,
 					translation: t.translation,
+					synonyms: t.synonyms.map(s => s.synonym), // Extract synonyms
 				}));
 
 				setNewTranslations(existingTranslations);
@@ -156,7 +159,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			if (!currentEditCategory) return;
 
 			try {
-				let iconId: number | null = currentIcon.iconId; // Use currentIcon.iconId
+				let iconId: number | null = currentIcon.iconId;
 
 				if (newIcon) {
 					const formData = new FormData();
@@ -164,36 +167,34 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					const { data: iconData } = await axios.post('/api/icons', formData, {
 						headers: { 'Content-Type': 'multipart/form-data' },
 					});
-					iconId = iconData.id; // Set iconId to new icon id
+					iconId = iconData.id;
 				}
 
+				console.log('newTranslations before submit:', newTranslations);
+
 				const translationUpdates = newTranslations.map(
-					({ translationId, languageId, translation }) => ({
+					({ translationId, languageId, translation, synonyms }) => ({
 						translationId,
 						languageId,
 						translation,
+						synonyms: synonyms || [], // Ensure synonyms is an array
 					})
 				);
 
-				await axios.put('/api/translation/translations', {
+				await axios.put(`/api/categories/${currentEditCategory.id}`, {
+					iconId,
+					parentIds,
 					translations: translationUpdates,
+					labelId: currentEditCategory.labelId,
 				});
 
-				const updateData: {
-					translations: {
-						translationId: number;
-						languageId: number;
-						translation: string;
-					}[];
-					iconId: number | null; // Ensure iconId is always included
-					parentIds: number[];
-				} = {
-					translations: translationUpdates,
-					iconId: iconId ?? null, // Always include iconId, even if it's null
-					parentIds,
-				};
-
-				await onEditCategory(currentEditCategory.id, updateData);
+				for (const { translationId, synonyms } of translationUpdates) {
+					console.log('synonyms-fe', synonyms);
+					await axios.post('/api/synonyms', {
+						translationId,
+						synonyms,
+					});
+				}
 
 				setIsModalOpen(false);
 				await refetchCategories();
@@ -208,7 +209,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			onEditCategory,
 			parentIds,
 			refetchCategories,
-			currentIcon, // include this dependency
+			currentIcon,
 		]
 	);
 
@@ -245,6 +246,34 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		setParentIds(prev => prev.filter(id => id !== parentId));
 	}, []);
 
+	const handleAddSynonym = (languageId: number, synonym: string) => {
+		setNewTranslations(prevTranslations =>
+			prevTranslations.map(t =>
+				t.languageId === languageId ? { ...t, synonyms: [...(t.synonyms || []), synonym] } : t
+			)
+		);
+	};
+
+	const handleRemoveSynonym = (languageId: number, index: number) => {
+		setNewTranslations(prevTranslations =>
+			prevTranslations.map(t =>
+				t.languageId === languageId
+					? { ...t, synonyms: t.synonyms?.filter((_, i) => i !== index) }
+					: t
+			)
+		);
+	};
+
+	// Helper function to filter categories for select input
+	const filterCategoriesForSelect = useCallback(() => {
+		if (!currentEditCategory) return categories;
+
+		const completeBranch = getCompleteBranch(currentEditCategory);
+		const uniqueCategories = categories.filter(cat => !completeBranch.has(cat.id));
+
+		return uniqueCategories;
+	}, [categories, currentEditCategory]);
+
 	// Helper function to get all descendants of a category
 	const getDescendants = (
 		category: Category,
@@ -279,18 +308,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		ancestors.forEach(id => branch.add(id));
 		return branch;
 	};
-
-	// Function to filter categories for select input
-	const filterCategoriesForSelect = useCallback(() => {
-		if (!currentEditCategory) return categories;
-
-		const completeBranch = getCompleteBranch(currentEditCategory);
-		const uniqueCategories = categories.filter(cat => !completeBranch.has(cat.id));
-
-		// Convert to a Set and back to an array to ensure uniqueness
-		const uniqueCategoriesSet = new Set(uniqueCategories.map(cat => cat.id));
-		return Array.from(uniqueCategoriesSet).map(id => categories.find(cat => cat.id === id));
-	}, [categories, currentEditCategory]);
 
 	const CategoryItem: React.FC<{ category: Category }> = ({ category }) => {
 		const iconUrl = getCategoryIconUrl(category.iconId);
@@ -327,7 +344,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				<p className='mt-2 text-gray-600'>
 					Parent Categories: {getParentCategoryNames(category.parents, languageId)}
 				</p>
-				<p className='mt-2 text-gray-600'>Languages: {languagesList}</p>
 
 				<div className='mt-4 flex space-x-2'>
 					<button
@@ -361,115 +377,116 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 			{isModalOpen && currentEditCategory && (
 				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
-					{currentEditCategory && (
-						<form onSubmit={handleSubmitEdit} className='space-y-4'>
-							<div className='flex flex-col'>
-								<label htmlFor='icon' className='font-semibold'>
-									Icon
+					<form
+						onSubmit={handleSubmitEdit}
+						className='space-y-4 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto'>
+						{/* Icon Section */}
+						<div className='flex flex-col items-center'>
+							<label htmlFor='icon' className='font-semibold mb-2'>
+								Icon
+							</label>
+							{currentIcon.iconUrl && !newIcon ? (
+								<div className='mb-4'>
+									<Image src={currentIcon.iconUrl} alt='Current Icon' width={50} height={50} />
+									<button
+										type='button'
+										className='text-blue-500 mt-2'
+										onClick={() => setIsIconPickerOpen(true)}>
+										Choose from existing icons
+									</button>
+								</div>
+							) : (
+								<p className='text-gray-500'>No icon selected</p>
+							)}
+							<input
+								type='file'
+								id='icon'
+								className='text-black mb-4'
+								name='icon'
+								accept='image/*'
+								onChange={handleFileChange}
+							/>
+						</div>
+
+						{/* Translations and Synonyms */}
+						{languages.map(language => (
+							<div key={language.id} className='flex flex-col mb-4'>
+								<label htmlFor={`translation-${language.id}`} className='font-semibold mb-1'>
+									{language.name}
 								</label>
-								{currentIcon.iconUrl && !newIcon ? (
-									<div className='mt-2'>
-										<Image src={currentIcon.iconUrl} alt='Current Icon' width={50} height={50} />
-										<button
-											type='button'
-											className='text-blue-500 mt-2'
-											onClick={() => {
-												setIsIconPickerOpen(true);
-												icons;
-											}}>
-											Choose from existing icons
-										</button>
-									</div>
-								) : (
-									<div className='mt-2'>
-										<p className='text-gray-500'>No icon selected</p>
-										<button
-											type='button'
-											className='text-blue-500 mt-2'
-											onClick={() => {
-												setIsIconPickerOpen(true);
-												icons;
-											}}>
-											Choose from existing icons
-										</button>
-									</div>
-								)}
 								<input
-									type='file'
-									id='icon'
-									className='text-black'
-									name='icon'
-									accept='image/*'
-									onChange={handleFileChange}
+									type='text'
+									id={`translation-${language.id}`}
+									className='border p-2 rounded w-full mb-2'
+									value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
+									onChange={e => {
+										const translation = e.target.value;
+										setNewTranslations(prevTranslations =>
+											prevTranslations.map(t =>
+												t.languageId === language.id ? { ...t, translation } : t
+											)
+										);
+									}}
+								/>
+								{/* Synonyms Input */}
+								<input
+									type='text'
+									placeholder='Add synonyms, separated by commas...'
+									className='border p-2 rounded w-full'
+									value={
+										newTranslations.find(t => t.languageId === language.id)?.synonyms.join(', ') ||
+										''
+									}
+									onChange={e => {
+										const synonyms = e.target.value.split(',').map(synonym => synonym.trim());
+										setNewTranslations(prevTranslations =>
+											prevTranslations.map(t =>
+												t.languageId === language.id ? { ...t, synonyms } : t
+											)
+										);
+									}}
 								/>
 							</div>
+						))}
 
-							{languages.map(language => (
-								<div key={language.id} className='flex flex-col'>
-									<label htmlFor={`translation-${language.id}`} className='font-semibold'>
-										{language.name}
-									</label>
-									<input
-										type='text'
-										id={`translation-${language.id}`}
-										className='text-black'
-										value={
-											newTranslations.find(t => t.languageId === language.id)?.translation || ''
-										}
-										onChange={e => {
-											const translation = e.target.value;
-											setNewTranslations(prevTranslations =>
-												prevTranslations.map(t =>
-													t.languageId === language.id ? { ...t, translation } : t
-												)
-											);
-										}}
-									/>
-								</div>
-							))}
-
-							<div>
-								<label className='font-semibold'>Current Parent Categories:</label>
-								<ul>
-									{[...new Set(parentIds)].map(parentId => (
-										<li key={`parent-${parentId}`}>
-											{getCategoryName(
-												categories.find(cat => cat.id === parentId)?.labelId || 0,
-												languageId
-											)}
-											<button
-												type='button'
-												onClick={() => handleRemoveParent(parentId)}
-												className='text-red-500 ml-2'>
-												Remove
-											</button>
-										</li>
+						{/* Parent Categories Section */}
+						<div className='mb-4'>
+							<label className='font-semibold mb-2'>Current Parent Categories:</label>
+							<ul className='list-disc pl-5'>
+								{[...new Set(parentIds)].map(parentId => (
+									<li key={`parent-${parentId}`} className='flex items-center'>
+										<span>{categories.find(cat => cat.id === parentId)?.labelId || 'Unknown'}</span>
+										<button
+											type='button'
+											onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
+											className='text-red-500 ml-2'>
+											Remove
+										</button>
+									</li>
+								))}
+							</ul>
+							<select
+								onChange={e => setParentIds([...parentIds, Number(e.target.value)])}
+								value=''
+								className='mt-2 text-black border p-2 rounded w-full'>
+								<option value='' disabled>
+									Add Parent Category
+								</option>
+								{categories
+									.filter(cat => !parentIds.includes(cat.id))
+									.map(cat => (
+										<option key={`select-${cat.id}`} value={cat.id}>
+											{cat.labelId}
+										</option>
 									))}
-								</ul>
-								<select
-									onChange={e => handleAddParent(Number(e.target.value))}
-									value=''
-									className='mt-2 text-black'>
-									<option value='' disabled>
-										Add Parent Category
-									</option>
-									{filterCategoriesForSelect().map(cat => {
-										if (!cat) return null; // Ensure `cat` is defined before using its properties
+							</select>
+						</div>
 
-										return (
-											<option key={`select-${cat.id}`} value={cat.id}>
-												{getCategoryName(cat.labelId, languageId)}
-											</option>
-										);
-									})}
-								</select>
-							</div>
-
-							<button type='submit' className='bg-blue-500 text-white py-2 px-4 rounded'>
-								Save Changes
-							</button>
-						</form>
-					)}
+						{/* Save Button */}
+						<button type='submit' className='bg-blue-500 text-white py-2 px-4 rounded w-full'>
+							Save Changes
+						</button>
+					</form>
 				</CustomModal>
 			)}
 		</div>

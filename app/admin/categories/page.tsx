@@ -24,8 +24,6 @@ const AddCategoryPage: React.FC = () => {
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 
-	console.log('currentIcon', currentIcon);
-
 	const fetchCategories = () => apiClient<Category[]>({ method: 'GET', url: '/api/categories' });
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () => apiClient<Icon[]>({ method: 'GET', url: '/api/icons' });
