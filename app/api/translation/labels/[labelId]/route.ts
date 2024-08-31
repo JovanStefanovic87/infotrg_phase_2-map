@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
 				labelId: translation.labelId,
 				languageId: translation.languageId,
 				translation: translation.translation,
+				description: translation.description, // Ensure description is included
 				createdAt: translation.createdAt,
 				synonyms: translation.synonyms.map(synonym => ({
 					id: synonym.id,

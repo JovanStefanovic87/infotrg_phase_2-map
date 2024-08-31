@@ -96,6 +96,7 @@ model Translation {
   languageId  Int
   Language    Language  @relation("LanguageTranslations", fields: [languageId], references: [id], onDelete: Cascade)
   translation String
+  description String? // New field for category description in each language
   synonyms    Synonym[] // Ensure this matches the TypeScript code
   createdAt   DateTime  @default(now())
 

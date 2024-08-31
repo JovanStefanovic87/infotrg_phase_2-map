@@ -113,12 +113,16 @@ var CategoryList = function (_a) {
                     return [4 /*yield*/, axios_1["default"].get("/api/translation/labels/" + category.labelId)];
                 case 2:
                     categoryTranslations = (_a.sent()).data;
-                    existingTranslations = categoryTranslations.map(function (t) { return ({
-                        translationId: t.id,
-                        languageId: t.languageId,
-                        translation: t.translation,
-                        synonyms: t.synonyms.map(function (s) { return s.synonym; })
-                    }); });
+                    existingTranslations = categoryTranslations.map(function (t) {
+                        console.log('Translation Data:', t); // Check each translation data fetched
+                        return {
+                            translationId: t.id,
+                            languageId: t.languageId,
+                            translation: t.translation,
+                            description: t.description || '',
+                            synonyms: t.synonyms.map(function (s) { return s.synonym; })
+                        };
+                    });
                     setNewTranslations(existingTranslations);
                     iconId = category.iconId || null;
                     iconUrl = getCategoryIconUrl(iconId);
@@ -163,11 +167,12 @@ var CategoryList = function (_a) {
                 case 3:
                     console.log('newTranslations before submit:', newTranslations);
                     translationUpdates = newTranslations.map(function (_a) {
-                        var translationId = _a.translationId, languageId = _a.languageId, translation = _a.translation, synonyms = _a.synonyms;
+                        var translationId = _a.translationId, languageId = _a.languageId, translation = _a.translation, description = _a.description, synonyms = _a.synonyms;
                         return ({
                             translationId: translationId,
                             languageId: languageId,
                             translation: translation,
+                            description: description,
                             synonyms: synonyms || []
                         });
                     });
@@ -334,17 +339,19 @@ var CategoryList = function (_a) {
         categories.map(function (category) { return (react_1["default"].createElement(CategoryItem, { key: category.id, category: category })); }),
         isModalOpen && currentEditCategory && (react_1["default"].createElement(CustomModal_1["default"], { isOpen: isModalOpen, onRequestClose: function () { return setIsModalOpen(false); } },
             react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'space-y-4 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto' },
-                react_1["default"].createElement("div", { className: 'flex flex-col items-center' },
+                react_1["default"].createElement("div", { className: 'flex flex-col items-centerc text-black' },
                     react_1["default"].createElement("label", { htmlFor: 'icon', className: 'font-semibold mb-2' }, "Icon"),
                     currentIcon.iconUrl && !newIcon ? (react_1["default"].createElement("div", { className: 'mb-4' },
                         react_1["default"].createElement(image_1["default"], { src: currentIcon.iconUrl, alt: 'Current Icon', width: 50, height: 50 }),
                         react_1["default"].createElement("button", { type: 'button', className: 'text-blue-500 mt-2', onClick: function () { return setIsIconPickerOpen(true); } }, "Choose from existing icons"))) : (react_1["default"].createElement("p", { className: 'text-gray-500' }, "No icon selected")),
                     react_1["default"].createElement("input", { type: 'file', id: 'icon', className: 'text-black mb-4', name: 'icon', accept: 'image/*', onChange: handleFileChange })),
                 languages.map(function (language) {
-                    var _a, _b;
-                    return (react_1["default"].createElement("div", { key: language.id, className: 'flex flex-col mb-4' },
-                        react_1["default"].createElement("label", { htmlFor: "translation-" + language.id, className: 'font-semibold mb-1' }, language.name),
-                        react_1["default"].createElement("input", { type: 'text', id: "translation-" + language.id, className: 'border p-2 rounded w-full mb-2', value: ((_a = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _a === void 0 ? void 0 : _a.translation) || '', onChange: function (e) {
+                    var _a, _b, _c;
+                    return (react_1["default"].createElement("div", { key: language.id, className: 'flex flex-col mb-4 text-black' },
+                        react_1["default"].createElement("label", { htmlFor: "translation-" + language.id, className: 'font-semibold mb-1' },
+                            language.name,
+                            " Translation"),
+                        react_1["default"].createElement("input", { type: 'text', id: "translation-" + language.id, className: 'border p-2 rounded w-full mb-2 text-black', value: ((_a = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _a === void 0 ? void 0 : _a.translation) || '', onChange: function (e) {
                                 var translation = e.target.value;
                                 setNewTranslations(function (prevTranslations) {
                                     return prevTranslations.map(function (t) {
@@ -352,7 +359,21 @@ var CategoryList = function (_a) {
                                     });
                                 });
                             } }),
-                        react_1["default"].createElement("input", { type: 'text', placeholder: 'Add synonyms, separated by commas...', className: 'border p-2 rounded w-full', value: ((_b = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _b === void 0 ? void 0 : _b.synonyms.join(', ')) ||
+                        react_1["default"].createElement("label", { htmlFor: "description-" + language.id, className: 'font-semibold mb-1' },
+                            language.name,
+                            " Description"),
+                        react_1["default"].createElement("textarea", { id: "description-" + language.id, className: 'border p-2 rounded w-full mb-2 text-black', value: ((_b = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _b === void 0 ? void 0 : _b.description) || '', onChange: function (e) {
+                                var description = e.target.value;
+                                setNewTranslations(function (prevTranslations) {
+                                    return prevTranslations.map(function (t) {
+                                        return t.languageId === language.id ? __assign(__assign({}, t), { description: description }) : t;
+                                    });
+                                });
+                            } }),
+                        react_1["default"].createElement("label", { htmlFor: "synonyms-" + language.id, className: 'font-semibold mb-1' },
+                            language.name,
+                            " Synonyms"),
+                        react_1["default"].createElement("input", { type: 'text', placeholder: 'Add synonyms, separated by commas...', className: 'border p-2 rounded w-full text-black', value: ((_c = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _c === void 0 ? void 0 : _c.synonyms.join(', ')) ||
                                 '', onChange: function (e) {
                                 var synonyms = e.target.value.split(',').map(function (synonym) { return synonym.trim(); });
                                 setNewTranslations(function (prevTranslations) {
@@ -363,8 +384,8 @@ var CategoryList = function (_a) {
                             } })));
                 }),
                 react_1["default"].createElement("div", { className: 'mb-4' },
-                    react_1["default"].createElement("label", { className: 'font-semibold mb-2' }, "Current Parent Categories:"),
-                    react_1["default"].createElement("ul", { className: 'list-disc pl-5' }, __spreadArrays(new Set(parentIds)).map(function (parentId) {
+                    react_1["default"].createElement("label", { className: 'font-semibold mb-2 text-black' }, "Current Parent Categories:"),
+                    react_1["default"].createElement("ul", { className: 'list-disc pl-5 text-black' }, __spreadArrays(new Set(parentIds)).map(function (parentId) {
                         var _a;
                         return (react_1["default"].createElement("li", { key: "parent-" + parentId, className: 'flex items-center' },
                             react_1["default"].createElement("span", null, ((_a = categories.find(function (cat) { return cat.id === parentId; })) === null || _a === void 0 ? void 0 : _a.labelId) || 'Unknown'),

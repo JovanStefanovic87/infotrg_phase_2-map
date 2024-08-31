@@ -37,7 +37,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 exports.POST = exports.GET = void 0;
-//app\api\translation\route.ts
 var server_1 = require("next/server");
 var prisma_1 = require("@/app/lib/prisma");
 function GET(request) {

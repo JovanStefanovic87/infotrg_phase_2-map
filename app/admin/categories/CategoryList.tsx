@@ -21,12 +21,7 @@ interface CategoryListProps {
 	onEditCategory: (
 		id: number,
 		data: {
-			translations: {
-				translationId: number;
-				languageId: number;
-				translation: string;
-				synonyms: string[];
-			}[];
+			translations: Translation[];
 			icon?: File | null;
 			iconId?: number | null; // Make iconId optional here
 			parentIds: number[];
@@ -41,6 +36,7 @@ interface TranslationUpdate {
 	translationId: number;
 	languageId: number;
 	translation: string;
+	description?: string;
 	synonyms: string[];
 }
 
@@ -127,18 +123,22 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					`/api/translation/labels/${category.labelId}`
 				);
 
-				const existingTranslations = categoryTranslations.map(t => ({
-					translationId: t.id,
-					languageId: t.languageId,
-					translation: t.translation,
-					synonyms: t.synonyms.map(s => s.synonym), // Extract synonyms
-				}));
+				const existingTranslations = categoryTranslations.map(t => {
+					console.log('Translation Data:', t); // Check each translation data fetched
+					return {
+						translationId: t.id,
+						languageId: t.languageId,
+						translation: t.translation,
+						description: t.description || '',
+						synonyms: t.synonyms.map(s => s.synonym),
+					};
+				});
 
 				setNewTranslations(existingTranslations);
 
 				// Set the current icon URL based on the category's iconId
 				const iconId = category.iconId || null;
-				const iconUrl = getCategoryIconUrl(iconId); // Make sure this function works correctly
+				const iconUrl = getCategoryIconUrl(iconId);
 				setCurrentIcon({
 					iconId,
 					iconUrl,
@@ -173,11 +173,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				console.log('newTranslations before submit:', newTranslations);
 
 				const translationUpdates = newTranslations.map(
-					({ translationId, languageId, translation, synonyms }) => ({
+					({ translationId, languageId, translation, description, synonyms }) => ({
 						translationId,
 						languageId,
 						translation,
-						synonyms: synonyms || [], // Ensure synonyms is an array
+						description, // Include description in the update payload
+						synonyms: synonyms || [],
 					})
 				);
 
@@ -381,7 +382,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						onSubmit={handleSubmitEdit}
 						className='space-y-4 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto'>
 						{/* Icon Section */}
-						<div className='flex flex-col items-center'>
+						<div className='flex flex-col items-centerc text-black'>
 							<label htmlFor='icon' className='font-semibold mb-2'>
 								Icon
 							</label>
@@ -410,14 +411,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 						{/* Translations and Synonyms */}
 						{languages.map(language => (
-							<div key={language.id} className='flex flex-col mb-4'>
+							<div key={language.id} className='flex flex-col mb-4 text-black'>
+								{/* Translation Input */}
 								<label htmlFor={`translation-${language.id}`} className='font-semibold mb-1'>
-									{language.name}
+									{language.name} Translation
 								</label>
 								<input
 									type='text'
 									id={`translation-${language.id}`}
-									className='border p-2 rounded w-full mb-2'
+									className='border p-2 rounded w-full mb-2 text-black'
 									value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
 									onChange={e => {
 										const translation = e.target.value;
@@ -428,11 +430,32 @@ const CategoryList: React.FC<CategoryListProps> = ({
 										);
 									}}
 								/>
+
+								{/* Description Input */}
+								<label htmlFor={`description-${language.id}`} className='font-semibold mb-1'>
+									{language.name} Description
+								</label>
+								<textarea
+									id={`description-${language.id}`}
+									className='border p-2 rounded w-full mb-2 text-black'
+									value={newTranslations.find(t => t.languageId === language.id)?.description || ''}
+									onChange={e => {
+										const description = e.target.value;
+										setNewTranslations(prevTranslations =>
+											prevTranslations.map(t =>
+												t.languageId === language.id ? { ...t, description } : t
+											)
+										);
+									}}
+								/>
 								{/* Synonyms Input */}
+								<label htmlFor={`synonyms-${language.id}`} className='font-semibold mb-1'>
+									{language.name} Synonyms
+								</label>
 								<input
 									type='text'
 									placeholder='Add synonyms, separated by commas...'
-									className='border p-2 rounded w-full'
+									className='border p-2 rounded w-full text-black'
 									value={
 										newTranslations.find(t => t.languageId === language.id)?.synonyms.join(', ') ||
 										''
@@ -451,8 +474,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 						{/* Parent Categories Section */}
 						<div className='mb-4'>
-							<label className='font-semibold mb-2'>Current Parent Categories:</label>
-							<ul className='list-disc pl-5'>
+							<label className='font-semibold mb-2 text-black'>Current Parent Categories:</label>
+							<ul className='list-disc pl-5 text-black'>
 								{[...new Set(parentIds)].map(parentId => (
 									<li key={`parent-${parentId}`} className='flex items-center'>
 										<span>{categories.find(cat => cat.id === parentId)?.labelId || 'Unknown'}</span>

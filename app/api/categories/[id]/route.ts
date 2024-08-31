@@ -172,7 +172,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
 		}
 
-		// Validate translations and synonyms
+		// Validate translations
 		if (!Array.isArray(translations)) {
 			return NextResponse.json({ error: 'Translations should be an array' }, { status: 400 });
 		}
@@ -184,13 +184,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				dataToUpdate.iconId = iconId;
 			}
 
-			// Update the category
 			const category = await prisma.category.update({
 				where: { id: Number(id) },
 				data: dataToUpdate,
 			});
 
-			// Update parent categories
 			await prisma.parentCategory.deleteMany({
 				where: { childId: Number(id) },
 			});
@@ -202,27 +200,30 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				})),
 			});
 
-			// Update translations and synonyms
 			for (const translation of translations) {
-				const { translationId, languageId, translation: translationText, synonyms } = translation;
-
-				// Update translation
+				const {
+					translationId,
+					languageId,
+					translation: translationText,
+					description,
+					synonyms,
+				} = translation;
+				console.log('description', description);
 				await prisma.translation.upsert({
 					where: { id: translationId },
-					update: { translation: translationText },
+					update: { translation: translationText, description }, // Update translation and description
 					create: {
 						labelId,
 						languageId,
 						translation: translationText,
+						description, // Create with description
 					},
 				});
 
-				// Delete existing synonyms for the translation
 				await prisma.synonym.deleteMany({
 					where: { translationId },
 				});
 
-				// Insert new synonyms
 				if (Array.isArray(synonyms)) {
 					await prisma.synonym.createMany({
 						data: synonyms.map((synonym: string) => ({

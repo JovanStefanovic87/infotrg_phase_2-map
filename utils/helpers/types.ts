@@ -199,10 +199,12 @@ export interface Synonym {
 }
 
 export interface Translation {
+	translationId: number | null; // Add this line
 	id: number;
 	labelId: number;
 	languageId: number;
 	translation: string;
+	description?: string; // Add if you need descriptions as well
 	createdAt: Date;
 	synonyms: Synonym[];
 }
