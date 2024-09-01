@@ -3,14 +3,14 @@
 import React, { useState } from 'react';
 import { Translation } from '@/utils/helpers/types';
 
-interface ComboboxProps {
+interface CustomComboboxProps {
 	options: Translation[];
 	selectedOptions: Translation[]; // New prop to keep track of selected options
 	onSelect: (selectedOptions: Translation[]) => void; // Updated to handle multiple selections
 	placeholder?: string;
 }
 
-const Combobox: React.FC<ComboboxProps> = ({
+const CustomCombobox: React.FC<CustomComboboxProps> = ({
 	options,
 	selectedOptions,
 	onSelect,
@@ -132,4 +132,4 @@ const Combobox: React.FC<ComboboxProps> = ({
 	);
 };
 
-export default Combobox;
+export default CustomCombobox;

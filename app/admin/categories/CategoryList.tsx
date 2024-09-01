@@ -1,10 +1,16 @@
 'use client';
 import React, { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Category, Icon, Translation, Language, Synonym } from '@/utils/helpers/types';
-import { FiChevronDown, FiChevronUp, FiEdit, FiTrash } from 'react-icons/fi';
+import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import CustomModal from '@/app/components/modals/CustomModal';
+import CustomCombobox from '@/app/components/input/CustomCombobox';
+import SumbitButton from '../../components/buttons/SubmitButton';
 import axios from 'axios';
+import ImageUploadButton from '@/app/components/buttons/ImageUploadButton';
+import ChooseImageButton from '@/app/components/buttons/ChooseImageButton';
+import H2 from '@/app/components/text/H2';
+import TextBlockItem from '@/app/ulaganje/collapsible/TextBlockItem';
 
 interface CategoryListProps {
 	categories: Category[];
@@ -243,28 +249,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[parentIds]
 	);
 
-	const handleRemoveParent = useCallback((parentId: number) => {
-		setParentIds(prev => prev.filter(id => id !== parentId));
-	}, []);
-
-	const handleAddSynonym = (languageId: number, synonym: string) => {
-		setNewTranslations(prevTranslations =>
-			prevTranslations.map(t =>
-				t.languageId === languageId ? { ...t, synonyms: [...(t.synonyms || []), synonym] } : t
-			)
-		);
-	};
-
-	const handleRemoveSynonym = (languageId: number, index: number) => {
-		setNewTranslations(prevTranslations =>
-			prevTranslations.map(t =>
-				t.languageId === languageId
-					? { ...t, synonyms: t.synonyms?.filter((_, i) => i !== index) }
-					: t
-			)
-		);
-	};
-
 	// Helper function to filter categories for select input
 	const filterCategoriesForSelect = useCallback(() => {
 		if (!currentEditCategory) return categories;
@@ -323,7 +307,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					<h3 className='text-lg font-semibold'>{getCategoryName(category.labelId, languageId)}</h3>
 					{category.children && category.children.length > 0 && (
 						<button
-							className='text-blue-500 hover:text-blue-700 focus:outline-none flex items-center'
+							className='text-sky-500 hover:text-sky-700 focus:outline-none flex items-center'
 							onClick={() => toggleCategory(category.id)}>
 							{isOpen ? <FiChevronUp size={24} /> : <FiChevronDown size={24} />}
 							<span className='ml-2'>Subcategories</span>
@@ -348,7 +332,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 				<div className='mt-4 flex space-x-2'>
 					<button
-						className='bg-blue-500 text-white px-4 py-2 rounded'
+						className='bg-sky-500 text-white px-4 py-2 rounded'
 						onClick={() => handleOpenEditModal(category)}>
 						Edit
 					</button>
@@ -377,138 +361,185 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			))}
 
 			{isModalOpen && currentEditCategory && (
-				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)}>
+				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} mt='10'>
 					<form
 						onSubmit={handleSubmitEdit}
-						className='space-y-4 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto'>
+						className='flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto overflow-auto max-h-[85vh] lg:max-h-[90vh]'>
 						{/* Icon Section */}
-						<div className='flex flex-col items-centerc text-black'>
-							<label htmlFor='icon' className='font-semibold mb-2'>
-								Icon
-							</label>
+						<div className='flex flex-col items-center text-black mb-6 w-full'>
+							<div className='mb-4'>
+								<H2 text='KATEGROIJA PROIZVODA' color='black' />
+							</div>
 							{currentIcon.iconUrl && !newIcon ? (
-								<div className='mb-4'>
+								<div className='mb-4 flex gap-4 justify-center items-center w-full'>
+									<TextBlockItem content='Trenutna ikonica:' />
 									<Image src={currentIcon.iconUrl} alt='Current Icon' width={50} height={50} />
-									<button
-										type='button'
-										className='text-blue-500 mt-2'
-										onClick={() => setIsIconPickerOpen(true)}>
-										Choose from existing icons
-									</button>
 								</div>
 							) : (
-								<p className='text-gray-500'>No icon selected</p>
+								<p className='text-gray-500 mb-4'>No icon selected</p>
 							)}
-							<input
-								type='file'
-								id='icon'
-								className='text-black mb-4'
-								name='icon'
-								accept='image/*'
-								onChange={handleFileChange}
-							/>
+							<div className='flex w-full justify-between space-x-4'>
+								<ImageUploadButton
+									id='iconUpload'
+									label='Nova ikonica (PNG)'
+									onChange={handleFileChange}
+								/>
+								<ChooseImageButton
+									onClick={() => setIsIconPickerOpen(true)}
+									label='Izbor ikonice'
+								/>
+							</div>
 						</div>
 
 						{/* Translations and Synonyms */}
-						{languages.map(language => (
-							<div key={language.id} className='flex flex-col mb-4 text-black'>
-								{/* Translation Input */}
-								<label htmlFor={`translation-${language.id}`} className='font-semibold mb-1'>
-									{language.name} Translation
-								</label>
-								<input
-									type='text'
-									id={`translation-${language.id}`}
-									className='border p-2 rounded w-full mb-2 text-black'
-									value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
-									onChange={e => {
-										const translation = e.target.value;
-										setNewTranslations(prevTranslations =>
-											prevTranslations.map(t =>
-												t.languageId === language.id ? { ...t, translation } : t
-											)
-										);
-									}}
-								/>
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-6 w-full'>
+							{languages.map(language => (
+								<div key={language.id} className='flex flex-col text-black space-y-4'>
+									{/* Translation Input */}
+									<div>
+										<label
+											htmlFor={`translation-${language.id}`}
+											className='font-semibold mb-1 block text-lg'>
+											{`${language.name.charAt(0).toUpperCase()}${language.name
+												.slice(1)
+												.toLocaleLowerCase()} naziv`}
+										</label>
+										<input
+											type='text'
+											id={`translation-${language.id}`}
+											className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+											value={
+												newTranslations.find(t => t.languageId === language.id)?.translation || ''
+											}
+											onChange={e => {
+												const translation = e.target.value;
+												setNewTranslations(prevTranslations =>
+													prevTranslations.map(t =>
+														t.languageId === language.id ? { ...t, translation } : t
+													)
+												);
+											}}
+										/>
+									</div>
 
-								{/* Description Input */}
-								<label htmlFor={`description-${language.id}`} className='font-semibold mb-1'>
-									{language.name} Description
-								</label>
-								<textarea
-									id={`description-${language.id}`}
-									className='border p-2 rounded w-full mb-2 text-black'
-									value={newTranslations.find(t => t.languageId === language.id)?.description || ''}
-									onChange={e => {
-										const description = e.target.value;
-										setNewTranslations(prevTranslations =>
-											prevTranslations.map(t =>
-												t.languageId === language.id ? { ...t, description } : t
-											)
-										);
-									}}
-								/>
-								{/* Synonyms Input */}
-								<label htmlFor={`synonyms-${language.id}`} className='font-semibold mb-1'>
-									{language.name} Synonyms
-								</label>
-								<input
-									type='text'
-									placeholder='Add synonyms, separated by commas...'
-									className='border p-2 rounded w-full text-black'
-									value={
-										newTranslations.find(t => t.languageId === language.id)?.synonyms.join(', ') ||
-										''
-									}
-									onChange={e => {
-										const synonyms = e.target.value.split(',').map(synonym => synonym.trim());
-										setNewTranslations(prevTranslations =>
-											prevTranslations.map(t =>
-												t.languageId === language.id ? { ...t, synonyms } : t
-											)
-										);
-									}}
-								/>
-							</div>
-						))}
+									{/* Description Input */}
+									<div>
+										<label
+											htmlFor={`description-${language.id}`}
+											className='font-semibold mb-1 block text-lg'>
+											{`${language.name.charAt(0).toUpperCase()}${language.name
+												.slice(1)
+												.toLocaleLowerCase()} opis`}
+										</label>
+										<textarea
+											id={`description-${language.id}`}
+											className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+											value={
+												newTranslations.find(t => t.languageId === language.id)?.description || ''
+											}
+											onChange={e => {
+												const description = e.target.value;
+												setNewTranslations(prevTranslations =>
+													prevTranslations.map(t =>
+														t.languageId === language.id ? { ...t, description } : t
+													)
+												);
+											}}
+										/>
+									</div>
 
-						{/* Parent Categories Section */}
-						<div className='mb-4'>
-							<label className='font-semibold mb-2 text-black'>Current Parent Categories:</label>
-							<ul className='list-disc pl-5 text-black'>
-								{[...new Set(parentIds)].map(parentId => (
-									<li key={`parent-${parentId}`} className='flex items-center'>
-										<span>{categories.find(cat => cat.id === parentId)?.labelId || 'Unknown'}</span>
-										<button
-											type='button'
-											onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
-											className='text-red-500 ml-2'>
-											Remove
-										</button>
-									</li>
-								))}
-							</ul>
-							<select
-								onChange={e => setParentIds([...parentIds, Number(e.target.value)])}
-								value=''
-								className='mt-2 text-black border p-2 rounded w-full'>
-								<option value='' disabled>
-									Add Parent Category
-								</option>
-								{categories
-									.filter(cat => !parentIds.includes(cat.id))
-									.map(cat => (
-										<option key={`select-${cat.id}`} value={cat.id}>
-											{cat.labelId}
-										</option>
-									))}
-							</select>
+									{/* Synonyms Input */}
+									<div>
+										<label
+											htmlFor={`synonyms-${language.id}`}
+											className='font-semibold mb-1 block text-lg'>
+											{`${language.name.charAt(0).toUpperCase()}${language.name
+												.slice(1)
+												.toLocaleLowerCase()} sinonimi`}
+										</label>
+										<input
+											type='text'
+											placeholder='Odvojite ih zarezom'
+											className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+											value={
+												newTranslations
+													.find(t => t.languageId === language.id)
+													?.synonyms.join(', ') || ''
+											}
+											onChange={e => {
+												const synonyms = e.target.value.split(',').map(synonym => synonym.trim());
+												setNewTranslations(prevTranslations =>
+													prevTranslations.map(t =>
+														t.languageId === language.id ? { ...t, synonyms } : t
+													)
+												);
+											}}
+										/>
+									</div>
+								</div>
+							))}
 						</div>
 
-						{/* Save Button */}
-						<button type='submit' className='bg-blue-500 text-white py-2 px-4 rounded w-full'>
-							Save Changes
-						</button>
+						{/* Parent Categories Section */}
+						<div className='mb-6 w-full'>
+							<label className='font-semibold text-lg mb-3 block text-black'>
+								Izabrane nadkategorije:
+							</label>
+							<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
+								{[...new Set(parentIds)].length > 0 ? (
+									[...new Set(parentIds)].map(parentId => {
+										const parentCategory = categories.find(cat => cat.id === parentId);
+										const translation = translations.find(
+											t => t.labelId === parentCategory?.labelId && t.languageId === 1
+										);
+
+										return (
+											<li key={`parent-${parentId}`} className='flex items-center justify-between'>
+												<span className='text-sm text-gray-800'>
+													{translation ? translation.translation : 'Translation not available'}
+												</span>
+												<button
+													type='button'
+													onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
+													className='ml-4 text-red-500 hover:text-red-700 focus:outline-none'>
+													Ukloni
+												</button>
+											</li>
+										);
+									})
+								) : (
+									<li className='text-sm text-gray-500'>Ovo je glavna kategorija</li>
+								)}
+							</ul>
+							<CustomCombobox
+								options={filterCategoriesForSelect().map(cat => {
+									const translation = translations.find(
+										t => t.labelId === cat.labelId && t.languageId === 1
+									);
+
+									return {
+										id: translation?.id || cat.id,
+										labelId: cat.id,
+										languageId: 1,
+										translation: translation?.translation || 'Ne postoji prevod',
+										description: translation?.description || '',
+										createdAt: translation?.createdAt || new Date(),
+										synonyms: translation?.synonyms || [],
+										translationId: translation?.translationId ?? null,
+									} as Translation;
+								})}
+								selectedOptions={translations.filter(t => parentIds.includes(t.labelId))}
+								onSelect={selectedOptions => {
+									const newParentIds = selectedOptions.map(option => option.labelId);
+									setParentIds(newParentIds);
+								}}
+								placeholder='Izaberite nadkategorije'
+							/>
+						</div>
+
+						<div className='flex justify-center mt-6'>
+							<SumbitButton>SAČUVAJ</SumbitButton>
+						</div>
 					</form>
 				</CustomModal>
 			)}

@@ -21,7 +21,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 };
 exports.__esModule = true;
 var react_1 = require("react");
-var Combobox = function (_a) {
+var CustomCombobox = function (_a) {
     var options = _a.options, selectedOptions = _a.selectedOptions, onSelect = _a.onSelect, _b = _a.placeholder, placeholder = _b === void 0 ? 'Select...' : _b;
     var _c = react_1.useState(false), isOpen = _c[0], setIsOpen = _c[1];
     var _d = react_1.useState(''), inputValue = _d[0], setInputValue = _d[1];
@@ -95,4 +95,4 @@ var Combobox = function (_a) {
                 ? 'bg-gray-100'
                 : '') }, option.translation)); })))));
 };
-exports["default"] = Combobox;
+exports["default"] = CustomCombobox;
