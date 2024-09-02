@@ -7,6 +7,7 @@ import PageContainer from '@/app/components/containers/PageContainer';
 import CategoryForm from './CategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePicker from './ImagePicker';
+import H1 from '@/app/components/text/H1';
 
 const AddCategoryPage: React.FC = () => {
 	const [parentIds, setParentIds] = useState<number[]>([]); // Changed to handle multiple parentIds
@@ -140,7 +141,7 @@ const AddCategoryPage: React.FC = () => {
 			}
 
 			resetForm();
-			setSuccessMessage('Data saved successfully.');
+			setSuccessMessage('Kategorija uspešno sačuvana.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
 			await refetchData();
 		} catch (err) {
@@ -216,7 +217,7 @@ const AddCategoryPage: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<h1 className='text-xl font-bold mb-4'>Add New Category</h1>
+			<H1 title='KATEGROIJE PROIZVODA' />
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
 			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
 

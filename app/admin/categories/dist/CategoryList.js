@@ -1,16 +1,5 @@
 'use client';
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -56,98 +45,17 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 };
 exports.__esModule = true;
 var react_1 = require("react");
-var image_1 = require("next/image");
-var fi_1 = require("react-icons/fi");
 var CustomModal_1 = require("@/app/components/modals/CustomModal");
-var CustomCombobox_1 = require("@/app/components/input/CustomCombobox");
-var SubmitButton_1 = require("../../components/buttons/SubmitButton");
 var axios_1 = require("axios");
-var ImageUploadButton_1 = require("@/app/components/buttons/ImageUploadButton");
-var ChooseImageButton_1 = require("@/app/components/buttons/ChooseImageButton");
-var H2_1 = require("@/app/components/text/H2");
-var TextBlockItem_1 = require("@/app/ulaganje/collapsible/TextBlockItem");
+var CategoryItem_1 = require("./CategoryItem");
+var EditCategoryForm_1 = require("./EditCategoryForm");
 var CategoryList = function (_a) {
     var categories = _a.categories, translations = _a.translations, icons = _a.icons, currentIcon = _a.currentIcon, setCurrentIcon = _a.setCurrentIcon, languages = _a.languages, languageId = _a.languageId, refetchCategories = _a.refetchCategories, onEditCategory = _a.onEditCategory, onDeleteCategory = _a.onDeleteCategory, setIsIconPickerOpen = _a.setIsIconPickerOpen;
-    var _b = react_1.useState(new Set()), openCategories = _b[0], setOpenCategories = _b[1];
-    var _c = react_1.useState(false), isModalOpen = _c[0], setIsModalOpen = _c[1];
-    var _d = react_1.useState(null), currentEditCategory = _d[0], setCurrentEditCategory = _d[1];
-    var _e = react_1.useState(null), newIcon = _e[0], setNewIcon = _e[1];
-    var _f = react_1.useState([]), newTranslations = _f[0], setNewTranslations = _f[1];
-    var _g = react_1.useState([]), parentIds = _g[0], setParentIds = _g[1];
-    var toggleCategory = react_1.useCallback(function (id) {
-        setOpenCategories(function (prev) {
-            var newOpenCategories = new Set(prev);
-            if (newOpenCategories.has(id)) {
-                newOpenCategories["delete"](id);
-            }
-            else {
-                newOpenCategories.add(id);
-            }
-            return newOpenCategories;
-        });
-    }, []);
-    var getCategoryName = react_1.useCallback(function (labelId, languageId) {
-        var translation = translations.find(function (t) { return t.labelId === labelId && t.languageId === languageId; });
-        return translation ? translation.translation : 'Unknown';
-    }, [translations]);
-    var getLanguageName = react_1.useCallback(function (languageId) {
-        var language = languages.find(function (l) { return l.id === languageId; });
-        return language ? language.name : 'Unknown';
-    }, [languages]);
-    var getParentCategoryNames = react_1.useCallback(function (parents, languageId) {
-        if (parents.length === 0)
-            return 'This is a main category';
-        return parents.map(function (parent) { return getCategoryName(parent.labelId, languageId); }).join(', ');
-    }, [getCategoryName]);
-    var getCategoryIconUrl = react_1.useCallback(function (iconId) {
-        var icon = icons.find(function (icon) { return icon.id === iconId; });
-        return icon ? icon.url : '';
-    }, [icons]);
-    var getCategoryTranslations = react_1.useCallback(function (labelId) {
-        return translations.filter(function (t) { return t.labelId === labelId; });
-    }, [translations]);
-    var handleOpenEditModal = react_1.useCallback(function (category) { return __awaiter(void 0, void 0, void 0, function () {
-        var categoryTranslations, existingTranslations, iconId, iconUrl, error_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    setCurrentEditCategory(category);
-                    setParentIds(category.parents.map(function (parent) { return parent.id; }));
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1["default"].get("/api/translation/labels/" + category.labelId)];
-                case 2:
-                    categoryTranslations = (_a.sent()).data;
-                    existingTranslations = categoryTranslations.map(function (t) {
-                        console.log('Translation Data:', t); // Check each translation data fetched
-                        return {
-                            translationId: t.id,
-                            languageId: t.languageId,
-                            translation: t.translation,
-                            description: t.description || '',
-                            synonyms: t.synonyms.map(function (s) { return s.synonym; })
-                        };
-                    });
-                    setNewTranslations(existingTranslations);
-                    iconId = category.iconId || null;
-                    iconUrl = getCategoryIconUrl(iconId);
-                    setCurrentIcon({
-                        iconId: iconId,
-                        iconUrl: iconUrl
-                    });
-                    return [3 /*break*/, 4];
-                case 3:
-                    error_1 = _a.sent();
-                    console.error('Failed to fetch category translations', error_1);
-                    return [3 /*break*/, 4];
-                case 4:
-                    setNewIcon(null);
-                    setIsModalOpen(true);
-                    return [2 /*return*/];
-            }
-        });
-    }); }, [getCategoryIconUrl, languages]);
+    var _b = react_1.useState(false), isModalOpen = _b[0], setIsModalOpen = _b[1];
+    var _c = react_1.useState(null), currentEditCategory = _c[0], setCurrentEditCategory = _c[1];
+    var _d = react_1.useState(null), newIcon = _d[0], setNewIcon = _d[1];
+    var _e = react_1.useState([]), newTranslations = _e[0], setNewTranslations = _e[1];
+    var _f = react_1.useState([]), parentIds = _f[0], setParentIds = _f[1];
     var handleSubmitEdit = react_1.useCallback(function (event) { return __awaiter(void 0, void 0, void 0, function () {
         var iconId, formData, iconData, translationUpdates, _i, translationUpdates_1, _a, translationId, synonyms, err_1;
         return __generator(this, function (_b) {
@@ -171,7 +79,6 @@ var CategoryList = function (_a) {
                     iconId = iconData.id;
                     _b.label = 3;
                 case 3:
-                    console.log('newTranslations before submit:', newTranslations);
                     translationUpdates = newTranslations.map(function (_a) {
                         var translationId = _a.translationId, languageId = _a.languageId, translation = _a.translation, description = _a.description, synonyms = _a.synonyms;
                         return ({
@@ -257,11 +164,6 @@ var CategoryList = function (_a) {
             }
         });
     }); }, [onDeleteCategory, refetchCategories]);
-    var handleAddParent = react_1.useCallback(function (parentId) {
-        if (!parentIds.includes(parentId)) {
-            setParentIds(function (prev) { return __spreadArrays(prev, [parentId]); });
-        }
-    }, [parentIds]);
     // Helper function to filter categories for select input
     var filterCategoriesForSelect = react_1.useCallback(function () {
         if (!currentEditCategory)
@@ -291,6 +193,19 @@ var CategoryList = function (_a) {
         });
         return ancestors;
     };
+    var getCategoryName = react_1.useCallback(function (labelId, languageId) {
+        var translation = translations.find(function (t) { return t.labelId === labelId && t.languageId === languageId; });
+        if (translation && translation.translation) {
+            return translation.translation.charAt(0).toUpperCase() + translation.translation.slice(1);
+        }
+        return 'Unknown';
+    }, [translations]);
+    // Sort categories alphabetically based on category name
+    var sortedCategories = __spreadArrays(categories).sort(function (a, b) {
+        var nameA = getCategoryName(a.labelId, languageId).toLowerCase();
+        var nameB = getCategoryName(b.labelId, languageId).toLowerCase();
+        return nameA.localeCompare(nameB);
+    });
     // Helper function to get the complete branch (all descendants and ancestors) of a category
     var getCompleteBranch = function (category) {
         var branch = new Set();
@@ -301,108 +216,9 @@ var CategoryList = function (_a) {
         ancestors.forEach(function (id) { return branch.add(id); });
         return branch;
     };
-    var CategoryItem = function (_a) {
-        var category = _a.category;
-        var iconUrl = getCategoryIconUrl(category.iconId);
-        var isOpen = openCategories.has(category.id);
-        var categoryTranslations = getCategoryTranslations(category.labelId);
-        var languagesList = categoryTranslations.map(function (t) { return getLanguageName(t.languageId); }).join(', ');
-        return (react_1["default"].createElement("div", { className: 'border p-4 mb-4 rounded-lg shadow-md' },
-            react_1["default"].createElement("div", { className: 'flex items-center justify-between' },
-                react_1["default"].createElement("h3", { className: 'text-lg font-semibold' }, getCategoryName(category.labelId, languageId)),
-                category.children && category.children.length > 0 && (react_1["default"].createElement("button", { className: 'text-sky-500 hover:text-sky-700 focus:outline-none flex items-center', onClick: function () { return toggleCategory(category.id); } },
-                    isOpen ? react_1["default"].createElement(fi_1.FiChevronUp, { size: 24 }) : react_1["default"].createElement(fi_1.FiChevronDown, { size: 24 }),
-                    react_1["default"].createElement("span", { className: 'ml-2' }, "Subcategories")))),
-            react_1["default"].createElement("div", { className: 'mt-2' }, category.iconId ? (iconUrl ? (react_1["default"].createElement(image_1["default"], { src: iconUrl, alt: 'Category Icon', width: 50, height: 50 })) : (react_1["default"].createElement("p", null, "No image selected"))) : (react_1["default"].createElement("p", null, "No image available"))),
-            react_1["default"].createElement("p", { className: 'mt-2 text-gray-600' },
-                "Parent Categories: ",
-                getParentCategoryNames(category.parents, languageId)),
-            react_1["default"].createElement("div", { className: 'mt-4 flex space-x-2' },
-                react_1["default"].createElement("button", { className: 'bg-sky-500 text-white px-4 py-2 rounded', onClick: function () { return handleOpenEditModal(category); } }, "Edit"),
-                react_1["default"].createElement("button", { className: 'bg-red-500 text-white px-4 py-2 rounded', onClick: function () { return handleDelete(category.id); } }, "Delete")),
-            category.children && isOpen && (react_1["default"].createElement("div", { className: 'mt-4 pl-4' }, category.children.map(function (subCategory) { return (react_1["default"].createElement(CategoryItem, { key: subCategory.id, category: subCategory })); })))));
-    };
     return (react_1["default"].createElement("div", null,
-        categories.map(function (category) { return (react_1["default"].createElement(CategoryItem, { key: category.id, category: category })); }),
+        sortedCategories.map(function (category) { return (react_1["default"].createElement(CategoryItem_1["default"], { key: category.id, category: category, icons: icons, translations: translations, languages: languages, languageId: languageId, handleDelete: handleDelete, setCurrentIcon: setCurrentIcon, setCurrentEditCategory: setCurrentEditCategory, setParentIds: setParentIds, setNewIcon: setNewIcon, setIsModalOpen: setIsModalOpen, setNewTranslations: setNewTranslations })); }),
         isModalOpen && currentEditCategory && (react_1["default"].createElement(CustomModal_1["default"], { isOpen: isModalOpen, onRequestClose: function () { return setIsModalOpen(false); }, mt: '10' },
-            react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto overflow-auto max-h-[85vh] lg:max-h-[90vh]' },
-                react_1["default"].createElement("div", { className: 'flex flex-col items-center text-black mb-6 w-full' },
-                    react_1["default"].createElement("div", { className: 'mb-4' },
-                        react_1["default"].createElement(H2_1["default"], { text: 'KATEGROIJA PROIZVODA', color: 'black' })),
-                    currentIcon.iconUrl && !newIcon ? (react_1["default"].createElement("div", { className: 'mb-4 flex gap-4 justify-center items-center w-full' },
-                        react_1["default"].createElement(TextBlockItem_1["default"], { content: 'Trenutna ikonica:' }),
-                        react_1["default"].createElement(image_1["default"], { src: currentIcon.iconUrl, alt: 'Current Icon', width: 50, height: 50 }))) : (react_1["default"].createElement("p", { className: 'text-gray-500 mb-4' }, "No icon selected")),
-                    react_1["default"].createElement("div", { className: 'flex w-full justify-between space-x-4' },
-                        react_1["default"].createElement(ImageUploadButton_1["default"], { id: 'iconUpload', label: 'Nova ikonica (PNG)', onChange: handleFileChange }),
-                        react_1["default"].createElement(ChooseImageButton_1["default"], { onClick: function () { return setIsIconPickerOpen(true); }, label: 'Izbor ikonice' }))),
-                react_1["default"].createElement("div", { className: 'grid grid-cols-1 md:grid-cols-2 gap-6 w-full' }, languages.map(function (language) {
-                    var _a, _b, _c;
-                    return (react_1["default"].createElement("div", { key: language.id, className: 'flex flex-col text-black space-y-4' },
-                        react_1["default"].createElement("div", null,
-                            react_1["default"].createElement("label", { htmlFor: "translation-" + language.id, className: 'font-semibold mb-1 block text-lg' }, "" + language.name.charAt(0).toUpperCase() + language.name
-                                .slice(1)
-                                .toLocaleLowerCase() + " naziv"),
-                            react_1["default"].createElement("input", { type: 'text', id: "translation-" + language.id, className: 'border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500', value: ((_a = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _a === void 0 ? void 0 : _a.translation) || '', onChange: function (e) {
-                                    var translation = e.target.value;
-                                    setNewTranslations(function (prevTranslations) {
-                                        return prevTranslations.map(function (t) {
-                                            return t.languageId === language.id ? __assign(__assign({}, t), { translation: translation }) : t;
-                                        });
-                                    });
-                                } })),
-                        react_1["default"].createElement("div", null,
-                            react_1["default"].createElement("label", { htmlFor: "description-" + language.id, className: 'font-semibold mb-1 block text-lg' }, "" + language.name.charAt(0).toUpperCase() + language.name
-                                .slice(1)
-                                .toLocaleLowerCase() + " opis"),
-                            react_1["default"].createElement("textarea", { id: "description-" + language.id, className: 'border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500', value: ((_b = newTranslations.find(function (t) { return t.languageId === language.id; })) === null || _b === void 0 ? void 0 : _b.description) || '', onChange: function (e) {
-                                    var description = e.target.value;
-                                    setNewTranslations(function (prevTranslations) {
-                                        return prevTranslations.map(function (t) {
-                                            return t.languageId === language.id ? __assign(__assign({}, t), { description: description }) : t;
-                                        });
-                                    });
-                                } })),
-                        react_1["default"].createElement("div", null,
-                            react_1["default"].createElement("label", { htmlFor: "synonyms-" + language.id, className: 'font-semibold mb-1 block text-lg' }, "" + language.name.charAt(0).toUpperCase() + language.name
-                                .slice(1)
-                                .toLocaleLowerCase() + " sinonimi"),
-                            react_1["default"].createElement("input", { type: 'text', placeholder: 'Odvojite ih zarezom', className: 'border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500', value: ((_c = newTranslations
-                                    .find(function (t) { return t.languageId === language.id; })) === null || _c === void 0 ? void 0 : _c.synonyms.join(', ')) || '', onChange: function (e) {
-                                    var synonyms = e.target.value.split(',').map(function (synonym) { return synonym.trim(); });
-                                    setNewTranslations(function (prevTranslations) {
-                                        return prevTranslations.map(function (t) {
-                                            return t.languageId === language.id ? __assign(__assign({}, t), { synonyms: synonyms }) : t;
-                                        });
-                                    });
-                                } }))));
-                })),
-                react_1["default"].createElement("div", { className: 'mb-6 w-full' },
-                    react_1["default"].createElement("label", { className: 'font-semibold text-lg mb-3 block text-black' }, "Izabrane nadkategorije:"),
-                    react_1["default"].createElement("ul", { className: 'list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto' }, __spreadArrays(new Set(parentIds)).length > 0 ? (__spreadArrays(new Set(parentIds)).map(function (parentId) {
-                        var parentCategory = categories.find(function (cat) { return cat.id === parentId; });
-                        var translation = translations.find(function (t) { return t.labelId === (parentCategory === null || parentCategory === void 0 ? void 0 : parentCategory.labelId) && t.languageId === 1; });
-                        return (react_1["default"].createElement("li", { key: "parent-" + parentId, className: 'flex items-center justify-between' },
-                            react_1["default"].createElement("span", { className: 'text-sm text-gray-800' }, translation ? translation.translation : 'Translation not available'),
-                            react_1["default"].createElement("button", { type: 'button', onClick: function () { return setParentIds(parentIds.filter(function (id) { return id !== parentId; })); }, className: 'ml-4 text-red-500 hover:text-red-700 focus:outline-none' }, "Ukloni")));
-                    })) : (react_1["default"].createElement("li", { className: 'text-sm text-gray-500' }, "Ovo je glavna kategorija"))),
-                    react_1["default"].createElement(CustomCombobox_1["default"], { options: filterCategoriesForSelect().map(function (cat) {
-                            var _a;
-                            var translation = translations.find(function (t) { return t.labelId === cat.labelId && t.languageId === 1; });
-                            return {
-                                id: (translation === null || translation === void 0 ? void 0 : translation.id) || cat.id,
-                                labelId: cat.id,
-                                languageId: 1,
-                                translation: (translation === null || translation === void 0 ? void 0 : translation.translation) || 'Ne postoji prevod',
-                                description: (translation === null || translation === void 0 ? void 0 : translation.description) || '',
-                                createdAt: (translation === null || translation === void 0 ? void 0 : translation.createdAt) || new Date(),
-                                synonyms: (translation === null || translation === void 0 ? void 0 : translation.synonyms) || [],
-                                translationId: (_a = translation === null || translation === void 0 ? void 0 : translation.translationId) !== null && _a !== void 0 ? _a : null
-                            };
-                        }), selectedOptions: translations.filter(function (t) { return parentIds.includes(t.labelId); }), onSelect: function (selectedOptions) {
-                            var newParentIds = selectedOptions.map(function (option) { return option.labelId; });
-                            setParentIds(newParentIds);
-                        }, placeholder: 'Izaberite nadkategorije' })),
-                react_1["default"].createElement("div", { className: 'flex justify-center mt-6' },
-                    react_1["default"].createElement(SubmitButton_1["default"], null, "SA\u010CUVAJ")))))));
+            react_1["default"].createElement(EditCategoryForm_1["default"], { categories: categories, currentIcon: currentIcon, newIcon: newIcon, filterCategoriesForSelect: filterCategoriesForSelect, handleFileChange: handleFileChange, handleSubmitEdit: handleSubmitEdit, languages: languages, newTranslations: newTranslations, parentIds: parentIds, setNewTranslations: setNewTranslations, setParentIds: setParentIds, setIsIconPickerOpen: setIsIconPickerOpen, translations: translations })))));
 };
 exports["default"] = CategoryList;

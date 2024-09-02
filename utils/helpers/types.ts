@@ -209,6 +209,14 @@ export interface Translation {
 	synonyms: Synonym[];
 }
 
+export interface TranslationUpdate {
+	translationId: number;
+	languageId: number;
+	translation: string;
+	description?: string;
+	synonyms: string[];
+}
+
 export interface Icon {
 	id: number;
 	name: string;

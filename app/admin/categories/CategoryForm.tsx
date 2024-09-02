@@ -1,8 +1,10 @@
-// CategoryForm.tsx
 import React from 'react';
-import FileUploadButton from '@/app/components/buttons/FileUploadButton';
+import ImageUploadButton from '../../components/buttons/ImageUploadButton';
+import ChooseImageButton from '../../components/buttons/ChooseImageButton';
 import Combobox from '@/app/components/input/CustomCombobox';
 import { Translation, Icon } from '@/utils/helpers/types';
+import SubmitButton from '@/app/components/buttons/SubmitButton';
+import Label from '../../components/text/Label';
 
 interface CategoryFormProps {
 	name: string;
@@ -37,22 +39,18 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 	return (
 		<form onSubmit={onSubmit} className='space-y-4'>
 			<div>
-				<label htmlFor='name' className='block mb-2'>
-					Naziv kategrorije:
-				</label>
+				<Label htmlFor='name'>Naziv kategrorije:</Label>
 				<input
 					type='text'
 					id='name'
 					value={name}
 					onChange={e => setName(e.target.value)}
-					className='border p-2 w-full text-black'
+					className='block w-full p-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500'
 					placeholder='Unesite naziv'
 				/>
 			</div>
 			<div>
-				<label htmlFor='parentId' className='block mb-2'>
-					Naziv natkategorije (opciono):
-				</label>
+				<Label htmlFor='parentId'>Naziv natkategorije (opciono):</Label>
 				<Combobox
 					options={translations}
 					selectedOptions={selectedParents} // Pass selected parent translations
@@ -63,25 +61,21 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 					placeholder='Izaberite natkategoriju'
 				/>
 			</div>
-			<div>
-				<label htmlFor='icon' className='block mb-2'>
-					Icon:
-				</label>
-				<FileUploadButton onFileChange={onFileChange} resetFileName={onFileReset} />
-				<button
-					type='button'
-					className='text-blue-500 mt-2'
-					onClick={() => {
-						setIsIconPickerOpen(true);
-						icons;
-					}}>
-					Choose from existing icons
-				</button>
+			<div className='flex w-full space-x-4'>
+				<ImageUploadButton
+					id='iconUpload'
+					label='Nova ikonica (PNG)'
+					onChange={e => onFileChange(e.target.files ? e.target.files[0] : null)}
+				/>
+
+				{/* Use ChooseImageButton for selecting images from the library */}
+				<ChooseImageButton
+					onClick={() => setIsIconPickerOpen(true)}
+					label='Izbor ikonice' // Custom label
+				/>
 			</div>
 			<div>
-				<button type='submit' className='bg-blue-500 text-white px-4 py-2'>
-					Save
-				</button>
+				<SubmitButton>Sačuvaj</SubmitButton>
 			</div>
 		</form>
 	);

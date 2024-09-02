@@ -51,6 +51,7 @@ var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var CategoryForm_1 = require("./CategoryForm");
 var apiClient_1 = require("@/utils/helpers/apiClient");
 var ImagePicker_1 = require("./ImagePicker");
+var H1_1 = require("@/app/components/text/H1");
 var AddCategoryPage = function () {
     var _a = react_1.useState([]), parentIds = _a[0], setParentIds = _a[1]; // Changed to handle multiple parentIds
     var _b = react_1.useState(1), languageId = _b[0], setLanguageId = _b[1];
@@ -238,7 +239,7 @@ var AddCategoryPage = function () {
                     _a.label = 7;
                 case 7:
                     resetForm();
-                    setSuccessMessage('Data saved successfully.');
+                    setSuccessMessage('Kategorija uspešno sačuvana.');
                     if (fileUploadButtonRef.current.resetFileName)
                         fileUploadButtonRef.current.resetFileName();
                     return [4 /*yield*/, refetchData()];
@@ -320,7 +321,7 @@ var AddCategoryPage = function () {
         });
     }); }, [currentIcon, refetchData]);
     return (react_1["default"].createElement(PageContainer_1["default"], null,
-        react_1["default"].createElement("h1", { className: 'text-xl font-bold mb-4' }, "Add New Category"),
+        react_1["default"].createElement(H1_1["default"], { title: 'KATEGROIJE PROIZVODA' }),
         error && react_1["default"].createElement("p", { className: 'text-red-500 mb-4' }, error),
         successMessage && react_1["default"].createElement("p", { className: 'text-green-500 mb-4' }, successMessage),
         react_1["default"].createElement(CategoryForm_1["default"], { name: name, setName: setName, parentIds: parentIds, setParentIds: setParentIds, translations: translations, icons: icons, onFileChange: handleFileChange, onFileReset: handleResetFileName, onSubmit: handleSubmit, isIconPickerOpen: isIconPickerOpen, setIsIconPickerOpen: setIsIconPickerOpen }),

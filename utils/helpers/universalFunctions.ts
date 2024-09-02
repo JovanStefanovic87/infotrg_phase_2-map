@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Category, LinkData } from './types';
+import { Category, Icon, LinkData } from './types';
 
 export const useIsMobile = () => {
 	const [isMobile, setIsMobile] = useState(false);
@@ -57,7 +57,12 @@ export const isTextHyperlinked = (text: string, hyperlinks: LinkData[]) => {
 	return foundLink ? foundLink.url : undefined;
 };
 
-export const formatCategoryOptions = (categories: Category[], searchTerm: string): any[] => {
+export const getCategoryIconUrl = (iconId: number | null, icons: Icon[]): string => {
+	const icon = icons.find(icon => icon.id === iconId);
+	return icon ? icon.url : '';
+};
+
+/* export const formatCategoryOptions = (categories: Category[], searchTerm: string): any[] => {
 	const categoryMap = new Map<string, any>();
 	const lowercasedSearch = searchTerm.toLowerCase();
 
@@ -95,3 +100,4 @@ export const formatCategoryOptions = (categories: Category[], searchTerm: string
 
 	return filteredCategories;
 };
+ */
