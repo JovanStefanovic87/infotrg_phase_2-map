@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { prefix_article_category_ } from '@/app/api/prefix';
 import CategoryList from './CategoryList';
 import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
@@ -25,13 +26,18 @@ const AddCategoryPage: React.FC = () => {
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 
-	const fetchCategories = () => apiClient<Category[]>({ method: 'GET', url: '/api/categories' });
+	const fetchCategories = () =>
+		apiClient<Category[]>({
+			method: 'GET',
+			url: `/api/categories?prefix=${prefix_article_category_}`,
+		});
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () => apiClient<Icon[]>({ method: 'GET', url: '/api/icons' });
+
 	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
 		const labels = await apiClient<{ id: number }[]>({
 			method: 'GET',
-			url: `/api/labels?languageId=${languageId}`,
+			url: `/api/labels?languageId=${languageId}&prefix=${prefix_article_category_}`,
 		});
 		const translationsPromises = labels.map(({ id }) =>
 			apiClient<Translation>({
@@ -108,14 +114,19 @@ const AddCategoryPage: React.FC = () => {
 				});
 				iconId = data.iconId;
 			}
-			const { data: labelData } = await axios.post('/api/labels', { name });
+			console.log('Sending name:', `article_category_${name}`);
+			const { data: labelData } = await axios.post('/api/labels', {
+				name: `article_category_${name}`,
+			});
+
 			const newLabelId = labelData.id;
 
 			if (!newLabelId) throw new Error('Failed to create label');
 			const { data: categoryData } = await axios.post('/api/categories', {
-				parentIds, // Update to use parentIds array
+				parentIds,
 				labelId: newLabelId,
 				iconId,
+				name: `article_category_${name}`,
 			});
 
 			if (!categoryData) throw new Error('Failed to create category');

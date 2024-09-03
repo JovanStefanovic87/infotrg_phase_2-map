@@ -19,7 +19,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 	return Promise.all(
 		parentCategories.map(async ({ parent }) => ({
 			id: parent.id,
-			name: '', // Fetch or provide the name for each parent category
+			name: parent.name, // Use the name fetched from the parent
 			iconId: parent.iconId,
 			labelId: parent.labelId,
 			parents: await fetchParents(parent.id), // Recursively fetch parent categories
@@ -37,7 +37,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 };
 
 // Function to build the category tree
-const buildCategoryTree = async (parentId: number | null): Promise<Category[]> => {
+const buildCategoryTree = async (parentId: number | null, prefix: string): Promise<Category[]> => {
 	const categories = await prisma.category.findMany({
 		include: {
 			icon: true,
@@ -47,21 +47,25 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 				},
 			},
 		},
-		where:
-			parentId === null
+		where: {
+			name: {
+				startsWith: prefix,
+			},
+			...(parentId === null
 				? { NOT: { childCategories: { some: {} } } }
-				: { childCategories: { some: { parentId } } },
+				: { childCategories: { some: { parentId } } }),
+		},
 	});
 
 	// Recursively build the tree structure
 	return Promise.all(
 		categories.map(async category => ({
 			id: category.id,
-			name: '', // Fetch or provide the name for each category
+			name: category.name, // Use the name fetched from the category
 			iconId: category.iconId,
 			labelId: category.labelId,
 			parents: await fetchParents(category.id), // Fetch and populate parents
-			children: await buildCategoryTree(category.id), // Recursively build children
+			children: await buildCategoryTree(category.id, prefix), // Recursively build children
 			icon: category.icon
 				? {
 						id: category.icon.id,
@@ -74,16 +78,18 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 	);
 };
 
-export async function GET() {
-	const topLevelCategories: Category[] = await buildCategoryTree(null);
+export async function GET(request: Request) {
+	const url = new URL(request.url);
+	const prefix = url.searchParams.get('prefix') || ''; // Fetch the prefix from query params
+	const topLevelCategories: Category[] = await buildCategoryTree(null, prefix);
 	return NextResponse.json(topLevelCategories);
 }
 
 export async function POST(request: Request) {
-	const { parentIds, labelId, iconId, newIcon } = await request.json();
+	const { parentIds, labelId, iconId, newIcon, name } = await request.json(); // Destructure `name` from the request body
 
 	let categoryIconId = iconId;
-	console.log(iconId);
+
 	// If a new icon is being uploaded, save it first
 	if (newIcon) {
 		try {
@@ -106,6 +112,7 @@ export async function POST(request: Request) {
 			data: {
 				labelId,
 				iconId: categoryIconId,
+				name: name, // Add the prefixed name here
 			},
 		});
 

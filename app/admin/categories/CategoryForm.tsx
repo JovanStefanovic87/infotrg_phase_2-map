@@ -26,11 +26,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 	parentIds,
 	setParentIds,
 	translations,
-	icons,
 	onFileChange,
-	onFileReset,
 	onSubmit,
-	isIconPickerOpen,
 	setIsIconPickerOpen,
 }) => {
 	// Convert parentIds to selected translations for Combobox
@@ -53,7 +50,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 				<Label htmlFor='parentId'>Naziv natkategorije (opciono):</Label>
 				<Combobox
 					options={translations}
-					selectedOptions={selectedParents} // Pass selected parent translations
+					selectedOptions={selectedParents}
 					onSelect={newSelectedOptions => {
 						const newParentIds = newSelectedOptions.map(option => option.labelId);
 						setParentIds(newParentIds);

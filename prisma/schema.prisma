@@ -53,6 +53,7 @@ model Language {
 model Category {
   id               Int              @id @default(autoincrement())
   labelId          Int
+  name             String           @default("Unknown")
   iconId           Int?
   icon             Icon?            @relation(fields: [iconId], references: [id])
   createdAt        DateTime         @default(now())

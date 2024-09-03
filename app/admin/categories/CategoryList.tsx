@@ -1,15 +1,8 @@
 'use client';
 import React, { useState, useCallback } from 'react';
-import Image from 'next/image';
 import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
-import CustomCombobox from '@/app/components/input/CustomCombobox';
-import SumbitButton from '../../components/buttons/SubmitButton';
 import axios from 'axios';
-import ImageUploadButton from '@/app/components/buttons/ImageUploadButton';
-import ChooseImageButton from '@/app/components/buttons/ChooseImageButton';
-import H2 from '@/app/components/text/H2';
-import TextBlockItem from '@/app/ulaganje/collapsible/TextBlockItem';
 import CategoryItem from './CategoryItem';
 import EditCategoryForm from './EditCategoryForm';
 

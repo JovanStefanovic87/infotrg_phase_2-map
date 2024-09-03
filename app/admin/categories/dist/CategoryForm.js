@@ -7,7 +7,7 @@ var CustomCombobox_1 = require("@/app/components/input/CustomCombobox");
 var SubmitButton_1 = require("@/app/components/buttons/SubmitButton");
 var Label_1 = require("../../components/text/Label");
 var CategoryForm = function (_a) {
-    var name = _a.name, setName = _a.setName, parentIds = _a.parentIds, setParentIds = _a.setParentIds, translations = _a.translations, icons = _a.icons, onFileChange = _a.onFileChange, onFileReset = _a.onFileReset, onSubmit = _a.onSubmit, isIconPickerOpen = _a.isIconPickerOpen, setIsIconPickerOpen = _a.setIsIconPickerOpen;
+    var name = _a.name, setName = _a.setName, parentIds = _a.parentIds, setParentIds = _a.setParentIds, translations = _a.translations, onFileChange = _a.onFileChange, onSubmit = _a.onSubmit, setIsIconPickerOpen = _a.setIsIconPickerOpen;
     // Convert parentIds to selected translations for Combobox
     var selectedParents = translations.filter(function (t) { return parentIds.includes(t.labelId); });
     return (react_1["default"].createElement("form", { onSubmit: onSubmit, className: 'space-y-4' },

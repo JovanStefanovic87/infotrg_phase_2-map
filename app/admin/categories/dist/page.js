@@ -46,6 +46,7 @@ var __spreadArrays = (this && this.__spreadArrays) || function () {
 exports.__esModule = true;
 var react_1 = require("react");
 var axios_1 = require("axios");
+var prefix_1 = require("@/app/api/prefix");
 var CategoryList_1 = require("./CategoryList");
 var PageContainer_1 = require("@/app/components/containers/PageContainer");
 var CategoryForm_1 = require("./CategoryForm");
@@ -67,7 +68,12 @@ var AddCategoryPage = function () {
     var _m = react_1.useState(false), loading = _m[0], setLoading = _m[1];
     var fileUploadButtonRef = react_1.useRef({});
     var _o = react_1.useState({ iconId: null, iconUrl: null }), currentIcon = _o[0], setCurrentIcon = _o[1];
-    var fetchCategories = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/categories' }); };
+    var fetchCategories = function () {
+        return apiClient_1["default"]({
+            method: 'GET',
+            url: "/api/categories?prefix=" + prefix_1.prefix_article_category_
+        });
+    };
     var fetchLanguages = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/languages' }); };
     var fetchIcons = function () { return apiClient_1["default"]({ method: 'GET', url: '/api/icons' }); };
     var fetchTranslations = function (languageId) { return __awaiter(void 0, void 0, Promise, function () {
@@ -76,7 +82,7 @@ var AddCategoryPage = function () {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, apiClient_1["default"]({
                         method: 'GET',
-                        url: "/api/labels?languageId=" + languageId
+                        url: "/api/labels?languageId=" + languageId + "&prefix=" + prefix_1.prefix_article_category_
                     })];
                 case 1:
                     labels = _a.sent();
@@ -204,7 +210,11 @@ var AddCategoryPage = function () {
                     data = (_a.sent()).data;
                     iconId = data.iconId;
                     _a.label = 3;
-                case 3: return [4 /*yield*/, axios_1["default"].post('/api/labels', { name: name })];
+                case 3:
+                    console.log('Sending name:', "article_category_" + name);
+                    return [4 /*yield*/, axios_1["default"].post('/api/labels', {
+                            name: "article_category_" + name
+                        })];
                 case 4:
                     labelData = (_a.sent()).data;
                     newLabelId_1 = labelData.id;
@@ -213,7 +223,8 @@ var AddCategoryPage = function () {
                     return [4 /*yield*/, axios_1["default"].post('/api/categories', {
                             parentIds: parentIds,
                             labelId: newLabelId_1,
-                            iconId: iconId
+                            iconId: iconId,
+                            name: "article_category_" + name
                         })];
                 case 5:
                     categoryData = (_a.sent()).data;

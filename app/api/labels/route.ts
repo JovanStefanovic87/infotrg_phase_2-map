@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
 	try {
 		const url = new URL(request.url);
 		const languageId = parseInt(url.searchParams.get('languageId') || '', 10);
+		const prefix = url.searchParams.get('prefix') || ''; // Get the prefix from query parameters
 
 		if (isNaN(languageId)) {
 			return NextResponse.json({ error: 'Invalid languageId' }, { status: 400 });
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 		const labels = await prisma.label.findMany({
 			where: {
 				name: {
-					startsWith: 'article_category_',
+					startsWith: prefix, // Use the prefix from the query parameter
 				},
 				translations: {
 					some: {
@@ -35,10 +36,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const { name } = await request.json();
+		console.log('Received name:', name);
 		if (typeof name !== 'string') {
 			return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
 		}
-		const labelName = `article_category_${name}`;
+		const labelName = name;
 
 		const label = await prisma.label.create({
 			data: {

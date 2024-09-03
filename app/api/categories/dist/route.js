@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -66,7 +77,7 @@ var fetchParents = function (childId) { return __awaiter(void 0, void 0, Promise
                                     case 0:
                                         _b = {
                                             id: parent.id,
-                                            name: '',
+                                            name: parent.name,
                                             iconId: parent.iconId,
                                             labelId: parent.labelId
                                         };
@@ -90,7 +101,7 @@ var fetchParents = function (childId) { return __awaiter(void 0, void 0, Promise
     });
 }); };
 // Function to build the category tree
-var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, Promise, function () {
+var buildCategoryTree = function (parentId, prefix) { return __awaiter(void 0, void 0, Promise, function () {
     var categories;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -103,9 +114,11 @@ var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, P
                             }
                         }
                     },
-                    where: parentId === null
+                    where: __assign({ name: {
+                            startsWith: prefix
+                        } }, (parentId === null
                         ? { NOT: { childCategories: { some: {} } } }
-                        : { childCategories: { some: { parentId: parentId } } }
+                        : { childCategories: { some: { parentId: parentId } } }))
                 })];
             case 1:
                 categories = _a.sent();
@@ -117,14 +130,14 @@ var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, P
                                 case 0:
                                     _a = {
                                         id: category.id,
-                                        name: '',
+                                        name: category.name,
                                         iconId: category.iconId,
                                         labelId: category.labelId
                                     };
                                     return [4 /*yield*/, fetchParents(category.id)];
                                 case 1:
                                     _a.parents = _b.sent();
-                                    return [4 /*yield*/, buildCategoryTree(category.id)];
+                                    return [4 /*yield*/, buildCategoryTree(category.id, prefix)];
                                 case 2: return [2 /*return*/, (_a.children = _b.sent(),
                                         _a.icon = category.icon
                                             ? {
@@ -141,12 +154,15 @@ var buildCategoryTree = function (parentId) { return __awaiter(void 0, void 0, P
         }
     });
 }); };
-function GET() {
+function GET(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var topLevelCategories;
+        var url, prefix, topLevelCategories;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, buildCategoryTree(null)];
+                case 0:
+                    url = new URL(request.url);
+                    prefix = url.searchParams.get('prefix') || '';
+                    return [4 /*yield*/, buildCategoryTree(null, prefix)];
                 case 1:
                     topLevelCategories = _a.sent();
                     return [2 /*return*/, server_1.NextResponse.json(topLevelCategories)];
@@ -157,14 +173,13 @@ function GET() {
 exports.GET = GET;
 function POST(request) {
     return __awaiter(this, void 0, void 0, function () {
-        var _a, parentIds, labelId, iconId, newIcon, categoryIconId, createdIcon, error_1, newCategory_1, error_2;
+        var _a, parentIds, labelId, iconId, newIcon, name, categoryIconId, createdIcon, error_1, newCategory_1, error_2;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0: return [4 /*yield*/, request.json()];
                 case 1:
-                    _a = _b.sent(), parentIds = _a.parentIds, labelId = _a.labelId, iconId = _a.iconId, newIcon = _a.newIcon;
+                    _a = _b.sent(), parentIds = _a.parentIds, labelId = _a.labelId, iconId = _a.iconId, newIcon = _a.newIcon, name = _a.name;
                     categoryIconId = iconId;
-                    console.log(iconId);
                     if (!newIcon) return [3 /*break*/, 5];
                     _b.label = 2;
                 case 2:
@@ -187,7 +202,8 @@ function POST(request) {
                     return [4 /*yield*/, prisma_1.prisma.category.create({
                             data: {
                                 labelId: labelId,
-                                iconId: categoryIconId
+                                iconId: categoryIconId,
+                                name: name
                             }
                         })];
                 case 6:

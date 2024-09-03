@@ -28,6 +28,16 @@ var CustomCombobox_1 = require("../../components/input/CustomCombobox");
 var SubmitButton_1 = require("../../components/buttons/SubmitButton");
 var EditCategoryForm = function (_a) {
     var currentIcon = _a.currentIcon, newIcon = _a.newIcon, languages = _a.languages, newTranslations = _a.newTranslations, handleFileChange = _a.handleFileChange, setNewTranslations = _a.setNewTranslations, parentIds = _a.parentIds, categories = _a.categories, translations = _a.translations, setParentIds = _a.setParentIds, filterCategoriesForSelect = _a.filterCategoriesForSelect, setIsIconPickerOpen = _a.setIsIconPickerOpen, handleSubmitEdit = _a.handleSubmitEdit;
+    // Helper function to find the appropriate translation
+    var findTranslation = function (labelId) {
+        // Check for primary language translation (e.g., languageId === 1)
+        var translation = translations.find(function (t) { return t.labelId === labelId && t.languageId === 1; });
+        // If no primary language translation, check for any translation for the given labelId
+        if (!translation) {
+            translation = translations.find(function (t) { return t.labelId === labelId; });
+        }
+        return translation;
+    };
     return (react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto overflow-auto max-h-[85vh] lg:max-h-[90vh]' },
         react_1["default"].createElement("div", { className: 'flex flex-col items-center text-black mb-6 w-full' },
             react_1["default"].createElement("div", { className: 'mb-4' },
@@ -82,9 +92,11 @@ var EditCategoryForm = function (_a) {
             react_1["default"].createElement("label", { className: 'font-semibold text-lg mb-3 block text-black' }, "Izabrane nadkategorije:"),
             react_1["default"].createElement("ul", { className: 'list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto' }, __spreadArrays(new Set(parentIds)).length > 0 ? (__spreadArrays(new Set(parentIds)).map(function (parentId) {
                 var parentCategory = categories.find(function (cat) { return cat.id === parentId; });
-                var translation = translations.find(function (t) { return t.labelId === (parentCategory === null || parentCategory === void 0 ? void 0 : parentCategory.labelId) && t.languageId === 1; });
+                var translation = parentCategory ? findTranslation(parentCategory.labelId) : null;
                 return (react_1["default"].createElement("li", { key: "parent-" + parentId, className: 'flex items-center justify-between' },
-                    react_1["default"].createElement("span", { className: 'text-sm text-gray-800' }, translation ? translation.translation : 'Translation not available'),
+                    react_1["default"].createElement("span", { className: 'text-sm text-gray-800' }, translation
+                        ? translation.translation
+                        : "Translation not available for labelId: " + (parentCategory === null || parentCategory === void 0 ? void 0 : parentCategory.labelId)),
                     react_1["default"].createElement("button", { type: 'button', onClick: function () { return setParentIds(parentIds.filter(function (id) { return id !== parentId; })); }, className: 'ml-4 text-red-500 hover:text-red-700 focus:outline-none' }, "Ukloni")));
             })) : (react_1["default"].createElement("li", { className: 'text-sm text-gray-500' }, "Ovo je glavna kategorija"))),
             react_1["default"].createElement(CustomCombobox_1["default"], { options: filterCategoriesForSelect().map(function (cat) {

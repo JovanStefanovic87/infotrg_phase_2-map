@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import H2 from '../../components/text/H2';
 import Image from 'next/image';
 import TextBlockItem from '../../ulaganje/collapsible/TextBlockItem';
@@ -48,6 +48,19 @@ const EditCategoryForm: React.FC<Props> = ({
 	setIsIconPickerOpen,
 	handleSubmitEdit,
 }) => {
+	// Helper function to find the appropriate translation
+	const findTranslation = (labelId: number) => {
+		// Check for primary language translation (e.g., languageId === 1)
+		let translation = translations.find(t => t.labelId === labelId && t.languageId === 1);
+
+		// If no primary language translation, check for any translation for the given labelId
+		if (!translation) {
+			translation = translations.find(t => t.labelId === labelId);
+		}
+
+		return translation;
+	};
+
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -167,14 +180,14 @@ const EditCategoryForm: React.FC<Props> = ({
 					{[...new Set(parentIds)].length > 0 ? (
 						[...new Set(parentIds)].map(parentId => {
 							const parentCategory = categories.find(cat => cat.id === parentId);
-							const translation = translations.find(
-								t => t.labelId === parentCategory?.labelId && t.languageId === 1
-							);
+							const translation = parentCategory ? findTranslation(parentCategory.labelId) : null;
 
 							return (
 								<li key={`parent-${parentId}`} className='flex items-center justify-between'>
 									<span className='text-sm text-gray-800'>
-										{translation ? translation.translation : 'Translation not available'}
+										{translation
+											? translation.translation
+											: `Translation not available for labelId: ${parentCategory?.labelId}`}
 									</span>
 									<button
 										type='button'
