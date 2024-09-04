@@ -114,7 +114,6 @@ const AddCategoryPage: React.FC = () => {
 				});
 				iconId = data.iconId;
 			}
-			console.log('Sending name:', `article_category_${name}`);
 			const { data: labelData } = await axios.post('/api/labels', {
 				name: `article_category_${name}`,
 			});

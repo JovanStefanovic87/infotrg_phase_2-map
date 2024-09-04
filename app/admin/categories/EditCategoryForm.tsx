@@ -61,6 +61,20 @@ const EditCategoryForm: React.FC<Props> = ({
 		return translation;
 	};
 
+	const findCategoryById = (id: number, categories: Category[]): Category | null => {
+		for (const category of categories) {
+			if (category.id === id) {
+				return category;
+			}
+			// Recursively search in children
+			const foundInChildren = findCategoryById(id, category.children);
+			if (foundInChildren) {
+				return foundInChildren;
+			}
+		}
+		return null; // Return null if not found
+	};
+
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -179,19 +193,27 @@ const EditCategoryForm: React.FC<Props> = ({
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{[...new Set(parentIds)].length > 0 ? (
 						[...new Set(parentIds)].map(parentId => {
-							const parentCategory = categories.find(cat => cat.id === parentId);
-							const translation = parentCategory ? findTranslation(parentCategory.labelId) : null;
+							const parentCategory = findCategoryById(parentId, categories);
+
+							if (!parentCategory) {
+								console.error(`Parent category not found for parentId: ${parentId}`);
+								return null;
+							}
+
+							const translation = findTranslation(parentCategory.labelId);
 
 							return (
 								<li key={`parent-${parentId}`} className='flex items-center justify-between'>
 									<span className='text-sm text-gray-800'>
 										{translation
 											? translation.translation
-											: `Translation not available for labelId: ${parentCategory?.labelId}`}
+											: `Translation not available for labelId: ${parentCategory.labelId}`}
 									</span>
 									<button
 										type='button'
-										onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
+										onClick={() =>
+											setParentIds(prevParentIds => prevParentIds.filter(id => id !== parentId))
+										}
 										className='ml-4 text-red-500 hover:text-red-700 focus:outline-none'>
 										Ukloni
 									</button>
@@ -202,6 +224,7 @@ const EditCategoryForm: React.FC<Props> = ({
 						<li className='text-sm text-gray-500'>Ovo je glavna kategorija</li>
 					)}
 				</ul>
+
 				<CustomCombobox
 					options={filterCategoriesForSelect().map(cat => {
 						const translation = translations.find(

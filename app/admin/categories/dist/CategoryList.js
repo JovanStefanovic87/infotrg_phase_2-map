@@ -102,7 +102,6 @@ var CategoryList = function (_a) {
                 case 5:
                     if (!(_i < translationUpdates_1.length)) return [3 /*break*/, 8];
                     _a = translationUpdates_1[_i], translationId = _a.translationId, synonyms = _a.synonyms;
-                    console.log('synonyms-fe', synonyms);
                     return [4 /*yield*/, axios_1["default"].post('/api/synonyms', {
                             translationId: translationId,
                             synonyms: synonyms
@@ -164,20 +163,49 @@ var CategoryList = function (_a) {
             }
         });
     }); }, [onDeleteCategory, refetchCategories]);
+    var flattenCategories = function (categories) {
+        var result = [];
+        var recurse = function (cats) {
+            for (var _i = 0, cats_1 = cats; _i < cats_1.length; _i++) {
+                var cat = cats_1[_i];
+                result.push(cat);
+                if (cat.children && cat.children.length > 0) {
+                    recurse(cat.children);
+                }
+            }
+        };
+        recurse(categories);
+        return result;
+    };
     // Helper function to filter categories for select input
     var filterCategoriesForSelect = react_1.useCallback(function () {
         if (!currentEditCategory)
-            return categories;
-        var completeBranch = getCompleteBranch(currentEditCategory);
-        var uniqueCategories = categories.filter(function (cat) { return !completeBranch.has(cat.id); });
+            return [];
+        var allCategories = flattenCategories(categories);
+        // Get all descendants of the current category
+        var descendants = getDescendants(currentEditCategory);
+        // Get direct parents of the current category
+        var directParentIds = new Set(currentEditCategory.parents.map(function (parent) { return parent.id; }));
+        // Use a Map to store unique categories by their IDs
+        var uniqueCategoriesMap = new Map();
+        for (var _i = 0, allCategories_1 = allCategories; _i < allCategories_1.length; _i++) {
+            var cat = allCategories_1[_i];
+            // Exclude the current category, all its descendants, and its direct parent
+            if (cat.id !== currentEditCategory.id &&
+                !descendants.has(cat.id) &&
+                !directParentIds.has(cat.id)) {
+                uniqueCategoriesMap.set(cat.id, cat);
+            }
+        }
+        var uniqueCategories = Array.from(uniqueCategoriesMap.values());
         return uniqueCategories;
     }, [categories, currentEditCategory]);
-    // Helper function to get all descendants of a category
+    // Helper function to recursively get all descendant IDs of a category
     var getDescendants = function (category, descendants) {
         if (descendants === void 0) { descendants = new Set(); }
         category.children.forEach(function (child) {
             descendants.add(child.id);
-            getDescendants(child, descendants);
+            getDescendants(child, descendants); // Recursively add all nested children
         });
         return descendants;
     };

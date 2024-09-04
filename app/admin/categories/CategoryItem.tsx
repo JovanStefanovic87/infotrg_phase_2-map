@@ -101,7 +101,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 	const handleOpenEditModal = useCallback(
 		async (category: Category) => {
-			console.log('open modal');
 			setCurrentEditCategory(category);
 			setParentIds(category.parents.map(parent => parent.id));
 
@@ -111,7 +110,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				);
 
 				const existingTranslations = categoryTranslations.map(t => {
-					console.log('Translation Data:', t); // Check each translation data fetched
 					return {
 						translationId: t.id,
 						languageId: t.languageId,

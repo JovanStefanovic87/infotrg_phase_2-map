@@ -88,7 +88,6 @@ var CategoryItem = function (_a) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log('open modal');
                     setCurrentEditCategory(category);
                     setParentIds(category.parents.map(function (parent) { return parent.id; }));
                     _a.label = 1;
@@ -98,7 +97,6 @@ var CategoryItem = function (_a) {
                 case 2:
                     categoryTranslations_1 = (_a.sent()).data;
                     existingTranslations = categoryTranslations_1.map(function (t) {
-                        console.log('Translation Data:', t); // Check each translation data fetched
                         return {
                             translationId: t.id,
                             languageId: t.languageId,

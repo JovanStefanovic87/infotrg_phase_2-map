@@ -210,11 +210,9 @@ var AddCategoryPage = function () {
                     data = (_a.sent()).data;
                     iconId = data.iconId;
                     _a.label = 3;
-                case 3:
-                    console.log('Sending name:', "article_category_" + name);
-                    return [4 /*yield*/, axios_1["default"].post('/api/labels', {
-                            name: "article_category_" + name
-                        })];
+                case 3: return [4 /*yield*/, axios_1["default"].post('/api/labels', {
+                        name: "article_category_" + name
+                    })];
                 case 4:
                     labelData = (_a.sent()).data;
                     newLabelId_1 = labelData.id;

@@ -38,6 +38,20 @@ var EditCategoryForm = function (_a) {
         }
         return translation;
     };
+    var findCategoryById = function (id, categories) {
+        for (var _i = 0, categories_1 = categories; _i < categories_1.length; _i++) {
+            var category = categories_1[_i];
+            if (category.id === id) {
+                return category;
+            }
+            // Recursively search in children
+            var foundInChildren = findCategoryById(id, category.children);
+            if (foundInChildren) {
+                return foundInChildren;
+            }
+        }
+        return null; // Return null if not found
+    };
     return (react_1["default"].createElement("form", { onSubmit: handleSubmitEdit, className: 'flex flex-col items-center space-y-6 p-6 bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto overflow-auto max-h-[85vh] lg:max-h-[90vh]' },
         react_1["default"].createElement("div", { className: 'flex flex-col items-center text-black mb-6 w-full' },
             react_1["default"].createElement("div", { className: 'mb-4' },
@@ -91,13 +105,19 @@ var EditCategoryForm = function (_a) {
         react_1["default"].createElement("div", { className: 'mb-6 w-full' },
             react_1["default"].createElement("label", { className: 'font-semibold text-lg mb-3 block text-black' }, "Izabrane nadkategorije:"),
             react_1["default"].createElement("ul", { className: 'list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto' }, __spreadArrays(new Set(parentIds)).length > 0 ? (__spreadArrays(new Set(parentIds)).map(function (parentId) {
-                var parentCategory = categories.find(function (cat) { return cat.id === parentId; });
-                var translation = parentCategory ? findTranslation(parentCategory.labelId) : null;
+                var parentCategory = findCategoryById(parentId, categories);
+                if (!parentCategory) {
+                    console.error("Parent category not found for parentId: " + parentId);
+                    return null;
+                }
+                var translation = findTranslation(parentCategory.labelId);
                 return (react_1["default"].createElement("li", { key: "parent-" + parentId, className: 'flex items-center justify-between' },
                     react_1["default"].createElement("span", { className: 'text-sm text-gray-800' }, translation
                         ? translation.translation
-                        : "Translation not available for labelId: " + (parentCategory === null || parentCategory === void 0 ? void 0 : parentCategory.labelId)),
-                    react_1["default"].createElement("button", { type: 'button', onClick: function () { return setParentIds(parentIds.filter(function (id) { return id !== parentId; })); }, className: 'ml-4 text-red-500 hover:text-red-700 focus:outline-none' }, "Ukloni")));
+                        : "Translation not available for labelId: " + parentCategory.labelId),
+                    react_1["default"].createElement("button", { type: 'button', onClick: function () {
+                            return setParentIds(function (prevParentIds) { return prevParentIds.filter(function (id) { return id !== parentId; }); });
+                        }, className: 'ml-4 text-red-500 hover:text-red-700 focus:outline-none' }, "Ukloni")));
             })) : (react_1["default"].createElement("li", { className: 'text-sm text-gray-500' }, "Ovo je glavna kategorija"))),
             react_1["default"].createElement(CustomCombobox_1["default"], { options: filterCategoriesForSelect().map(function (cat) {
                     var _a;

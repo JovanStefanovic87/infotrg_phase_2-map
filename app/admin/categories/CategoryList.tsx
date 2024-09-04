@@ -94,7 +94,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				});
 
 				for (const { translationId, synonyms } of translationUpdates) {
-					console.log('synonyms-fe', synonyms);
 					await axios.post('/api/synonyms', {
 						translationId,
 						synonyms,
@@ -138,24 +137,61 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[onDeleteCategory, refetchCategories]
 	);
 
+	const flattenCategories = (categories: Category[]): Category[] => {
+		let result: Category[] = [];
+
+		const recurse = (cats: Category[]) => {
+			for (const cat of cats) {
+				result.push(cat);
+				if (cat.children && cat.children.length > 0) {
+					recurse(cat.children);
+				}
+			}
+		};
+
+		recurse(categories);
+		return result;
+	};
+
 	// Helper function to filter categories for select input
 	const filterCategoriesForSelect = useCallback(() => {
-		if (!currentEditCategory) return categories;
+		if (!currentEditCategory) return [];
 
-		const completeBranch = getCompleteBranch(currentEditCategory);
-		const uniqueCategories = categories.filter(cat => !completeBranch.has(cat.id));
+		const allCategories = flattenCategories(categories);
+
+		// Get all descendants of the current category
+		const descendants = getDescendants(currentEditCategory);
+
+		// Get direct parents of the current category
+		const directParentIds = new Set(currentEditCategory.parents.map(parent => parent.id));
+
+		// Use a Map to store unique categories by their IDs
+		const uniqueCategoriesMap = new Map<number, Category>();
+
+		for (const cat of allCategories) {
+			// Exclude the current category, all its descendants, and its direct parent
+			if (
+				cat.id !== currentEditCategory.id &&
+				!descendants.has(cat.id) &&
+				!directParentIds.has(cat.id)
+			) {
+				uniqueCategoriesMap.set(cat.id, cat);
+			}
+		}
+
+		const uniqueCategories = Array.from(uniqueCategoriesMap.values());
 
 		return uniqueCategories;
 	}, [categories, currentEditCategory]);
 
-	// Helper function to get all descendants of a category
+	// Helper function to recursively get all descendant IDs of a category
 	const getDescendants = (
 		category: Category,
 		descendants: Set<number> = new Set()
 	): Set<number> => {
 		category.children.forEach(child => {
 			descendants.add(child.id);
-			getDescendants(child, descendants);
+			getDescendants(child, descendants); // Recursively add all nested children
 		});
 		return descendants;
 	};
