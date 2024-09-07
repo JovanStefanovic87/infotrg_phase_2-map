@@ -173,7 +173,7 @@ const AddCategoryPage: React.FC = () => {
 		setError('');
 	};
 
-	const handleEditCategory = useCallback(
+	/* const handleEditCategory = useCallback(
 		async (
 			id: number,
 			data: {
@@ -223,7 +223,7 @@ const AddCategoryPage: React.FC = () => {
 			}
 		},
 		[currentIcon, refetchData]
-	);
+	); */
 
 	return (
 		<PageContainer>
@@ -254,7 +254,6 @@ const AddCategoryPage: React.FC = () => {
 					languages={languages}
 					languageId={languageId}
 					refetchCategories={refetchData}
-					onEditCategory={handleEditCategory}
 					onDeleteCategory={async id => {
 						try {
 							await axios.delete(`/api/categories/${id}`);

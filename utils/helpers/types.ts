@@ -1,3 +1,8 @@
+export interface Option {
+	value: string;
+	label: string;
+}
+
 export interface LinkData {
 	text: string;
 	url: string;

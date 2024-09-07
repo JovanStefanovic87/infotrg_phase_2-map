@@ -92,8 +92,8 @@ const HeaderLinkButton: React.FC<Props> = ({
 							className={`h-4 w-4 transition-transform duration-200 transform ${
 								isTopLevel
 									? isOpen
-										? 'rotate-0'
-										: 'rotate-180'
+										? 'rotate-180'
+										: 'rotate-0'
 									: isOpen
 									? '-rotate-90'
 									: 'rotate-90'

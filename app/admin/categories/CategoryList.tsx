@@ -18,15 +18,6 @@ interface CategoryListProps {
 	languages: Language[];
 	languageId: number;
 	refetchCategories: () => Promise<void>;
-	onEditCategory: (
-		id: number,
-		data: {
-			translations: Translation[];
-			icon?: File | null;
-			iconId?: number | null; // Make iconId optional here
-			parentIds: number[];
-		}
-	) => Promise<void>;
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
@@ -49,7 +40,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	languages,
 	languageId,
 	refetchCategories,
-	onEditCategory,
 	onDeleteCategory,
 	setIsIconPickerOpen,
 }) => {
@@ -106,15 +96,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				console.error('Failed to edit category', err);
 			}
 		},
-		[
-			currentEditCategory,
-			newTranslations,
-			newIcon,
-			onEditCategory,
-			parentIds,
-			refetchCategories,
-			currentIcon,
-		]
+		[currentEditCategory, newTranslations, newIcon, parentIds, refetchCategories, currentIcon]
 	);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,6 +135,30 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		return result;
 	};
 
+	// Helper function to recursively get all descendant IDs of a category
+	const getDescendants = useCallback(
+		(category: Category, descendants: Set<number> = new Set()): Set<number> => {
+			category.children.forEach(child => {
+				descendants.add(child.id);
+				getDescendants(child, descendants); // Recursively add all nested children
+			});
+			return descendants;
+		},
+		[]
+	);
+
+	// Helper function to get all ancestors of a category
+	const getAncestors = (category: Category, ancestors: Set<number> = new Set()): Set<number> => {
+		category.parents.forEach(parent => {
+			ancestors.add(parent.id);
+			const parentCategory = categories.find(cat => cat.id === parent.id);
+			if (parentCategory) {
+				getAncestors(parentCategory, ancestors);
+			}
+		});
+		return ancestors;
+	};
+
 	// Helper function to filter categories for select input
 	const filterCategoriesForSelect = useCallback(() => {
 		if (!currentEditCategory) return [];
@@ -182,31 +188,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		const uniqueCategories = Array.from(uniqueCategoriesMap.values());
 
 		return uniqueCategories;
-	}, [categories, currentEditCategory]);
-
-	// Helper function to recursively get all descendant IDs of a category
-	const getDescendants = (
-		category: Category,
-		descendants: Set<number> = new Set()
-	): Set<number> => {
-		category.children.forEach(child => {
-			descendants.add(child.id);
-			getDescendants(child, descendants); // Recursively add all nested children
-		});
-		return descendants;
-	};
-
-	// Helper function to get all ancestors of a category
-	const getAncestors = (category: Category, ancestors: Set<number> = new Set()): Set<number> => {
-		category.parents.forEach(parent => {
-			ancestors.add(parent.id);
-			const parentCategory = categories.find(cat => cat.id === parent.id);
-			if (parentCategory) {
-				getAncestors(parentCategory, ancestors);
-			}
-		});
-		return ancestors;
-	};
+	}, [categories, currentEditCategory, getDescendants]);
 
 	const getCategoryName = useCallback(
 		(labelId: number, languageId: number) => {

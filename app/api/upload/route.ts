@@ -26,8 +26,8 @@ const readableStreamToNodeStream = (readableStream: ReadableStream<Uint8Array>):
 	return nodeStream;
 };
 
-// Utility function to handle file upload
-export const uploadFile = async (file: File, uploadDirectory: string): Promise<number> => {
+// Utility function to handle file upload (removed the export)
+const uploadFile = async (file: File, uploadDirectory: string): Promise<number> => {
 	const fileStream = file.stream();
 	const nodeStream = readableStreamToNodeStream(fileStream);
 

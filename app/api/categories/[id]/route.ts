@@ -1,18 +1,20 @@
 //app\api\categories\[id]\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { Category } from '@/utils/helpers/types';
+import { Category as AppCategory } from '@/utils/helpers/types';
 import { Prisma } from '@prisma/client';
 
-const buildCategoryTree = async (parentId: number | null): Promise<Category[]> => {
-	const categories = await prisma.category.findMany({
+const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]> => {
+	const categories: Prisma.CategoryGetPayload<{
+		include: { parentCategories: { include: { parent: true } }; childCategories: true; icon: true };
+	}>[] = await prisma.category.findMany({
 		where:
 			parentId === null
 				? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
 				: { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
 		include: {
-			parentCategories: { include: { parent: true } }, // Fetch parent categories to get parents
-			childCategories: { include: { child: true } }, // Fetch child categories to get children
+			parentCategories: { include: { parent: true } }, // Include parent relation in the query
+			childCategories: { include: { child: true } }, // Include child relation in the query
 			icon: true, // Include icon details if any
 		},
 	});
@@ -23,8 +25,8 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 
 			return {
 				id: category.id,
-				iconId: category.iconId,
-				labelId: category.labelId,
+				iconId: category.iconId ?? null, // Handle null cases
+				labelId: category.labelId ?? null, // Handle null cases
 				icon: category.icon
 					? {
 							id: category.icon.id,
@@ -34,14 +36,14 @@ const buildCategoryTree = async (parentId: number | null): Promise<Category[]> =
 					  }
 					: null,
 				parents: category.parentCategories.map(pc => ({
-					id: pc.parent.id,
-					iconId: pc.parent.iconId,
-					labelId: pc.parent.labelId,
+					id: pc.parent.id, // Now, we correctly access the parent category's fields
+					iconId: pc.parent.iconId ?? null, // Access iconId from parent relation
+					labelId: pc.parent.labelId ?? null, // Access labelId from parent relation
 					parents: [], // To avoid recursion loop
 					children: [], // To avoid recursion loop
 				})),
 				children,
-			} as Category;
+			} as AppCategory; // Cast to your custom Category type
 		})
 	);
 };
@@ -67,7 +69,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 			}
 
 			// Transform the fetched data to match the Category interface without icon details
-			const transformedCategory: Category = {
+			const transformedCategory: AppCategory = {
 				id: category.id,
 				iconId: category.iconId, // Keep only iconId
 				labelId: category.labelId,

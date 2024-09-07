@@ -121,7 +121,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 				setNewTranslations(existingTranslations);
 
-				// Set the current icon URL based on the category's iconId
 				const iconId = category.iconId || null;
 				const iconUrl = getCategoryIconUrl(iconId, icons);
 				setCurrentIcon({
@@ -135,7 +134,15 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			setNewIcon(null);
 			setIsModalOpen(true);
 		},
-		[getCategoryIconUrl, languages]
+		[
+			setCurrentEditCategory,
+			setParentIds,
+			setNewTranslations,
+			setCurrentIcon,
+			setNewIcon,
+			setIsModalOpen,
+			icons,
+		]
 	);
 
 	const categoryTranslations = getCategoryTranslations(category.labelId);

@@ -1,4 +1,3 @@
-// app/api/upload/route.ts
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
@@ -26,7 +25,7 @@ const readableStreamToNodeStream = (readableStream: ReadableStream<Uint8Array>):
 };
 
 // Utility function to handle file upload
-export const uploadFile = async (file: File, uploadDirectory: string): Promise<string> => {
+const uploadFile = async (file: File, uploadDirectory: string): Promise<string> => {
 	const fileStream = file.stream();
 	const nodeStream = readableStreamToNodeStream(fileStream);
 
