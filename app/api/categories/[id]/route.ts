@@ -4,6 +4,71 @@ import { prisma } from '@/app/lib/prisma';
 import { Category as AppCategory } from '@/utils/helpers/types';
 import { Prisma } from '@prisma/client';
 
+const testQuery = async () => {
+	const result = await prisma.parentCategory.findMany({
+		include: {
+			parent: true,
+			child: true,
+		},
+	});
+
+	console.log('Test ParentCategory Relationship:', result);
+};
+
+const fetchSubcategories = async (parentId: number) => {
+	const categories = await prisma.category.findMany({
+		where: { childCategories: { some: { parentId } } }, // Fetch subcategories where this category is the parent
+		include: {
+			icon: true, // Include icon details
+			childCategories: { select: { childId: true } }, // Include child category information
+			parentCategories: {
+				// Fetch parent categories
+				include: {
+					parent: {
+						// Fetch parent category details
+						include: { icon: true }, // Include parent icon details
+					},
+				},
+			},
+		},
+	});
+
+	console.log('Subcategories from database:', categories); // Log the fetched subcategories
+
+	return categories.map(category => ({
+		id: category.id,
+		iconId: category.iconId ?? null,
+		labelId: category.labelId ?? null,
+		name: category.name,
+		icon: category.icon
+			? {
+					id: category.icon.id,
+					name: category.icon.name,
+					url: category.icon.url,
+			  }
+			: null,
+		// Map parents based on parentCategories relation
+		parents:
+			category.parentCategories.length > 0
+				? category.parentCategories.map(pc => ({
+						id: pc.parent.id,
+						iconId: pc.parent.iconId ?? null,
+						labelId: pc.parent.labelId,
+						name: pc.parent.name,
+						icon: pc.parent.icon
+							? {
+									id: pc.parent.icon.id,
+									name: pc.parent.icon.name,
+									url: pc.parent.icon.url,
+							  }
+							: null,
+				  }))
+				: [], // Return empty array if no parents
+		children: [], // Initially empty, to be populated later when subcategories are fetched
+		hasChildren: category.childCategories.length > 0, // Indicate if the category has children
+	}));
+};
+
 const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]> => {
 	const categories: Prisma.CategoryGetPayload<{
 		include: { parentCategories: { include: { parent: true } }; childCategories: true; icon: true };
@@ -25,8 +90,9 @@ const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]
 
 			return {
 				id: category.id,
-				iconId: category.iconId ?? null, // Handle null cases
-				labelId: category.labelId ?? null, // Handle null cases
+				iconId: category.iconId ?? null,
+				labelId: category.labelId ?? null,
+				name: category.name, // Dodaj polje name
 				icon: category.icon
 					? {
 							id: category.icon.id,
@@ -36,64 +102,37 @@ const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]
 					  }
 					: null,
 				parents: category.parentCategories.map(pc => ({
-					id: pc.parent.id, // Now, we correctly access the parent category's fields
-					iconId: pc.parent.iconId ?? null, // Access iconId from parent relation
-					labelId: pc.parent.labelId ?? null, // Access labelId from parent relation
-					parents: [], // To avoid recursion loop
-					children: [], // To avoid recursion loop
+					id: pc.parent.id,
+					iconId: pc.parent.iconId ?? null,
+					labelId: pc.parent.labelId ?? null,
+					name: pc.parent.name, // Dodaj name za roditeljsku kategoriju
+					parents: [],
+					children: [],
 				})),
 				children,
-			} as AppCategory; // Cast to your custom Category type
+			} as AppCategory;
 		})
 	);
 };
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;
+	console.log('clicked categroy id', id);
+
 	try {
-		if (id === 'all') {
-			const categories = await buildCategoryTree(null); // Fetch the whole tree structure
-			return NextResponse.json(categories);
-		} else {
-			const category = await prisma.category.findUnique({
-				where: { id: Number(id) },
-				include: {
-					parentCategories: { include: { parent: true } }, // Fetch parent details
-					childCategories: { include: { child: true } }, // Fetch child details
-					// No need to include icon details if you are only using iconId
-				},
-			});
+		const parentId = Number(id);
+		console.log('Fetching subcategories for parentId:', parentId); // This log should appear
 
-			if (!category) {
-				return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-			}
+		// Call fetchSubcategories to get the subcategories for the given parentId
+		const categories = await fetchSubcategories(parentId);
 
-			// Transform the fetched data to match the Category interface without icon details
-			const transformedCategory: AppCategory = {
-				id: category.id,
-				iconId: category.iconId, // Keep only iconId
-				labelId: category.labelId,
-				parents: category.parentCategories.map(pc => ({
-					id: pc.parent.id,
-					iconId: pc.parent.iconId,
-					labelId: pc.parent.labelId,
-					parents: [],
-					children: [],
-				})),
-				children: category.childCategories.map(cc => ({
-					id: cc.child.id,
-					iconId: cc.child.iconId,
-					labelId: cc.child.labelId,
-					parents: [],
-					children: [],
-				})),
-			};
+		// Log the fetched subcategories
+		console.log('Fetched subcategories:', categories);
 
-			return NextResponse.json(transformedCategory);
-		}
+		return NextResponse.json(categories);
 	} catch (error) {
-		console.error('Error fetching category:', error);
-		return NextResponse.json({ error: 'Error fetching category' }, { status: 500 });
+		console.error('Error fetching subcategories:', error); // Log error
+		return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
 	}
 }
 

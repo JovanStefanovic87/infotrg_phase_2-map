@@ -19,10 +19,10 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 	return Promise.all(
 		parentCategories.map(async ({ parent }) => ({
 			id: parent.id,
-			name: parent.name, // Use the name fetched from the parent
+			name: parent.name,
 			iconId: parent.iconId,
 			labelId: parent.labelId,
-			parents: await fetchParents(parent.id), // Recursively fetch parent categories
+			parents: await fetchParents(parent.id),
 			children: [], // This is not required here
 			icon: parent.icon
 				? {
@@ -34,6 +34,63 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 				: null,
 		}))
 	);
+};
+
+const fetchTopLevelCategories = async () => {
+	const topCategories = await prisma.category.findMany({
+		where: {
+			NOT: {
+				childCategories: {
+					some: {},
+				},
+			},
+		},
+		include: {
+			icon: true,
+		},
+	});
+	return topCategories;
+};
+
+const fetchSubCategories = async (parentId: number) => {
+	const subCategories = await prisma.parentCategory.findMany({
+		where: {
+			parentId: parentId,
+		},
+		include: {
+			child: {
+				include: {
+					icon: true,
+				},
+			},
+		},
+	});
+
+	return subCategories.map(({ child }) => ({
+		id: child.id,
+		name: child.name,
+		iconId: child.iconId,
+		labelId: child.labelId,
+		parents: [], // Popunjava se ako je potrebno
+		children: [], // Ne povlačimo decu odmah
+		icon: child.icon
+			? {
+					id: child.icon.id,
+					name: child.icon.name,
+					url: child.icon.url,
+					createdAt: child.icon.createdAt,
+			  }
+			: null,
+	}));
+};
+
+const hasChildren = async (categoryId: number): Promise<boolean> => {
+	const childCount = await prisma.parentCategory.count({
+		where: {
+			parentId: categoryId,
+		},
+	});
+	return childCount > 0;
 };
 
 // Function to build the category tree
@@ -61,11 +118,11 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 	return Promise.all(
 		categories.map(async category => ({
 			id: category.id,
-			name: category.name, // Use the name fetched from the category
+			name: category.name,
 			iconId: category.iconId,
 			labelId: category.labelId,
-			parents: await fetchParents(category.id), // Fetch and populate parents
-			children: await buildCategoryTree(category.id, prefix), // Recursively build children
+			parents: await fetchParents(category.id),
+			children: await buildCategoryTree(category.id, prefix),
 			icon: category.icon
 				? {
 						id: category.icon.id,
@@ -80,9 +137,27 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 
 export async function GET(request: Request) {
 	const url = new URL(request.url);
-	const prefix = url.searchParams.get('prefix') || ''; // Fetch the prefix from query params
-	const topLevelCategories: Category[] = await buildCategoryTree(null, prefix);
-	return NextResponse.json(topLevelCategories);
+	const parentId = url.searchParams.get('parentId');
+
+	try {
+		if (parentId) {
+			const subCategories = await fetchSubCategories(parseInt(parentId, 10));
+			return NextResponse.json(subCategories);
+		}
+
+		const topLevelCategories = await fetchTopLevelCategories();
+		const categoriesWithChildrenInfo = await Promise.all(
+			topLevelCategories.map(async category => ({
+				...category,
+				hasChildren: await hasChildren(category.id),
+			}))
+		);
+
+		return NextResponse.json(categoriesWithChildrenInfo);
+	} catch (error) {
+		console.error('Failed to fetch categories', error); // Provera grešaka
+		return NextResponse.json({ error: 'Failed to fetch categories.' }, { status: 500 });
+	}
 }
 
 export async function POST(request: Request) {

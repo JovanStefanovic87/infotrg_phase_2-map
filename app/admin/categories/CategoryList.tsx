@@ -8,6 +8,7 @@ import EditCategoryForm from './EditCategoryForm';
 
 interface CategoryListProps {
 	categories: Category[];
+	setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 	translations: Translation[];
 	icons: Icon[];
 	currentIcon: {
@@ -21,6 +22,8 @@ interface CategoryListProps {
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
+	onToggleCategory: (categoryId: number) => void;
+	fetchSubCategories: (parentId: number) => Promise<Category[]>;
 }
 
 interface TranslationUpdate {
@@ -33,6 +36,7 @@ interface TranslationUpdate {
 
 const CategoryList: React.FC<CategoryListProps> = ({
 	categories,
+	setCategories,
 	translations,
 	icons,
 	currentIcon,
@@ -42,6 +46,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	refetchCategories,
 	onDeleteCategory,
 	setIsIconPickerOpen,
+	onToggleCategory,
+	fetchSubCategories,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
@@ -227,17 +233,20 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				<CategoryItem
 					key={category.id}
 					category={category}
+					setCategories={setCategories}
 					icons={icons}
 					translations={translations}
 					languages={languages}
 					languageId={languageId}
-					handleDelete={handleDelete}
 					setCurrentIcon={setCurrentIcon}
 					setCurrentEditCategory={setCurrentEditCategory}
 					setParentIds={setParentIds}
+					setNewTranslations={setNewTranslations}
 					setNewIcon={setNewIcon}
 					setIsModalOpen={setIsModalOpen}
-					setNewTranslations={setNewTranslations}
+					handleDelete={handleDelete}
+					onToggleCategory={onToggleCategory}
+					fetchSubCategories={fetchSubCategories}
 				/>
 			))}
 

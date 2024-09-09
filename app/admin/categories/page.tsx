@@ -9,6 +9,7 @@ import CategoryForm from './CategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePicker from './ImagePicker';
 import H1 from '@/app/components/text/H1';
+import { prisma } from '@/app/lib/prisma';
 
 const AddCategoryPage: React.FC = () => {
 	const [parentIds, setParentIds] = useState<number[]>([]); // Changed to handle multiple parentIds
@@ -25,12 +26,78 @@ const AddCategoryPage: React.FC = () => {
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
+	const [topLevelCategories, setTopLevelCategories] = useState<Category[]>([]);
 
-	const fetchCategories = () =>
-		apiClient<Category[]>({
-			method: 'GET',
-			url: `/api/categories?prefix=${prefix_article_category_}`,
+	const fetchCategories = async (): Promise<Category[]> => {
+		try {
+			const response = await apiClient<Category[]>({
+				method: 'GET',
+				url: `/api/categories?prefix=your_prefix`, // Postavi svoj prefiks
+			});
+			return response; // Vrati podatke eksplicitno
+		} catch (error) {
+			console.error('Failed to fetch categories', error);
+			return []; // Vrati prazan niz u slučaju greške
+		}
+	};
+
+	const fetchSubCategories = async (categoryId: number) => {
+		try {
+			const response = await apiClient<Category[]>({
+				method: 'GET',
+				url: `/api/categories/${categoryId}`, // Ensure the URL is correct
+			});
+			console.log('API response for subcategories:', response); // Check if the API call is working
+			return response;
+		} catch (error) {
+			console.error('Error fetching subcategories:', error);
+			return [];
+		}
+	};
+
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				const topCategories = await fetchCategories();
+				const initializedCategories = topCategories.map(cat => ({
+					...cat,
+					isOpen: false,
+				}));
+				setTopLevelCategories(initializedCategories);
+			} catch (error) {
+				console.error('Greška prilikom učitavanja kategorija:', error);
+			}
+		};
+
+		loadCategories();
+	}, []);
+
+	const handleToggleCategory = async (categoryId: number) => {
+		setCategories(prevCategories => {
+			const categoryToUpdate = prevCategories.find(cat => cat.id === categoryId);
+			if (!categoryToUpdate) return prevCategories;
+
+			if (
+				!categoryToUpdate.isOpen &&
+				categoryToUpdate.hasChildren &&
+				categoryToUpdate.children.length === 0
+			) {
+				fetchSubCategories(categoryId).then(subCategories => {
+					setCategories(prev =>
+						prev.map(cat =>
+							cat.id === categoryId ? { ...cat, isOpen: true, children: subCategories } : cat
+						)
+					);
+				});
+				return prevCategories;
+			} else {
+				return prevCategories.map(cat =>
+					cat.id === categoryId ? { ...cat, isOpen: !cat.isOpen } : cat
+				);
+			}
 		});
+	};
+
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () => apiClient<Icon[]>({ method: 'GET', url: '/api/icons' });
 
@@ -225,6 +292,8 @@ const AddCategoryPage: React.FC = () => {
 		[currentIcon, refetchData]
 	); */
 
+	console.log('categories', categories);
+
 	return (
 		<PageContainer>
 			<H1 title='KATEGROIJE PROIZVODA' />
@@ -247,6 +316,7 @@ const AddCategoryPage: React.FC = () => {
 			<div className='mt-8'>
 				<CategoryList
 					categories={categories}
+					setCategories={setCategories}
 					translations={translations}
 					icons={icons}
 					currentIcon={currentIcon}
@@ -264,6 +334,8 @@ const AddCategoryPage: React.FC = () => {
 					}}
 					isIconPickerOpen={isIconPickerOpen}
 					setIsIconPickerOpen={setIsIconPickerOpen}
+					onToggleCategory={handleToggleCategory}
+					fetchSubCategories={fetchSubCategories}
 				/>
 			</div>
 			<ImagePicker

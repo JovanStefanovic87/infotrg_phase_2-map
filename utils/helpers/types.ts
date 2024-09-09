@@ -193,8 +193,11 @@ export interface Category {
 	id: number;
 	iconId: number | null;
 	labelId: number;
-	parents: Category[]; // Array of parent categories
-	children: Category[]; // Array of child categories
+	name: string; // Dodaj polje name
+	hasChildren?: boolean; // Dodaj opcionalno polje hasChildren
+	parents: Category[];
+	children: Category[];
+	isOpen?: boolean;
 }
 
 export interface Synonym {
