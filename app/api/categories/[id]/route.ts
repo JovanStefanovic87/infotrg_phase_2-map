@@ -4,116 +4,119 @@ import { prisma } from '@/app/lib/prisma';
 import { Category as AppCategory } from '@/utils/helpers/types';
 import { Prisma } from '@prisma/client';
 
-const testQuery = async () => {
-	const result = await prisma.parentCategory.findMany({
-		include: {
-			parent: true,
-			child: true,
-		},
-	});
-
-	console.log('Test ParentCategory Relationship:', result);
-};
-
 const fetchSubcategories = async (parentId: number) => {
 	const categories = await prisma.category.findMany({
-		where: { childCategories: { some: { parentId } } }, // Fetch subcategories where this category is the parent
+		where: { childCategories: { some: { parentId } } }, // Povucite potkategorije gde je trenutna kategorija roditelj
 		include: {
-			icon: true, // Include icon details
-			childCategories: { select: { childId: true } }, // Include child category information
-			parentCategories: {
-				// Fetch parent categories
-				include: {
-					parent: {
-						// Fetch parent category details
-						include: { icon: true }, // Include parent icon details
-					},
-				},
+		  icon: true, // Uključite detalje ikone
+		  parentCategories: {
+			include: {
+			  parent: {
+				include: { icon: true },
+			  },
 			},
+		  },
+		  childCategories: {
+			include: {
+			  child: { // Povucite sve informacije o potkategorijama
+				include: { icon: true },
+			  },
+			},
+		  },
 		},
+	  });
+	
+  
+	  categories.forEach(category => {
+		console.log('Fetched parent categories for:', category.name, JSON.stringify(category.parentCategories, null, 2));
+		console.log('Fetched child categories for:', category.name, JSON.stringify(category.childCategories, null, 2));
 	});
-
-	console.log('Subcategories from database:', categories); // Log the fetched subcategories
-
-	return categories.map(category => ({
+  
+	return categories.map((category) => ({
 		id: category.id,
 		iconId: category.iconId ?? null,
 		labelId: category.labelId ?? null,
 		name: category.name,
 		icon: category.icon
-			? {
-					id: category.icon.id,
-					name: category.icon.name,
-					url: category.icon.url,
-			  }
-			: null,
-		// Map parents based on parentCategories relation
-		parents:
-			category.parentCategories.length > 0
-				? category.parentCategories.map(pc => ({
-						id: pc.parent.id,
-						iconId: pc.parent.iconId ?? null,
-						labelId: pc.parent.labelId,
-						name: pc.parent.name,
-						icon: pc.parent.icon
-							? {
-									id: pc.parent.icon.id,
-									name: pc.parent.icon.name,
-									url: pc.parent.icon.url,
-							  }
-							: null,
-				  }))
-				: [], // Return empty array if no parents
-		children: [], // Initially empty, to be populated later when subcategories are fetched
-		hasChildren: category.childCategories.length > 0, // Indicate if the category has children
-	}));
-};
+		  ? {
+			  id: category.icon.id,
+			  name: category.icon.name,
+			  url: category.icon.url,
+			}
+		  : null,
+		parents: category.parentCategories.length > 0
+		  ? category.parentCategories.map((pc) => ({
+			  id: pc.parent.id,
+			  iconId: pc.parent.iconId ?? null,
+			  labelId: pc.parent.labelId ?? null,
+			  name: pc.parent.name,
+			  icon: pc.parent.icon
+				? {
+					id: pc.parent.id,
+					name: pc.parent.icon.name,
+					url: pc.parent.icon.url,
+				  }
+				: null,
+			}))
+		  : [],
+		children: category.childCategories.map((cc) => ({
+		  id: cc.child.id,
+		  name: cc.child.name,
+		  iconId: cc.child.iconId ?? null,
+		})),
+		hasChildren: category.childCategories.length > 0, // Indikujte da li kategorija ima decu
+	  }));
+	};
+  
+  
 
 const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]> => {
 	const categories: Prisma.CategoryGetPayload<{
-		include: { parentCategories: { include: { parent: true } }; childCategories: true; icon: true };
+	  include: { parentCategories: { include: { parent: true } }; childCategories: true; icon: true };
 	}>[] = await prisma.category.findMany({
-		where:
-			parentId === null
-				? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
-				: { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
-		include: {
-			parentCategories: { include: { parent: true } }, // Include parent relation in the query
-			childCategories: { include: { child: true } }, // Include child relation in the query
-			icon: true, // Include icon details if any
-		},
+	  where:
+		parentId === null
+		  ? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
+		  : { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
+	  include: {
+		parentCategories: { include: { parent: true } }, // Include parent relation in the query
+		childCategories: { include: { child: true } }, // Include child relation in the query
+		icon: true, // Include icon details if any
+	  },
 	});
-
+  
 	return Promise.all(
-		categories.map(async category => {
-			const children = await buildCategoryTree(category.id); // Recursively fetch children
-
-			return {
-				id: category.id,
-				iconId: category.iconId ?? null,
-				labelId: category.labelId ?? null,
-				name: category.name, // Dodaj polje name
-				icon: category.icon
-					? {
-							id: category.icon.id,
-							name: category.icon.name,
-							url: category.icon.url,
-							createdAt: category.icon.createdAt,
-					  }
-					: null,
-				parents: category.parentCategories.map(pc => ({
-					id: pc.parent.id,
-					iconId: pc.parent.iconId ?? null,
-					labelId: pc.parent.labelId ?? null,
-					name: pc.parent.name, // Dodaj name za roditeljsku kategoriju
-					parents: [],
-					children: [],
-				})),
-				children,
-			} as AppCategory;
-		})
+	  categories.map(async category => {
+		const children = await buildCategoryTree(category.id); // Recursively fetch children
+		const parents = await buildCategoryTree(category.parentCategories[0]?.parent?.id || null); // Fetch parent recursively
+  
+		return {
+		  id: category.id,
+		  iconId: category.iconId ?? null,
+		  labelId: category.labelId ?? null,
+		  name: category.name, // Dodaj polje name
+		  icon: category.icon
+			? {
+				id: category.icon.id,
+				name: category.icon.name,
+				url: category.icon.url,
+				createdAt: category.icon.createdAt,
+			  }
+			: null,
+		  parents: parents.length > 0 ? parents : category.parentCategories.map(pc => ({
+			id: pc.parent.id,
+			iconId: pc.parent.iconId ?? null,
+			labelId: pc.parent.labelId ?? null,
+			name: pc.parent.name, // Dodaj name za roditeljsku kategoriju
+			parents: [],
+			children: [],
+		  })),
+		  children,
+		} as AppCategory;
+	  })
 	);
-};
+  };
+  
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;

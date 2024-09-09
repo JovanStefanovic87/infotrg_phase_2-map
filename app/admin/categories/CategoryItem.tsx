@@ -91,11 +91,13 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 	const getParentCategoryNames = useCallback(
 		(parents: Category[] = [], languageId: number): string => {
+			console.log('Parents array:', parents); // Dodaj log da proverimo roditelje
 			if (parents.length === 0) return 'Ovo je glavna kategorija';
 			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
 		},
 		[getCategoryName]
 	);
+	
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>

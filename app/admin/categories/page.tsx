@@ -73,30 +73,38 @@ const AddCategoryPage: React.FC = () => {
 	}, []);
 
 	const handleToggleCategory = async (categoryId: number) => {
-		setCategories(prevCategories => {
-			const categoryToUpdate = prevCategories.find(cat => cat.id === categoryId);
-			if (!categoryToUpdate) return prevCategories;
-
-			if (
-				!categoryToUpdate.isOpen &&
-				categoryToUpdate.hasChildren &&
-				categoryToUpdate.children.length === 0
-			) {
-				fetchSubCategories(categoryId).then(subCategories => {
-					setCategories(prev =>
-						prev.map(cat =>
-							cat.id === categoryId ? { ...cat, isOpen: true, children: subCategories } : cat
-						)
-					);
-				});
-				return prevCategories;
-			} else {
-				return prevCategories.map(cat =>
-					cat.id === categoryId ? { ...cat, isOpen: !cat.isOpen } : cat
-				);
-			}
-		});
+		setCategories(prevCategories =>
+			prevCategories.map(cat => {
+				if (cat.id === categoryId) {
+					if (!cat.isOpen) {
+						if (cat.hasChildren && cat.children.length === 0) {
+							fetchSubCategories(categoryId).then(subCategories => {
+								const initializedSubCategories = subCategories.map(subCat => ({
+									...subCat,
+									isOpen: false,
+									children: [],
+								}));
+								setCategories(prev =>
+									prev.map(c =>
+										c.id === categoryId
+											? { ...c, isOpen: true, children: initializedSubCategories }
+											: c
+									)
+								);
+							});
+							return { ...cat, isOpen: true };
+						} else {
+							return { ...cat, isOpen: true };
+						}
+					} else {
+						return { ...cat, isOpen: false };
+					}
+				}
+				return cat;
+			})
+		);
 	};
+	
 
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () => apiClient<Icon[]>({ method: 'GET', url: '/api/icons' });
