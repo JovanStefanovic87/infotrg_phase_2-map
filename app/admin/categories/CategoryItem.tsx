@@ -31,6 +31,8 @@ interface CategoryItemProps {
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	handleDelete: (categoryId: number) => void;
 	setRelatedIds: (relatedIds: number[]) => void;
+	expandedCategories: Set<number>;
+	toggleCategory: (id: number) => void;
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
@@ -47,6 +49,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setIsModalOpen,
 	handleDelete,
 	setRelatedIds,
+	expandedCategories,
+	toggleCategory,
 }) => {
 	// State za prikaz povezanih kategorija
 	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
@@ -55,10 +59,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
 
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
-	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
-	const isOpen = openCategories.has(category.id);
+	const isOpen = expandedCategories ? expandedCategories.has(category.id) : false;
 
-	const toggleCategory = useCallback((id: number) => {
+	/* const toggleCategory = useCallback((id: number) => {
 		setOpenCategories(prev => {
 			const newOpenCategories = new Set(prev);
 			if (newOpenCategories.has(id)) {
@@ -68,27 +71,24 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			}
 			return newOpenCategories;
 		});
-	}, []);
+	}, []); */
 
 	// Funkcija za preuzimanje povezanih kategorija za prikaz
-	const fetchRelatedCategoriesForDisplay = useCallback(
-		async (relatedIds: number[]) => {
-			try {
-				const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
-				const relatedData = await Promise.all(promises);
+	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
+		try {
+			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
+			const relatedData = await Promise.all(promises);
 
-				const categories = relatedData.map(response => response.data);
-				if (categories && Array.isArray(categories)) {
-					setDisplayRelatedCategories(categories); // Setovanje state-a za prikaz
-				} else {
-					setDisplayRelatedCategories([]); // Resetuj ako nema povezanih kategorija
-				}
-			} catch (error) {
-				console.error('Failed to fetch related categories for display', error);
+			const categories = relatedData.map(response => response.data);
+			if (categories && Array.isArray(categories)) {
+				setDisplayRelatedCategories(categories); // Setovanje state-a za prikaz
+			} else {
+				setDisplayRelatedCategories([]); // Resetuj ako nema povezanih kategorija
 			}
-		},
-		[]
-	);
+		} catch (error) {
+			console.error('Failed to fetch related categories for display', error);
+		}
+	}, []);
 
 	// Automatski preuzmi povezane kategorije prilikom rendera
 	useEffect(() => {
@@ -203,9 +203,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			{displayRelatedCategories.length > 0 ? (
 				<ul className='list-disc pl-5 text-gray-800'>
 					{displayRelatedCategories.map(relatedCategory => (
-						<li key={relatedCategory.id}>
-							{getCategoryName(relatedCategory.labelId, languageId)}
-						</li>
+						<li key={relatedCategory.id}>{getCategoryName(relatedCategory.labelId, languageId)}</li>
 					))}
 				</ul>
 			) : (
@@ -243,6 +241,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							setIsModalOpen={setIsModalOpen}
 							handleDelete={handleDelete}
 							setRelatedIds={setRelatedIds}
+							expandedCategories={expandedCategories}
+							toggleCategory={toggleCategory}
 						/>
 					))}
 				</div>

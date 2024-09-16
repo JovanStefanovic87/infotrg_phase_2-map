@@ -33,6 +33,8 @@ interface CategoryListProps {
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
+	expandedCategories: Set<number>;
+	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 }
 
 interface TranslationUpdate {
@@ -57,12 +59,61 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setIsIconPickerOpen,
 	relatedIds,
 	setRelatedIds,
+	expandedCategories,
+	setExpandedCategories,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [parentIds, setParentIds] = useState<number[]>([]);
+	const [searchQuery, setSearchQuery] = useState<string>(''); // State for search input
+	const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
+
+	const searchCategories = (categories: Category[], query: string): Category[] => {
+		const lowercasedQuery = query.toLowerCase();
+		const result = categories
+			.map(category => {
+				const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
+				const matches = categoryName.includes(lowercasedQuery);
+
+				// Search within child categories
+				const childMatches = searchCategories(category.children || [], query);
+
+				// If the category or any of its children matches, include it
+				if (matches || childMatches.length > 0) {
+					// Expand categories that have matching children or match themselves
+					setExpandedCategories(prev => new Set([...prev, category.id]));
+					return {
+						...category,
+						children: childMatches, // Keep the filtered children
+					};
+				} else {
+					// Collapse categories that don't match
+					setExpandedCategories(prev => {
+						const newSet = new Set(prev);
+						newSet.delete(category.id); // Remove from expanded set
+						return newSet;
+					});
+					return null;
+				}
+			})
+			.filter(Boolean); // Remove null entries
+		return result as Category[];
+	};
+
+	// Trigger search whenever the searchQuery or categories change
+	useEffect(() => {
+		if (searchQuery.trim() === '') {
+			// If the search query is empty, collapse all categories by clearing the expandedCategories set
+			setExpandedCategories(new Set());
+			setFilteredCategories(categories);
+		} else {
+			// Perform the search and expand matching categories
+			const filtered = searchCategories(categories, searchQuery);
+			setFilteredCategories(filtered);
+		}
+	}, [searchQuery, categories, languageId]);
 
 	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(
@@ -133,12 +184,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		}
 	};
 
-	useEffect(() => {
-		console.log('relatedIds updated:', relatedIds);
-	}, [relatedIds]);
-
-	console.log('relatedIds:', relatedIds);
-	// Handle category deletion
 	const handleDelete = useCallback(
 		async (id: number) => {
 			if (confirm('Are you sure you want to delete this category?')) {
@@ -221,6 +266,18 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[translations]
 	);
 
+	const toggleCategory = useCallback((id: number) => {
+		setExpandedCategories(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(id)) {
+				newSet.delete(id);
+			} else {
+				newSet.add(id);
+			}
+			return newSet;
+		});
+	}, []);
+
 	// Sort categories alphabetically
 	const sortedCategories = [...categories].sort((a, b) => {
 		const nameA = getCategoryName(a.labelId, languageId).toLowerCase();
@@ -230,7 +287,16 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	return (
 		<div>
-			{sortedCategories.map(category => (
+			<div className='mb-4'>
+				<input
+					type='text'
+					placeholder='Search categories by name'
+					value={searchQuery}
+					onChange={e => setSearchQuery(e.target.value)}
+					className='border p-2 w-full text-black'
+				/>
+			</div>
+			{filteredCategories.map(category => (
 				<CategoryItem
 					key={category.id}
 					category={category}
@@ -246,6 +312,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					setIsModalOpen={setIsModalOpen}
 					setNewTranslations={setNewTranslations}
 					setRelatedIds={setRelatedIds}
+					expandedCategories={expandedCategories}
+					toggleCategory={toggleCategory}
 				/>
 			))}
 

@@ -23,10 +23,11 @@ const AddCategoryPage: React.FC = () => {
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-	const [relatedIds, setRelatedIds] = useState<number[]>([]); // Add relatedIds state
+	const [relatedIds, setRelatedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
+	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
 	// Fetch categories, languages, icons, etc.
 	const fetchCategories = () =>
@@ -64,6 +65,7 @@ const AddCategoryPage: React.FC = () => {
 			setCategories(categoriesData);
 			setTranslations(translationsData);
 			setIcons(iconsData);
+			// Do not reset expandedCategories here to prevent collapsing
 		} catch (error) {
 			console.error('Failed to refetch data', error);
 		} finally {
@@ -272,6 +274,8 @@ const AddCategoryPage: React.FC = () => {
 					}}
 					isIconPickerOpen={isIconPickerOpen}
 					setIsIconPickerOpen={setIsIconPickerOpen}
+					expandedCategories={expandedCategories}
+					setExpandedCategories={setExpandedCategories}
 				/>
 			</div>
 			<ImagePicker
