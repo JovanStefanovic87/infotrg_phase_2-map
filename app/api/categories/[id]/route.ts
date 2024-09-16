@@ -1,147 +1,135 @@
 //app\api\categories\[id]\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
-import { Category as AppCategory } from '@/utils/helpers/types';
+import { Category } from '@/utils/helpers/types';
 import { Prisma } from '@prisma/client';
 
-const fetchSubcategories = async (parentId: number) => {
-	const categories = await prisma.category.findMany({
-		where: { childCategories: { some: { parentId } } }, // Povucite potkategorije gde je trenutna kategorija roditelj
-		include: {
-		  icon: true, // Uključite detalje ikone
-		  parentCategories: {
-			include: {
-			  parent: {
-				include: { icon: true },
-			  },
-			},
-		  },
-		  childCategories: {
-			include: {
-			  child: { // Povucite sve informacije o potkategorijama
-				include: { icon: true },
-			  },
-			},
-		  },
-		},
-	  });
-	
-  
-	  categories.forEach(category => {
-		console.log('Fetched parent categories for:', category.name, JSON.stringify(category.parentCategories, null, 2));
-		console.log('Fetched child categories for:', category.name, JSON.stringify(category.childCategories, null, 2));
+const getCategoryTranslation = async (labelId: number, languageId: number = 1) => {
+	const translation = await prisma.translation.findFirst({
+		where: { labelId, languageId },
+		select: { translation: true },
 	});
-  
-	return categories.map((category) => ({
-		id: category.id,
-		iconId: category.iconId ?? null,
-		labelId: category.labelId ?? null,
-		name: category.name,
-		icon: category.icon
-		  ? {
-			  id: category.icon.id,
-			  name: category.icon.name,
-			  url: category.icon.url,
-			}
-		  : null,
-		parents: category.parentCategories.length > 0
-		  ? category.parentCategories.map((pc) => ({
-			  id: pc.parent.id,
-			  iconId: pc.parent.iconId ?? null,
-			  labelId: pc.parent.labelId ?? null,
-			  name: pc.parent.name,
-			  icon: pc.parent.icon
-				? {
-					id: pc.parent.id,
-					name: pc.parent.icon.name,
-					url: pc.parent.icon.url,
-				  }
-				: null,
-			}))
-		  : [],
-		children: category.childCategories.map((cc) => ({
-		  id: cc.child.id,
-		  name: cc.child.name,
-		  iconId: cc.child.iconId ?? null,
-		})),
-		hasChildren: category.childCategories.length > 0, // Indikujte da li kategorija ima decu
-	  }));
-	};
-  
-  
+	return translation?.translation || 'Unknown';
+};
 
-const buildCategoryTree = async (parentId: number | null): Promise<AppCategory[]> => {
-	const categories: Prisma.CategoryGetPayload<{
-	  include: { parentCategories: { include: { parent: true } }; childCategories: true; icon: true };
-	}>[] = await prisma.category.findMany({
-	  where:
-		parentId === null
-		  ? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
-		  : { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
-	  include: {
-		parentCategories: { include: { parent: true } }, // Include parent relation in the query
-		childCategories: { include: { child: true } }, // Include child relation in the query
-		icon: true, // Include icon details if any
-	  },
+const buildCategoryTree = async (
+	parentId: number | null,
+	languageId: number = 1
+): Promise<Category[]> => {
+	const categories = await prisma.category.findMany({
+		where:
+			parentId === null
+				? { parentCategories: { none: {} } } // Fetch categories with no parents if parentId is null
+				: { parentCategories: { some: { parentId } } }, // Fetch categories with specific parentId
+		include: {
+			parentCategories: { include: { parent: true } }, // Fetch parent categories to get parents
+			childCategories: { include: { child: true } }, // Fetch child categories to get children
+			icon: true, // Include icon details if any
+		},
 	});
-  
+
 	return Promise.all(
-	  categories.map(async category => {
-		const children = await buildCategoryTree(category.id); // Recursively fetch children
-		const parents = await buildCategoryTree(category.parentCategories[0]?.parent?.id || null); // Fetch parent recursively
-  
-		return {
-		  id: category.id,
-		  iconId: category.iconId ?? null,
-		  labelId: category.labelId ?? null,
-		  name: category.name, // Dodaj polje name
-		  icon: category.icon
-			? {
-				id: category.icon.id,
-				name: category.icon.name,
-				url: category.icon.url,
-				createdAt: category.icon.createdAt,
-			  }
-			: null,
-		  parents: parents.length > 0 ? parents : category.parentCategories.map(pc => ({
-			id: pc.parent.id,
-			iconId: pc.parent.iconId ?? null,
-			labelId: pc.parent.labelId ?? null,
-			name: pc.parent.name, // Dodaj name za roditeljsku kategoriju
-			parents: [],
-			children: [],
-		  })),
-		  children,
-		} as AppCategory;
-	  })
+		categories.map(async category => {
+			const name = await getCategoryTranslation(category.labelId, languageId);
+			const children = await buildCategoryTree(category.id, languageId); // Recursively fetch children
+
+			return {
+				id: category.id,
+				iconId: category.iconId,
+				labelId: category.labelId,
+				name, // Name is fetched from translations
+				icon: category.icon
+					? {
+							id: category.icon.id,
+							name: category.icon.name,
+							url: category.icon.url,
+							createdAt: category.icon.createdAt,
+					  }
+					: null,
+				parents: await Promise.all(
+					category.parentCategories.map(async pc => ({
+						id: pc.parent.id,
+						iconId: pc.parent.iconId,
+						labelId: pc.parent.labelId,
+						name: await getCategoryTranslation(pc.parent.labelId, languageId), // Fetch parent's name
+						parents: [], // Avoid recursion
+						children: [], // Avoid recursion
+					}))
+				),
+				children,
+			} as Category;
+		})
 	);
-  };
-  
+};
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;
-	console.log('clicked categroy id', id);
+	console.log('API HIT: /api/categories/[id]', id);
+	const languageId = 1; // Assuming you are using default languageId as 1
 
 	try {
-		const parentId = Number(id);
-		console.log('Fetching subcategories for parentId:', parentId); // This log should appear
+		const category = await prisma.category.findUnique({
+			where: { id: Number(id) },
+			include: {
+				parentCategories: { include: { parent: true } }, // Fetch parent details
+				childCategories: { include: { child: true } }, // Fetch child details
+				relatedCategories: { include: { related: true } }, // Fetch related categories
+				relatedTo: { include: { category: true } }, // Fetch categories that this category is related to
+			},
+		});
+		console.log('CATEGORY FETCHED:', category);
+		if (!category) {
+			return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+		}
 
-		// Call fetchSubcategories to get the subcategories for the given parentId
-		const categories = await fetchSubcategories(parentId);
+		// Combine relatedCategories and relatedTo categories into one array
+		const relatedIds = [
+			...(category.relatedCategories?.map(related => related.relatedId) || []),
+			...(category.relatedTo?.map(related => related.categoryId) || []),
+		];
 
-		// Log the fetched subcategories
-		console.log('Fetched subcategories:', categories);
+		// Fetch category and parent/child names from the Translation table
+		const name = await getCategoryTranslation(category.labelId, languageId);
 
-		return NextResponse.json(categories);
+		console.log('relatedIds from API:', relatedIds);
+
+		const transformedCategory: Category = {
+			id: category.id,
+			iconId: category.iconId,
+			labelId: category.labelId,
+			name, // Category name from translations
+			parents: await Promise.all(
+				category.parentCategories.map(async pc => ({
+					id: pc.parent.id,
+					iconId: pc.parent.iconId,
+					labelId: pc.parent.labelId,
+					name: await getCategoryTranslation(pc.parent.labelId, languageId), // Fetch parent's name
+					parents: [], // Avoid recursion
+					children: [], // Avoid recursion
+				}))
+			),
+			children: await Promise.all(
+				category.childCategories.map(async cc => ({
+					id: cc.child.id,
+					iconId: cc.child.iconId,
+					labelId: cc.child.labelId,
+					name: await getCategoryTranslation(cc.child.labelId, languageId), // Fetch child's name
+					parents: [], // Avoid recursion
+					children: [], // Avoid recursion
+				}))
+			),
+			relatedIds, // Add the combined relatedIds to the category response
+		};
+
+		return NextResponse.json(transformedCategory);
 	} catch (error) {
-		console.error('Error fetching subcategories:', error); // Log error
-		return NextResponse.json({ error: 'Failed to fetch subcategories' }, { status: 500 });
+		console.error('Error fetching category:', error);
+		return NextResponse.json({ error: 'Error fetching category' }, { status: 500 });
 	}
 }
 
-export async function DELETE(request: Request) {
-	const url = new URL(request.url);
-	const id = url.pathname.split('/').pop();
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+	const { id } = params;
 
 	if (!id || isNaN(Number(id))) {
 		return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
@@ -151,42 +139,79 @@ export async function DELETE(request: Request) {
 		const categoryId = Number(id);
 
 		const deleteCategoryAndRelatedData = async (id: number) => {
-			// Recursively find and delete child categories
-			const subcategories = await prisma.category.findMany({
-				where: { childCategories: { some: { parentId: id } } }, // Fetch child categories
+			// Recursively find and delete subcategories
+			const subcategories = await prisma.parentCategory.findMany({
+				where: { parentId: id },
+				select: { childId: true },
 			});
 
+			// Recursively delete subcategories
 			for (const subcategory of subcategories) {
-				await deleteCategoryAndRelatedData(subcategory.id);
+				await deleteCategoryAndRelatedData(subcategory.childId);
 			}
 
-			const label = await prisma.category.findUnique({
+			// Find the label associated with the category
+			const category = await prisma.category.findUnique({
 				where: { id },
 				select: { labelId: true },
 			});
 
-			if (label?.labelId) {
-				await prisma.translation.deleteMany({
-					where: { labelId: label.labelId },
+			// Delete the category itself
+			await prisma.category.delete({
+				where: { id },
+			});
+
+			// Delete the related categories for this category
+			await prisma.relatedCategory.deleteMany({
+				where: {
+					OR: [
+						{ categoryId: id }, // Delete where the category is the main category
+						{ relatedId: id }, // Delete where the category is the related one
+					],
+				},
+			});
+
+			if (category?.labelId) {
+				// Delete the synonyms associated with the label's translations
+				const translations = await prisma.translation.findMany({
+					where: { labelId: category.labelId },
+					select: { id: true },
 				});
 
+				// Delete all synonyms for the translations
+				for (const translation of translations) {
+					await prisma.synonym.deleteMany({
+						where: { translationId: translation.id },
+					});
+				}
+
+				// Delete translations associated with the label
+				await prisma.translation.deleteMany({
+					where: { labelId: category.labelId },
+				});
+
+				// Delete the label itself (once all categories that reference it are deleted)
 				await prisma.label.delete({
-					where: { id: label.labelId },
+					where: { id: category.labelId },
 				});
 			}
-
-			await prisma.category.delete({ where: { id } });
 		};
 
-		const category = await prisma.category.findUnique({ where: { id: categoryId } });
-		if (!category) {
+		// Ensure the category exists
+		const categoryExists = await prisma.category.findUnique({
+			where: { id: categoryId },
+		});
+
+		if (!categoryExists) {
 			return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 		}
 
+		// Delete the category and related data
 		await deleteCategoryAndRelatedData(categoryId);
 
 		return NextResponse.json({
-			message: 'Category, subcategories, and related data deleted successfully',
+			message:
+				'Category, subcategories, translations, synonyms, related categories, and related data deleted successfully',
 		});
 	} catch (error) {
 		console.error('Error deleting category and related data:', error);
@@ -202,10 +227,15 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 	try {
 		const body = await request.json();
-		const { parentIds, labelId, iconId, translations } = body;
+		const { parentIds, relatedIds, labelId, iconId, translations } = body;
 
-		if (!Array.isArray(parentIds)) {
-			return NextResponse.json({ error: 'parentIds should be an array' }, { status: 400 });
+		console.log('relatedIds', relatedIds);
+
+		if (!Array.isArray(parentIds) || !Array.isArray(relatedIds)) {
+			return NextResponse.json(
+				{ error: 'parentIds and relatedIds should be arrays' },
+				{ status: 400 }
+			);
 		}
 
 		if (labelId === undefined || typeof labelId !== 'number') {
@@ -233,6 +263,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				data: dataToUpdate,
 			});
 
+			// Handle parent categories
 			await prisma.parentCategory.deleteMany({
 				where: { childId: Number(id) },
 			});
@@ -244,6 +275,21 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				})),
 			});
 
+			// Handle related categories
+			await prisma.relatedCategory.deleteMany({
+				where: { categoryId: Number(id) },
+			});
+
+			if (relatedIds.length > 0) {
+				await prisma.relatedCategory.createMany({
+					data: relatedIds.map((relatedId: number) => ({
+						categoryId: Number(id),
+						relatedId: relatedId,
+					})),
+				});
+			}
+
+			// Handle translations
 			for (const translation of translations) {
 				const {
 					translationId,
@@ -252,18 +298,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					description,
 					synonyms,
 				} = translation;
-				console.log('description', description);
+
 				await prisma.translation.upsert({
 					where: { id: translationId },
-					update: { translation: translationText, description }, // Update translation and description
+					update: { translation: translationText, description },
 					create: {
 						labelId,
 						languageId,
 						translation: translationText,
-						description, // Create with description
+						description,
 					},
 				});
 
+				// Handle synonyms
 				await prisma.synonym.deleteMany({
 					where: { translationId },
 				});

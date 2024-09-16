@@ -1,3 +1,4 @@
+//app\api\translation\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 
@@ -10,6 +11,7 @@ export async function GET(request: Request) {
 		return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
 	}
 
+	// Find a single translation
 	const translation = await prisma.translation.findFirst({
 		where: {
 			labelId,
@@ -20,11 +22,13 @@ export async function GET(request: Request) {
 		},
 	});
 
+	// If no translation is found, return a 404 error
 	if (!translation) {
 		return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
 	}
 
-	return NextResponse.json({
+	// Format the response (for a single object)
+	const response = {
 		id: translation.id,
 		labelId: translation.labelId,
 		languageId: translation.languageId,
@@ -36,7 +40,9 @@ export async function GET(request: Request) {
 			synonym: synonym.synonym,
 			createdAt: synonym.createdAt,
 		})),
-	});
+	};
+
+	return NextResponse.json(response);
 }
 
 export async function POST(request: Request) {

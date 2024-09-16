@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import {
@@ -19,7 +19,6 @@ import DeleteButton from '../../components/buttons/DeleteButton';
 
 interface CategoryItemProps {
 	category: Category;
-	setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 	icons: Icon[];
 	translations: Translation[];
 	languages: Language[];
@@ -31,13 +30,11 @@ interface CategoryItemProps {
 	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	handleDelete: (categoryId: number) => void;
-	onToggleCategory: (categoryId: number) => void;
-	fetchSubCategories: (parentId: number) => Promise<Category[]>;
+	setRelatedIds: (relatedIds: number[]) => void;
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
 	category,
-	setCategories,
 	icons,
 	translations,
 	languages,
@@ -49,32 +46,80 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setNewIcon,
 	setIsModalOpen,
 	handleDelete,
-	onToggleCategory,
-	fetchSubCategories,
+	setRelatedIds,
 }) => {
-	const [subCategories, setSubCategories] = useState<Category[]>([]);
-	const [isOpen, setIsOpen] = useState(false);
-	const [isLoadingSubCategories, setIsLoadingSubCategories] = useState(false); // New state to manage loading
+	// State za prikaz povezanih kategorija
+	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
+
+	// State za editovanje (ostaje isti)
+	const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
 
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
+	const [openCategories, setOpenCategories] = useState<Set<number>>(new Set());
+	const isOpen = openCategories.has(category.id);
 
-	const handleToggle = () => {
-		console.log('Category shildren:', category || 'Category:', []);
-		if (!isOpen && category.hasChildren) {
-			setIsLoadingSubCategories(true);
-			fetchSubCategories(category.id)
-				.then(subcategories => {
-					console.log('Fetched subcategories:', subcategories); // Log the fetched subcategories
-					setSubCategories(subcategories);
-					setIsOpen(true);
-				})
-				.finally(() => setIsLoadingSubCategories(false));
+	const toggleCategory = useCallback((id: number) => {
+		setOpenCategories(prev => {
+			const newOpenCategories = new Set(prev);
+			if (newOpenCategories.has(id)) {
+				newOpenCategories.delete(id);
+			} else {
+				newOpenCategories.add(id);
+			}
+			return newOpenCategories;
+		});
+	}, []);
+
+	// Funkcija za preuzimanje povezanih kategorija za prikaz
+	const fetchRelatedCategoriesForDisplay = useCallback(
+		async (relatedIds: number[]) => {
+			try {
+				const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
+				const relatedData = await Promise.all(promises);
+
+				const categories = relatedData.map(response => response.data);
+				if (categories && Array.isArray(categories)) {
+					setDisplayRelatedCategories(categories); // Setovanje state-a za prikaz
+				} else {
+					setDisplayRelatedCategories([]); // Resetuj ako nema povezanih kategorija
+				}
+			} catch (error) {
+				console.error('Failed to fetch related categories for display', error);
+			}
+		},
+		[]
+	);
+
+	// Automatski preuzmi povezane kategorije prilikom rendera
+	useEffect(() => {
+		if (category.relatedIds && category.relatedIds.length > 0) {
+			fetchRelatedCategoriesForDisplay(category.relatedIds);
 		} else {
-			setIsOpen(!isOpen);
+			setDisplayRelatedCategories([]);
 		}
-	};
+	}, [category.relatedIds, fetchRelatedCategoriesForDisplay]);
 
-	console.log('Updated subCategories state:', subCategories);
+	// Funkcija za preuzimanje i setovanje povezanih kategorija pri editovanju
+	const fetchRelatedCategoriesForEdit = useCallback(
+		async (relatedIds: number[]) => {
+			try {
+				const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
+				const relatedData = await Promise.all(promises);
+
+				const categories = relatedData.map(response => response.data);
+				if (categories && Array.isArray(categories)) {
+					setRelatedCategories(categories);
+					setRelatedIds(relatedIds);
+				} else {
+					setRelatedCategories([]);
+					setRelatedIds([]);
+				}
+			} catch (error) {
+				console.error('Failed to fetch related categories for edit', error);
+			}
+		},
+		[setRelatedIds]
+	);
 
 	const getCategoryName = useCallback(
 		(labelId: number, languageId: number) => {
@@ -90,14 +135,51 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	);
 
 	const getParentCategoryNames = useCallback(
-		(parents: Category[] = [], languageId: number): string => {
-			console.log('Parents array:', parents); // Dodaj log da proverimo roditelje
+		(parents: Category[], languageId: number): string => {
 			if (parents.length === 0) return 'Ovo je glavna kategorija';
 			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
 		},
 		[getCategoryName]
 	);
-	
+
+	// Handle otvaranje modala za editovanje
+	const handleOpenEditModal = useCallback(
+		async (category: Category) => {
+			setCurrentEditCategory(category);
+			setParentIds(category.parents.map(parent => parent.id));
+
+			// Fetch translations for editing
+			const { data: categoryTranslations } = await axios.get<Translation[]>(
+				`/api/translation/labels/${category.labelId}`
+			);
+
+			const existingTranslations = categoryTranslations.map(t => ({
+				translationId: t.id,
+				languageId: t.languageId,
+				translation: t.translation,
+				description: t.description || '',
+				synonyms: t.synonyms.map(s => s.synonym),
+			}));
+
+			setNewTranslations(existingTranslations);
+
+			// Fetch related categories for editing
+			if (category.relatedIds && category.relatedIds.length > 0) {
+				await fetchRelatedCategoriesForEdit(category.relatedIds);
+			} else {
+				setRelatedCategories([]);
+			}
+
+			// Set icon for editing
+			const iconId = category.iconId || null;
+			const iconUrl = getCategoryIconUrl(iconId, icons);
+			setCurrentIcon({ iconId, iconUrl });
+
+			setNewIcon(null);
+			setIsModalOpen(true);
+		},
+		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon]
+	);
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
@@ -117,28 +199,38 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			<TextNormal text={`Nadkategorije:`} weight='bold' />
 			<TextWrapped block={getParentCategoryNames(category.parents, languageId)} />
 
+			<TextNormal text={`Povezane kategorije:`} weight='bold' />
+			{displayRelatedCategories.length > 0 ? (
+				<ul className='list-disc pl-5 text-gray-800'>
+					{displayRelatedCategories.map(relatedCategory => (
+						<li key={relatedCategory.id}>
+							{getCategoryName(relatedCategory.labelId, languageId)}
+						</li>
+					))}
+				</ul>
+			) : (
+				<TextWrapped block='Nema povezanih kategorija' />
+			)}
+
 			<div className='mt-4 flex space-x-2'>
-				<EditButton onClick={() => setCurrentEditCategory(category)} />
+				<EditButton onClick={() => handleOpenEditModal(category)} />
 				<DeleteButton onClick={() => handleDelete(category.id)} />
 			</div>
 
-			{category.hasChildren && (
+			{category.children && category.children.length > 0 && (
 				<div
 					className='flex justify-center items-center py-2 bg-black rounded-lg mt-4'
-					onClick={handleToggle}>
-					<ArrowToggleButton isOpen={isOpen} title='Potkategorije' onClick={handleToggle} />
+					onClick={() => toggleCategory(category.id)}>
+					<ArrowToggleButton isOpen={isOpen} onClick={() => {}} title='Potkategroije' />
 				</div>
 			)}
 
-			{isOpen && isLoadingSubCategories && <p>Loading...</p>}
-
-			{isOpen && !isLoadingSubCategories && subCategories.length > 0 && (
+			{category.children && isOpen && (
 				<div className='mt-4 pl-4'>
-					{subCategories.map(subCategory => (
+					{category.children.map(subCategory => (
 						<CategoryItem
 							key={subCategory.id}
 							category={subCategory}
-							setCategories={setCategories}
 							icons={icons}
 							translations={translations}
 							languages={languages}
@@ -150,16 +242,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							setNewIcon={setNewIcon}
 							setIsModalOpen={setIsModalOpen}
 							handleDelete={handleDelete}
-							onToggleCategory={onToggleCategory}
-							fetchSubCategories={fetchSubCategories}
+							setRelatedIds={setRelatedIds}
 						/>
 					))}
-				</div>
-			)}
-
-			{isOpen && subCategories.length === 0 && (
-				<div className='mt-4 pl-4'>
-					<p>Nema potkategorija.</p>
 				</div>
 			)}
 		</div>

@@ -7,8 +7,6 @@ export async function POST(request: Request) {
 		const body = await request.json();
 		const { translationId, synonyms } = body;
 
-		console.log('synonyms', synonyms);
-
 		if (!translationId || !Array.isArray(synonyms)) {
 			return NextResponse.json({ error: 'Invalid input data' }, { status: 400 });
 		}

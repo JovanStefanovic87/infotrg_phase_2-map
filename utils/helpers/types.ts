@@ -1,8 +1,3 @@
-export interface Option {
-	value: string;
-	label: string;
-}
-
 export interface LinkData {
 	text: string;
 	url: string;
@@ -193,11 +188,10 @@ export interface Category {
 	id: number;
 	iconId: number | null;
 	labelId: number;
-	name: string; // Dodaj polje name
-	hasChildren?: boolean; // Dodaj opcionalno polje hasChildren
-	parents: Category[];
-	children: Category[];
-	isOpen?: boolean;
+	name: string;
+	parents: Category[]; // Array of parent categories
+	relatedIds?: number[]; // Add relatedIds to Category interface
+	children: Category[]; // Array of child categories
 }
 
 export interface Synonym {

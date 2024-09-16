@@ -1,6 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -52,14 +51,16 @@ model Language {
 }
 
 model Category {
-  id               Int              @id @default(autoincrement())
-  labelId          Int
-  name             String           @default("Unknown")
-  iconId           Int?
-  icon             Icon?            @relation(fields: [iconId], references: [id])
-  createdAt        DateTime         @default(now())
-  parentCategories ParentCategory[] @relation("Parent")
-  childCategories  ParentCategory[] @relation("Child")
+  id                Int               @id @default(autoincrement())
+  labelId           Int
+  iconId            Int?
+  icon              Icon?             @relation(fields: [iconId], references: [id])
+  label             Label             @relation("CategoryToLabel", fields: [labelId], references: [id])
+  parentCategories  ParentCategory[]  @relation("Parent")
+  childCategories   ParentCategory[]  @relation("Child")
+  relatedCategories RelatedCategory[] @relation("CategoryRelated") // Related categories
+  relatedTo         RelatedCategory[] @relation("RelatedToCategory") // Reverse relation for related categories
+  createdAt         DateTime          @default(now())
 }
 
 model ParentCategory {
@@ -72,10 +73,20 @@ model ParentCategory {
   @@id([parentId, childId]) // Composite primary key to ensure unique parent-child pairs
 }
 
+model RelatedCategory {
+  categoryId Int
+  relatedId  Int
+  category   Category @relation("CategoryRelated", fields: [categoryId], references: [id], onDelete: Cascade)
+  related    Category @relation("RelatedToCategory", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, relatedId]) // Composite key to ensure unique relations
+}
+
 model Label {
   id           Int           @id @default(autoincrement())
-  name         String // Assuming name should always be present
+  name         String // Naziv etikete
   translations Translation[] @relation("LabelTranslations")
+  categories   Category[]    @relation("CategoryToLabel") // Imenovana relacija između etikete i kategorija
   createdAt    DateTime      @default(now())
 
   @@index([name])

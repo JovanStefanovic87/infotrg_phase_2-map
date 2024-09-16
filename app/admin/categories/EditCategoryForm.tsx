@@ -1,4 +1,3 @@
-import React from 'react';
 import H2 from '../../components/text/H2';
 import Image from 'next/image';
 import TextBlockItem from '../../ulaganje/collapsible/TextBlockItem';
@@ -31,6 +30,8 @@ interface Props {
 	filterCategoriesForSelect: () => Category[];
 	setIsIconPickerOpen: (isOpen: boolean) => void;
 	handleSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => void;
+	relatedIds: number[];
+	setRelatedIds: (relatedIds: number[]) => void;
 }
 
 const EditCategoryForm: React.FC<Props> = ({
@@ -47,34 +48,9 @@ const EditCategoryForm: React.FC<Props> = ({
 	filterCategoriesForSelect,
 	setIsIconPickerOpen,
 	handleSubmitEdit,
+	relatedIds,
+	setRelatedIds,
 }) => {
-	// Helper function to find the appropriate translation
-	const findTranslation = (labelId: number) => {
-		// Check for primary language translation (e.g., languageId === 1)
-		let translation = translations.find(t => t.labelId === labelId && t.languageId === 1);
-
-		// If no primary language translation, check for any translation for the given labelId
-		if (!translation) {
-			translation = translations.find(t => t.labelId === labelId);
-		}
-
-		return translation;
-	};
-
-	const findCategoryById = (id: number, categories: Category[]): Category | null => {
-		for (const category of categories) {
-			if (category.id === id) {
-				return category;
-			}
-			// Recursively search in children
-			const foundInChildren = findCategoryById(id, category.children);
-			if (foundInChildren) {
-				return foundInChildren;
-			}
-		}
-		return null; // Return null if not found
-	};
-
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -185,6 +161,70 @@ const EditCategoryForm: React.FC<Props> = ({
 				))}
 			</div>
 
+			<div className='mb-6 w-full'>
+				<label className='font-semibold text-lg mb-3 block text-black'>Povezane kategorije:</label>
+				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
+					{relatedIds.map(relatedId => {
+						const relatedCategory = categories.find(cat => cat.id === relatedId);
+						return (
+							<li key={`related-${relatedId}`} className='flex items-center justify-between'>
+								<span className='text-sm text-gray-800'>
+									{translations.find(t => t.labelId === relatedCategory?.labelId)?.translation ||
+										'Unknown'}
+								</span>
+								<button
+									type='button'
+									onClick={() => setRelatedIds(relatedIds.filter(id => id !== relatedId))}
+									className='ml-4 text-red-500 hover:text-red-700'>
+									Ukloni
+								</button>
+							</li>
+						);
+					})}
+				</ul>
+				<CustomCombobox
+					options={filterCategoriesForSelect().map(cat => {
+						const translation = translations.find(
+							t => t.labelId === cat.labelId && t.languageId === 1
+						);
+
+						return {
+							id: cat.id,
+							labelId: cat.labelId,
+							languageId: 1,
+							translation: translation?.translation || 'No translation',
+							description: translation?.description || '',
+							createdAt: translation?.createdAt || new Date(),
+							synonyms: translation?.synonyms || [],
+							translationId: translation?.translationId ?? null,
+						};
+					})}
+					selectedOptions={categories
+						.filter(cat => relatedIds.includes(cat.id))
+						.map(cat => {
+							const translation = translations.find(
+								t => t.labelId === cat.labelId && t.languageId === 1
+							);
+							return {
+								id: cat.id,
+								labelId: cat.labelId,
+								languageId: 1,
+								translation: translation?.translation || 'No translation',
+								description: translation?.description || '',
+								createdAt: translation?.createdAt || new Date(),
+								synonyms: translation?.synonyms || [],
+								translationId: translation?.translationId ?? null,
+							} as Translation;
+						})}
+					onSelect={selectedOptions => {
+						const newRelatedIds = selectedOptions.map(option => option.id);
+						console.log('New Related Ids:', newRelatedIds); // Ensure it is correct
+						setRelatedIds(newRelatedIds); // Make sure this update happens before submission
+					}}
+					placeholder='Select related categories'
+				/>
+			</div>
+
 			{/* Parent Categories Section */}
 			<div className='mb-6 w-full'>
 				<label className='font-semibold text-lg mb-3 block text-black'>
@@ -193,27 +233,19 @@ const EditCategoryForm: React.FC<Props> = ({
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{[...new Set(parentIds)].length > 0 ? (
 						[...new Set(parentIds)].map(parentId => {
-							const parentCategory = findCategoryById(parentId, categories);
-
-							if (!parentCategory) {
-								console.error(`Parent category not found for parentId: ${parentId}`);
-								return null;
-							}
-
-							const translation = findTranslation(parentCategory.labelId);
+							const parentCategory = categories.find(cat => cat.id === parentId);
+							const translation = translations.find(
+								t => t.labelId === parentCategory?.labelId && t.languageId === 1
+							);
 
 							return (
 								<li key={`parent-${parentId}`} className='flex items-center justify-between'>
 									<span className='text-sm text-gray-800'>
-										{translation
-											? translation.translation
-											: `Translation not available for labelId: ${parentCategory.labelId}`}
+										{translation ? translation.translation : 'Translation not available'}
 									</span>
 									<button
 										type='button'
-										onClick={() =>
-											setParentIds(prevParentIds => prevParentIds.filter(id => id !== parentId))
-										}
+										onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
 										className='ml-4 text-red-500 hover:text-red-700 focus:outline-none'>
 										Ukloni
 									</button>
@@ -224,7 +256,6 @@ const EditCategoryForm: React.FC<Props> = ({
 						<li className='text-sm text-gray-500'>Ovo je glavna kategorija</li>
 					)}
 				</ul>
-
 				<CustomCombobox
 					options={filterCategoriesForSelect().map(cat => {
 						const translation = translations.find(
