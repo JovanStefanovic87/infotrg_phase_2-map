@@ -64,7 +64,6 @@ const buildCategoryTree = async (
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;
-	console.log('API HIT: /api/categories/[id]', id);
 	const languageId = 1; // Assuming you are using default languageId as 1
 
 	try {
@@ -77,7 +76,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 				relatedTo: { include: { category: true } }, // Fetch categories that this category is related to
 			},
 		});
-		console.log('CATEGORY FETCHED:', category);
 		if (!category) {
 			return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 		}
@@ -90,8 +88,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
 		// Fetch category and parent/child names from the Translation table
 		const name = await getCategoryTranslation(category.labelId, languageId);
-
-		console.log('relatedIds from API:', relatedIds);
 
 		const transformedCategory: Category = {
 			id: category.id,
@@ -228,8 +224,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 	try {
 		const body = await request.json();
 		const { parentIds, relatedIds, labelId, iconId, translations } = body;
-
-		console.log('relatedIds', relatedIds);
 
 		if (!Array.isArray(parentIds) || !Array.isArray(relatedIds)) {
 			return NextResponse.json(

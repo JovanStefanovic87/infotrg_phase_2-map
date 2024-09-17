@@ -11,7 +11,7 @@ interface ImagePickerProps {
 	onClose: () => void;
 }
 
-const ImagePicker: React.FC<ImagePickerProps> = ({ icons, isOpen, onSelect, onClose }) => {
+const ImagePickerForm: React.FC<ImagePickerProps> = ({ icons, isOpen, onSelect, onClose }) => {
 	const [searchTerm, setSearchTerm] = useState<string>('');
 
 	// Filter icons based on the search term
@@ -53,4 +53,4 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ icons, isOpen, onSelect, onCl
 	);
 };
 
-export default ImagePicker;
+export default ImagePickerForm;

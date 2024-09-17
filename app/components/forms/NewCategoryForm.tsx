@@ -1,10 +1,10 @@
 import React from 'react';
-import ImageUploadButton from '../../components/buttons/ImageUploadButton';
-import ChooseImageButton from '../../components/buttons/ChooseImageButton';
+import ImageUploadButton from '../buttons/ImageUploadButton';
+import ChooseImageButton from '../buttons/ChooseImageButton';
 import Combobox from '@/app/components/input/CustomCombobox';
 import { Translation, Icon } from '@/utils/helpers/types';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
-import Label from '../../components/text/Label';
+import Label from '../text/Label';
 
 interface CategoryFormProps {
 	name: string;
@@ -20,7 +20,7 @@ interface CategoryFormProps {
 	setIsIconPickerOpen: (isOpen: boolean) => void;
 }
 
-const CategoryForm: React.FC<CategoryFormProps> = ({
+const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	name,
 	setName,
 	parentIds,
@@ -81,4 +81,4 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
 	);
 };
 
-export default CategoryForm;
+export default NewCategoryForm;

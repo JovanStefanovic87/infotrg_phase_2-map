@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import CategoryList from './CategoryList';
+import CategoryList from '../../components/lists/CategoryList';
 import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
-import CategoryForm from './CategoryForm';
+import NewCategoryForm from '../../components/forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
-import ImagePicker from './ImagePicker';
+import ImagePickerForm from '../../components/forms/ImagePickerForm';
 import H1 from '@/app/components/text/H1';
 
 const prefix = 'article_category_';
@@ -241,7 +241,7 @@ const AddCategoryPage: React.FC = () => {
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
 			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
 
-			<CategoryForm
+			<NewCategoryForm
 				name={name}
 				setName={setName}
 				parentIds={parentIds}
@@ -283,7 +283,7 @@ const AddCategoryPage: React.FC = () => {
 					setFilteredCategories={setFilteredCategories}
 				/>
 			</div>
-			<ImagePicker
+			<ImagePickerForm
 				icons={icons}
 				isOpen={isIconPickerOpen}
 				onSelect={setCurrentIcon}

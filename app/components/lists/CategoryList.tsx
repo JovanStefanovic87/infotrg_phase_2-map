@@ -4,7 +4,7 @@ import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
 import axios from 'axios';
 import CategoryItem from './CategoryItem';
-import EditCategoryForm from './EditCategoryForm';
+import EditCategoryForm from '../forms/EditCategoryForm';
 
 interface CategoryListProps {
 	categories: Category[];

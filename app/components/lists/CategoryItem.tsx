@@ -10,12 +10,12 @@ import {
 	TranslationUpdate,
 } from '../../../utils/helpers/types';
 import { getCategoryIconUrl } from '../../../utils/helpers/universalFunctions';
-import H4 from '../../components/text/H4';
-import TextNormal from '../../components/text/TextNormal';
-import TextWrapped from '../../components/text/TextWrapped';
-import ArrowToggleButton from '../../components/buttons/ArrowToggleButton';
-import EditButton from '../../components/buttons/EditButton';
-import DeleteButton from '../../components/buttons/DeleteButton';
+import H4 from '../text/H4';
+import TextNormal from '../text/TextNormal';
+import TextWrapped from '../text/TextWrapped';
+import ArrowToggleButton from '../buttons/ArrowToggleButton';
+import EditButton from '../buttons/EditButton';
+import DeleteButton from '../buttons/DeleteButton';
 
 interface CategoryItemProps {
 	category: Category;
