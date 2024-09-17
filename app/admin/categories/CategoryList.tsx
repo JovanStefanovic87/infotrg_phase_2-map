@@ -35,6 +35,8 @@ interface CategoryListProps {
 	setIsIconPickerOpen: (isOpen: boolean) => void;
 	expandedCategories: Set<number>;
 	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	filteredCategories: Category[];
+	setFilteredCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 }
 
 interface TranslationUpdate {
@@ -61,6 +63,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setRelatedIds,
 	expandedCategories,
 	setExpandedCategories,
+	filteredCategories,
+	setFilteredCategories,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
@@ -68,52 +72,53 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState<string>(''); // State for search input
-	const [filteredCategories, setFilteredCategories] = useState<Category[]>(categories);
 
 	const searchCategories = (categories: Category[], query: string): Category[] => {
 		const lowercasedQuery = query.toLowerCase();
+
 		const result = categories
 			.map(category => {
 				const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
 				const matches = categoryName.includes(lowercasedQuery);
 
-				// Search within child categories
-				const childMatches = searchCategories(category.children || [], query);
+				// Recursively search within child categories
+				let childMatches = searchCategories(category.children || [], query);
 
-				// If the category or any of its children matches, include it
-				if (matches || childMatches.length > 0) {
-					// Expand categories that have matching children or match themselves
-					setExpandedCategories(prev => new Set([...prev, category.id]));
+				// If the category matches, include it and all its children, but don't expand it
+				if (matches) {
 					return {
 						...category,
-						children: childMatches, // Keep the filtered children
+						children: category.children, // Keep all children
 					};
-				} else {
-					// Collapse categories that don't match
-					setExpandedCategories(prev => {
-						const newSet = new Set(prev);
-						newSet.delete(category.id); // Remove from expanded set
-						return newSet;
-					});
-					return null;
 				}
+
+				// If any child categories match, include the parent category as well, but don't expand
+				if (childMatches.length > 0) {
+					return {
+						...category,
+						children: childMatches, // Only include matching children
+					};
+				}
+
+				// If neither the category nor its children match, return null
+				return null;
 			})
 			.filter(Boolean); // Remove null entries
+
 		return result as Category[];
 	};
 
 	// Trigger search whenever the searchQuery or categories change
 	useEffect(() => {
-		if (searchQuery.trim() === '') {
-			// If the search query is empty, collapse all categories by clearing the expandedCategories set
-			setExpandedCategories(new Set());
-			setFilteredCategories(categories);
-		} else {
-			// Perform the search and expand matching categories
-			const filtered = searchCategories(categories, searchQuery);
-			setFilteredCategories(filtered);
-		}
+		const filtered = searchQuery.trim() ? searchCategories(categories, searchQuery) : categories;
+
+		setFilteredCategories(filtered);
 	}, [searchQuery, categories, languageId]);
+
+	useEffect(() => {
+		// Filter categories on categories fetch or search change
+		setFilteredCategories(categories); // Ensure we set initial filtered categories on refetch
+	}, [categories]);
 
 	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(
@@ -290,7 +295,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			<div className='mb-4'>
 				<input
 					type='text'
-					placeholder='Search categories by name'
+					placeholder='Brza pretraga kategorija'
 					value={searchQuery}
 					onChange={e => setSearchQuery(e.target.value)}
 					className='border p-2 w-full text-black'
