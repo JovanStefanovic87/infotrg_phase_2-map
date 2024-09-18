@@ -228,7 +228,7 @@ const EditCategoryForm: React.FC<Props> = ({
 			{/* Parent Categories Section */}
 			<div className='mb-6 w-full'>
 				<label className='font-semibold text-lg mb-3 block text-black'>
-					Izabrane nadkategorije:
+					Izabrane natkategorije:
 				</label>
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{[...new Set(parentIds)].length > 0 ? (
@@ -278,7 +278,7 @@ const EditCategoryForm: React.FC<Props> = ({
 						const newParentIds = selectedOptions.map(option => option.labelId);
 						setParentIds(newParentIds);
 					}}
-					placeholder='Izaberite nadkategorije'
+					placeholder='Izaberite natkategorije'
 				/>
 			</div>
 

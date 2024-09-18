@@ -196,7 +196,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				)}
 			</div>
 
-			<TextNormal text={`Nadkategorije:`} weight='bold' />
+			<TextNormal text={`Natkategorije:`} weight='bold' />
 			<TextWrapped block={getParentCategoryNames(category.parents, languageId)} />
 
 			<TextNormal text={`Povezane kategorije:`} weight='bold' />

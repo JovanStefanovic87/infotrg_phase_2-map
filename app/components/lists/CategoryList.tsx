@@ -37,6 +37,8 @@ interface CategoryListProps {
 	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 	filteredCategories: Category[];
 	setFilteredCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+	initialExpandedCategories: Set<number>;
+	setInitialExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 }
 
 interface TranslationUpdate {
@@ -65,60 +67,67 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setExpandedCategories,
 	filteredCategories,
 	setFilteredCategories,
+	initialExpandedCategories,
+	setInitialExpandedCategories,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [parentIds, setParentIds] = useState<number[]>([]);
-	const [searchQuery, setSearchQuery] = useState<string>(''); // State for search input
+	const [searchQuery, setSearchQuery] = useState<string>('');
 
 	const searchCategories = (categories: Category[], query: string): Category[] => {
 		const lowercasedQuery = query.toLowerCase();
 
-		const result = categories
+		return categories
 			.map(category => {
 				const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
 				const matches = categoryName.includes(lowercasedQuery);
 
-				// Recursively search within child categories
-				let childMatches = searchCategories(category.children || [], query);
+				// Search within child categories
+				const childMatches = searchCategories(category.children || [], query);
 
-				// If the category matches, include it and all its children, but don't expand it
-				if (matches) {
+				// If the category or any of its children matches, include it
+				if (matches || childMatches.length > 0) {
+					setExpandedCategories(prev => {
+						const newSet = new Set([...prev]);
+						newSet.add(category.id); // Otvori nadkategoriju da se vidi filtrirana kategorija
+						if (matches && childMatches.length === 0) {
+							newSet.delete(category.id); // Zatvori potkategorije ako kategorija nema filtriranu decu
+						}
+						return newSet;
+					});
+
 					return {
 						...category,
-						children: category.children, // Keep all children
+						children: childMatches.length > 0 ? childMatches : category.children, // Prikaži decu, ali bez otvaranja
 					};
 				}
-
-				// If any child categories match, include the parent category as well, but don't expand
-				if (childMatches.length > 0) {
-					return {
-						...category,
-						children: childMatches, // Only include matching children
-					};
-				}
-
-				// If neither the category nor its children match, return null
 				return null;
 			})
-			.filter(Boolean); // Remove null entries
-
-		return result as Category[];
+			.filter(Boolean) as Category[];
 	};
 
 	// Trigger search whenever the searchQuery or categories change
 	useEffect(() => {
 		const filtered = searchQuery.trim() ? searchCategories(categories, searchQuery) : categories;
 
+		// Ažuriraj filtrirane kategorije koristeći setFilteredCategories
 		setFilteredCategories(filtered);
+
+		// Ako je pretraga obrisana, vrati proširene kategorije na njihovo početno stanje
+		if (!searchQuery.trim()) {
+			setExpandedCategories(new Set(initialExpandedCategories));
+		}
 	}, [searchQuery, categories, languageId]);
 
+	// Sačuvaj trenutno stanje proširenih kategorija pre pretrage
 	useEffect(() => {
-		// Filter categories on categories fetch or search change
-		setFilteredCategories(categories); // Ensure we set initial filtered categories on refetch
-	}, [categories]);
+		if (!searchQuery.trim()) {
+			setInitialExpandedCategories(new Set(expandedCategories));
+		}
+	}, [searchQuery]);
 
 	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(

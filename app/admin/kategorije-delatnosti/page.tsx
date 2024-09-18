@@ -1,9 +1,9 @@
 import { NextPage } from 'next';
 import CategoriesAdmin from '../../components/categories/CategoriesAdmin';
-import { prefixAticleCategory } from '@/app/api/prefix';
+import { prefixActivityCategory } from '@/app/api/prefix';
 
 const CategoriesAdminPage: NextPage = () => {
-	return <CategoriesAdmin prefix={prefixAticleCategory} title='KATEGORIJE PROIZVODA' />;
+	return <CategoriesAdmin prefix={prefixActivityCategory} title='KATEGORIJE DELATNOSTI' />;
 };
 
 export default CategoriesAdminPage;
