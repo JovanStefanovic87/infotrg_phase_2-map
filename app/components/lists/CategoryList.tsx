@@ -110,16 +110,27 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	// Search logic and reset state when search is cleared
 	useEffect(() => {
-		if (searchQuery.trim()) {
+		if (!searchQuery.trim()) {
+			// Sortiraj kategorije po abecednom redosledu (po imenu)
+			const sortedCategories = [...categories].sort((a, b) => {
+				return a.name.localeCompare(b.name); // Sortiranje po imenu
+			});
+
+			setFilteredCategories(sortedCategories);
+			setExpandedCategories(new Set(initialExpandedCategories));
+		} else {
 			const { filteredCategories: filtered, expandedIds } = searchCategories(
 				categories,
 				searchQuery
 			);
-			setFilteredCategories(filtered);
+
+			// Sortiraj filtrirane kategorije po abecednom redosledu
+			const sortedFiltered = filtered.sort((a, b) => {
+				return a.name.localeCompare(b.name);
+			});
+
+			setFilteredCategories(sortedFiltered);
 			setExpandedCategories(expandedIds);
-		} else {
-			setFilteredCategories(categories);
-			setExpandedCategories(new Set(initialExpandedCategories));
 		}
 	}, [searchQuery, categories, initialExpandedCategories]);
 
@@ -329,13 +340,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			return newSet;
 		});
 	};
-
-	// Sort categories alphabetically
-	const sortedCategories = [...categories].sort((a, b) => {
-		const nameA = getCategoryName(a.labelId, languageId).toLowerCase();
-		const nameB = getCategoryName(b.labelId, languageId).toLowerCase();
-		return nameA.localeCompare(nameB);
-	});
 
 	return (
 		<div>

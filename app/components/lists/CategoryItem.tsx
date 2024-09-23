@@ -176,7 +176,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			<div className='mt-2'>
 				{category.iconId ? (
 					iconUrl ? (
-						<Image src={iconUrl} alt='Category Icon' width={50} height={50} />
+						<Image src={iconUrl} alt='Category Icon' width={50} height={50} priority={false} />
 					) : (
 						<p>Ikonica nije izabrana</p>
 					)

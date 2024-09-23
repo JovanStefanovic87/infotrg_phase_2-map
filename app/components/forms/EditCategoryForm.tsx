@@ -96,6 +96,7 @@ const EditCategoryForm: React.FC<Props> = ({
 								id={`translation-${language.id}`}
 								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
 								value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
+								name='category-name'
 								onChange={e => {
 									const translation = e.target.value;
 									setNewTranslations(prevTranslations =>
@@ -142,6 +143,7 @@ const EditCategoryForm: React.FC<Props> = ({
 							</label>
 							<input
 								type='text'
+								name='translation'
 								placeholder='Odvojite ih zarezom'
 								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
 								value={
