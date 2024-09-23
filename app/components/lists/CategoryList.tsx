@@ -33,12 +33,16 @@ interface CategoryListProps {
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
-	expandedCategories: Set<number>;
-	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	expandedCategoriesForSearch: Set<number>;
+	setExpandedCategoriesForSearch: React.Dispatch<React.SetStateAction<Set<number>>>;
 	filteredCategories: Category[];
 	setFilteredCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 	initialExpandedCategories: Set<number>;
 	setInitialExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	manuallyExpandedCategories: Set<number>;
+	setManuallyExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	expandedCategories: Set<number>;
+	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 }
 
 interface TranslationUpdate {
@@ -63,12 +67,16 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setIsIconPickerOpen,
 	relatedIds,
 	setRelatedIds,
-	expandedCategories,
-	setExpandedCategories,
+	expandedCategoriesForSearch,
+	setExpandedCategoriesForSearch,
+	manuallyExpandedCategories,
+	setManuallyExpandedCategories,
 	filteredCategories,
 	setFilteredCategories,
 	initialExpandedCategories,
 	setInitialExpandedCategories,
+	expandedCategories,
+	setExpandedCategories,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
@@ -77,57 +85,83 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 
-	const searchCategories = (categories: Category[], query: string): Category[] => {
+	const searchCategories = (
+		categories: Category[],
+		query: string
+	): { filteredCategories: Category[]; expandedIds: Set<number> } => {
 		const lowercasedQuery = query.toLowerCase();
+		const expandedIds = new Set<number>();
 
-		return categories
-			.map(category => {
-				const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
-				const matches = categoryName.includes(lowercasedQuery);
+		const recursiveSearch = (categories: Category[]): Category[] => {
+			return categories
+				.map(category => {
+					const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
+					const matches = categoryName.includes(lowercasedQuery);
 
-				// Search within child categories
-				const childMatches = searchCategories(category.children || [], query);
+					const childMatches = category.children ? recursiveSearch(category.children) : [];
 
-				// If the category or any of its children matches, include it
-				if (matches || childMatches.length > 0) {
-					setExpandedCategories(prev => {
-						const newSet = new Set([...prev]);
-						newSet.add(category.id); // Otvori nadkategoriju da se vidi filtrirana kategorija
-						if (matches && childMatches.length === 0) {
-							newSet.delete(category.id); // Zatvori potkategorije ako kategorija nema filtriranu decu
-						}
-						return newSet;
-					});
+					if (matches || childMatches.length > 0) {
+						expandedIds.add(category.id);
 
-					return {
-						...category,
-						children: childMatches.length > 0 ? childMatches : category.children, // Prikaži decu, ali bez otvaranja
-					};
-				}
-				return null;
-			})
-			.filter(Boolean) as Category[];
+						return {
+							...category,
+							children: childMatches.length > 0 ? childMatches : category.children,
+						};
+					}
+					return null;
+				})
+				.filter(Boolean) as Category[];
+		};
+
+		const filteredCategories = recursiveSearch(categories);
+		return { filteredCategories, expandedIds };
 	};
 
-	// Trigger search whenever the searchQuery or categories change
 	useEffect(() => {
-		const filtered = searchQuery.trim() ? searchCategories(categories, searchQuery) : categories;
-
-		// Ažuriraj filtrirane kategorije koristeći setFilteredCategories
-		setFilteredCategories(filtered);
-
-		// Ako je pretraga obrisana, vrati proširene kategorije na njihovo početno stanje
 		if (!searchQuery.trim()) {
+			setInitialExpandedCategories(new Set(manuallyExpandedCategories));
+		}
+	}, [manuallyExpandedCategories]);
+
+	// Search logic and reset state when search is cleared
+	useEffect(() => {
+		if (searchQuery.trim()) {
+			const { filteredCategories: filtered, expandedIds } = searchCategories(
+				categories,
+				searchQuery
+			);
+			setFilteredCategories(filtered);
+			setExpandedCategories(expandedIds);
+		} else {
+			setFilteredCategories(categories);
 			setExpandedCategories(new Set(initialExpandedCategories));
 		}
-	}, [searchQuery, categories, languageId]);
+	}, [searchQuery, categories, initialExpandedCategories]);
 
-	// Sačuvaj trenutno stanje proširenih kategorija pre pretrage
+	// Save expanded categories on initial load or refetch
+
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			setInitialExpandedCategories(new Set(expandedCategories));
+			// This will only set expandedCategories if manuallyExpandedCategories has changed
+			setExpandedCategories(prev => {
+				const manuallyExpanded = manuallyExpandedCategories;
+
+				if (
+					prev.size !== manuallyExpanded.size ||
+					[...prev].some(id => !manuallyExpanded.has(id))
+				) {
+					return new Set(manuallyExpanded); // Create a new Set only if it has changed
+				}
+				return prev; // No update needed
+			});
 		}
-	}, [searchQuery]);
+	}, [manuallyExpandedCategories, searchQuery]);
+
+	useEffect(() => {
+		if (!searchQuery.trim()) {
+			setExpandedCategories(new Set(manuallyExpandedCategories));
+		}
+	}, [manuallyExpandedCategories]);
 
 	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(
@@ -163,7 +197,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				await axios.put(`/api/categories/${currentEditCategory.id}`, {
 					iconId,
 					parentIds,
-					relatedIds, // Include relatedIds here
+					relatedIds,
 					translations: translationUpdates,
 					labelId: currentEditCategory.labelId,
 				});
@@ -174,7 +208,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				}
 
 				setIsModalOpen(false);
-				setRelatedIds([]); // Reset relatedIds after successful submission
+				setRelatedIds([]);
 				await refetchCategories();
 			} catch (err) {
 				console.error('Failed to edit category', err);
@@ -187,7 +221,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			currentIcon.iconId,
 			parentIds,
 			refetchCategories,
-			relatedIds, // Ensure that relatedIds is part of the dependencies
+			relatedIds,
 		]
 	);
 
@@ -280,7 +314,16 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[translations]
 	);
 
-	const toggleCategory = useCallback((id: number) => {
+	const toggleCategory = (id: number) => {
+		setManuallyExpandedCategories(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(id)) {
+				newSet.delete(id);
+			} else {
+				newSet.add(id);
+			}
+			return newSet;
+		});
 		setExpandedCategories(prev => {
 			const newSet = new Set(prev);
 			if (newSet.has(id)) {
@@ -290,7 +333,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			}
 			return newSet;
 		});
-	}, []);
+	};
 
 	// Sort categories alphabetically
 	const sortedCategories = [...categories].sort((a, b) => {
@@ -325,9 +368,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					setNewIcon={setNewIcon}
 					setIsModalOpen={setIsModalOpen}
 					setNewTranslations={setNewTranslations}
-					setRelatedIds={setRelatedIds}
-					expandedCategories={expandedCategories}
 					toggleCategory={toggleCategory}
+					expandedCategories={expandedCategories}
+					setRelatedIds={setRelatedIds}
 				/>
 			))}
 

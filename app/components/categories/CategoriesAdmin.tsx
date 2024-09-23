@@ -31,6 +31,12 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+	const [expandedCategoriesForSearch, setExpandedCategoriesForSearch] = useState<Set<number>>(
+		new Set()
+	);
+	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
+		new Set()
+	);
 	const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
@@ -285,6 +291,10 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					setIsIconPickerOpen={setIsIconPickerOpen}
 					expandedCategories={expandedCategories}
 					setExpandedCategories={setExpandedCategories}
+					expandedCategoriesForSearch={expandedCategoriesForSearch}
+					setExpandedCategoriesForSearch={setExpandedCategoriesForSearch}
+					manuallyExpandedCategories={manuallyExpandedCategories}
+					setManuallyExpandedCategories={setManuallyExpandedCategories}
 					filteredCategories={filteredCategories}
 					setFilteredCategories={setFilteredCategories}
 					initialExpandedCategories={initialExpandedCategories}

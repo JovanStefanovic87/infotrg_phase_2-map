@@ -31,8 +31,8 @@ interface CategoryItemProps {
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	handleDelete: (categoryId: number) => void;
 	setRelatedIds: (relatedIds: number[]) => void;
-	expandedCategories: Set<number>;
-	toggleCategory: (id: number) => void;
+	expandedCategories: Set<number>; // Expanded categories
+	toggleCategory: (id: number) => void; // Function to toggle category expand/collapse
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
@@ -49,48 +49,40 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setIsModalOpen,
 	handleDelete,
 	setRelatedIds,
-	expandedCategories,
-	toggleCategory,
+	expandedCategories, // Use expandedCategories instead of manuallyExpandedCategories or expandedCategoriesForSearch
+	toggleCategory, // Function to toggle category
 }) => {
-	// State za prikaz povezanih kategorija
+	// State for displaying related categories
 	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
 
-	// State za editovanje (ostaje isti)
+	// State for editing related categories
 	const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
 
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
-	const isOpen = expandedCategories ? expandedCategories.has(category.id) : false;
 
-	/* const toggleCategory = useCallback((id: number) => {
-		setOpenCategories(prev => {
-			const newOpenCategories = new Set(prev);
-			if (newOpenCategories.has(id)) {
-				newOpenCategories.delete(id);
-			} else {
-				newOpenCategories.add(id);
-			}
-			return newOpenCategories;
-		});
-	}, []); */
+	// Check if the category is expanded based on expandedCategories
+	const isCategoryExpanded = useCallback(
+		(id: number) => {
+			return expandedCategories.has(id);
+		},
+		[expandedCategories]
+	);
 
-	// Funkcija za preuzimanje povezanih kategorija za prikaz
+	// Function to fetch related categories for display
 	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
 		try {
 			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
 			const relatedData = await Promise.all(promises);
 
 			const categories = relatedData.map(response => response.data);
-			if (categories && Array.isArray(categories)) {
-				setDisplayRelatedCategories(categories); // Setovanje state-a za prikaz
-			} else {
-				setDisplayRelatedCategories([]); // Resetuj ako nema povezanih kategorija
-			}
+			setDisplayRelatedCategories(categories);
 		} catch (error) {
 			console.error('Failed to fetch related categories for display', error);
+			setDisplayRelatedCategories([]);
 		}
 	}, []);
 
-	// Automatski preuzmi povezane kategorije prilikom rendera
+	// Automatically fetch related categories on component mount
 	useEffect(() => {
 		if (category.relatedIds && category.relatedIds.length > 0) {
 			fetchRelatedCategoriesForDisplay(category.relatedIds);
@@ -99,7 +91,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		}
 	}, [category.relatedIds, fetchRelatedCategoriesForDisplay]);
 
-	// Funkcija za preuzimanje i setovanje povezanih kategorija pri editovanju
+	// Function to fetch and set related categories for editing
 	const fetchRelatedCategoriesForEdit = useCallback(
 		async (relatedIds: number[]) => {
 			try {
@@ -107,15 +99,12 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				const relatedData = await Promise.all(promises);
 
 				const categories = relatedData.map(response => response.data);
-				if (categories && Array.isArray(categories)) {
-					setRelatedCategories(categories);
-					setRelatedIds(relatedIds);
-				} else {
-					setRelatedCategories([]);
-					setRelatedIds([]);
-				}
+				setRelatedCategories(categories);
+				setRelatedIds(relatedIds);
 			} catch (error) {
 				console.error('Failed to fetch related categories for edit', error);
+				setRelatedCategories([]);
+				setRelatedIds([]);
 			}
 		},
 		[setRelatedIds]
@@ -142,7 +131,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[getCategoryName]
 	);
 
-	// Handle otvaranje modala za editovanje
+	// Handle opening the edit modal
 	const handleOpenEditModal = useCallback(
 		async (category: Category) => {
 			setCurrentEditCategory(category);
@@ -219,11 +208,15 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				<div
 					className='flex justify-center items-center py-2 bg-black rounded-lg mt-4'
 					onClick={() => toggleCategory(category.id)}>
-					<ArrowToggleButton isOpen={isOpen} onClick={() => {}} title='Potkategroije' />
+					<ArrowToggleButton
+						isOpen={isCategoryExpanded(category.id)}
+						onClick={() => {}}
+						title='Potkategorije'
+					/>
 				</div>
 			)}
 
-			{category.children && isOpen && (
+			{category.children && isCategoryExpanded(category.id) && (
 				<div className='mt-4 pl-4'>
 					{category.children.map(subCategory => (
 						<CategoryItem
@@ -241,8 +234,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							setIsModalOpen={setIsModalOpen}
 							handleDelete={handleDelete}
 							setRelatedIds={setRelatedIds}
-							expandedCategories={expandedCategories}
-							toggleCategory={toggleCategory}
+							expandedCategories={expandedCategories} // Pass expandedCategories down
+							toggleCategory={toggleCategory} // Pass toggleCategory function down
 						/>
 					))}
 				</div>
