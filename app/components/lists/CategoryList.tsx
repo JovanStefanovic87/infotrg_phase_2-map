@@ -20,21 +20,9 @@ interface CategoryListProps {
 	relatedIds: number[];
 	setRelatedIds: (relatedIds: number[]) => void;
 	refetchCategories: () => Promise<void>;
-	onEditCategory: (
-		id: number,
-		data: {
-			translations: Translation[];
-			icon?: File | null;
-			iconId?: number | null;
-			parentIds: number[];
-			relatedIds: number[]; // Added relatedIds to onEditCategory props
-		}
-	) => Promise<void>;
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
-	expandedCategoriesForSearch: Set<number>;
-	setExpandedCategoriesForSearch: React.Dispatch<React.SetStateAction<Set<number>>>;
 	filteredCategories: Category[];
 	setFilteredCategories: React.Dispatch<React.SetStateAction<Category[]>>;
 	initialExpandedCategories: Set<number>;
@@ -62,13 +50,10 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	languages,
 	languageId,
 	refetchCategories,
-	onEditCategory,
 	onDeleteCategory,
 	setIsIconPickerOpen,
 	relatedIds,
 	setRelatedIds,
-	expandedCategoriesForSearch,
-	setExpandedCategoriesForSearch,
 	manuallyExpandedCategories,
 	setManuallyExpandedCategories,
 	filteredCategories,
@@ -139,7 +124,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	}, [searchQuery, categories, initialExpandedCategories]);
 
 	// Save expanded categories on initial load or refetch
-
 	useEffect(() => {
 		if (!searchQuery.trim()) {
 			// This will only set expandedCategories if manuallyExpandedCategories has changed
@@ -247,19 +231,30 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	);
 
 	// Helper function to filter categories for the select input (avoiding circular references)
-	const filterCategoriesForSelect = useCallback(() => {
-		if (!currentEditCategory) return categories;
+	const filterCategoriesForSelect = () => {
+		const allCategories: Category[] = [];
 
-		// Dobijamo kompletnu granu (pretke i potomke) trenutne kategorije
-		const completeBranch = getCompleteBranch(currentEditCategory);
+		const traverseCategories = (categoryList: Category[]) => {
+			categoryList.forEach(cat => {
+				allCategories.push(cat); // Add the current category to the list
 
-		// Filtriramo kategorije koje nisu u kompletnom stablu i nisu već povezane kao relatedIds
-		const uniqueCategories = categories.filter(
-			cat => !completeBranch.has(cat.id) && !relatedIds.includes(cat.id)
+				if (cat.children && cat.children.length > 0) {
+					traverseCategories(cat.children); // Recursively add subcategories
+				}
+			});
+		};
+
+		traverseCategories(categories); // Start from the root categories
+
+		// Filter out categories that are already related, selected as parent categories,
+		// and the category being edited (currentEditCategory).
+		return allCategories.filter(
+			cat =>
+				!relatedIds.includes(cat.id) &&
+				!parentIds.includes(cat.id) &&
+				cat.id !== currentEditCategory?.id // Exclude the category being edited
 		);
-
-		return uniqueCategories;
-	}, [categories, currentEditCategory, relatedIds]);
+	};
 
 	// Recursive function to get all descendants of a category
 	const getDescendants = (

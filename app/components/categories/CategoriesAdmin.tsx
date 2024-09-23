@@ -31,9 +31,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-	const [expandedCategoriesForSearch, setExpandedCategoriesForSearch] = useState<Set<number>>(
-		new Set()
-	);
 	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
@@ -190,7 +187,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const resetForm = () => {
 		setName('');
 		setParentIds([]);
-		setRelatedIds([]); // Reset relatedIds when resetting form
+		setRelatedIds([]);
 		setLanguageId(1);
 		setIcon(null);
 		setError('');
@@ -203,7 +200,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 				translations: { translationId: number | null; languageId: number; translation: string }[];
 				icon?: File | null;
 				parentIds: number[];
-				relatedIds: number[]; // Include relatedIds in the edit operation
+				relatedIds: number[];
 			}
 		) => {
 			const { translations, icon: newIcon, parentIds, relatedIds } = data;
@@ -275,10 +272,9 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
 					languageId={languageId}
-					relatedIds={relatedIds} // Pass relatedIds to CategoryList
-					setRelatedIds={setRelatedIds} // Pass setRelatedIds to CategoryList
+					relatedIds={relatedIds}
+					setRelatedIds={setRelatedIds}
 					refetchCategories={refetchData}
-					onEditCategory={handleEditCategory}
 					onDeleteCategory={async id => {
 						try {
 							await axios.delete(`/api/categories/${id}`);
@@ -291,8 +287,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					setIsIconPickerOpen={setIsIconPickerOpen}
 					expandedCategories={expandedCategories}
 					setExpandedCategories={setExpandedCategories}
-					expandedCategoriesForSearch={expandedCategoriesForSearch}
-					setExpandedCategoriesForSearch={setExpandedCategoriesForSearch}
 					manuallyExpandedCategories={manuallyExpandedCategories}
 					setManuallyExpandedCategories={setManuallyExpandedCategories}
 					filteredCategories={filteredCategories}
