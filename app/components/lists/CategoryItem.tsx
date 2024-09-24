@@ -16,6 +16,7 @@ import TextWrapped from '../text/TextWrapped';
 import ArrowToggleButton from '../buttons/ArrowToggleButton';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
+import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
 
 interface CategoryItemProps {
 	category: Category;
@@ -173,21 +174,25 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
 			<H4 text={getCategoryName(category.labelId, languageId)} color='black' shouldBreak />
+
+			{/* Display Icon */}
 			<div className='mt-2'>
 				{category.iconId ? (
 					iconUrl ? (
 						<Image src={iconUrl} alt='Category Icon' width={50} height={50} priority={false} />
 					) : (
-						<p>Ikonica nije izabrana</p>
+						<p className='text-gray-500'>Ikonica nije izabrana</p>
 					)
 				) : (
-					<p>Ikonica ne postoji</p>
+					<p className='text-gray-500'>Ikonica ne postoji</p>
 				)}
 			</div>
 
+			{/* Parent Categories */}
 			<TextNormal text={`Natkategorije:`} weight='bold' />
 			<TextWrapped block={getParentCategoryNames(category.parents, languageId)} />
 
+			{/* Related Categories */}
 			<TextNormal text={`Povezane kategorije:`} weight='bold' />
 			{displayRelatedCategories.length > 0 ? (
 				<ul className='list-disc pl-5 text-gray-800'>
@@ -199,25 +204,25 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				<TextWrapped block='Nema povezanih kategorija' />
 			)}
 
+			{/* Edit and Delete Buttons */}
 			<div className='mt-4 flex space-x-2'>
 				<EditButton onClick={() => handleOpenEditModal(category)} />
 				<DeleteButton onClick={() => handleDelete(category.id)} />
 			</div>
 
+			{/* Toggle Subcategory Button */}
 			{category.children && category.children.length > 0 && (
-				<div
-					className='flex justify-center items-center py-2 bg-black rounded-lg mt-4'
-					onClick={() => toggleCategory(category.id)}>
-					<ArrowToggleButton
-						isOpen={isCategoryExpanded(category.id)}
-						onClick={() => {}}
-						title='Potkategorije'
-					/>
-				</div>
+				<ToggleButtonContainer
+					data={{ id: category.id.toString() }} // Konvertuj id u string
+					toggleFunction={(id: string) => toggleCategory(parseInt(id))} // Konvertuj nazad u number kada koristiš funkciju
+				>
+					<ArrowToggleButton isOpen={isCategoryExpanded(category.id)} onClick={() => {}} />
+				</ToggleButtonContainer>
 			)}
 
+			{/* Subcategory List */}
 			{category.children && isCategoryExpanded(category.id) && (
-				<div className='mt-4 pl-4'>
+				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
 					{category.children.map(subCategory => (
 						<CategoryItem
 							key={subCategory.id}
@@ -234,8 +239,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							setIsModalOpen={setIsModalOpen}
 							handleDelete={handleDelete}
 							setRelatedIds={setRelatedIds}
-							expandedCategories={expandedCategories} // Pass expandedCategories down
-							toggleCategory={toggleCategory} // Pass toggleCategory function down
+							expandedCategories={expandedCategories}
+							toggleCategory={toggleCategory}
 						/>
 					))}
 				</div>
