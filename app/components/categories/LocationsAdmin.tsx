@@ -197,8 +197,11 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
+
 		try {
 			let iconId = currentIcon.iconId;
+
+			// Handle icon upload if present
 			if (icon) {
 				const formData = new FormData();
 				formData.append('icon', icon);
@@ -208,21 +211,34 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				});
 				iconId = data.iconId;
 			}
+
+			// Create label first
 			const { data: labelData } = await axios.post('/api/labels', { name, prefix });
 			const newLabelId = labelData.id;
-
 			if (!newLabelId) throw new Error('Failed to create label');
 
-			const { data: locationData } = await axios.post('/api/locations', {
-				parentId,
+			// Prepare location data
+			const locationData: Record<string, any> = {
 				labelId: newLabelId,
 				iconId,
 				name,
 				type,
-			});
+			};
 
-			if (!locationData) throw new Error('Failed to create location');
+			// Conditionally assign either parentId (country) or cityId based on type
+			if (type === 'cityPart' && cityId) {
+				locationData.cityId = cityId; // Send cityId for cityPart
+			} else if (type === 'city' && parentId) {
+				locationData.countryId = parentId; // Send parentId (as countryId) for city
+			}
 
+			console.log('Submitting with parentId:', parentId, 'and cityId:', cityId); // Debugging
+
+			// Submit the new location
+			const { data: newLocationData } = await axios.post('/api/locations', locationData);
+			if (!newLocationData) throw new Error('Failed to create location');
+
+			// Handle translations
 			const translationsArray = [
 				{
 					labelId: newLabelId,
@@ -237,7 +253,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 						translation: null,
 					})),
 			];
-
 			if (translationsArray.length) {
 				await axios.post('/api/translation', { translations: translationsArray });
 			}

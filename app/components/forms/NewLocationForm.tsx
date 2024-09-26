@@ -51,10 +51,17 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 	setIsIconPickerOpen,
 }) => {
 	const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value);
-	const handleParentIdChange = (e: ChangeEvent<HTMLSelectElement>) =>
-		setParentId(Number(e.target.value));
-	const handleCityIdChange = (e: ChangeEvent<HTMLSelectElement>) =>
-		setCityId(Number(e.target.value));
+
+	// For countries (parentId is countryId)
+	const handleParentIdChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setParentId(Number(e.target.value)); // Correctly set parentId (countryId for cities)
+		setCityId(null); // Reset cityId if parentId changes
+	};
+
+	const handleCityIdChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setCityId(Number(e.target.value)); // Set cityId for city parts
+	};
+
 	const handleIconChange = (file: File | null) => setIcon(file);
 
 	const handleIconSelection = (selectedIconId: number) => {
@@ -95,7 +102,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				</select>
 			</div>
 
-			{/* Country and City Selection */}
+			{/* Country Selection for City */}
 			{type === 'city' && (
 				<div className='flex flex-col'>
 					<label htmlFor='countryId' className='font-medium text-gray-700'>
@@ -103,8 +110,8 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 					</label>
 					<select
 						id='countryId'
-						value={parentId ?? ''} // Allow null to show as empty
-						onChange={handleParentIdChange}
+						value={parentId ?? ''} // Set the value of parentId here
+						onChange={handleParentIdChange} // This sets the parentId (countryId)
 						className='mt-1 p-2 border border-gray-300 rounded text-black'
 						required>
 						<option value=''>Izaberite državu</option>
@@ -117,6 +124,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				</div>
 			)}
 
+			{/* Country and City Selection for City Part */}
 			{type === 'cityPart' && (
 				<>
 					<div className='flex flex-col'>
@@ -125,8 +133,8 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 						</label>
 						<select
 							id='countryId'
-							value={parentId ?? ''}
-							onChange={handleParentIdChange}
+							value={parentId ?? ''} // Set the value of parentId here
+							onChange={handleParentIdChange} // This sets the parentId (countryId)
 							className='mt-1 p-2 border border-gray-300 rounded text-black'
 							required>
 							<option value=''>Izaberite državu</option>
@@ -144,8 +152,8 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 						</label>
 						<select
 							id='cityId'
-							value={cityId ?? ''} // Allow null to show
-							onChange={handleCityIdChange}
+							value={cityId ?? ''} // Set the value of cityId here
+							onChange={handleCityIdChange} // This sets the cityId
 							className='mt-1 p-2 border border-gray-300 rounded text-black'
 							required>
 							<option value=''>Izaberite grad</option>
@@ -166,10 +174,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 					label='Upload Icon'
 					onChange={e => handleIconChange(e.target.files?.[0] || null)}
 				/>
-				<ChooseImageButton
-					onClick={() => setIsIconPickerOpen(true)} // Open the icon picker
-					label='Choose Existing Icon'
-				/>
+				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Choose Existing Icon' />
 			</div>
 
 			{/* Submit Button */}

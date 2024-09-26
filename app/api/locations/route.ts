@@ -6,51 +6,72 @@ import moment from 'moment-timezone';
 // POST: Create a new location
 export async function POST(req: Request) {
 	try {
-		const { parentId, labelId, type, iconId } = await req.json();
+		const { countryId, cityId, labelId, type, iconId } = await req.json();
+		console.log('Received parentId:', countryId); // Debugging to check the incoming value
+		console.log('Received cityId:', cityId); // Debugging to check the incoming value
 
-		// Ensure labelId is passed and no need to create a label again
+		// Validation
 		if (!labelId) {
 			return NextResponse.json({ error: 'Label ID is missing' }, { status: 400 });
 		}
 
-		const currentTime = moment.tz(new Date(), 'Europe/Belgrade').format();
-
 		let locationData;
+
+		// Handle the creation of a country
 		if (type === 'country') {
 			locationData = await prisma.country.create({
 				data: {
 					labelId,
 					iconId,
-					createdAt: currentTime,
+					createdAt: new Date(),
 				},
 			});
-		} else if (type === 'city') {
-			const country = await prisma.country.findUnique({ where: { id: parentId } });
-			if (!country) throw new Error(`Parent country with id ${parentId} not found`);
+		}
+
+		// Handle the creation of a city (requires parentId to be countryId)
+		else if (type === 'city') {
+			if (!countryId) {
+				return NextResponse.json(
+					{ error: 'Parent country ID is required for creating a city.' },
+					{ status: 400 }
+				);
+			}
+
+			const country = await prisma.country.findUnique({ where: { id: countryId } });
+			if (!country) throw new Error(`Parent country with id ${countryId} not found`);
 
 			locationData = await prisma.city.create({
 				data: {
 					labelId,
-					countryId: parentId,
+					countryId: countryId, // Use countryId as countryId
 					iconId,
-					createdAt: currentTime,
+					createdAt: new Date(),
 				},
 			});
-		} else if (type === 'cityPart') {
-			const city = await prisma.city.findUnique({ where: { id: parentId } });
-			if (!city) throw new Error(`Parent city with id ${parentId} not found`);
+		}
+
+		// Handle the creation of a city part (requires cityId to be cityId)
+		else if (type === 'cityPart') {
+			if (!cityId) {
+				return NextResponse.json(
+					{ error: 'Parent city ID is required for creating a city part.' },
+					{ status: 400 }
+				);
+			}
+
+			const city = await prisma.city.findUnique({ where: { id: cityId } });
+			if (!city) throw new Error(`Parent city with id ${cityId} not found`);
 
 			locationData = await prisma.cityPart.create({
 				data: {
 					labelId,
-					cityId: parentId,
+					cityId: cityId, // Use cityId as cityId
 					iconId,
-					createdAt: currentTime,
+					createdAt: new Date(),
 				},
 			});
-		} else {
-			throw new Error('Invalid type provided');
 		}
+
 		return NextResponse.json(locationData);
 	} catch (error) {
 		console.error('Error creating location:', (error as Error).message);
