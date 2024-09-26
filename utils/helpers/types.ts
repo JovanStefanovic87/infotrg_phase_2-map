@@ -256,3 +256,35 @@ export interface RenderCategoryListProps {
 	onEdit: (category: Category) => void;
 	onDelete: (id: string) => void;
 }
+
+export interface Label {
+	id: number;
+	name: string;
+	translations: Translation[];
+}
+
+export interface LocationBase {
+	id: number;
+	label: {
+		id: number;
+		name: string;
+	};
+	createdAt: string;
+}
+
+export interface Country extends LocationBase {
+	cities: City[];
+}
+
+export interface City extends LocationBase {
+	postCode: string | null;
+	countryId: number;
+	parts: CityPart[];
+}
+
+export interface CityPart extends LocationBase {
+	postCode: string | null;
+	cityId: number;
+}
+
+export type Location = Country | City | CityPart;

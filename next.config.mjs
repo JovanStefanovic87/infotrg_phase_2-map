@@ -7,6 +7,9 @@ const nextConfig = {
       }
       return config;
     },
+    env: {
+      TZ: 'Europe/Belgrade',
+    },
   };
   
   export default nextConfig;

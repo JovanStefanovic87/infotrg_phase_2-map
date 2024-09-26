@@ -1,10 +1,10 @@
 import React from 'react';
-import ImageUploadButton from '../buttons/ImageUploadButton';
-import ChooseImageButton from '../buttons/ChooseImageButton';
+import ImageUploadButton from '../../components/buttons/ImageUploadButton';
+import ChooseImageButton from '../../components/buttons/ChooseImageButton';
 import Combobox from '@/app/components/input/CustomCombobox';
 import { Translation, Icon } from '@/utils/helpers/types';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
-import Label from '../text/Label';
+import Label from '../../components/text/Label';
 
 interface CategoryFormProps {
 	name: string;

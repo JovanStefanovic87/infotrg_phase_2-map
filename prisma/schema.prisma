@@ -50,6 +50,75 @@ model Language {
   @@index([code])
 }
 
+model Label {
+  id           Int           @id @default(autoincrement())
+  name         String // Naziv etikete
+  translations Translation[] @relation("LabelTranslations")
+  categories   Category[]    @relation("CategoryToLabel")
+  createdAt    DateTime      @default(now())
+  countries    Country[]     @relation("CountryToLabel")
+  cities       City[]        @relation("CityToLabel")
+  cityParts    CityPart[]    @relation("CityPartToLabel")
+
+  @@index([name])
+}
+
+model Translation {
+  id          Int       @id @default(autoincrement())
+  labelId     Int
+  Label       Label     @relation("LabelTranslations", fields: [labelId], references: [id], onDelete: Cascade)
+  languageId  Int
+  Language    Language  @relation("LanguageTranslations", fields: [languageId], references: [id], onDelete: Cascade)
+  translation String
+  description String? // New field for category description in each language
+  synonyms    Synonym[] // Ensure this matches the TypeScript code
+  createdAt   DateTime  @default(now())
+
+  @@unique([labelId, languageId]) // Composite unique constraint
+}
+
+model Country {
+  id        Int      @id @default(autoincrement())
+  labelId   Int
+  label     Label    @relation("CountryToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  cities    City[]
+  createdAt DateTime @default(now())
+
+  iconId Int? // Foreign key for Icon
+  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+}
+
+model City {
+  id        Int        @id @default(autoincrement())
+  labelId   Int
+  label     Label      @relation("CityToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  postCode  String?
+  countryId Int
+  country   Country    @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  parts     CityPart[]
+  createdAt DateTime   @default(now())
+
+  iconId Int? // Foreign key for Icon
+  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+
+  @@unique([labelId, countryId])
+}
+
+model CityPart {
+  id        Int      @id @default(autoincrement())
+  labelId   Int
+  label     Label    @relation("CityPartToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  postCode  String?
+  cityId    Int
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  iconId Int? // Foreign key for Icon
+  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+
+  @@unique([labelId, cityId])
+}
+
 model Category {
   id                Int               @id @default(autoincrement())
   labelId           Int
@@ -82,38 +151,17 @@ model RelatedCategory {
   @@id([categoryId, relatedId]) // Composite key to ensure unique relations
 }
 
-model Label {
-  id           Int           @id @default(autoincrement())
-  name         String // Naziv etikete
-  translations Translation[] @relation("LabelTranslations")
-  categories   Category[]    @relation("CategoryToLabel") // Imenovana relacija između etikete i kategorija
-  createdAt    DateTime      @default(now())
-
-  @@index([name])
-}
-
 model Icon {
   id        Int        @id @default(autoincrement())
   name      String
   url       String // e.g., 'icon.png'
   createdAt DateTime   @default(now())
-  Category  Category[]
+  Category  Category[] // Relations with Categories (if needed)
+  Country   Country[] // Relation with Country
+  City      City[] // Relation with City
+  CityPart  CityPart[] // Relation with CityPart
 
   @@index([name])
-}
-
-model Translation {
-  id          Int       @id @default(autoincrement())
-  labelId     Int
-  Label       Label     @relation("LabelTranslations", fields: [labelId], references: [id], onDelete: Cascade)
-  languageId  Int
-  Language    Language  @relation("LanguageTranslations", fields: [languageId], references: [id], onDelete: Cascade)
-  translation String
-  description String? // New field for category description in each language
-  synonyms    Synonym[] // Ensure this matches the TypeScript code
-  createdAt   DateTime  @default(now())
-
-  @@unique([labelId, languageId]) // Composite unique constraint
 }
 
 model Synonym {

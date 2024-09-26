@@ -1,10 +1,18 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import CategoryList from '../lists/CategoryList';
-import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
+import LocationList from '@/app/components/lists/LocationList';
+import {
+	Location,
+	Language,
+	Translation,
+	Icon,
+	CurrentIcon,
+	City,
+	Country,
+} from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
-import NewCategoryForm from '../forms/NewCategoryForm';
+import NewLocationForm from '../forms/NewLocationForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import H1 from '@/app/components/text/H1';
@@ -14,41 +22,43 @@ interface Props {
 	title: string;
 }
 
-const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
-	const [parentIds, setParentIds] = useState<number[]>([]);
+const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
+	const [parentId, setParentId] = useState<number | null>(null); // Changed from parentIds (single parent for locations)
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [categories, setCategories] = useState<Category[]>([]);
+	const [locations, setLocations] = useState<Location[]>([]); // Now handling locations
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [translations, setTranslations] = useState<Translation[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
+	const [type, setType] = useState<'country' | 'city' | 'cityPart'>('country');
+	const [countries, setCountries] = useState<Country[]>([]);
+	const [cities, setCities] = useState<City[]>([]);
+	const [cityId, setCityId] = useState<number | null>(null);
+	const [iconId, setIconId] = useState<number | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-	const [relatedIds, setRelatedIds] = useState<number[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
-	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
-	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
+	const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set());
+	const [manuallyExpandedLocations, setManuallyExpandedLocations] = useState<Set<number>>(
 		new Set()
 	);
-	const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
-	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
-		new Set()
-	);
+	const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
+	const [initialExpandedLocations, setInitialExpandedLocations] = useState<Set<number>>(new Set());
 
-	// Fetch categories, languages, icons, etc.
-	const fetchCategories = () =>
-		apiClient<Category[]>({
+	const fetchLocations = () =>
+		apiClient<Location[]>({
 			method: 'GET',
-			url: `/api/categories?prefix=${prefix}`,
+			url: `/api/locations?prefix=${prefix}`,
 		});
 
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () =>
-		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=articles' });
+		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=locations' });
+
 	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
 		const labels = await apiClient<{ id: number }[]>({
 			method: 'GET',
@@ -68,17 +78,17 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const refetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [categoriesData, translationsData, iconsData] = await Promise.all([
-				fetchCategories(),
+			const [locationsData, translationsData, iconsData] = await Promise.all([
+				fetchLocations(),
 				fetchTranslations(languageId),
 				fetchIcons(),
 			]);
-			setCategories(categoriesData);
+			setLocations(locationsData);
 			setTranslations(translationsData);
 			setIcons(iconsData);
 
-			// Filter fetched categories and retain expanded categories
-			setFilteredCategories(categoriesData);
+			// Filter fetched locations and retain expanded locations
+			setFilteredLocations(locationsData);
 		} catch (error) {
 			console.error('Failed to refetch data', error);
 		} finally {
@@ -122,7 +132,68 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			fetchTranslationsData();
 		}
 	}, [languageId]);
-	console.log('parentIds:', parentIds);
+
+	useEffect(() => {
+		const fetchLocationsAndIcons = async () => {
+			try {
+				const [fetchedCountries, fetchedIcons] = await Promise.all([
+					axios.get(`/api/countries?prefix=location_`),
+					axios.get('/api/icons?directory=locations'),
+				]);
+
+				setCountries(fetchedCountries.data);
+				setIcons(fetchedIcons.data);
+
+				const translatedCountriesData = await Promise.all(
+					fetchedCountries.data.map(async (country: Country) => {
+						const translationResponse = await axios.get(
+							`/api/translation?labelId=${country.label.id}&languageId=${languageId}`
+						);
+						const translation = translationResponse.data.translation || country.label.name;
+						return {
+							...country,
+							label: { ...country.label, name: translation },
+						};
+					})
+				);
+				setCountries(translatedCountriesData);
+			} catch (error) {
+				console.error('Failed to fetch data', error);
+			}
+		};
+
+		fetchLocationsAndIcons();
+	}, [type]);
+
+	useEffect(() => {
+		const fetchCities = async () => {
+			if (parentId) {
+				try {
+					const response = await axios.get(`/api/cities?countryId=${parentId}`);
+					setCities(response.data);
+
+					const translatedCitiesData = await Promise.all(
+						response.data.map(async (city: City) => {
+							const translationResponse = await axios.get(
+								`/api/translation?labelId=${city.label.id}&languageId=${languageId}`
+							);
+							const translation = translationResponse.data.translation || city.label.name;
+							return { ...city, label: { ...city.label, name: translation } };
+						})
+					);
+					setCities(translatedCitiesData);
+				} catch (error) {
+					console.error('Failed to fetch cities', error);
+				}
+			} else {
+				setCities([]);
+			}
+		};
+
+		if (type === 'cityPart' || type === 'city') {
+			fetchCities();
+		}
+	}, [parentId, type]);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -131,28 +202,26 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			if (icon) {
 				const formData = new FormData();
 				formData.append('icon', icon);
-				formData.append('directory', 'articles');
+				formData.append('directory', 'locations');
 				const { data } = await axios.post('/api/icons', formData, {
 					headers: { 'Content-Type': 'multipart/form-data' },
 				});
 				iconId = data.iconId;
 			}
-
 			const { data: labelData } = await axios.post('/api/labels', { name, prefix });
 			const newLabelId = labelData.id;
 
 			if (!newLabelId) throw new Error('Failed to create label');
-			console.log('parentIds:', parentIds);
 
-			const { data: categoryData } = await axios.post('/api/categories', {
-				parentIds,
-				relatedIds, // Send relatedIds along with the request
+			const { data: locationData } = await axios.post('/api/locations', {
+				parentId,
 				labelId: newLabelId,
 				iconId,
 				name,
+				type,
 			});
 
-			if (!categoryData) throw new Error('Failed to create category');
+			if (!locationData) throw new Error('Failed to create location');
 
 			const translationsArray = [
 				{
@@ -174,10 +243,11 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			}
 
 			resetForm();
-			setSuccessMessage('Kategorija uspešno sačuvana.');
+			setSuccessMessage('Location successfully saved.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
 			await refetchData();
 		} catch (err) {
+			console.error('Submission Error:', err);
 			setError(
 				`Submission Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
 			);
@@ -190,24 +260,22 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 		fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
 	const resetForm = () => {
 		setName('');
-		setParentIds([]);
-		setRelatedIds([]);
+		setParentId(null);
 		setLanguageId(1);
 		setIcon(null);
 		setError('');
 	};
 
-	const handleEditCategory = useCallback(
+	const handleEditLocation = useCallback(
 		async (
 			id: number,
 			data: {
 				translations: { translationId: number | null; languageId: number; translation: string }[];
 				icon?: File | null;
-				parentIds: number[];
-				relatedIds: number[];
+				parentId: number | null;
 			}
 		) => {
-			const { translations, icon: newIcon, parentIds, relatedIds } = data;
+			const { translations, icon: newIcon, parentId } = data;
 
 			try {
 				let iconId: number | null = currentIcon.iconId;
@@ -215,10 +283,11 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
-					const { data: iconData } = await axios.post('/api/icons', formData, {
+					formData.append('directory', 'locations');
+					const { data } = await axios.post('/api/icons', formData, {
 						headers: { 'Content-Type': 'multipart/form-data' },
 					});
-					iconId = iconData.iconId;
+					iconId = data.iconId;
 				}
 
 				const translationsArray = translations.map(translation => ({
@@ -227,18 +296,18 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					translation: translation.translation ?? '',
 				}));
 
-				await axios.put(`/api/categories/${id}`, {
+				await axios.put(`/api/locations/${id}`, {
 					iconId,
-					parentIds,
-					relatedIds, // Include relatedIds in update
+					parentId, // Now handling single parent location
 					translations: translationsArray,
 					labelId: id,
+					name,
 				});
 
-				setSuccessMessage('Category updated successfully.');
+				setSuccessMessage('Location updated successfully.');
 				await refetchData();
 			} catch (err) {
-				console.error('Failed to update category', err);
+				console.error('Failed to update location', err);
 				setError(
 					`Update Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
 				);
@@ -254,49 +323,54 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			{error && <p className='text-red-500 mb-4'>{error}</p>}
 			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
 
-			<NewCategoryForm
+			<NewLocationForm
+				onSubmit={handleSubmit}
+				languageId={languageId}
 				name={name}
 				setName={setName}
-				parentIds={parentIds}
-				setParentIds={setParentIds}
-				translations={translations}
+				parentId={parentId}
+				setParentId={setParentId}
+				type={type}
+				setType={setType}
+				countries={countries}
+				cities={cities}
+				setCities={setCities}
+				cityId={cityId}
+				setCityId={setCityId}
 				icons={icons}
-				onFileChange={handleFileChange}
-				onFileReset={handleResetFileName}
-				onSubmit={handleSubmit}
+				icon={icon}
+				setIcon={setIcon}
+				iconId={iconId}
+				setIconId={setIconId}
 				isIconPickerOpen={isIconPickerOpen}
 				setIsIconPickerOpen={setIsIconPickerOpen}
 			/>
 			<div className='mt-8'>
-				<CategoryList
-					categories={categories}
+				<LocationList
+					locations={locations}
 					translations={translations}
 					icons={icons}
 					currentIcon={currentIcon}
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
 					languageId={languageId}
-					relatedIds={relatedIds}
-					setRelatedIds={setRelatedIds}
-					refetchCategories={refetchData}
-					onDeleteCategory={async id => {
+					refetchLocations={refetchData}
+					onDeleteLocation={async id => {
 						try {
-							await axios.delete(`/api/categories/${id}`);
+							await axios.delete(`/api/locations/${id}`);
 							await refetchData();
 						} catch (err) {
-							console.error('Failed to delete category', err);
+							console.error('Failed to delete location', err);
 						}
 					}}
-					isIconPickerOpen={isIconPickerOpen}
-					setIsIconPickerOpen={setIsIconPickerOpen}
-					expandedCategories={expandedCategories}
-					setExpandedCategories={setExpandedCategories}
-					manuallyExpandedCategories={manuallyExpandedCategories}
-					setManuallyExpandedCategories={setManuallyExpandedCategories}
-					filteredCategories={filteredCategories}
-					setFilteredCategories={setFilteredCategories}
-					initialExpandedCategories={initialExpandedCategories}
-					setInitialExpandedCategories={setInitialExpandedCategories}
+					expandedLocations={expandedLocations}
+					setExpandedLocations={setExpandedLocations}
+					manuallyExpandedLocations={manuallyExpandedLocations}
+					setManuallyExpandedLocations={setManuallyExpandedLocations}
+					filteredLocations={filteredLocations}
+					setFilteredLocations={setFilteredLocations}
+					initialExpandedLocations={initialExpandedLocations}
+					setInitialExpandedLocations={setInitialExpandedLocations}
 				/>
 			</div>
 			<ImagePickerForm
@@ -309,4 +383,4 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	);
 };
 
-export default ArticleCategories;
+export default LocationsAdmin;
