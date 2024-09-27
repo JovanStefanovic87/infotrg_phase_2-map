@@ -85,43 +85,87 @@ export async function POST(req: Request) {
 // GET: Retrieve all locations (countries, cities, or city parts) with their translations
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
-	const type = searchParams.get('type');
-	const prefix = searchParams.get('prefix');
-	const languageId = 1; // Currently active language is hardcoded to 1
+	const prefix = searchParams.get('prefix'); // Prefiks za filtriranje
+	const languageId = 1; // Trenutno hardkodiran jezik
+
+	console.log('Prefix received:', prefix); // Loguje primljen prefiks
 
 	try {
 		let locations: any[] = [];
 
-		if (type === 'country') {
-			locations = await prisma.country.findMany({
-				where: {
-					label: {
-						name: {
-							startsWith: prefix ? `${prefix}_` : '',
+		// Prvo, pronalazimo sve države
+		locations = await prisma.country.findMany({
+			where: {
+				label: {
+					name: {
+						startsWith: prefix ? `${prefix}` : '', // Prefiks je ključan ovde
+					},
+				},
+			},
+			include: {
+				label: {
+					include: {
+						translations: {
+							where: {
+								languageId, // Filtriraj prema aktivnom jeziku
+							},
 						},
 					},
 				},
-				include: {
-					label: {
-						include: {
-							translations: {
-								where: {
-									languageId, // Filter by the active language
+				cities: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId, // Filtriraj prema aktivnom jeziku
+									},
+								},
+							},
+						},
+						parts: {
+							include: {
+								label: {
+									include: {
+										translations: {
+											where: {
+												languageId, // Filtriraj prema aktivnom jeziku
+											},
+										},
+									},
 								},
 							},
 						},
 					},
 				},
-			});
-		}
+			},
+		});
 
-		// Remove the prefix from label names and replace with the active language translation
+		console.log('Locations fetched:', locations); // Loguje pronađene lokacije
+
+		// Formatiramo lokacije, uklanjamo prefiks i postavljamo prevode
 		locations = locations.map(location => ({
 			...location,
 			label: {
 				...location.label,
-				name: location.label.translations[0]?.translation || location.label.name, // Use the translation if available, else fallback to label name
+				name: location.label.translations[0]?.translation || location.label.name, // Koristite prevod ako postoji, ili fallback na labelu
 			},
+			cities: location.cities.map(
+				(city: { label: { translations: { translation: any }[]; name: any }; parts: any[] }) => ({
+					...city,
+					label: {
+						...city.label,
+						name: city.label.translations[0]?.translation || city.label.name,
+					},
+					parts: city.parts.map(part => ({
+						...part,
+						label: {
+							...part.label,
+							name: part.label.translations[0]?.translation || part.label.name,
+						},
+					})),
+				})
+			),
 		}));
 
 		return NextResponse.json(locations);

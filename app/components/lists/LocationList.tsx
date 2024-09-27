@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
 	Country,
 	City,
@@ -15,7 +15,7 @@ import EditLocationForm from '../forms/EditLocationForm';
 
 interface LocationListProps {
 	locations: (Country | City | CityPart)[];
-	translations: Translation[]; // Add this to the props interface
+	translations: Translation[];
 	icons: Icon[];
 	currentIcon: CurrentIcon;
 	setCurrentIcon: React.Dispatch<React.SetStateAction<CurrentIcon>>;
@@ -35,31 +35,35 @@ interface LocationListProps {
 
 const LocationList: React.FC<LocationListProps> = ({
 	locations,
+	translations,
+	icons,
+	currentIcon,
+	setCurrentIcon,
 	languages,
 	languageId,
 	refetchLocations,
 	onDeleteLocation,
+	expandedLocations,
+	setExpandedLocations,
+	manuallyExpandedLocations,
+	setManuallyExpandedLocations,
 	filteredLocations,
 	setFilteredLocations,
 	initialExpandedLocations,
 	setInitialExpandedLocations,
-	manuallyExpandedLocations,
-	setManuallyExpandedLocations,
-	expandedLocations,
-	setExpandedLocations,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditLocation, setCurrentEditLocation] = useState<Country | City | CityPart | null>(
 		null
 	);
-	const [newTranslations, setNewTranslations] = useState<any[]>([]);
-	const [parentId, setParentId] = useState<number | null>(null);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 
-	const topLevelLocations = locations.filter(
-		location => 'cities' in location || 'parts' in location
-	);
+	// Definisanje top-level lokacija (samo države)
+	const topLevelLocations = useMemo(() => {
+		return locations.filter(location => 'cities' in location || 'parts' in location);
+	}, [locations]);
 
+	// Logika za pretragu lokacija
 	const searchLocations = (locations: (Country | City | CityPart)[], query: string) => {
 		const lowercasedQuery = query.toLowerCase();
 		const expandedIds = new Set<number>();
@@ -71,20 +75,24 @@ const LocationList: React.FC<LocationListProps> = ({
 				.map(location => {
 					const locationName = location.label.name.toLowerCase();
 					const matches = locationName.includes(lowercasedQuery);
-
 					let childMatches: (Country | City | CityPart)[] = [];
 
+					// Ako je lokacija država, pretraži gradove unutar države
 					if ('cities' in location) {
-						childMatches = recursiveSearch(location.cities); // If it's a Country, search cities
-					} else if ('parts' in location) {
-						childMatches = recursiveSearch(location.parts); // If it's a City, search parts
+						childMatches = recursiveSearch(location.cities); // Pretraži gradove unutar države
 					}
 
+					// Ako je lokacija grad, pretraži delove gradova unutar tog grada
+					if ('parts' in location) {
+						childMatches = recursiveSearch(location.parts); // Pretraži delove gradova unutar grada
+					}
+
+					// Ako postoji poklapanje ili podlokacija koja se poklapa, dodaj tu lokaciju
 					if (matches || childMatches.length > 0) {
-						expandedIds.add(location.id);
+						expandedIds.add(location.id); // Proširi ID lokacije
 						return {
 							...location,
-							...(childMatches.length > 0 && 'parts' in location ? { parts: childMatches } : {}), // Ensure child matches are handled
+							...(childMatches.length > 0 ? { parts: childMatches, cities: childMatches } : {}),
 						};
 					}
 					return null;
@@ -96,37 +104,38 @@ const LocationList: React.FC<LocationListProps> = ({
 		return { filteredLocations, expandedIds };
 	};
 
+	// Proširi top-level lokacije ako imaju podlokacije (gradove ili delove gradova) kada se prvi put učitaju
 	useEffect(() => {
-		if (!searchQuery.trim()) {
-			setInitialExpandedLocations(new Set(manuallyExpandedLocations));
-		}
-	}, [manuallyExpandedLocations]);
+		const expandedIds = new Set<number>();
+		topLevelLocations.forEach(location => {
+			if ('cities' in location && Array.isArray(location.cities) && location.cities.length > 0) {
+				expandedIds.add(location.id);
+			} else if (
+				'parts' in location &&
+				Array.isArray(location.parts) &&
+				location.parts.length > 0
+			) {
+				expandedIds.add(location.id);
+			}
+		});
 
+		setExpandedLocations(expandedIds);
+		setFilteredLocations(topLevelLocations);
+	}, [topLevelLocations]);
+
+	// Pretraga i resetovanje stanja
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			setFilteredLocations(topLevelLocations);
+			setFilteredLocations(topLevelLocations); // Prikaz top-level lokacija kada je pretraga prazna
 			setExpandedLocations(new Set(initialExpandedLocations));
 		} else {
 			const { filteredLocations: filtered, expandedIds } = searchLocations(locations, searchQuery);
 			setFilteredLocations(filtered);
-			setExpandedLocations(expandedIds);
+			setExpandedLocations(expandedIds); // Proširi odgovarajuće lokacije
 		}
 	}, [searchQuery, locations, initialExpandedLocations]);
 
-	const handleDelete = useCallback(
-		async (id: number) => {
-			if (confirm('Da li ste sigurni da želite da obrišete ovu lokaciju?')) {
-				try {
-					await onDeleteLocation(id);
-					await refetchLocations();
-				} catch (err) {
-					console.error('Failed to delete location', err);
-				}
-			}
-		},
-		[onDeleteLocation, refetchLocations]
-	);
-
+	// Toggler funkcija za ručno proširivanje
 	const toggleLocation = (id: number) => {
 		setManuallyExpandedLocations(prev => {
 			const newSet = new Set(prev);
@@ -150,6 +159,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
 	return (
 		<div>
+			{/* Input za pretragu */}
 			<div className='mb-4'>
 				<input
 					type='text'
@@ -159,37 +169,35 @@ const LocationList: React.FC<LocationListProps> = ({
 					className='border p-2 w-full text-black'
 				/>
 			</div>
+
+			{/* Render lokacija */}
 			{filteredLocations.map(location => (
 				<LocationItem
 					key={location.id}
 					location={location}
 					languageId={languageId}
-					handleDelete={handleDelete}
+					handleDelete={onDeleteLocation}
 					setCurrentEditLocation={setCurrentEditLocation}
-					setParentId={setParentId}
+					setParentId={() => {}}
 					setIsModalOpen={setIsModalOpen}
 					toggleLocation={toggleLocation}
 					expandedLocations={expandedLocations}
+					locations={locations}
 				/>
 			))}
 
+			{/* Modal za uređivanje */}
 			{isModalOpen && currentEditLocation && (
-				<CustomModal
-					isOpen={isModalOpen}
-					onRequestClose={() => {
-						setIsModalOpen(false);
-						setParentId(null);
-					}}
-					mt='10'>
+				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} mt='10'>
 					<EditLocationForm
 						locations={locations}
 						currentLocation={currentEditLocation}
 						handleSubmitEdit={() => {}}
 						languages={languages}
-						newTranslations={newTranslations}
-						parentId={parentId}
-						setNewTranslations={setNewTranslations}
-						setParentId={setParentId}
+						newTranslations={[]}
+						parentId={null}
+						setNewTranslations={() => {}}
+						setParentId={() => {}}
 					/>
 				</CustomModal>
 			)}

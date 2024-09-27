@@ -13,10 +13,11 @@ interface LocationItemProps {
 	languageId: number;
 	handleDelete: (id: number) => Promise<void>;
 	setCurrentEditLocation: React.Dispatch<React.SetStateAction<Country | City | CityPart | null>>;
-	setParentId: React.Dispatch<React.SetStateAction<number | null>>; // Single parent ID now
+	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	toggleLocation: (id: number) => void;
 	expandedLocations: Set<number>;
+	locations: (Country | City | CityPart)[];
 }
 
 const LocationItem: React.FC<LocationItemProps> = ({
@@ -28,8 +29,10 @@ const LocationItem: React.FC<LocationItemProps> = ({
 	expandedLocations,
 	toggleLocation,
 	languageId,
+	locations,
 }) => {
-	// Check if the location is expanded based on expandedLocations
+	let city: City | undefined;
+	let country: Country | undefined;
 	const isLocationExpanded = useCallback(
 		(id: number) => expandedLocations.has(id),
 		[expandedLocations]
@@ -39,11 +42,8 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		return location.label.name.charAt(0).toUpperCase() + location.label.name.slice(1);
 	};
 
-	// Handle opening the edit modal
 	const handleOpenEditModal = (location: Country | City | CityPart) => {
 		setCurrentEditLocation(location);
-
-		// Set parent ID based on the location type
 		if ('cityId' in location && typeof location.cityId === 'number') {
 			setParentId(location.cityId); // CityPart has a city parent
 		} else if ('countryId' in location && typeof location.countryId === 'number') {
@@ -51,56 +51,62 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		} else {
 			setParentId(null); // Country has no parent
 		}
-
 		setIsModalOpen(true);
 	};
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
-			<H4 text={getLocationName(location)} color='black' shouldBreak />
+			<TextNormal text={getLocationName(location)} weight='bold' />
 
-			{/* Display Parent Locations */}
-			{/* Display Parent Locations */}
-			{'cityId' in location ? (
-				<TextNormal text='Grad:' weight='bold' />
-			) : 'countryId' in location ? (
-				<TextNormal text='Država:' weight='bold' />
-			) : (
-				<TextNormal text='Ovo je glavna država' weight='bold' />
-			)}
-
-			{/* Edit and Delete Buttons */}
 			<div className='mt-4 flex space-x-2'>
 				<EditButton onClick={() => handleOpenEditModal(location)} />
 				<DeleteButton onClick={() => handleDelete(location.id)} />
 			</div>
 
-			{/* Toggle Sub-locations (Gradovi ili delovi gradova) */}
-			{'parts' in location && location.parts.length > 0 && (
+			{/* Toggle Sub-locations (Cities or parts) */}
+			{('cities' in location && location.cities.length > 0) ||
+			('parts' in location && location.parts.length > 0) ? (
 				<ToggleButtonContainer
-					data={{ id: location.id.toString() }} // Convert id to string
-					toggleFunction={(id: string) => toggleLocation(parseInt(id))} // Convert back to number
-				>
+					data={{ id: location.id.toString() }}
+					toggleFunction={(id: string) => toggleLocation(parseInt(id))}>
 					<ArrowToggleButton isOpen={isLocationExpanded(location.id)} onClick={() => {}} />
 				</ToggleButtonContainer>
-			)}
+			) : null}
 
-			{/* Sub-location List (Gradovi ili delovi gradova) */}
-			{'parts' in location && isLocationExpanded(location.id) && (
+			{/* Sub-location List (Cities or parts) */}
+			{isLocationExpanded(location.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
-					{location.parts.map(subLocation => (
-						<LocationItem
-							key={subLocation.id}
-							location={subLocation}
-							setCurrentEditLocation={setCurrentEditLocation}
-							setParentId={setParentId}
-							setIsModalOpen={setIsModalOpen}
-							handleDelete={handleDelete}
-							expandedLocations={expandedLocations}
-							toggleLocation={toggleLocation}
-							languageId={languageId}
-						/>
-					))}
+					{'cities' in location &&
+						location.cities.map(subLocation => (
+							<LocationItem
+								key={subLocation.id}
+								location={subLocation}
+								setCurrentEditLocation={setCurrentEditLocation}
+								setParentId={setParentId}
+								setIsModalOpen={setIsModalOpen}
+								handleDelete={handleDelete}
+								expandedLocations={expandedLocations}
+								toggleLocation={toggleLocation}
+								languageId={languageId}
+								locations={locations}
+							/>
+						))}
+
+					{'parts' in location &&
+						location.parts.map(subLocation => (
+							<LocationItem
+								key={subLocation.id}
+								location={subLocation}
+								setCurrentEditLocation={setCurrentEditLocation}
+								setParentId={setParentId}
+								setIsModalOpen={setIsModalOpen}
+								handleDelete={handleDelete}
+								expandedLocations={expandedLocations}
+								toggleLocation={toggleLocation}
+								languageId={languageId}
+								locations={locations}
+							/>
+						))}
 				</div>
 			)}
 		</div>

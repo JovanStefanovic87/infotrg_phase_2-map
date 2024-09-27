@@ -52,6 +52,9 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 }) => {
 	const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value);
 
+	// Filtriranje gradova na osnovu odabrane države
+	const filteredCities = cities.filter(city => city.countryId === parentId);
+
 	// For countries (parentId is countryId)
 	const handleParentIdChange = (e: ChangeEvent<HTMLSelectElement>) => {
 		setParentId(Number(e.target.value)); // Correctly set parentId (countryId for cities)
@@ -157,7 +160,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 							className='mt-1 p-2 border border-gray-300 rounded text-black'
 							required>
 							<option value=''>Izaberite grad</option>
-							{cities.map(city => (
+							{filteredCities.map(city => (
 								<option key={city.id} value={city.id}>
 									{city.label.name}
 								</option>

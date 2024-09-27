@@ -52,7 +52,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const fetchLocations = () =>
 		apiClient<Location[]>({
 			method: 'GET',
-			url: `/api/locations?prefix=${prefix}`,
+			url: `/api/locations?prefix=${prefix}`, // Prefiks za filtriranje kategorija
+		}).then(response => {
+			console.log('Fetched Locations:', response); // Proverite šta vraća API
+			return response;
 		});
 
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
