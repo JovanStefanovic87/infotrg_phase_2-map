@@ -266,10 +266,12 @@ export interface Label {
 export interface LocationBase {
 	id: number;
 	label: {
+		translations(translations: any, languages: Language[]): string;
 		id: number;
 		name: string;
 	};
 	createdAt: string;
+	icon?: Icon; // Dodaj ikonu kao opcionalno polje
 }
 
 export interface Country extends LocationBase {

@@ -38,6 +38,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [cities, setCities] = useState<City[]>([]);
 	const [cityId, setCityId] = useState<number | null>(null);
 	const [iconId, setIconId] = useState<number | null>(null);
+	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
@@ -54,7 +55,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			method: 'GET',
 			url: `/api/locations?prefix=${prefix}`, // Prefiks za filtriranje kategorija
 		}).then(response => {
-			console.log('Fetched Locations:', response); // Proverite šta vraća API
 			return response;
 		});
 
@@ -62,20 +62,31 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const fetchIcons = () =>
 		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=locations' });
 
-	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
+	const fetchTranslations = async (): Promise<Translation[]> => {
 		const labels = await apiClient<{ id: number }[]>({
 			method: 'GET',
-			url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
+			url: `/api/labels?prefix=${prefix}&languageId=${languageId}`, // Include languageId in the URL
 		});
 
-		const translationsPromises = labels.map(({ id }) =>
-			apiClient<Translation>({
-				method: 'GET',
-				url: `/api/translation?languageId=${languageId}&labelId=${id}`,
-			})
+		// Fetch all languages
+		const languages = await apiClient<Language[]>({
+			method: 'GET',
+			url: '/api/languages', // Fetch all available languages
+		});
+
+		// For each label, fetch translations across all languages
+		const translationsPromises = labels.flatMap(({ id }) =>
+			languages.map(({ id: languageId }) =>
+				apiClient<Translation>({
+					method: 'GET',
+					url: `/api/translation?languageId=${languageId}&labelId=${id}`,
+				})
+			)
 		);
 
-		return (await Promise.all(translationsPromises)).map(res => res);
+		// Resolve all translation promises and flatten the results into a single array
+		const translationsResults = await Promise.all(translationsPromises);
+		return translationsResults.map(res => res);
 	};
 
 	const refetchData = useCallback(async () => {
@@ -83,21 +94,18 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		try {
 			const [locationsData, translationsData, iconsData] = await Promise.all([
 				fetchLocations(),
-				fetchTranslations(languageId),
+				fetchTranslations(), // Fetch translations for all languages
 				fetchIcons(),
 			]);
 			setLocations(locationsData);
 			setTranslations(translationsData);
 			setIcons(iconsData);
-
-			// Filter fetched locations and retain expanded locations
-			setFilteredLocations(locationsData);
 		} catch (error) {
 			console.error('Failed to refetch data', error);
 		} finally {
 			setLoading(false);
 		}
-	}, [languageId]);
+	}, []);
 
 	useEffect(() => {
 		refetchData();
@@ -124,7 +132,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			const fetchTranslationsData = async () => {
 				setLoading(true);
 				try {
-					const data = await fetchTranslations(languageId);
+					const data = await fetchTranslations();
 					setTranslations(data);
 				} catch (err) {
 					console.error('Failed to fetch translations', err);
@@ -235,8 +243,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				locationData.countryId = parentId; // Send parentId (as countryId) for city
 			}
 
-			console.log('Submitting with parentId:', parentId, 'and cityId:', cityId); // Debugging
-
 			// Submit the new location
 			const { data: newLocationData } = await axios.post('/api/locations', locationData);
 			if (!newLocationData) throw new Error('Failed to create location');
@@ -273,7 +279,51 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	};
 
-	const handleFileChange = (file: File | null) => setIcon(file);
+	const handleSubmitEdit = async (updatedLocation: any) => {
+		try {
+			let iconId = updatedLocation.iconId; // Keep the current iconId
+
+			// If a new icon is selected, handle the file upload
+			if (newIcon) {
+				const formData = new FormData();
+				formData.append('icon', newIcon);
+				const { data: iconData } = await axios.post('/api/icons', formData, {
+					headers: { 'Content-Type': 'multipart/form-data' },
+				});
+				iconId = iconData.id; // Update iconId with the new one
+			} else if (currentIcon) {
+				// Use the selected existing icon
+				iconId = currentIcon.iconId;
+			}
+
+			const translations = updatedLocation.translations.map((translation: Translation) => ({
+				translationId: translation.id,
+				languageId: translation.languageId,
+				translation: translation.translation,
+				labelId: updatedLocation.label.id,
+			}));
+
+			// Update the location with the new iconId (if changed) and translations
+			await axios.put(`/api/locations/${updatedLocation.id}`, {
+				iconId, // Send updated iconId
+				translations,
+				// other updated location data
+			});
+
+			setSuccessMessage('Location successfully updated.');
+			await refetchData();
+		} catch (err) {
+			console.error('Error updating location:', err);
+			setError('Error updating location.');
+		}
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files && event.target.files.length > 0) {
+			setNewIcon(event.target.files[0]);
+		}
+	};
+
 	const handleResetFileName = () =>
 		fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
 	const resetForm = () => {
@@ -389,13 +439,17 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setFilteredLocations={setFilteredLocations}
 					initialExpandedLocations={initialExpandedLocations}
 					setInitialExpandedLocations={setInitialExpandedLocations}
+					handleSubmitEdit={handleSubmitEdit}
+					newIcon={newIcon}
+					setNewIcon={setNewIcon}
+					setIsIconPickerOpen={setIsIconPickerOpen}
 				/>
 			</div>
 			<ImagePickerForm
 				icons={icons}
-				isOpen={isIconPickerOpen}
-				onSelect={setCurrentIcon}
-				onClose={() => setIsIconPickerOpen(false)}
+				isOpen={isIconPickerOpen} // Controls modal visibility
+				onSelect={setCurrentIcon} // Set the selected icon
+				onClose={() => setIsIconPickerOpen(false)} // Close the modal
 			/>
 		</PageContainer>
 	);

@@ -1,12 +1,11 @@
-'use client';
 import React, { useCallback } from 'react';
-import { Country, City, CityPart } from '../../../utils/helpers/types';
-import H4 from '../text/H4';
+import { Country, City, CityPart, Language, Translation } from '../../../utils/helpers/types';
 import TextNormal from '../text/TextNormal';
-import ArrowToggleButton from '../buttons/ArrowToggleButton';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
+import ArrowToggleButton from '../buttons/ArrowToggleButton';
 import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
+import Image from 'next/image';
 
 interface LocationItemProps {
 	location: Country | City | CityPart;
@@ -14,52 +13,89 @@ interface LocationItemProps {
 	handleDelete: (id: number) => Promise<void>;
 	setCurrentEditLocation: React.Dispatch<React.SetStateAction<Country | City | CityPart | null>>;
 	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
-	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	toggleLocation: (id: number) => void;
 	expandedLocations: Set<number>;
 	locations: (Country | City | CityPart)[];
+	handleOpenTranslationModal: (location: Country | City | CityPart) => void;
+	languages: Language[]; // Add languages as a prop
 }
+
+// Helper function to display translations for all languages
+const getLocationTranslations = (translations: Translation[], languages: Language[]): string => {
+	return languages
+		.map(language => {
+			const translation = translations.find(t => t.languageId === language.id);
+			return `${language.name}: ${translation?.translation || 'No translation available'}`;
+		})
+		.join(', ');
+};
 
 const LocationItem: React.FC<LocationItemProps> = ({
 	location,
 	setCurrentEditLocation,
 	setParentId,
-	setIsModalOpen,
 	handleDelete,
 	expandedLocations,
 	toggleLocation,
 	languageId,
 	locations,
+	handleOpenTranslationModal,
+	languages,
 }) => {
-	let city: City | undefined;
-	let country: Country | undefined;
 	const isLocationExpanded = useCallback(
 		(id: number) => expandedLocations.has(id),
 		[expandedLocations]
 	);
 
 	const getLocationName = (location: Country | City | CityPart): string => {
-		return location.label.name.charAt(0).toUpperCase() + location.label.name.slice(1);
+		// Ensure translations exist and are an array
+		const translations = Array.isArray(location.label.translations)
+			? (location.label.translations as unknown as Translation[])
+			: [];
+
+		// Find the translation for languageId = 1
+		const primaryTranslation = translations.find(
+			(translation: Translation) => translation.languageId === 1
+		);
+
+		return primaryTranslation?.translation
+			? primaryTranslation.translation.charAt(0).toUpperCase() +
+					primaryTranslation.translation.slice(1)
+			: location.label.name; // Fallback if no translation is found
 	};
 
-	const handleOpenEditModal = (location: Country | City | CityPart) => {
-		setCurrentEditLocation(location);
-		if ('cityId' in location && typeof location.cityId === 'number') {
-			setParentId(location.cityId); // CityPart has a city parent
-		} else if ('countryId' in location && typeof location.countryId === 'number') {
-			setParentId(location.countryId); // City has a country parent
-		} else {
-			setParentId(null); // Country has no parent
-		}
-		setIsModalOpen(true);
-	};
+	console.log(location.icon?.url);
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
-			<TextNormal text={getLocationName(location)} weight='bold' />
+			<div className='flex items-center space-x-2'>
+				{/* Display location icon */}
+				{location.icon?.url && (
+					<Image
+						src={location.icon.url}
+						alt='Location Icon'
+						width={50}
+						height={50}
+						priority={false}
+						style={{ width: '50px', height: '50px' }} // Adjusting size
+					/>
+				)}
+
+				{/* Location Name */}
+				<TextNormal text={getLocationName(location)} weight='bold' />
+			</div>
+
+			{/* Display all translations */}
+			<TextNormal
+				text={getLocationTranslations(
+					location.label.translations as unknown as Translation[],
+					languages
+				)} // Use the helper function here
+				weight='normal'
+			/>
 
 			<div className='mt-4 flex space-x-2'>
-				<EditButton onClick={() => handleOpenEditModal(location)} />
+				<EditButton onClick={() => handleOpenTranslationModal(location)} />
 				<DeleteButton onClick={() => handleDelete(location.id)} />
 			</div>
 
@@ -83,12 +119,13 @@ const LocationItem: React.FC<LocationItemProps> = ({
 								location={subLocation}
 								setCurrentEditLocation={setCurrentEditLocation}
 								setParentId={setParentId}
-								setIsModalOpen={setIsModalOpen}
 								handleDelete={handleDelete}
 								expandedLocations={expandedLocations}
 								toggleLocation={toggleLocation}
 								languageId={languageId}
 								locations={locations}
+								handleOpenTranslationModal={handleOpenTranslationModal}
+								languages={languages}
 							/>
 						))}
 
@@ -99,12 +136,13 @@ const LocationItem: React.FC<LocationItemProps> = ({
 								location={subLocation}
 								setCurrentEditLocation={setCurrentEditLocation}
 								setParentId={setParentId}
-								setIsModalOpen={setIsModalOpen}
 								handleDelete={handleDelete}
 								expandedLocations={expandedLocations}
 								toggleLocation={toggleLocation}
 								languageId={languageId}
 								locations={locations}
+								handleOpenTranslationModal={handleOpenTranslationModal}
+								languages={languages}
 							/>
 						))}
 				</div>

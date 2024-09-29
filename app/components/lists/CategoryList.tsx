@@ -70,17 +70,19 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 
-	const topLevelCategories = categories.filter(category => category.parents.length === 0);
-
-	const searchCategories = (categories: Category[], query: string) => {
+	const searchCategories = (
+		categories: Category[],
+		query: string
+	): { filteredCategories: Category[]; expandedIds: Set<number> } => {
 		const lowercasedQuery = query.toLowerCase();
 		const expandedIds = new Set<number>();
 
 		const recursiveSearch = (categories: Category[]): Category[] => {
 			return categories
 				.map(category => {
-					const categoryName = category.name.toLowerCase();
+					const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
 					const matches = categoryName.includes(lowercasedQuery);
+
 					const childMatches = category.children ? recursiveSearch(category.children) : [];
 
 					if (matches || childMatches.length > 0) {
@@ -109,15 +111,26 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	// Search logic and reset state when search is cleared
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			setFilteredCategories(topLevelCategories); // Show only top-level categories initially
+			// Sortiraj kategorije po abecednom redosledu (po imenu)
+			const sortedCategories = [...categories].sort((a, b) => {
+				return a.name.localeCompare(b.name); // Sortiranje po imenu
+			});
+
+			setFilteredCategories(sortedCategories);
 			setExpandedCategories(new Set(initialExpandedCategories));
 		} else {
 			const { filteredCategories: filtered, expandedIds } = searchCategories(
 				categories,
 				searchQuery
 			);
-			setFilteredCategories(filtered);
-			setExpandedCategories(expandedIds); // Expand matching categories
+
+			// Sortiraj filtrirane kategorije po abecednom redosledu
+			const sortedFiltered = filtered.sort((a, b) => {
+				return a.name.localeCompare(b.name);
+			});
+
+			setFilteredCategories(sortedFiltered);
+			setExpandedCategories(expandedIds);
 		}
 	}, [searchQuery, categories, initialExpandedCategories]);
 

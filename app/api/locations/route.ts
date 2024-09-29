@@ -3,6 +3,31 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import moment from 'moment-timezone';
 
+interface Translation {
+	translation: string;
+}
+
+interface Label {
+	name: string;
+	translations: Translation[];
+}
+
+interface Part {
+	label: Label;
+}
+
+interface City {
+	label: Label;
+	parts: Part[];
+}
+
+interface Country {
+	label: Label;
+	cities: City[];
+}
+
+type Location = Country | City | Part;
+
 // POST: Create a new location
 export async function POST(req: Request) {
 	try {
@@ -86,9 +111,10 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const prefix = searchParams.get('prefix'); // Prefiks za filtriranje
-	const languageId = 1; // Trenutno hardkodiran jezik
+	const languageId = searchParams.get('languageId') ? Number(searchParams.get('languageId')) : null; // Dinamički prosleđeni jezik
 
 	console.log('Prefix received:', prefix); // Loguje primljen prefiks
+	console.log('Language ID received:', languageId); // Loguje primljen jezik
 
 	try {
 		let locations: any[] = [];
@@ -105,35 +131,26 @@ export async function GET(req: Request) {
 			include: {
 				label: {
 					include: {
-						translations: {
-							where: {
-								languageId, // Filtriraj prema aktivnom jeziku
-							},
-						},
+						translations: true, // Vraća sve prevode, bez obzira na `languageId`
 					},
 				},
+				icon: true, // Fetch the icon for the location
 				cities: {
 					include: {
 						label: {
 							include: {
-								translations: {
-									where: {
-										languageId, // Filtriraj prema aktivnom jeziku
-									},
-								},
+								translations: true, // Vraća sve prevode za gradove
 							},
 						},
+						icon: true, // Fetch the icon for the city
 						parts: {
 							include: {
 								label: {
 									include: {
-										translations: {
-											where: {
-												languageId, // Filtriraj prema aktivnom jeziku
-											},
-										},
+										translations: true, // Vraća sve prevode za delove grada
 									},
 								},
+								icon: true, // Fetch the icon for the city part
 							},
 						},
 					},
@@ -141,32 +158,55 @@ export async function GET(req: Request) {
 			},
 		});
 
-		console.log('Locations fetched:', locations); // Loguje pronađene lokacije
-
 		// Formatiramo lokacije, uklanjamo prefiks i postavljamo prevode
-		locations = locations.map(location => ({
-			...location,
-			label: {
-				...location.label,
-				name: location.label.translations[0]?.translation || location.label.name, // Koristite prevod ako postoji, ili fallback na labelu
-			},
-			cities: location.cities.map(
-				(city: { label: { translations: { translation: any }[]; name: any }; parts: any[] }) => ({
-					...city,
+		locations = locations.map((location: Location) => {
+			// Provera da li je `location` country sa `cities`
+			if ('cities' in location) {
+				return {
+					...location,
 					label: {
-						...city.label,
-						name: city.label.translations[0]?.translation || city.label.name,
+						...location.label,
+						// Koristi prevode za sve jezike, fallback na originalni naziv
+						name:
+							location.label.translations
+								.map((translation: Translation) => translation.translation)
+								.join(', ') || location.label.name,
 					},
-					parts: city.parts.map(part => ({
-						...part,
+					cities: location.cities.map((city: City) => ({
+						...city,
 						label: {
-							...part.label,
-							name: part.label.translations[0]?.translation || part.label.name,
+							...city.label,
+							name:
+								city.label.translations
+									.map((translation: Translation) => translation.translation)
+									.join(', ') || city.label.name,
 						},
+						parts: city.parts.map((part: Part) => ({
+							...part,
+							label: {
+								...part.label,
+								name:
+									part.label.translations
+										.map((translation: Translation) => translation.translation)
+										.join(', ') || part.label.name,
+							},
+						})),
 					})),
-				})
-			),
-		}));
+				};
+			}
+
+			// Ako `location` nema `cities`, vraćamo samo lokaciju
+			return {
+				...location,
+				label: {
+					...location.label,
+					name:
+						location.label.translations
+							.map((translation: Translation) => translation.translation)
+							.join(', ') || location.label.name,
+				},
+			};
+		});
 
 		return NextResponse.json(locations);
 	} catch (error) {

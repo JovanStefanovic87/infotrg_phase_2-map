@@ -1,4 +1,3 @@
-'use client';
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
 	Country,
@@ -12,6 +11,7 @@ import {
 import CustomModal from '@/app/components/modals/CustomModal';
 import LocationItem from './LocationItem';
 import EditLocationForm from '../forms/EditLocationForm';
+import axios from 'axios';
 
 interface LocationListProps {
 	locations: (Country | City | CityPart)[];
@@ -31,6 +31,10 @@ interface LocationListProps {
 	setFilteredLocations: React.Dispatch<React.SetStateAction<(Country | City | CityPart)[]>>;
 	initialExpandedLocations: Set<number>;
 	setInitialExpandedLocations: React.Dispatch<React.SetStateAction<Set<number>>>;
+	handleSubmitEdit: (updatedLocation: any) => void;
+	newIcon: File | null;
+	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
+	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const LocationList: React.FC<LocationListProps> = ({
@@ -51,19 +55,47 @@ const LocationList: React.FC<LocationListProps> = ({
 	setFilteredLocations,
 	initialExpandedLocations,
 	setInitialExpandedLocations,
+	handleSubmitEdit,
+	newIcon,
+	setNewIcon,
+	setIsIconPickerOpen,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditLocation, setCurrentEditLocation] = useState<Country | City | CityPart | null>(
 		null
 	);
 	const [searchQuery, setSearchQuery] = useState<string>('');
+	const [isTranslationModalOpen, setIsTranslationModalOpen] = useState<boolean>(false);
+	const [currentTranslations, setCurrentTranslations] = useState<Translation[]>([]);
 
-	// Definisanje top-level lokacija (samo države)
+	// Function to handle opening the translation form modal
+	const handleOpenTranslationModal = (location: Country | City | CityPart) => {
+		const locationTranslations = translations.filter(t => t.labelId === location.label.id);
+		setCurrentTranslations(locationTranslations);
+		setIsTranslationModalOpen(true);
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files) {
+			setNewIcon(event.target.files[0]);
+		}
+	};
+
+	// Function to handle the submission of updated translations
+	const handleSubmitTranslations = async (updatedTranslations: Translation[]) => {
+		try {
+			await axios.put('/api/translation/locations', { translations: updatedTranslations });
+			setIsTranslationModalOpen(false);
+			await refetchLocations();
+		} catch (error) {
+			console.error('Failed to update translations', error);
+		}
+	};
+
 	const topLevelLocations = useMemo(() => {
 		return locations.filter(location => 'cities' in location || 'parts' in location);
 	}, [locations]);
 
-	// Logika za pretragu lokacija
 	const searchLocations = (locations: (Country | City | CityPart)[], query: string) => {
 		const lowercasedQuery = query.toLowerCase();
 		const expandedIds = new Set<number>();
@@ -73,28 +105,42 @@ const LocationList: React.FC<LocationListProps> = ({
 		): (Country | City | CityPart)[] => {
 			return locations
 				.map(location => {
-					const locationName = location.label.name.toLowerCase();
+					// Get the name for languageId = 1
+					const primaryTranslation = Array.isArray(location.label.translations)
+						? (location.label.translations as unknown as Translation[]).find(
+								(translation: Translation) => translation.languageId === 1
+						  )
+						: undefined;
+
+					const locationName = primaryTranslation?.translation.toLowerCase() || '';
+
+					// Check if the location matches the query
 					const matches = locationName.includes(lowercasedQuery);
-					let childMatches: (Country | City | CityPart)[] = [];
+					let matchingCities: (Country | City | CityPart)[] = [];
+					let matchingParts: (Country | City | CityPart)[] = [];
 
-					// Ako je lokacija država, pretraži gradove unutar države
+					// Recursively search in cities
 					if ('cities' in location) {
-						childMatches = recursiveSearch(location.cities); // Pretraži gradove unutar države
+						matchingCities = recursiveSearch(location.cities);
 					}
 
-					// Ako je lokacija grad, pretraži delove gradova unutar tog grada
+					// Recursively search in parts
 					if ('parts' in location) {
-						childMatches = recursiveSearch(location.parts); // Pretraži delove gradova unutar grada
+						matchingParts = recursiveSearch(location.parts);
 					}
 
-					// Ako postoji poklapanje ili podlokacija koja se poklapa, dodaj tu lokaciju
-					if (matches || childMatches.length > 0) {
-						expandedIds.add(location.id); // Proširi ID lokacije
+					// If the location matches or there are matching children, return the location
+					if (matches || matchingCities.length > 0 || matchingParts.length > 0) {
+						expandedIds.add(location.id);
+
+						// Return the location with its matching cities and parts
 						return {
 							...location,
-							...(childMatches.length > 0 ? { parts: childMatches, cities: childMatches } : {}),
+							cities: matchingCities.length > 0 ? matchingCities : [],
+							parts: matchingParts.length > 0 ? matchingParts : [],
 						};
 					}
+
 					return null;
 				})
 				.filter(Boolean) as (Country | City | CityPart)[];
@@ -104,7 +150,7 @@ const LocationList: React.FC<LocationListProps> = ({
 		return { filteredLocations, expandedIds };
 	};
 
-	// Proširi top-level lokacije ako imaju podlokacije (gradove ili delove gradova) kada se prvi put učitaju
+	// Set expanded locations when component loads
 	useEffect(() => {
 		const expandedIds = new Set<number>();
 		topLevelLocations.forEach(location => {
@@ -123,19 +169,19 @@ const LocationList: React.FC<LocationListProps> = ({
 		setFilteredLocations(topLevelLocations);
 	}, [topLevelLocations]);
 
-	// Pretraga i resetovanje stanja
+	// Search logic
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			setFilteredLocations(topLevelLocations); // Prikaz top-level lokacija kada je pretraga prazna
+			setFilteredLocations(topLevelLocations); // Reset the search when query is cleared
 			setExpandedLocations(new Set(initialExpandedLocations));
 		} else {
 			const { filteredLocations: filtered, expandedIds } = searchLocations(locations, searchQuery);
 			setFilteredLocations(filtered);
-			setExpandedLocations(expandedIds); // Proširi odgovarajuće lokacije
+			setExpandedLocations(expandedIds);
 		}
 	}, [searchQuery, locations, initialExpandedLocations]);
 
-	// Toggler funkcija za ručno proširivanje
+	// Toggle specific locations
 	const toggleLocation = (id: number) => {
 		setManuallyExpandedLocations(prev => {
 			const newSet = new Set(prev);
@@ -157,20 +203,32 @@ const LocationList: React.FC<LocationListProps> = ({
 		});
 	};
 
+	const handleSetCurrentIcon = (icon: Icon | null) => {
+		if (icon) {
+			setCurrentIcon({
+				iconId: icon.id,
+				iconUrl: icon.url, // or `icon.iconUrl` depending on your icon structure
+			});
+		} else {
+			setCurrentIcon({
+				iconId: null,
+				iconUrl: null,
+			});
+		}
+	};
+
 	return (
 		<div>
-			{/* Input za pretragu */}
 			<div className='mb-4'>
 				<input
 					type='text'
-					placeholder='Brza pretraga lokacija'
+					placeholder='Search locations'
 					value={searchQuery}
 					onChange={e => setSearchQuery(e.target.value)}
 					className='border p-2 w-full text-black'
 				/>
 			</div>
 
-			{/* Render lokacija */}
 			{filteredLocations.map(location => (
 				<LocationItem
 					key={location.id}
@@ -179,25 +237,29 @@ const LocationList: React.FC<LocationListProps> = ({
 					handleDelete={onDeleteLocation}
 					setCurrentEditLocation={setCurrentEditLocation}
 					setParentId={() => {}}
-					setIsModalOpen={setIsModalOpen}
 					toggleLocation={toggleLocation}
 					expandedLocations={expandedLocations}
 					locations={locations}
+					handleOpenTranslationModal={handleOpenTranslationModal}
+					languages={languages}
 				/>
 			))}
 
-			{/* Modal za uređivanje */}
-			{isModalOpen && currentEditLocation && (
-				<CustomModal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} mt='10'>
+			{/* Translation Modal */}
+			{isTranslationModalOpen && (
+				<CustomModal
+					isOpen={isTranslationModalOpen}
+					onRequestClose={() => setIsTranslationModalOpen(false)}>
 					<EditLocationForm
-						locations={locations}
-						currentLocation={currentEditLocation}
-						handleSubmitEdit={() => {}}
+						currentTranslations={currentTranslations}
 						languages={languages}
-						newTranslations={[]}
-						parentId={null}
-						setNewTranslations={() => {}}
-						setParentId={() => {}}
+						handleSubmit={handleSubmitTranslations}
+						currentIcon={currentIcon?.iconUrl || null} // Pass the current icon URL
+						newIcon={newIcon} // Pass the selected new icon file
+						setNewIcon={setNewIcon} // Function to set newIcon state
+						availableIcons={icons} // Pass the list of available icons
+						setCurrentIcon={handleSetCurrentIcon} // Function to select an existing icon
+						setIsIconPickerOpen={setIsIconPickerOpen} // Function to open the icon picker
 					/>
 				</CustomModal>
 			)}
