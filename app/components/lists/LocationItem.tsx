@@ -10,14 +10,14 @@ import Image from 'next/image';
 interface LocationItemProps {
 	location: Country | City | CityPart;
 	languageId: number;
-	handleDelete: (id: number) => Promise<void>;
+	handleDelete: (id: number, type: string) => Promise<void>; // Update to match the actual signature
 	setCurrentEditLocation: React.Dispatch<React.SetStateAction<Country | City | CityPart | null>>;
 	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
 	toggleLocation: (id: number) => void;
 	expandedLocations: Set<number>;
 	locations: (Country | City | CityPart)[];
 	handleOpenTranslationModal: (location: Country | City | CityPart) => void;
-	languages: Language[]; // Add languages as a prop
+	languages: Language[];
 }
 
 // Helper function to display translations for all languages
@@ -64,8 +64,6 @@ const LocationItem: React.FC<LocationItemProps> = ({
 			: location.label.name; // Fallback if no translation is found
 	};
 
-	console.log(location.icon?.url);
-
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
 			<div className='flex items-center space-x-2'>
@@ -96,7 +94,11 @@ const LocationItem: React.FC<LocationItemProps> = ({
 
 			<div className='mt-4 flex space-x-2'>
 				<EditButton onClick={() => handleOpenTranslationModal(location)} />
-				<DeleteButton onClick={() => handleDelete(location.id)} />
+				<DeleteButton
+					onClick={() => {
+						handleDelete(location.id, location.type);
+					}}
+				/>
 			</div>
 
 			{/* Toggle Sub-locations (Cities or parts) */}

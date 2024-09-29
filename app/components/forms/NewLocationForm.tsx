@@ -26,6 +26,8 @@ interface NewLocationFormProps {
 	setIconId: React.Dispatch<React.SetStateAction<number | null>>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	postalCode: string;
+	setPostalCode: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const NewLocationForm: React.FC<NewLocationFormProps> = ({
@@ -49,10 +51,14 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 	setIconId,
 	isIconPickerOpen,
 	setIsIconPickerOpen,
+	postalCode,
+	setPostalCode,
 }) => {
 	const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value);
+	const handlePostalCodeChange = (e: ChangeEvent<HTMLInputElement>) =>
+		setPostalCode(e.target.value);
 
-	// Filtriranje gradova na osnovu odabrane države
+	// Filter cities based on selected country
 	const filteredCities = cities.filter(city => city.countryId === parentId);
 
 	// For countries (parentId is countryId)
@@ -71,6 +77,8 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 		setIconId(selectedIconId);
 		setIsIconPickerOpen(false); // Close the icon picker after selection
 	};
+
+	console.log('postalCode:', postalCode);
 
 	return (
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
@@ -107,28 +115,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 
 			{/* Country Selection for City */}
 			{type === 'city' && (
-				<div className='flex flex-col'>
-					<label htmlFor='countryId' className='font-medium text-gray-700'>
-						Izaberite državu
-					</label>
-					<select
-						id='countryId'
-						value={parentId ?? ''} // Set the value of parentId here
-						onChange={handleParentIdChange} // This sets the parentId (countryId)
-						className='mt-1 p-2 border border-gray-300 rounded text-black'
-						required>
-						<option value=''>Izaberite državu</option>
-						{countries.map(country => (
-							<option key={country.id} value={country.id}>
-								{country.label.name}
-							</option>
-						))}
-					</select>
-				</div>
-			)}
-
-			{/* Country and City Selection for City Part */}
-			{type === 'cityPart' && (
 				<>
 					<div className='flex flex-col'>
 						<label htmlFor='countryId' className='font-medium text-gray-700'>
@@ -149,23 +135,19 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 						</select>
 					</div>
 
+					{/* Postal Code */}
 					<div className='flex flex-col'>
-						<label htmlFor='cityId' className='font-medium text-gray-700'>
-							Izaberite grad
+						<label htmlFor='postalCode' className='font-medium text-gray-700'>
+							Postanski kod
 						</label>
-						<select
-							id='cityId'
-							value={cityId ?? ''} // Set the value of cityId here
-							onChange={handleCityIdChange} // This sets the cityId
+						<input
+							type='text'
+							id='postalCode'
+							value={postalCode}
+							onChange={handlePostalCodeChange}
 							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required>
-							<option value=''>Izaberite grad</option>
-							{filteredCities.map(city => (
-								<option key={city.id} value={city.id}>
-									{city.label.name}
-								</option>
-							))}
-						</select>
+							required
+						/>
 					</div>
 				</>
 			)}

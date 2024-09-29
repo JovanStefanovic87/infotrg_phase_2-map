@@ -276,17 +276,20 @@ export interface LocationBase {
 
 export interface Country extends LocationBase {
 	cities: City[];
+	type: string;
 }
 
 export interface City extends LocationBase {
 	postCode: string | null;
 	countryId: number;
 	parts: CityPart[];
+	type: string;
 }
 
 export interface CityPart extends LocationBase {
 	postCode: string | null;
 	cityId: number;
+	type: string;
 }
 
 export type Location = Country | City | CityPart;

@@ -12,7 +12,7 @@ const FileUploadButton = forwardRef<{ resetFileName?: () => void }, FileUploadBu
 
 		const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files ? event.target.files[0] : null;
-			setFileName(file ? file.name : null);
+			setFileName(file ? file.name : 'No file chosen');
 			onFileChange(file);
 		};
 
@@ -42,6 +42,7 @@ const FileUploadButton = forwardRef<{ resetFileName?: () => void }, FileUploadBu
 				<input
 					type='file'
 					id='file-upload'
+					accept='image/*'
 					onChange={handleFileChange}
 					style={{ display: 'none' }}
 				/>

@@ -8,8 +8,6 @@ export async function PUT(request: Request) {
 	try {
 		const data = await request.json();
 		const translations = data.translations;
-		console.log('Received translations:', translations); // Debugging to check the incoming value
-		console.log('Received translations count:', translations.length); // Debugging to check the incoming value
 
 		// Process each translation update
 		for (const translation of translations) {

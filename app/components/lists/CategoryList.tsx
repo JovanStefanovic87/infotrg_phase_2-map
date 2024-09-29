@@ -158,6 +158,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		}
 	}, [manuallyExpandedCategories]);
 
+	const handleCloseModal = () => {
+		setIsModalOpen(false);
+		setNewIcon(null); // Reset newIcon when closing the modal
+		setCurrentIcon({ iconId: null, iconUrl: null }); // Optionally reset currentIcon
+		setRelatedIds([]); // Reset relatedIds
+		setParentIds([]); // Reset parent categories
+		setNewTranslations([]); // Clear translation updates
+	};
+
 	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(
 		async (event: React.FormEvent) => {
@@ -165,41 +174,36 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			if (!currentEditCategory) return;
 
 			try {
-				let iconId: number | null = currentIcon.iconId;
+				let iconId = currentIcon.iconId;
 
-				// If a new icon is uploaded, handle the file upload
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
+					formData.append('directory', 'articles');
+
 					const { data: iconData } = await axios.post('/api/icons', formData, {
 						headers: { 'Content-Type': 'multipart/form-data' },
 					});
-					iconId = iconData.id;
+
+					iconId = iconData?.iconId;
 				}
 
-				// Prepare the translations payload
-				const translationUpdates = newTranslations.map(
-					({ translationId, languageId, translation, description, synonyms }) => ({
-						translationId,
-						languageId,
-						translation,
-						description,
-						synonyms: synonyms || [],
-					})
-				);
-
-				// Submit the category update with hierarchy
-				await axios.put(`/api/categories/${currentEditCategory.id}`, {
-					iconId,
-					parentIds,
-					relatedIds,
-					translations: translationUpdates,
-					labelId: currentEditCategory.labelId,
-				});
-
-				// Submit synonyms for translations
-				for (const { translationId, synonyms } of translationUpdates) {
-					await axios.post('/api/synonyms', { translationId, synonyms });
+				if (iconId) {
+					await axios.put(`/api/categories/${currentEditCategory.id}`, {
+						iconId,
+						parentIds,
+						relatedIds,
+						translations: newTranslations.map(
+							({ translationId, languageId, translation, description, synonyms }) => ({
+								translationId,
+								languageId,
+								translation,
+								description,
+								synonyms: synonyms || [],
+							})
+						),
+						labelId: currentEditCategory.labelId,
+					});
 				}
 
 				setIsModalOpen(false);
@@ -222,8 +226,11 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	// Handle file change for the icon
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.files) {
-			setNewIcon(event.target.files[0]);
+		if (event.target.files && event.target.files.length > 0) {
+			const selectedFile = event.target.files[0];
+			setNewIcon(selectedFile);
+		} else {
+			console.log('No file selected');
 		}
 	};
 
@@ -374,13 +381,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			))}
 
 			{isModalOpen && currentEditCategory && (
-				<CustomModal
-					isOpen={isModalOpen}
-					onRequestClose={() => {
-						setIsModalOpen(false);
-						setRelatedIds([]); // Reset relatedIds when modal is closed
-					}}
-					mt='10'>
+				<CustomModal isOpen={isModalOpen} onRequestClose={handleCloseModal} mt='10'>
 					<EditCategoryForm
 						categories={categories}
 						currentIcon={currentIcon}

@@ -70,6 +70,7 @@ const LocationList: React.FC<LocationListProps> = ({
 
 	// Function to handle opening the translation form modal
 	const handleOpenTranslationModal = (location: Country | City | CityPart) => {
+		setCurrentEditLocation(location); // Set the current location to edit
 		const locationTranslations = translations.filter(t => t.labelId === location.label.id);
 		setCurrentTranslations(locationTranslations);
 		setIsTranslationModalOpen(true);
@@ -82,14 +83,70 @@ const LocationList: React.FC<LocationListProps> = ({
 	};
 
 	// Function to handle the submission of updated translations
-	const handleSubmitTranslations = async (updatedTranslations: Translation[]) => {
+	const handleSubmitTranslations = async (
+		updatedTranslations: Translation[],
+		newIcon: File | null,
+		currentIconId: number | null, // This will contain the existing iconId if no new icon is uploaded
+		locationId: number,
+		type: string
+	) => {
 		try {
-			await axios.put('/api/translation/locations', { translations: updatedTranslations });
+			// Step 1: Start with the existing icon ID or null if none
+			let iconId = currentIconId;
+
+			// Step 2: If a new icon is uploaded, upload it and get its ID
+			if (newIcon) {
+				const formData = new FormData();
+				formData.append('icon', newIcon); // Add the new icon to FormData
+				formData.append('directory', 'locations'); // Define the directory for storing the icon
+
+				// Step 3: Post the new icon to the API and retrieve its ID
+				const { data: iconData } = await axios.post('/api/icons', formData, {
+					headers: { 'Content-Type': 'multipart/form-data' },
+				});
+
+				// Update the iconId with the newly uploaded icon's ID
+				iconId = iconData?.iconId;
+			}
+
+			// Step 4: Update the translations first, since this is handled by a separate API
+			await axios.put('/api/translation/locations', {
+				translations: updatedTranslations,
+			});
+
+			// Step 5: Update the location with the new/existing icon ID
+			if (iconId) {
+				await axios.put(`/api/locations/${locationId}?type=${type}`, {
+					iconId, // Send the iconId (new or existing) to the location update API
+				});
+			}
+			// Step 6: Close the modal and refresh the locations to reflect the updates
 			setIsTranslationModalOpen(false);
 			await refetchLocations();
 		} catch (error) {
-			console.error('Failed to update translations', error);
+			// Handle any errors that occur during the process
+			console.error('Failed to update translations and icon', error);
 		}
+	};
+
+	const handleDeleteLocation = async (id: number, type: string) => {
+		const confirmed = window.confirm('Da li ste sigurni da želite da obrišete ovu lokaciju?');
+		if (!confirmed) return;
+
+		try {
+			await axios.delete(`/api/locations/${id}?type=${type}`);
+			await refetchLocations(); // Osvježavanje podataka nakon brisanja
+		} catch (error) {
+			console.error('Greška prilikom brisanja lokacije:', error);
+		}
+	};
+
+	const handleCloseModal = () => {
+		setIsTranslationModalOpen(false);
+		setCurrentIcon({ iconId: null, iconUrl: null });
+		setNewIcon(null);
+		setCurrentEditLocation(null);
+		setCurrentTranslations([]);
 	};
 
 	const topLevelLocations = useMemo(() => {
@@ -207,7 +264,7 @@ const LocationList: React.FC<LocationListProps> = ({
 		if (icon) {
 			setCurrentIcon({
 				iconId: icon.id,
-				iconUrl: icon.url, // or `icon.iconUrl` depending on your icon structure
+				iconUrl: icon.url,
 			});
 		} else {
 			setCurrentIcon({
@@ -234,7 +291,7 @@ const LocationList: React.FC<LocationListProps> = ({
 					key={location.id}
 					location={location}
 					languageId={languageId}
-					handleDelete={onDeleteLocation}
+					handleDelete={handleDeleteLocation}
 					setCurrentEditLocation={setCurrentEditLocation}
 					setParentId={() => {}}
 					toggleLocation={toggleLocation}
@@ -247,19 +304,20 @@ const LocationList: React.FC<LocationListProps> = ({
 
 			{/* Translation Modal */}
 			{isTranslationModalOpen && (
-				<CustomModal
-					isOpen={isTranslationModalOpen}
-					onRequestClose={() => setIsTranslationModalOpen(false)}>
+				<CustomModal isOpen={isTranslationModalOpen} onRequestClose={handleCloseModal}>
 					<EditLocationForm
 						currentTranslations={currentTranslations}
 						languages={languages}
 						handleSubmit={handleSubmitTranslations}
-						currentIcon={currentIcon?.iconUrl || null} // Pass the current icon URL
-						newIcon={newIcon} // Pass the selected new icon file
-						setNewIcon={setNewIcon} // Function to set newIcon state
-						availableIcons={icons} // Pass the list of available icons
-						setCurrentIcon={handleSetCurrentIcon} // Function to select an existing icon
-						setIsIconPickerOpen={setIsIconPickerOpen} // Function to open the icon picker
+						currentIcon={currentIcon?.iconUrl || null}
+						currentIconId={currentIcon?.iconId || null} // Pass the currentIconId
+						newIcon={newIcon}
+						setNewIcon={setNewIcon}
+						availableIcons={icons}
+						setCurrentIcon={handleSetCurrentIcon}
+						setIsIconPickerOpen={setIsIconPickerOpen}
+						locationId={currentEditLocation?.id || null}
+						type={currentEditLocation?.type || ''}
 					/>
 				</CustomModal>
 			)}

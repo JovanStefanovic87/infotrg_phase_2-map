@@ -12,6 +12,7 @@ import {
 	Language,
 	TranslationUpdate,
 } from '../../../utils/helpers/types';
+import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
 
 interface Props {
 	currentIcon: {
@@ -68,12 +69,18 @@ const EditCategoryForm: React.FC<Props> = ({
 				) : (
 					<p className='text-gray-500 mb-4'>No icon selected</p>
 				)}
+				{newIcon && (
+					<div className='mt-4'>
+						<p>New Icon:</p>
+						<img
+							src={URL.createObjectURL(newIcon)}
+							alt='New Icon Preview'
+							className='w-16 h-16 object-cover'
+						/>
+					</div>
+				)}
 				<div className='flex w-full justify-between space-x-4'>
-					<ImageUploadButton
-						id='iconUpload'
-						label='Nova ikonica (PNG)'
-						onChange={handleFileChange}
-					/>
+					<UploadNewIconOnEditButton onChange={handleFileChange} />
 					<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Izbor ikonice' />
 				</div>
 			</div>

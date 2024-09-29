@@ -26,6 +26,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [parentId, setParentId] = useState<number | null>(null); // Changed from parentIds (single parent for locations)
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
+	const [postalCode, setPostalCode] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [locations, setLocations] = useState<Location[]>([]); // Now handling locations
@@ -239,8 +240,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			// Conditionally assign either parentId (country) or cityId based on type
 			if (type === 'cityPart' && cityId) {
 				locationData.cityId = cityId; // Send cityId for cityPart
+				locationData.postCode = postalCode;
 			} else if (type === 'city' && parentId) {
 				locationData.countryId = parentId; // Send parentId (as countryId) for city
+				locationData.postCode = postalCode; // Add postalCode for city
 			}
 
 			// Submit the new location
@@ -279,38 +282,41 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	};
 
+	console.log('locations:', locations);
+
 	const handleSubmitEdit = async (updatedLocation: any) => {
 		try {
-			let iconId = updatedLocation.iconId; // Keep the current iconId
+			let iconId = updatedLocation.iconId; // Zadrži trenutni iconId
 
-			// If a new icon is selected, handle the file upload
+			// Provera da li je nova ikona odabrana
 			if (newIcon) {
+				console.log('Slanje nove ikone:', newIcon);
 				const formData = new FormData();
 				formData.append('icon', newIcon);
+				formData.append('directory', 'locations'); // Proveri da li je ovo tačan direktorijum za upload
 				const { data: iconData } = await axios.post('/api/icons', formData, {
 					headers: { 'Content-Type': 'multipart/form-data' },
 				});
-				iconId = iconData.id; // Update iconId with the new one
-			} else if (currentIcon) {
-				// Use the selected existing icon
-				iconId = currentIcon.iconId;
+				iconId = iconData.id; // Ažuriranje iconId sa novom ikonom
 			}
 
-			const translations = updatedLocation.translations.map((translation: Translation) => ({
-				translationId: translation.id,
-				languageId: translation.languageId,
-				translation: translation.translation,
-				labelId: updatedLocation.label.id,
-			}));
-
-			// Update the location with the new iconId (if changed) and translations
-			await axios.put(`/api/locations/${updatedLocation.id}`, {
-				iconId, // Send updated iconId
-				translations,
-				// other updated location data
+			// Slanje zahteva za ažuriranje lokacije
+			const response = await axios.put(`/api/locations/${updatedLocation.id}`, {
+				iconId, // Ažurirani iconId
+				translations: updatedLocation.translations.map((translation: Translation) => ({
+					translationId: translation.id,
+					languageId: translation.languageId,
+					translation: translation.translation,
+					labelId: updatedLocation.label.id,
+				})),
 			});
 
-			setSuccessMessage('Location successfully updated.');
+			if (response.status === 200) {
+				setSuccessMessage('Location successfully updated.');
+			} else {
+				console.error('Error updating location:', response);
+			}
+
 			await refetchData();
 		} catch (err) {
 			console.error('Error updating location:', err);
@@ -334,7 +340,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setError('');
 	};
 
-	const handleEditLocation = useCallback(
+	/* const handleEditLocation = useCallback(
 		async (
 			id: number,
 			data: {
@@ -383,7 +389,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			}
 		},
 		[currentIcon, refetchData]
-	);
+	); */
 
 	return (
 		<PageContainer>
@@ -412,6 +418,8 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setIconId={setIconId}
 				isIconPickerOpen={isIconPickerOpen}
 				setIsIconPickerOpen={setIsIconPickerOpen}
+				postalCode={postalCode}
+				setPostalCode={setPostalCode}
 			/>
 			<div className='mt-8'>
 				<LocationList

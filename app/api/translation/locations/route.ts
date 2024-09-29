@@ -7,7 +7,6 @@ export async function PUT(request: Request) {
 	try {
 		const data = await request.json();
 		const translations = data.translations;
-		console.log('Received translations:', translations); // Debugging to check the incoming value
 
 		// Process each translation update or creation
 		for (const translation of translations) {

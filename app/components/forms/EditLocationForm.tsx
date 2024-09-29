@@ -2,17 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { Language, Translation, Icon } from '@/utils/helpers/types';
 import InputDefault from '../input/InputDefault';
 import SubmitButton from '../buttons/SubmitButton';
+import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
+import Image from 'next/image';
+import ChooseImageButton from '../buttons/ChooseImageButton';
 
 interface Props {
 	currentTranslations: Translation[];
 	languages: Language[];
-	handleSubmit: (updatedTranslations: Translation[]) => void;
-	currentIcon: string | null; // URL of the current icon
-	newIcon: File | null; // Newly selected icon
+	handleSubmit: (
+		updatedTranslations: Translation[],
+		newIcon: File | null,
+		currentIconId: number | null,
+		locationId: number,
+		type: string,
+		postalCode?: string // Make postalCode optional for locations other than cities
+	) => void;
+	currentIcon: string | null;
+	currentIconId: number | null;
+	newIcon: File | null;
 	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
-	availableIcons: Icon[]; // List of available icons
-	setCurrentIcon: (icon: Icon | null) => void; // Correct type for selecting an existing icon
+	availableIcons: Icon[];
+	setCurrentIcon: (icon: Icon | null) => void;
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	locationId: number | null;
+	type: string;
+	postalCode?: string; // Add postalCode
+	setPostalCode?: React.Dispatch<React.SetStateAction<string>>; // Add setPostalCode
 }
 
 const EditLocationForm: React.FC<Props> = ({
@@ -25,11 +40,16 @@ const EditLocationForm: React.FC<Props> = ({
 	availableIcons,
 	setCurrentIcon,
 	setIsIconPickerOpen,
+	locationId,
+	type,
+	currentIconId,
+	postalCode, // Postal code
+	setPostalCode, // Function to update postal code
 }) => {
 	const [updatedTranslations, setUpdatedTranslations] = useState<Translation[]>([]);
-	const [showIconPicker, setShowIconPicker] = useState<boolean>(false); // State to control visibility of icon picker
 
 	// Initialize translations for all languages (including existing translations or empty fields)
+	console.log(postalCode);
 	useEffect(() => {
 		const translationsWithLanguages = languages.map(language => {
 			const existingTranslation = currentTranslations.find(
@@ -59,17 +79,25 @@ const EditLocationForm: React.FC<Props> = ({
 		);
 	};
 
-	// Handle icon file selection
+	// Handle icon file selection (new upload)
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files.length > 0) {
-			setNewIcon(event.target.files[0]);
+			setNewIcon(event.target.files[0]); // Set new icon
+			setCurrentIcon(null); // Clear the existing icon when a new icon is selected
 		}
 	};
 
 	// Handle form submission
 	const onSubmit = (event: React.FormEvent) => {
 		event.preventDefault();
-		handleSubmit(updatedTranslations);
+
+		// Validate locationId
+		if (!locationId || locationId === 0) {
+			console.error('Invalid locationId:', locationId);
+			return;
+		}
+
+		handleSubmit(updatedTranslations, newIcon, currentIconId, locationId, type, postalCode);
 	};
 
 	return (
@@ -83,64 +111,44 @@ const EditLocationForm: React.FC<Props> = ({
 					</div>
 				)}
 
-				{/* File input for selecting a new icon */}
-				<input
-					type='file'
-					accept='image/*'
-					onChange={handleFileChange}
-					className='border p-2 w-full'
-				/>
+				<UploadNewIconOnEditButton onChange={handleFileChange} />
+				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Izbor ikonice' />
 
 				{newIcon && (
 					<div className='mt-4'>
 						<p>New Icon:</p>
-						<img
+						<Image
 							src={URL.createObjectURL(newIcon)}
 							alt='New Icon Preview'
 							className='w-16 h-16 object-cover'
+							width={16}
+							height={16}
 						/>
 					</div>
 				)}
 			</div>
 
-			{/* Button to show available icons */}
-			<div className='mb-6'>
-				<button
-					type='button'
-					onClick={() => setIsIconPickerOpen(true)}
-					className='bg-gray-300 p-2 rounded-md'>
-					{showIconPicker ? 'Hide Available Icons' : 'Choose from Existing Icons'}
-				</button>
-			</div>
-
-			{/* Conditionally render the available icons based on state */}
-			{showIconPicker && (
-				<div className='mb-6'>
-					<label className='block mb-1 font-medium text-gray-700'>Available Icons</label>
-					<div className='flex flex-wrap gap-2'>
-						{availableIcons.map(icon => (
-							<button
-								key={icon.id}
-								type='button'
-								onClick={() => setCurrentIcon(icon)}
-								className='border p-2'>
-								<img src={icon.url} alt='Available Icon' className='w-16 h-16 object-cover' />
-							</button>
-						))}
-					</div>
+			{/* Postal Code Section (conditionally displayed for city type) */}
+			{type === 'city' && (
+				<div className='mb-4'>
+					<label className='block mb-1 font-medium text-gray-700'>Postal Code</label>
+					<input
+						type='text'
+						value={postalCode || ''}
+						onChange={e => setPostalCode?.(e.target.value)} // Update postal code
+						className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+					/>
 				</div>
 			)}
 
 			{/* Translations Section */}
-			{languages.map((language, i) => {
+			{languages.map(language => {
 				const existingTranslation = updatedTranslations.find(t => t.languageId === language.id);
 				return (
 					<div key={language.id} className='mb-4'>
 						<label className='block mb-1 font-medium text-gray-700'>{language.name}</label>
 						<InputDefault
-							placeholder={
-								existingTranslation?.translation || `No translation available for ${language.name}`
-							}
+							placeholder={`Translation for ${language.name}`}
 							value={existingTranslation?.translation || ''}
 							onChange={e => handleTranslationChange(language.id, e.target.value)}
 							className='text-black'

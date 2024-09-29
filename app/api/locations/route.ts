@@ -1,5 +1,5 @@
 // app\api\locations\route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import moment from 'moment-timezone';
 
@@ -14,11 +14,13 @@ interface Label {
 
 interface Part {
 	label: Label;
+	postCode?: string;
 }
 
 interface City {
 	label: Label;
 	parts: Part[];
+	postCode?: string;
 }
 
 interface Country {
@@ -31,14 +33,14 @@ type Location = Country | City | Part;
 // POST: Create a new location
 export async function POST(req: Request) {
 	try {
-		const { countryId, cityId, labelId, type, iconId } = await req.json();
-		console.log('Received parentId:', countryId); // Debugging to check the incoming value
-		console.log('Received cityId:', cityId); // Debugging to check the incoming value
+		const { countryId, cityId, labelId, type, iconId, postCode } = await req.json();
 
 		// Validation
 		if (!labelId) {
 			return NextResponse.json({ error: 'Label ID is missing' }, { status: 400 });
 		}
+
+		console.log('postCode:', postCode);
 
 		let locationData;
 
@@ -53,7 +55,7 @@ export async function POST(req: Request) {
 			});
 		}
 
-		// Handle the creation of a city (requires parentId to be countryId)
+		// Handle the creation of a city (requires countryId)
 		else if (type === 'city') {
 			if (!countryId) {
 				return NextResponse.json(
@@ -68,14 +70,15 @@ export async function POST(req: Request) {
 			locationData = await prisma.city.create({
 				data: {
 					labelId,
-					countryId: countryId, // Use countryId as countryId
+					countryId, // Use countryId for the city
+					postCode, // Add postal code for city creation
 					iconId,
 					createdAt: new Date(),
 				},
 			});
 		}
 
-		// Handle the creation of a city part (requires cityId to be cityId)
+		// Handle the creation of a city part (requires cityId)
 		else if (type === 'cityPart') {
 			if (!cityId) {
 				return NextResponse.json(
@@ -90,7 +93,7 @@ export async function POST(req: Request) {
 			locationData = await prisma.cityPart.create({
 				data: {
 					labelId,
-					cityId: cityId, // Use cityId as cityId
+					cityId, // Use cityId for the city part
 					iconId,
 					createdAt: new Date(),
 				},
@@ -110,47 +113,46 @@ export async function POST(req: Request) {
 // GET: Retrieve all locations (countries, cities, or city parts) with their translations
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
-	const prefix = searchParams.get('prefix'); // Prefiks za filtriranje
-	const languageId = searchParams.get('languageId') ? Number(searchParams.get('languageId')) : null; // Dinamički prosleđeni jezik
-
-	console.log('Prefix received:', prefix); // Loguje primljen prefiks
-	console.log('Language ID received:', languageId); // Loguje primljen jezik
+	const prefix = searchParams.get('prefix');
+	const languageId = searchParams.get('languageId') ? Number(searchParams.get('languageId')) : null;
 
 	try {
 		let locations: any[] = [];
 
-		// Prvo, pronalazimo sve države
+		// Fetch all countries
 		locations = await prisma.country.findMany({
 			where: {
 				label: {
 					name: {
-						startsWith: prefix ? `${prefix}` : '', // Prefiks je ključan ovde
+						startsWith: prefix ? `${prefix}` : '',
 					},
 				},
 			},
 			include: {
 				label: {
 					include: {
-						translations: true, // Vraća sve prevode, bez obzira na `languageId`
+						translations: true,
 					},
 				},
-				icon: true, // Fetch the icon for the location
+				icon: true,
 				cities: {
 					include: {
 						label: {
 							include: {
-								translations: true, // Vraća sve prevode za gradove
+								translations: true,
 							},
 						},
-						icon: true, // Fetch the icon for the city
+						// No need for postCode: true here, postCode will be fetched automatically
+						icon: true,
 						parts: {
 							include: {
 								label: {
 									include: {
-										translations: true, // Vraća sve prevode za delove grada
+										translations: true,
 									},
 								},
-								icon: true, // Fetch the icon for the city part
+								// No need for postCode: true here, postCode will be fetched automatically
+								icon: true,
 							},
 						},
 					},
@@ -158,54 +160,22 @@ export async function GET(req: Request) {
 			},
 		});
 
-		// Formatiramo lokacije, uklanjamo prefiks i postavljamo prevode
-		locations = locations.map((location: Location) => {
-			// Provera da li je `location` country sa `cities`
-			if ('cities' in location) {
-				return {
-					...location,
-					label: {
-						...location.label,
-						// Koristi prevode za sve jezike, fallback na originalni naziv
-						name:
-							location.label.translations
-								.map((translation: Translation) => translation.translation)
-								.join(', ') || location.label.name,
-					},
-					cities: location.cities.map((city: City) => ({
-						...city,
-						label: {
-							...city.label,
-							name:
-								city.label.translations
-									.map((translation: Translation) => translation.translation)
-									.join(', ') || city.label.name,
-						},
-						parts: city.parts.map((part: Part) => ({
-							...part,
-							label: {
-								...part.label,
-								name:
-									part.label.translations
-										.map((translation: Translation) => translation.translation)
-										.join(', ') || part.label.name,
-							},
-						})),
-					})),
-				};
-			}
-
-			// Ako `location` nema `cities`, vraćamo samo lokaciju
-			return {
+		// Add 'type' to each location
+		locations = locations.map((location: any) => {
+			const countryWithCities = {
 				...location,
-				label: {
-					...location.label,
-					name:
-						location.label.translations
-							.map((translation: Translation) => translation.translation)
-							.join(', ') || location.label.name,
-				},
+				type: 'country',
+				cities: location.cities.map((city: any) => ({
+					...city,
+					type: 'city',
+					parts: city.parts.map((part: any) => ({
+						...part,
+						type: 'cityPart',
+					})),
+				})),
 			};
+
+			return countryWithCities;
 		});
 
 		return NextResponse.json(locations);
