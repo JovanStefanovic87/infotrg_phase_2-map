@@ -47,34 +47,33 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 	try {
 		const data = await req.json();
-		const { iconId } = data; // We are concerned with updating the iconId here
+		const { iconId, postCode } = data;
 
-		if (!iconId) {
-			return Response.json({ error: 'Missing iconId' }, { status: 400 });
-		}
+		console.log('Received postCode:', postCode);
 
 		let updatedLocation;
 
-		// Update based on location type (country, city, cityPart)
 		if (type === 'country') {
 			updatedLocation = await prisma.country.update({
 				where: { id: Number(id) },
 				data: {
-					icon: { connect: { id: iconId } }, // Ensure the icon connection is always updated
+					iconId: iconId,
 				},
 			});
 		} else if (type === 'city') {
 			updatedLocation = await prisma.city.update({
 				where: { id: Number(id) },
 				data: {
-					icon: { connect: { id: iconId } }, // Ensure the icon connection is always updated
+					iconId: iconId,
+					postCode: postCode || undefined, // Add postCode only if provided
 				},
 			});
 		} else if (type === 'cityPart') {
 			updatedLocation = await prisma.cityPart.update({
 				where: { id: Number(id) },
 				data: {
-					icon: { connect: { id: iconId } }, // Ensure the icon connection is always updated
+					iconId: iconId,
+					postCode: postCode || undefined, // Add postCode only if provided
 				},
 			});
 		} else {

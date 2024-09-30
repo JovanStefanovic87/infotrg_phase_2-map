@@ -23,10 +23,10 @@ interface Props {
 }
 
 const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
-	const [parentId, setParentId] = useState<number | null>(null); // Changed from parentIds (single parent for locations)
+	const [parentId, setParentId] = useState<number | null>(null);
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
-	const [postalCode, setPostalCode] = useState<string>('');
+	const [postCode, setPostCode] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [locations, setLocations] = useState<Location[]>([]); // Now handling locations
@@ -38,7 +38,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [countries, setCountries] = useState<Country[]>([]);
 	const [cities, setCities] = useState<City[]>([]);
 	const [cityId, setCityId] = useState<number | null>(null);
-	const [iconId, setIconId] = useState<number | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -240,10 +239,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			// Conditionally assign either parentId (country) or cityId based on type
 			if (type === 'cityPart' && cityId) {
 				locationData.cityId = cityId; // Send cityId for cityPart
-				locationData.postCode = postalCode;
+				locationData.postCode = postCode; // Include postCode for cityPart
 			} else if (type === 'city' && parentId) {
 				locationData.countryId = parentId; // Send parentId (as countryId) for city
-				locationData.postCode = postalCode; // Add postalCode for city
+				locationData.postCode = postCode; // Include postCode for city
 			}
 
 			// Submit the new location
@@ -282,48 +281,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	};
 
-	console.log('locations:', locations);
-
-	const handleSubmitEdit = async (updatedLocation: any) => {
-		try {
-			let iconId = updatedLocation.iconId; // Zadrži trenutni iconId
-
-			// Provera da li je nova ikona odabrana
-			if (newIcon) {
-				console.log('Slanje nove ikone:', newIcon);
-				const formData = new FormData();
-				formData.append('icon', newIcon);
-				formData.append('directory', 'locations'); // Proveri da li je ovo tačan direktorijum za upload
-				const { data: iconData } = await axios.post('/api/icons', formData, {
-					headers: { 'Content-Type': 'multipart/form-data' },
-				});
-				iconId = iconData.id; // Ažuriranje iconId sa novom ikonom
-			}
-
-			// Slanje zahteva za ažuriranje lokacije
-			const response = await axios.put(`/api/locations/${updatedLocation.id}`, {
-				iconId, // Ažurirani iconId
-				translations: updatedLocation.translations.map((translation: Translation) => ({
-					translationId: translation.id,
-					languageId: translation.languageId,
-					translation: translation.translation,
-					labelId: updatedLocation.label.id,
-				})),
-			});
-
-			if (response.status === 200) {
-				setSuccessMessage('Location successfully updated.');
-			} else {
-				console.error('Error updating location:', response);
-			}
-
-			await refetchData();
-		} catch (err) {
-			console.error('Error updating location:', err);
-			setError('Error updating location.');
-		}
-	};
-
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (event.target.files && event.target.files.length > 0) {
 			setNewIcon(event.target.files[0]);
@@ -340,57 +297,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setError('');
 	};
 
-	/* const handleEditLocation = useCallback(
-		async (
-			id: number,
-			data: {
-				translations: { translationId: number | null; languageId: number; translation: string }[];
-				icon?: File | null;
-				parentId: number | null;
-			}
-		) => {
-			const { translations, icon: newIcon, parentId } = data;
-
-			try {
-				let iconId: number | null = currentIcon.iconId;
-
-				if (newIcon) {
-					const formData = new FormData();
-					formData.append('icon', newIcon);
-					formData.append('directory', 'locations');
-					const { data } = await axios.post('/api/icons', formData, {
-						headers: { 'Content-Type': 'multipart/form-data' },
-					});
-					iconId = data.iconId;
-				}
-
-				const translationsArray = translations.map(translation => ({
-					translationId: translation.translationId,
-					languageId: translation.languageId,
-					translation: translation.translation ?? '',
-				}));
-
-				await axios.put(`/api/locations/${id}`, {
-					iconId,
-					parentId, // Now handling single parent location
-					translations: translationsArray,
-					labelId: id,
-					name,
-				});
-
-				setSuccessMessage('Location updated successfully.');
-				await refetchData();
-			} catch (err) {
-				console.error('Failed to update location', err);
-				setError(
-					`Update Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
-				);
-				setSuccessMessage(null);
-			}
-		},
-		[currentIcon, refetchData]
-	); */
-
 	return (
 		<PageContainer>
 			<H1 title={title} />
@@ -399,7 +305,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			<NewLocationForm
 				onSubmit={handleSubmit}
-				languageId={languageId}
 				name={name}
 				setName={setName}
 				parentId={parentId}
@@ -408,18 +313,12 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setType={setType}
 				countries={countries}
 				cities={cities}
-				setCities={setCities}
 				cityId={cityId}
 				setCityId={setCityId}
-				icons={icons}
-				icon={icon}
 				setIcon={setIcon}
-				iconId={iconId}
-				setIconId={setIconId}
-				isIconPickerOpen={isIconPickerOpen}
 				setIsIconPickerOpen={setIsIconPickerOpen}
-				postalCode={postalCode}
-				setPostalCode={setPostalCode}
+				postCode={postCode}
+				setPostCode={setPostCode}
 			/>
 			<div className='mt-8'>
 				<LocationList
@@ -447,17 +346,18 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setFilteredLocations={setFilteredLocations}
 					initialExpandedLocations={initialExpandedLocations}
 					setInitialExpandedLocations={setInitialExpandedLocations}
-					handleSubmitEdit={handleSubmitEdit}
 					newIcon={newIcon}
 					setNewIcon={setNewIcon}
 					setIsIconPickerOpen={setIsIconPickerOpen}
+					postCode={postCode}
+					setPostCode={setPostCode}
 				/>
 			</div>
 			<ImagePickerForm
 				icons={icons}
-				isOpen={isIconPickerOpen} // Controls modal visibility
-				onSelect={setCurrentIcon} // Set the selected icon
-				onClose={() => setIsIconPickerOpen(false)} // Close the modal
+				isOpen={isIconPickerOpen}
+				onSelect={setCurrentIcon}
+				onClose={() => setIsIconPickerOpen(false)}
 			/>
 		</PageContainer>
 	);

@@ -47,6 +47,8 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		[expandedLocations]
 	);
 
+	console.log('location', location);
+
 	const getLocationName = (location: Country | City | CityPart): string => {
 		// Ensure translations exist and are an array
 		const translations = Array.isArray(location.label.translations)

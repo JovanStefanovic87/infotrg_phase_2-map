@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Language, Translation, Icon } from '@/utils/helpers/types';
+import { Language, Translation, Icon, Country, City, CityPart } from '@/utils/helpers/types';
 import InputDefault from '../input/InputDefault';
 import SubmitButton from '../buttons/SubmitButton';
 import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
@@ -15,19 +15,19 @@ interface Props {
 		currentIconId: number | null,
 		locationId: number,
 		type: string,
-		postalCode?: string // Make postalCode optional for locations other than cities
+		postCode?: string
 	) => void;
 	currentIcon: string | null;
 	currentIconId: number | null;
 	newIcon: File | null;
 	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
-	availableIcons: Icon[];
 	setCurrentIcon: (icon: Icon | null) => void;
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	locationId: number | null;
 	type: string;
-	postalCode?: string; // Add postalCode
-	setPostalCode?: React.Dispatch<React.SetStateAction<string>>; // Add setPostalCode
+	postCode?: string; // Add postCode
+	setPostCode?: React.Dispatch<React.SetStateAction<string>>;
+	currentLocation: Country | City | CityPart | null;
 }
 
 const EditLocationForm: React.FC<Props> = ({
@@ -37,19 +37,20 @@ const EditLocationForm: React.FC<Props> = ({
 	currentIcon,
 	newIcon,
 	setNewIcon,
-	availableIcons,
 	setCurrentIcon,
 	setIsIconPickerOpen,
 	locationId,
 	type,
 	currentIconId,
-	postalCode, // Postal code
-	setPostalCode, // Function to update postal code
+	postCode,
+	setPostCode,
+	currentLocation,
 }) => {
 	const [updatedTranslations, setUpdatedTranslations] = useState<Translation[]>([]);
+	console.log('currentIcon', currentIcon);
+	console.log('currentIconId', currentIconId);
 
 	// Initialize translations for all languages (including existing translations or empty fields)
-	console.log(postalCode);
 	useEffect(() => {
 		const translationsWithLanguages = languages.map(language => {
 			const existingTranslation = currentTranslations.find(
@@ -71,6 +72,14 @@ const EditLocationForm: React.FC<Props> = ({
 
 		setUpdatedTranslations(translationsWithLanguages);
 	}, [currentTranslations, languages]);
+
+	useEffect(() => {
+		if (currentLocation && (type === 'city' || type === 'cityPart')) {
+			if ('postCode' in currentLocation) {
+				setPostCode?.(currentLocation.postCode || '');
+			}
+		}
+	}, [currentLocation, type]);
 
 	// Handle translation change
 	const handleTranslationChange = (languageId: number, translation: string) => {
@@ -97,7 +106,7 @@ const EditLocationForm: React.FC<Props> = ({
 			return;
 		}
 
-		handleSubmit(updatedTranslations, newIcon, currentIconId, locationId, type, postalCode);
+		handleSubmit(updatedTranslations, newIcon, currentIconId, locationId, type, postCode);
 	};
 
 	return (
@@ -128,14 +137,14 @@ const EditLocationForm: React.FC<Props> = ({
 				)}
 			</div>
 
-			{/* Postal Code Section (conditionally displayed for city type) */}
-			{type === 'city' && (
+			{/* Post Code Section (conditionally displayed for city type) */}
+			{(type === 'city' || type === 'cityPart') && (
 				<div className='mb-4'>
-					<label className='block mb-1 font-medium text-gray-700'>Postal Code</label>
+					<label className='block mb-1 font-medium text-gray-700'>Post Code</label>
 					<input
 						type='text'
-						value={postalCode || ''}
-						onChange={e => setPostalCode?.(e.target.value)} // Update postal code
+						value={postCode || ''} // Ensure it's not undefined
+						onChange={e => setPostCode?.(e.target.value)}
 						className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
 					/>
 				</div>

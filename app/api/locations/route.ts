@@ -40,8 +40,6 @@ export async function POST(req: Request) {
 			return NextResponse.json({ error: 'Label ID is missing' }, { status: 400 });
 		}
 
-		console.log('postCode:', postCode);
-
 		let locationData;
 
 		// Handle the creation of a country
@@ -94,6 +92,7 @@ export async function POST(req: Request) {
 				data: {
 					labelId,
 					cityId, // Use cityId for the city part
+					postCode, // Add postal code for city part creation
 					iconId,
 					createdAt: new Date(),
 				},
