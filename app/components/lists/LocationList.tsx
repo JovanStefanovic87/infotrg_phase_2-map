@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo, use } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
 	Location,
 	City,
 	CityPart,
 	Language,
-	Translation,
 	Icon,
 	CurrentIcon,
+	Translation,
 } from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
 import LocationItem from './LocationItem';
@@ -15,7 +15,6 @@ import axios from 'axios';
 
 interface LocationListProps {
 	locations: Location[];
-	translations: Translation[];
 	icons: Icon[];
 	currentIcon: CurrentIcon;
 	setCurrentIcon: React.Dispatch<React.SetStateAction<CurrentIcon>>;
@@ -42,7 +41,6 @@ interface LocationListProps {
 
 const LocationList: React.FC<LocationListProps> = ({
 	locations,
-	translations,
 	icons,
 	currentIcon,
 	setCurrentIcon,
@@ -70,14 +68,10 @@ const LocationList: React.FC<LocationListProps> = ({
 	const [currentEditLocation, setCurrentEditLocation] = useState<Location | null>(null);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const [isTranslationModalOpen, setIsTranslationModalOpen] = useState<boolean>(false);
-	const [currentTranslations, setCurrentTranslations] = useState<Translation[]>([]);
 
-	console.log('address:', address);
-
+	// Otvaranje modala za prevode, prevodi su već deo lokacije
 	const handleOpenTranslationModal = (location: Location) => {
 		setCurrentEditLocation(location);
-		const locationTranslations = translations.filter(t => t.labelId === location.label.id);
-		setCurrentTranslations(locationTranslations);
 		setIsTranslationModalOpen(true);
 		setCurrentIcon({
 			iconId: location.icon?.id || null,
@@ -157,19 +151,15 @@ const LocationList: React.FC<LocationListProps> = ({
 		setCurrentIcon({ iconId: null, iconUrl: null });
 		setNewIcon(null);
 		setCurrentEditLocation(null);
-		setCurrentTranslations([]);
 	};
 
-	const topLevelLocations = useMemo(() => {
-		return locations.filter(location => 'cities' in location || 'parts' in location);
-	}, [locations]);
-
-	const sortLocationsAlphabetically = (locations: Location[]) => {
+	// Logika za sortiranje po abecedi
+	const sortedLocations = useMemo(() => {
 		const getTranslation = (location: Location): string => {
-			const translationForLang1 = (location.label.translations as unknown as Translation[]).find(
-				(translation: Translation) => translation.languageId === 1
+			const translationForLang = location.label.translations.find(
+				translation => translation.languageId === languageId
 			);
-			return translationForLang1?.translation?.toLowerCase() || '';
+			return translationForLang?.translation?.toLowerCase() || location.label.name.toLowerCase();
 		};
 
 		const recursiveSort = (locations: Location[]): Location[] => {
@@ -180,39 +170,31 @@ const LocationList: React.FC<LocationListProps> = ({
 			});
 
 			return sortedLocations.map(location => {
+				// Sort cities
 				if ('cities' in location && Array.isArray(location.cities)) {
-					location.cities = recursiveSort(
-						location.cities.filter((loc): loc is City => 'postCode' in loc && 'countryId' in loc)
-					) as City[];
+					location.cities = recursiveSort(location.cities as City[]) as City[];
 				}
-				if ('parts' in location && Array.isArray(location.parts)) {
-					location.parts = recursiveSort(
-						location.parts.filter((loc): loc is CityPart => 'postCode' in loc && 'cityId' in loc)
-					) as CityPart[];
+
+				// Sort cityParts
+				if ('cityParts' in location && Array.isArray(location.cityParts)) {
+					location.cityParts = recursiveSort(location.cityParts as CityPart[]) as CityPart[];
 				}
+
 				return location;
 			});
 		};
 
 		return recursiveSort(locations);
-	};
+	}, [locations, languageId]);
 
-	const sortedLocations = sortLocationsAlphabetically(locations);
-
-	const searchLocations = (locations: Location[], query: string) => {
+	const searchLocations = useCallback((locations: Location[], query: string) => {
 		const lowercasedQuery = query.toLowerCase();
 		const expandedIds = new Set<number>();
 
 		const recursiveSearch = (locations: Location[]): Location[] => {
 			return locations
 				.map(location => {
-					const primaryTranslation = Array.isArray(location.label.translations)
-						? (location.label.translations as unknown as Translation[]).find(
-								(translation: Translation) => translation.languageId === 1
-						  )
-						: undefined;
-
-					const locationName = primaryTranslation?.translation.toLowerCase() || '';
+					const locationName = location.label.name.toLowerCase();
 
 					const matches = locationName.includes(lowercasedQuery);
 					let matchingCities: Location[] = [];
@@ -224,7 +206,7 @@ const LocationList: React.FC<LocationListProps> = ({
 					}
 
 					if ('cityParts' in location) {
-						matchingCityParts = recursiveSearch(location.cityParts as Location[]);
+						matchingCityParts = recursiveSearch(location.cityParts);
 					}
 
 					if ('marketplaces' in location) {
@@ -254,36 +236,36 @@ const LocationList: React.FC<LocationListProps> = ({
 
 		const filteredLocations = recursiveSearch(locations);
 		return { filteredLocations, expandedIds };
-	};
+	}, []);
 
 	useEffect(() => {
 		const expandedIds = new Set<number>();
-		topLevelLocations.forEach(location => {
+		locations.forEach(location => {
 			if ('cities' in location && Array.isArray(location.cities) && location.cities.length > 0) {
 				expandedIds.add(location.id);
 			} else if (
-				'parts' in location &&
-				Array.isArray(location.parts) &&
-				location.parts.length > 0
+				'cityParts' in location &&
+				Array.isArray(location.cityParts) &&
+				location.cityParts.length > 0
 			) {
 				expandedIds.add(location.id);
 			}
 		});
 
 		setExpandedLocations(expandedIds);
-		setFilteredLocations(topLevelLocations);
-	}, [topLevelLocations]);
+		setFilteredLocations(locations);
+	}, [locations, setExpandedLocations, setFilteredLocations]);
 
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			setFilteredLocations(topLevelLocations);
+			setFilteredLocations(locations);
 			setExpandedLocations(new Set(initialExpandedLocations));
 		} else {
 			const { filteredLocations: filtered, expandedIds } = searchLocations(locations, searchQuery);
 			setFilteredLocations(filtered);
 			setExpandedLocations(expandedIds);
 		}
-	}, [searchQuery, locations, topLevelLocations]);
+	}, [searchQuery, locations]);
 
 	const toggleLocation = (id: number) => {
 		setManuallyExpandedLocations(prev => {
@@ -359,11 +341,11 @@ const LocationList: React.FC<LocationListProps> = ({
 				/>
 			))}
 
-			{isTranslationModalOpen && (
+			{isTranslationModalOpen && currentEditLocation && (
 				<CustomModal isOpen={isTranslationModalOpen} onRequestClose={handleCloseModal}>
 					<EditLocationForm
-						currentTranslations={currentTranslations}
 						currentLocation={currentEditLocation}
+						currentTranslations={currentEditLocation.label.translations} // Pass the translations
 						languages={languages}
 						handleSubmitEdit={handleSubmitEdit}
 						currentIcon={currentIcon?.iconUrl || null}

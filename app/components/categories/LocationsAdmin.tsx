@@ -2,16 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
-import {
-	Location,
-	Language,
-	Translation,
-	Icon,
-	CurrentIcon,
-	City,
-	Country,
-	CityPart,
-} from '@/utils/helpers/types';
+import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
 import NewLocationForm from '../forms/NewLocationForm';
 import apiClient from '@/utils/helpers/apiClient';
@@ -26,13 +17,12 @@ interface Props {
 const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
-	const [address, setAddress] = useState<string>(''); // New state for marketplace address
+	const [address, setAddress] = useState<string>('');
 	const [postCode, setPostCode] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [locations, setLocations] = useState<Location[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
-	const [translations, setTranslations] = useState<Translation[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [type, setType] = useState<'country' | 'city' | 'cityPart' | 'marketplace'>('country');
@@ -40,7 +30,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [countryId, setCountryId] = useState<number | null>(null);
 	const [cities, setCities] = useState<City[]>([]);
 	const [cityId, setCityId] = useState<number | null>(null);
-	const [cityParts, setCityParts] = useState<CityPart[]>([]);
 	const [cityPartId, setCityPartId] = useState<number | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
@@ -58,12 +47,12 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		try {
 			const response = await apiClient<Location[]>({
 				method: 'GET',
-				url: `/api/locations?prefix=${prefix}`,
+				url: `/api/locations?prefix=${prefix}&languageId=${languageId}`,
 			});
 			return response;
 		} catch (error) {
-			console.error('Error fetching locations:', error); // Catch any errors
-			throw error; // Rethrow to handle later
+			console.error('Error fetching locations:', error);
+			throw error;
 		}
 	};
 
@@ -71,47 +60,18 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const fetchIcons = () =>
 		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=locations' });
 
-	const fetchTranslations = async (): Promise<Translation[]> => {
-		const labels = await apiClient<{ id: number }[]>({
-			method: 'GET',
-			url: `/api/labels?prefix=${prefix}&languageId=${languageId}`,
-		});
-
-		const languages = await apiClient<Language[]>({
-			method: 'GET',
-			url: '/api/languages',
-		});
-
-		const translationsPromises = labels.flatMap(({ id }) =>
-			languages.map(({ id: languageId }) =>
-				apiClient<Translation>({
-					method: 'GET',
-					url: `/api/translation?languageId=${languageId}&labelId=${id}`,
-				})
-			)
-		);
-
-		const translationsResults = await Promise.all(translationsPromises);
-		return translationsResults.map(res => res);
-	};
-
 	const refetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [locationsData, translationsData, iconsData] = await Promise.all([
-				fetchLocations(),
-				fetchTranslations(),
-				fetchIcons(),
-			]);
+			const [locationsData, iconsData] = await Promise.all([fetchLocations(), fetchIcons()]);
 			setLocations(locationsData);
-			setTranslations(translationsData);
 			setIcons(iconsData);
 		} catch (error) {
 			console.error('Failed to refetch data', error);
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [languageId, prefix]);
 
 	useEffect(() => {
 		refetchData();
@@ -131,96 +91,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		};
 		fetchLanguagesData();
 	}, []);
-
-	useEffect(() => {
-		if (languageId) {
-			const fetchTranslationsData = async () => {
-				setLoading(true);
-				try {
-					const data = await fetchTranslations();
-					setTranslations(data);
-				} catch (err) {
-					console.error('Failed to fetch translations', err);
-				} finally {
-					setLoading(false);
-				}
-			};
-			fetchTranslationsData();
-		}
-	}, [languageId]);
-
-	useEffect(() => {
-		const fetchLocationsAndIcons = async () => {
-			try {
-				const [fetchedCountries, fetchedIcons] = await Promise.all([
-					axios.get(`/api/countries?prefix=location_`),
-					axios.get('/api/icons?directory=locations'),
-				]);
-
-				setCountries(fetchedCountries.data);
-				setIcons(fetchedIcons.data);
-
-				const translatedCountriesData = await Promise.all(
-					fetchedCountries.data.map(async (country: Country) => {
-						const translationResponse = await axios.get(
-							`/api/translation?labelId=${country.label.id}&languageId=${languageId}`
-						);
-						const translation = translationResponse.data.translation || country.label.name;
-						return {
-							...country,
-							label: { ...country.label, name: translation },
-						};
-					})
-				);
-				setCountries(translatedCountriesData);
-			} catch (error) {
-				console.error('Failed to fetch data', error);
-			}
-		};
-
-		fetchLocationsAndIcons();
-	}, [type]);
-
-	useEffect(() => {
-		const fetchCities = async () => {
-			if (countryId) {
-				try {
-					const response = await axios.get(`/api/locations?countryId=${countryId}`);
-					setCities(response.data);
-
-					const translatedCitiesData = await Promise.all(
-						response.data.map(async (city: City) => {
-							const translationResponse = await axios.get(
-								`/api/translation?labelId=${city.label.id}&languageId=${languageId}`
-							);
-							const translation = translationResponse.data.translation || city.label.name;
-							return { ...city, label: { ...city.label, name: translation } };
-						})
-					);
-					setCities(translatedCitiesData);
-				} catch (error) {
-					console.error('Failed to fetch cities', error);
-				}
-			}
-		};
-
-		if (type === 'cityPart' || type === 'city' || type === 'marketplace') {
-			fetchCities();
-		}
-	}, [countryId, type]);
-
-	useEffect(() => {
-		if (cityId) {
-			const fetchCityParts = async () => {
-				const response = await fetch(`/api/locations?cityId=${cityId}`);
-				const data = await response.json();
-				setCityParts(data);
-			};
-			fetchCityParts();
-		} else {
-			setCityParts([]);
-		}
-	}, [cityId, setCityParts]);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -262,24 +132,13 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			const { data: newLocationData } = await axios.post('/api/locations', locationData);
 			if (!newLocationData) throw new Error('Failed to create location');
 
-			const translationsArray = [
-				{
-					labelId: newLabelId,
-					languageId,
-					translation: name,
-				},
-				...languages
-					.filter(lang => lang.id !== languageId)
-					.map(lang => ({
-						labelId: newLabelId,
-						languageId: lang.id,
-						translation: null,
-					})),
-			];
+			const translations = languages.map(language => ({
+				labelId: newLabelId,
+				languageId: language.id,
+				translation: name,
+			}));
 
-			if (translationsArray.length) {
-				await axios.post('/api/translation', { translations: translationsArray });
-			}
+			await axios.post('/api/translation', { translations });
 
 			resetForm();
 			setSuccessMessage('Location successfully saved.');
@@ -294,21 +153,19 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	};
 
-	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.files && event.target.files.length > 0) {
-			setNewIcon(event.target.files[0]);
-		}
-	};
-
-	const handleResetFileName = () =>
-		fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
 	const resetForm = () => {
 		setName('');
+		setAddress('');
+		setPostCode('');
 		setCountryId(null);
-		setLanguageId(1);
+		setCityId(null);
+		setCityPartId(null);
+		setType('country');
 		setIcon(null);
-		setAddress(''); // Reset address for marketplace
+		setCurrentIcon({ iconId: null, iconUrl: null });
 		setError('');
+		setNewIcon(null);
+		setIsIconPickerOpen(false);
 	};
 
 	return (
@@ -329,8 +186,8 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				countries={countries}
 				cityId={cityId}
 				setCityId={setCityId}
-				cityPartId={cityPartId} // Pass the cityPartId state to the form
-				setCityPartId={setCityPartId} // Pass the setter function to the form
+				cityPartId={cityPartId}
+				setCityPartId={setCityPartId}
 				setIcon={setIcon}
 				setIsIconPickerOpen={setIsIconPickerOpen}
 				postCode={postCode}
@@ -343,7 +200,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			<div className='mt-8'>
 				<LocationList
 					locations={locations}
-					translations={translations}
 					icons={icons}
 					currentIcon={currentIcon}
 					setCurrentIcon={setCurrentIcon}

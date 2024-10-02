@@ -26,7 +26,7 @@ interface Props {
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	locationId: number | null;
 	type: string;
-	postCode?: string; // Add postCode
+	postCode?: string;
 	setPostCode?: React.Dispatch<React.SetStateAction<string>>;
 	currentLocation: Location | null;
 	address?: string;
@@ -60,20 +60,21 @@ const EditLocationForm: React.FC<Props> = ({
 				t => t.languageId === language.id && t.labelId === currentTranslations[0]?.labelId
 			);
 
+			// Return either the existing translation or a new object that strictly matches the Translation type
 			return (
 				existingTranslation || {
 					languageId: language.id,
 					translation: '', // Empty for languages without translations
 					labelId: currentTranslations.length ? currentTranslations[0].labelId : 0,
-					translationId: Math.random(),
-					id: Math.random(),
+					translationId: 0, // Use a placeholder value, update this later if needed
+					id: 0, // Same here
 					createdAt: new Date(),
 					synonyms: [],
 				}
 			);
 		});
 
-		setUpdatedTranslations(translationsWithLanguages);
+		setUpdatedTranslations(translationsWithLanguages as Translation[]);
 	}, [currentTranslations, languages]);
 
 	useEffect(() => {

@@ -72,8 +72,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 
 	const handleIconChange = (file: File | null) => setIcon(file);
 
-	console.log('locations', locations);
-
 	const filteredCities = countryId
 		? (locations.find(location => location.id === countryId) as Country)?.cities || []
 		: [];
@@ -114,6 +112,22 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 
 	return (
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
+			{/* Location Type */}
+			<div className='flex flex-col'>
+				<label htmlFor='type' className='font-medium text-gray-700'>
+					Tip lokacije
+				</label>
+				<select
+					id='type'
+					value={type}
+					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart' | 'marketplace')}
+					className='mt-1 p-2 border border-gray-300 rounded text-black'>
+					<option value='country'>Država</option>
+					<option value='city'>Mesto</option>
+					<option value='cityPart'>Deo mesta</option>
+					<option value='marketplace'>Pijaca</option>
+				</select>
+			</div>
 			{/* Location Name */}
 			<div className='flex flex-col'>
 				<label htmlFor='location' className='font-medium text-gray-700'>
@@ -145,23 +159,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 					/>
 				</div>
 			)}
-
-			{/* Location Type */}
-			<div className='flex flex-col'>
-				<label htmlFor='type' className='font-medium text-gray-700'>
-					Tip lokacije
-				</label>
-				<select
-					id='type'
-					value={type}
-					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart' | 'marketplace')}
-					className='mt-1 p-2 border border-gray-300 rounded text-black'>
-					<option value='country'>Država</option>
-					<option value='city'>Mesto</option>
-					<option value='cityPart'>Deo mesta</option>
-					<option value='marketplace'>Pijaca</option>
-				</select>
-			</div>
 
 			{/* Country Selection */}
 			{(type === 'city' || type === 'cityPart' || type === 'marketplace') && (

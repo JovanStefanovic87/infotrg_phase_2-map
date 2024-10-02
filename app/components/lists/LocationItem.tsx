@@ -18,7 +18,7 @@ import Image from 'next/image';
 interface LocationItemProps {
 	location: Location;
 	languageId: number;
-	handleDelete: (id: number, type: string) => Promise<void>; // Update to match the actual signature
+	handleDelete: (id: number, type: string) => Promise<void>;
 	setCurrentEditLocation: React.Dispatch<
 		React.SetStateAction<Country | City | CityPart | Marketplace | null>
 	>;
@@ -30,7 +30,6 @@ interface LocationItemProps {
 	languages: Language[];
 }
 
-// Helper function to display translations for all languages
 const getLocationTranslations = (translations: Translation[], languages: Language[]): string => {
 	return languages
 		.map(language => {
@@ -58,12 +57,10 @@ const LocationItem: React.FC<LocationItemProps> = ({
 	);
 
 	const getLocationName = (location: Country | City | CityPart | Marketplace): string => {
-		// Ensure translations exist and are an array
 		const translations = Array.isArray(location.label.translations)
 			? (location.label.translations as unknown as Translation[])
 			: [];
 
-		// Find the translation for languageId = 1
 		const primaryTranslation = translations.find(
 			(translation: Translation) => translation.languageId === 1
 		);
@@ -71,13 +68,12 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		return primaryTranslation?.translation
 			? primaryTranslation.translation.charAt(0).toUpperCase() +
 					primaryTranslation.translation.slice(1)
-			: location.label.name; // Fallback if no translation is found
+			: location.label.name;
 	};
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
 			<div className='flex items-center space-x-2'>
-				{/* Display location icon */}
 				{location.icon?.url && (
 					<Image
 						src={location.icon.url}
@@ -85,20 +81,18 @@ const LocationItem: React.FC<LocationItemProps> = ({
 						width={50}
 						height={50}
 						priority={false}
-						style={{ width: '50px', height: '50px' }} // Adjusting size
+						style={{ width: '50px', height: '50px' }}
 					/>
 				)}
 
-				{/* Location Name */}
 				<TextNormal text={getLocationName(location)} weight='bold' />
 			</div>
 
-			{/* Display all translations */}
 			<TextNormal
 				text={getLocationTranslations(
 					location.label.translations as unknown as Translation[],
 					languages
-				)} // Use the helper function here
+				)}
 				weight='normal'
 			/>
 
@@ -111,7 +105,6 @@ const LocationItem: React.FC<LocationItemProps> = ({
 				/>
 			</div>
 
-			{/* Toggle Sub-locations (Cities or parts) */}
 			{('cities' in location && location.cities.length > 0) ||
 			('cityParts' in location && location.cityParts.length > 0) ||
 			('marketplaces' in location && location.marketplaces.length > 0) ? (
@@ -122,7 +115,6 @@ const LocationItem: React.FC<LocationItemProps> = ({
 				</ToggleButtonContainer>
 			) : null}
 
-			{/* Sub-location List (Cities or CityParts) */}
 			{isLocationExpanded(location.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
 					{'cities' in location &&
@@ -158,7 +150,6 @@ const LocationItem: React.FC<LocationItemProps> = ({
 									languages={languages}
 								/>
 
-								{/* Prikaz marketplaces ako je cityPart proširen */}
 								{isLocationExpanded(cityPart.id) && (
 									<div className='mt-2 pl-4 border-l-2 border-gray-300'>
 										{cityPart.marketplaces.map(marketplace => (

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import moment from 'moment-timezone';
+import { Translation, City } from '@/utils/helpers/types';
 
 // POST: Create a new location
 export async function POST(req: Request) {
@@ -116,6 +117,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const prefix = searchParams.get('prefix');
+	const languageId = parseInt(searchParams.get('languageId') || '1'); // Dodajemo languageId iz query parametara
 
 	try {
 		let locations: any[] = [];
@@ -169,28 +171,54 @@ export async function GET(req: Request) {
 			},
 		});
 
-		// Add 'type' to each location
-		locations = locations.map((location: any) => ({
+		// Filtriranje prevoda po languageId za svaku lokaciju, grad, deo grada i pijacu
+		const filterTranslationsByLanguage = (translations: Translation[], languageId: number) => {
+			return translations.find(t => t.languageId === languageId) || translations[0];
+		};
+
+		// Mapiramo lokacije i filtriramo prevode
+		const filteredLocations = locations.map(location => ({
 			...location,
+			label: {
+				...location.label,
+				name:
+					filterTranslationsByLanguage(location.label.translations, languageId)?.translation ||
+					location.label.name,
+			},
 			type: 'country',
-			cities:
-				location.cities?.map((city: any) => ({
-					...city,
-					type: 'city',
-					cityParts:
-						city.cityParts?.map((part: any) => ({
-							...part,
-							type: 'cityPart',
-							marketplaces:
-								part.marketplaces?.map((marketplace: any) => ({
-									...marketplace,
-									type: 'marketplace',
-								})) || [],
-						})) || [],
-				})) || [],
+			cities: location.cities.map((city: City) => ({
+				...city,
+				label: {
+					...city.label,
+					name:
+						filterTranslationsByLanguage(city.label.translations, languageId)?.translation ||
+						city.label.name,
+				},
+				type: 'city',
+				cityParts: city.cityParts.map(part => ({
+					...part,
+					label: {
+						...part.label,
+						name:
+							filterTranslationsByLanguage(part.label.translations, languageId)?.translation ||
+							part.label.name,
+					},
+					type: 'cityPart',
+					marketplaces: part.marketplaces.map(marketplace => ({
+						...marketplace,
+						label: {
+							...marketplace.label,
+							name:
+								filterTranslationsByLanguage(marketplace.label.translations, languageId)
+									?.translation || marketplace.label.name,
+						},
+						type: 'marketplace',
+					})),
+				})),
+			})),
 		}));
 
-		return NextResponse.json(locations);
+		return NextResponse.json(filteredLocations);
 	} catch (error) {
 		console.error('Error fetching locations:', error);
 		return NextResponse.json({ error: 'Failed to fetch locations' }, { status: 500 });
