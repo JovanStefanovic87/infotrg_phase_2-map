@@ -1,5 +1,13 @@
 import React, { useCallback } from 'react';
-import { Country, City, CityPart, Language, Translation } from '../../../utils/helpers/types';
+import {
+	Country,
+	City,
+	CityPart,
+	Language,
+	Translation,
+	Marketplace,
+	Location,
+} from '../../../utils/helpers/types';
 import TextNormal from '../text/TextNormal';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
@@ -8,15 +16,17 @@ import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
 import Image from 'next/image';
 
 interface LocationItemProps {
-	location: Country | City | CityPart;
+	location: Location;
 	languageId: number;
 	handleDelete: (id: number, type: string) => Promise<void>; // Update to match the actual signature
-	setCurrentEditLocation: React.Dispatch<React.SetStateAction<Country | City | CityPart | null>>;
+	setCurrentEditLocation: React.Dispatch<
+		React.SetStateAction<Country | City | CityPart | Marketplace | null>
+	>;
 	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
 	toggleLocation: (id: number) => void;
 	expandedLocations: Set<number>;
-	locations: (Country | City | CityPart)[];
-	handleOpenTranslationModal: (location: Country | City | CityPart) => void;
+	locations: (Country | City | CityPart | Marketplace)[];
+	handleOpenTranslationModal: (location: Country | City | CityPart | Marketplace) => void;
 	languages: Language[];
 }
 
@@ -47,9 +57,7 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		[expandedLocations]
 	);
 
-	console.log('location', location);
-
-	const getLocationName = (location: Country | City | CityPart): string => {
+	const getLocationName = (location: Country | City | CityPart | Marketplace): string => {
 		// Ensure translations exist and are an array
 		const translations = Array.isArray(location.label.translations)
 			? (location.label.translations as unknown as Translation[])
@@ -105,7 +113,8 @@ const LocationItem: React.FC<LocationItemProps> = ({
 
 			{/* Toggle Sub-locations (Cities or parts) */}
 			{('cities' in location && location.cities.length > 0) ||
-			('parts' in location && location.parts.length > 0) ? (
+			('cityParts' in location && location.cityParts.length > 0) ||
+			('marketplaces' in location && location.marketplaces.length > 0) ? (
 				<ToggleButtonContainer
 					data={{ id: location.id.toString() }}
 					toggleFunction={(id: string) => toggleLocation(parseInt(id))}>
@@ -113,14 +122,14 @@ const LocationItem: React.FC<LocationItemProps> = ({
 				</ToggleButtonContainer>
 			) : null}
 
-			{/* Sub-location List (Cities or parts) */}
+			{/* Sub-location List (Cities or CityParts) */}
 			{isLocationExpanded(location.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
 					{'cities' in location &&
-						location.cities.map(subLocation => (
+						location.cities.map(city => (
 							<LocationItem
-								key={subLocation.id}
-								location={subLocation}
+								key={city.id}
+								location={city}
 								setCurrentEditLocation={setCurrentEditLocation}
 								setParentId={setParentId}
 								handleDelete={handleDelete}
@@ -133,21 +142,43 @@ const LocationItem: React.FC<LocationItemProps> = ({
 							/>
 						))}
 
-					{'parts' in location &&
-						location.parts.map(subLocation => (
-							<LocationItem
-								key={subLocation.id}
-								location={subLocation}
-								setCurrentEditLocation={setCurrentEditLocation}
-								setParentId={setParentId}
-								handleDelete={handleDelete}
-								expandedLocations={expandedLocations}
-								toggleLocation={toggleLocation}
-								languageId={languageId}
-								locations={locations}
-								handleOpenTranslationModal={handleOpenTranslationModal}
-								languages={languages}
-							/>
+					{'cityParts' in location &&
+						location.cityParts.map(cityPart => (
+							<div key={cityPart.id}>
+								<LocationItem
+									location={cityPart}
+									setCurrentEditLocation={setCurrentEditLocation}
+									setParentId={setParentId}
+									handleDelete={handleDelete}
+									expandedLocations={expandedLocations}
+									toggleLocation={toggleLocation}
+									languageId={languageId}
+									locations={locations}
+									handleOpenTranslationModal={handleOpenTranslationModal}
+									languages={languages}
+								/>
+
+								{/* Prikaz marketplaces ako je cityPart proširen */}
+								{isLocationExpanded(cityPart.id) && (
+									<div className='mt-2 pl-4 border-l-2 border-gray-300'>
+										{cityPart.marketplaces.map(marketplace => (
+											<LocationItem
+												key={marketplace.id}
+												location={marketplace}
+												setCurrentEditLocation={setCurrentEditLocation}
+												setParentId={setParentId}
+												handleDelete={handleDelete}
+												expandedLocations={expandedLocations}
+												toggleLocation={toggleLocation}
+												languageId={languageId}
+												locations={locations}
+												handleOpenTranslationModal={handleOpenTranslationModal}
+												languages={languages}
+											/>
+										))}
+									</div>
+								)}
+							</div>
 						))}
 				</div>
 			)}

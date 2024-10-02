@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Language, Translation, Icon, Country, City, CityPart } from '@/utils/helpers/types';
+import { Language, Translation, Icon, Location } from '@/utils/helpers/types';
 import InputDefault from '../input/InputDefault';
 import SubmitButton from '../buttons/SubmitButton';
 import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
@@ -9,13 +9,14 @@ import ChooseImageButton from '../buttons/ChooseImageButton';
 interface Props {
 	currentTranslations: Translation[];
 	languages: Language[];
-	handleSubmit: (
+	handleSubmitEdit: (
 		updatedTranslations: Translation[],
 		newIcon: File | null,
 		currentIconId: number | null,
 		locationId: number,
 		type: string,
-		postCode?: string
+		postCode?: string,
+		address?: string
 	) => void;
 	currentIcon: string | null;
 	currentIconId: number | null;
@@ -27,13 +28,15 @@ interface Props {
 	type: string;
 	postCode?: string; // Add postCode
 	setPostCode?: React.Dispatch<React.SetStateAction<string>>;
-	currentLocation: Country | City | CityPart | null;
+	currentLocation: Location | null;
+	address?: string;
+	setAddress?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const EditLocationForm: React.FC<Props> = ({
 	currentTranslations,
 	languages,
-	handleSubmit,
+	handleSubmitEdit,
 	currentIcon,
 	newIcon,
 	setNewIcon,
@@ -45,10 +48,10 @@ const EditLocationForm: React.FC<Props> = ({
 	postCode,
 	setPostCode,
 	currentLocation,
+	address,
+	setAddress,
 }) => {
 	const [updatedTranslations, setUpdatedTranslations] = useState<Translation[]>([]);
-	console.log('currentIcon', currentIcon);
-	console.log('currentIconId', currentIconId);
 
 	// Initialize translations for all languages (including existing translations or empty fields)
 	useEffect(() => {
@@ -79,6 +82,11 @@ const EditLocationForm: React.FC<Props> = ({
 				setPostCode?.(currentLocation.postCode || '');
 			}
 		}
+		if (currentLocation && type === 'marketplace') {
+			if ('address' in currentLocation) {
+				setAddress?.(currentLocation.address || '');
+			}
+		}
 	}, [currentLocation, type]);
 
 	// Handle translation change
@@ -106,14 +114,25 @@ const EditLocationForm: React.FC<Props> = ({
 			return;
 		}
 
-		handleSubmit(updatedTranslations, newIcon, currentIconId, locationId, type, postCode);
+		handleSubmitEdit(
+			updatedTranslations,
+			newIcon,
+			currentIconId,
+			locationId,
+			type,
+			postCode,
+			address
+		);
+
+		setNewIcon(null);
+		setCurrentIcon(null);
 	};
 
 	return (
 		<form onSubmit={onSubmit} className='flex flex-col space-y-6 p-6 bg-white rounded-lg shadow-lg'>
 			{/* Icon Section */}
 			<div className='mb-6'>
-				<label className='block mb-1 font-medium text-gray-700'>Current Icon</label>
+				<label className='block mb-1 font-medium text-gray-700'>Trenutna Icon</label>
 				{currentIcon && (
 					<div className='mb-4'>
 						<img src={currentIcon} alt='Current Icon' className='w-16 h-16 object-cover' />
@@ -125,7 +144,7 @@ const EditLocationForm: React.FC<Props> = ({
 
 				{newIcon && (
 					<div className='mt-4'>
-						<p>New Icon:</p>
+						<p>Nova ikonica:</p>
 						<Image
 							src={URL.createObjectURL(newIcon)}
 							alt='New Icon Preview'
@@ -140,11 +159,23 @@ const EditLocationForm: React.FC<Props> = ({
 			{/* Post Code Section (conditionally displayed for city type) */}
 			{(type === 'city' || type === 'cityPart') && (
 				<div className='mb-4'>
-					<label className='block mb-1 font-medium text-gray-700'>Post Code</label>
+					<label className='block mb-1 font-medium text-gray-700'>Poštanski broj</label>
 					<input
 						type='text'
 						value={postCode || ''} // Ensure it's not undefined
 						onChange={e => setPostCode?.(e.target.value)}
+						className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+					/>
+				</div>
+			)}
+
+			{type === 'marketplace' && (
+				<div className='mb-4'>
+					<label className='block mb-1 font-medium text-gray-700'>Adresa</label>
+					<input
+						type='text'
+						value={address || ''} // Ensure it's not undefined
+						onChange={e => setAddress?.(e.target.value)}
 						className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
 					/>
 				</div>
@@ -155,7 +186,7 @@ const EditLocationForm: React.FC<Props> = ({
 				const existingTranslation = updatedTranslations.find(t => t.languageId === language.id);
 				return (
 					<div key={language.id} className='mb-4'>
-						<label className='block mb-1 font-medium text-gray-700'>{language.name}</label>
+						<label className='block mb-1 font-medium text-gray-700'>{language.name} prevod</label>
 						<InputDefault
 							placeholder={`Translation for ${language.name}`}
 							value={existingTranslation?.translation || ''}
@@ -167,7 +198,7 @@ const EditLocationForm: React.FC<Props> = ({
 			})}
 
 			<div className='flex justify-center mt-6'>
-				<SubmitButton>Save Changes</SubmitButton>
+				<SubmitButton>Sačuvaj izmene</SubmitButton>
 			</div>
 		</form>
 	);

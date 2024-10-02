@@ -266,12 +266,12 @@ export interface Label {
 export interface LocationBase {
 	id: number;
 	label: {
-		translations(translations: any, languages: Language[]): string;
+		translations: Translation[];
 		id: number;
 		name: string;
 	};
 	createdAt: string;
-	icon?: Icon; // Dodaj ikonu kao opcionalno polje
+	icon?: Icon; // Optional field for an icon
 }
 
 export interface Country extends LocationBase {
@@ -282,14 +282,27 @@ export interface Country extends LocationBase {
 export interface City extends LocationBase {
 	postCode: string | null;
 	countryId: number;
-	parts: CityPart[];
+	cityParts: CityPart[];
 	type: string;
 }
 
 export interface CityPart extends LocationBase {
 	postCode: string | null;
 	cityId: number;
+	marketplaces: Marketplace[];
 	type: string;
 }
 
-export type Location = Country | City | CityPart;
+export interface Marketplace extends LocationBase {
+	name: string; // Name of the marketplace
+	address: string; // Address of the marketplace
+	cityPartId: number; // Foreign key to CityPart
+	createdAt: string; // Creation date
+	iconId?: number; // Optional foreign key for Icon
+	icon?: Icon; // Optional relation with Icon
+	labelId: number; // Foreign key for Label (make this required)
+	label: Label; // Relation with Label (make this required)
+	type: string; // Type of location
+}
+
+export type Location = Country | City | CityPart | Marketplace;

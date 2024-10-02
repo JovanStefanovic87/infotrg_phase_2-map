@@ -1,68 +1,116 @@
 'use client';
 import { ChangeEvent } from 'react';
-import { Icon, Country, City } from '@/utils/helpers/types';
+import { Country, City, CityPart, Location } from '@/utils/helpers/types';
 import SubmitButton from '../buttons/SubmitButton';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
 
 interface NewLocationFormProps {
+	languageId: number;
 	onSubmit: (event: React.FormEvent) => Promise<void>;
 	name: string;
 	setName: React.Dispatch<React.SetStateAction<string>>;
-	parentId: number | null;
-	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
-	type: 'country' | 'city' | 'cityPart';
-	setType: React.Dispatch<React.SetStateAction<'country' | 'city' | 'cityPart'>>;
+	address: string;
+	setAddress: React.Dispatch<React.SetStateAction<string>>;
+	countryId: number | null;
+	setCountryId: React.Dispatch<React.SetStateAction<number | null>>;
+	type: 'country' | 'city' | 'cityPart' | 'marketplace';
+	setType: React.Dispatch<React.SetStateAction<'country' | 'city' | 'cityPart' | 'marketplace'>>;
 	countries: Country[];
 	cities: City[];
+	cityId: number | null;
 	setCityId: React.Dispatch<React.SetStateAction<number | null>>;
+	cityPartId: number | null;
+	setCityPartId: React.Dispatch<React.SetStateAction<number | null>>;
 	setIcon: React.Dispatch<React.SetStateAction<File | null>>;
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	postCode: string;
 	setPostCode: React.Dispatch<React.SetStateAction<string>>;
-	cityId: number | null;
+	locations: Location[];
 }
 
 const NewLocationForm: React.FC<NewLocationFormProps> = ({
+	languageId,
 	onSubmit,
 	name,
 	setName,
-	parentId,
-	setParentId,
+	address,
+	setAddress,
+	countryId,
+	setCountryId,
 	type,
 	setType,
 	countries,
-	cities,
+	cityId,
 	setCityId,
+	cityPartId,
+	setCityPartId,
 	setIcon,
 	setIsIconPickerOpen,
 	postCode,
 	setPostCode,
-	cityId,
+	locations,
 }) => {
 	const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value);
+	const handleAddressChange = (e: ChangeEvent<HTMLInputElement>) => setAddress(e.target.value);
 	const handlePostCodeChange = (e: ChangeEvent<HTMLInputElement>) => setPostCode(e.target.value);
 
-	// Filter cities based on selected country
-	const filteredCities = cities.filter(city => city.countryId === parentId);
-
-	// For countries (parentId is countryId)
-	const handleParentIdChange = (e: ChangeEvent<HTMLSelectElement>) => {
-		setParentId(Number(e.target.value)); // Correctly set parentId (countryId for cities)
-		setCityId(null); // Reset cityId if parentId changes
+	const handleCountryChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setCountryId(Number(e.target.value));
+		setCityId(null);
+		setCityPartId(null);
 	};
 
-	const handleCityIdChange = (e: ChangeEvent<HTMLSelectElement>) => {
-		setCityId(Number(e.target.value)); // Set cityId for city parts
+	const handleCityChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setCityId(Number(e.target.value));
+		setCityPartId(null);
+	};
+
+	const handleCityPartChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setCityPartId(Number(e.target.value));
 	};
 
 	const handleIconChange = (file: File | null) => setIcon(file);
 
-	const handleIconSelection = (selectedIconId: number) => {
-		setIsIconPickerOpen(false); // Close the icon picker after selection
-	};
+	console.log('locations', locations);
 
-	console.log('postCode:', postCode);
+	const filteredCities = countryId
+		? (locations.find(location => location.id === countryId) as Country)?.cities || []
+		: [];
+
+	const filteredCityParts = cityId
+		? filteredCities.find(city => city.id === cityId)?.cityParts || []
+		: [];
+
+	const filteredCountryOptions = locations.map(country => ({
+		...country,
+		label: {
+			...country.label,
+			name:
+				country.label.translations.find(t => t.languageId === languageId)?.translation ||
+				country.label.name,
+		},
+	}));
+
+	const filteredCityOptions = filteredCities.map(city => ({
+		...city,
+		label: {
+			...city.label,
+			name:
+				city.label.translations.find(t => t.languageId === languageId)?.translation ||
+				city.label.name,
+		},
+	}));
+
+	const filteredCityPartOptions = filteredCityParts.map(part => ({
+		...part,
+		label: {
+			...part.label,
+			name:
+				part.label.translations.find(t => t.languageId === languageId)?.translation ||
+				part.label.name,
+		},
+	}));
 
 	return (
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
@@ -81,6 +129,23 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				/>
 			</div>
 
+			{/* Marketplace Address */}
+			{type === 'marketplace' && (
+				<div className='flex flex-col'>
+					<label htmlFor='address' className='font-medium text-gray-700'>
+						Adresa pijace
+					</label>
+					<input
+						type='text'
+						id='address'
+						value={address}
+						onChange={handleAddressChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required
+					/>
+				</div>
+			)}
+
 			{/* Location Type */}
 			<div className='flex flex-col'>
 				<label htmlFor='type' className='font-medium text-gray-700'>
@@ -89,109 +154,96 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				<select
 					id='type'
 					value={type}
-					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart')}
+					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart' | 'marketplace')}
 					className='mt-1 p-2 border border-gray-300 rounded text-black'>
 					<option value='country'>Država</option>
 					<option value='city'>Mesto</option>
 					<option value='cityPart'>Deo mesta</option>
+					<option value='marketplace'>Pijaca</option>
 				</select>
 			</div>
 
-			{/* Country Selection for City */}
-			{type === 'city' && (
-				<>
-					<div className='flex flex-col'>
-						<label htmlFor='countryId' className='font-medium text-gray-700'>
-							Izaberite državu
-						</label>
-						<select
-							id='countryId'
-							value={parentId ?? ''} // Set the value of parentId here
-							onChange={handleParentIdChange} // This sets the parentId (countryId)
-							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required>
-							<option value=''>Izaberite državu</option>
-							{countries.map(country => (
-								<option key={country.id} value={country.id}>
-									{country.label.name}
-								</option>
-							))}
-						</select>
-					</div>
-
-					{/* Post Code */}
-					<div className='flex flex-col'>
-						<label htmlFor='postCode' className='font-medium text-gray-700'>
-							Postanski kod
-						</label>
-						<input
-							type='text'
-							id='postCode'
-							value={postCode}
-							onChange={handlePostCodeChange}
-							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required
-						/>
-					</div>
-				</>
+			{/* Country Selection */}
+			{(type === 'city' || type === 'cityPart' || type === 'marketplace') && (
+				<div className='flex flex-col'>
+					<label htmlFor='countryId' className='font-medium text-gray-700'>
+						Izaberite državu
+					</label>
+					<select
+						id='countryId'
+						value={countryId ?? ''}
+						onChange={handleCountryChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite državu</option>
+						{filteredCountryOptions.map(country => (
+							<option key={country.id} value={country.id}>
+								{country.label.name}
+							</option>
+						))}
+					</select>
+				</div>
 			)}
 
-			{/* City and Post Code Selection for CityPart */}
-			{type === 'cityPart' && (
-				<>
-					<div className='flex flex-col'>
-						<label htmlFor='countryId' className='font-medium text-gray-700'>
-							Izaberite državu
-						</label>
-						<select
-							id='countryId'
-							value={parentId ?? ''}
-							onChange={handleParentIdChange}
-							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required>
-							<option value=''>Izaberite državu</option>
-							{countries.map(country => (
-								<option key={country.id} value={country.id}>
-									{country.label.name}
-								</option>
-							))}
-						</select>
-					</div>
+			{/* City Selection */}
+			{(type === 'cityPart' || type === 'marketplace') && (
+				<div className='flex flex-col'>
+					<label htmlFor='cityId' className='font-medium text-gray-700'>
+						Izaberite mesto
+					</label>
+					<select
+						id='cityId'
+						value={cityId ?? ''}
+						onChange={handleCityChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite mesto</option>
+						{filteredCityOptions.map(city => (
+							<option key={city.id} value={city.id}>
+								{city.label.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
 
-					<div className='flex flex-col'>
-						<label htmlFor='cityId' className='font-medium text-gray-700'>
-							Izaberite mesto
-						</label>
-						<select
-							id='cityId'
-							value={cityId ?? ''}
-							onChange={handleCityIdChange}
-							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required>
-							<option value=''>Izaberite mesto</option>
-							{filteredCities.map(city => (
-								<option key={city.id} value={city.id}>
-									{city.label.name}
-								</option>
-							))}
-						</select>
-					</div>
+			{/* City Part Selection */}
+			{type === 'marketplace' && (
+				<div className='flex flex-col'>
+					<label htmlFor='cityPartId' className='font-medium text-gray-700'>
+						Izaberite deo mesta
+					</label>
+					<select
+						id='cityPartId'
+						value={cityPartId ?? ''}
+						onChange={handleCityPartChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite deo mesta</option>
+						{filteredCityPartOptions.map(part => (
+							<option key={part.id} value={part.id}>
+								{part.label.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
 
-					{/* Post Code */}
-					<div className='flex flex-col'>
-						<label htmlFor='postCode' className='font-medium text-gray-700'>
-							Postanski kod
-						</label>
-						<input
-							type='text'
-							id='postCode'
-							value={postCode}
-							onChange={handlePostCodeChange}
-							className='mt-1 p-2 border border-gray-300 rounded text-black'
-							required
-						/>
-					</div>
-				</>
+			{/* Post Code */}
+			{(type === 'cityPart' || type === 'city') && (
+				<div className='flex flex-col'>
+					<label htmlFor='postCode' className='font-medium text-gray-700'>
+						Postanski kod
+					</label>
+					<input
+						type='text'
+						id='postCode'
+						value={postCode}
+						onChange={handlePostCodeChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required
+					/>
+				</div>
 			)}
 
 			{/* Icon Upload and Select */}

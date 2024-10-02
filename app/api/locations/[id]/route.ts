@@ -1,10 +1,10 @@
 import { prisma } from '@/app/lib/prisma';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-	const { id } = params; // Fetching id from the path
-	const { searchParams } = new URL(req.url); // Fetching type from query params
-	const type = searchParams.get('type'); // Get the type from the query params
+	const { id } = params;
+	const { searchParams } = new URL(req.url);
+	const type = searchParams.get('type');
 
 	if (!id || !type) {
 		return Response.json({ error: 'Missing id or type parameter' }, { status: 400 });
@@ -23,6 +23,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 			});
 		} else if (type === 'cityPart') {
 			deletedLocation = await prisma.cityPart.delete({
+				where: { id: Number(id) },
+			});
+		} else if (type === 'marketplace') {
+			deletedLocation = await prisma.marketplace.delete({
 				where: { id: Number(id) },
 			});
 		} else {
@@ -47,9 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 	try {
 		const data = await req.json();
-		const { iconId, postCode } = data;
-
-		console.log('Received postCode:', postCode);
+		const { iconId, postCode, address } = data;
 
 		let updatedLocation;
 
@@ -74,6 +76,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 				data: {
 					iconId: iconId,
 					postCode: postCode || undefined, // Add postCode only if provided
+				},
+			});
+		} else if (type === 'marketplace') {
+			updatedLocation = await prisma.marketplace.update({
+				where: { id: Number(id) },
+				data: {
+					iconId: iconId,
+					address: address || undefined,
 				},
 			});
 		} else {

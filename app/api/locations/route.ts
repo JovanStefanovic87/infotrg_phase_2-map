@@ -3,37 +3,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import moment from 'moment-timezone';
 
-interface Translation {
-	translation: string;
-}
-
-interface Label {
-	name: string;
-	translations: Translation[];
-}
-
-interface Part {
-	label: Label;
-	postCode?: string;
-}
-
-interface City {
-	label: Label;
-	parts: Part[];
-	postCode?: string;
-}
-
-interface Country {
-	label: Label;
-	cities: City[];
-}
-
-type Location = Country | City | Part;
-
 // POST: Create a new location
 export async function POST(req: Request) {
 	try {
-		const { countryId, cityId, labelId, type, iconId, postCode } = await req.json();
+		const { countryId, cityId, labelId, type, iconId, postCode, cityPartId, address } =
+			await req.json();
+		console.log('cityPartId:', cityPartId);
+		console.log('address:', address);
+		console.log('labelId:', labelId);
+		console.log('type:', type);
+		console.log('iconId:', iconId);
+		console.log('postCode:', postCode);
+		console.log('countryId:', countryId);
+		console.log('cityId:', cityId);
 
 		// Validation
 		if (!labelId) {
@@ -52,7 +34,6 @@ export async function POST(req: Request) {
 				},
 			});
 		}
-
 		// Handle the creation of a city (requires countryId)
 		else if (type === 'city') {
 			if (!countryId) {
@@ -75,7 +56,6 @@ export async function POST(req: Request) {
 				},
 			});
 		}
-
 		// Handle the creation of a city part (requires cityId)
 		else if (type === 'cityPart') {
 			if (!cityId) {
@@ -98,6 +78,29 @@ export async function POST(req: Request) {
 				},
 			});
 		}
+		// Handle the creation of a marketplace
+		else if (type === 'marketplace') {
+			if (!cityPartId || !address || !labelId) {
+				return NextResponse.json(
+					{ error: 'CityPart ID, address, and label ID are required for creating a marketplace.' },
+					{ status: 400 }
+				);
+			}
+
+			const cityPart = await prisma.cityPart.findUnique({ where: { id: cityPartId } });
+			if (!cityPart) throw new Error(`Parent city part with id ${cityPartId} not found`);
+
+			locationData = await prisma.marketplace.create({
+				data: {
+					labelId, // Add the labelId for the marketplace
+					cityPartId, // Use cityPartId for the marketplace
+					name: address, // Set name to address or provide a separate name if needed
+					address, // Include address for the marketplace
+					iconId,
+					createdAt: new Date(),
+				},
+			});
+		}
 
 		return NextResponse.json(locationData);
 	} catch (error) {
@@ -109,11 +112,10 @@ export async function POST(req: Request) {
 	}
 }
 
-// GET: Retrieve all locations (countries, cities, or city parts) with their translations
+// GET: Retrieve all locations (countries, cities, city parts, and marketplaces) with their translations
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const prefix = searchParams.get('prefix');
-	const languageId = searchParams.get('languageId') ? Number(searchParams.get('languageId')) : null;
 
 	try {
 		let locations: any[] = [];
@@ -141,17 +143,25 @@ export async function GET(req: Request) {
 								translations: true,
 							},
 						},
-						// No need for postCode: true here, postCode will be fetched automatically
 						icon: true,
-						parts: {
+						cityParts: {
 							include: {
 								label: {
 									include: {
 										translations: true,
 									},
 								},
-								// No need for postCode: true here, postCode will be fetched automatically
 								icon: true,
+								marketplaces: {
+									include: {
+										label: {
+											include: {
+												translations: true,
+											},
+										},
+										icon: true,
+									},
+								},
 							},
 						},
 					},
@@ -160,22 +170,25 @@ export async function GET(req: Request) {
 		});
 
 		// Add 'type' to each location
-		locations = locations.map((location: any) => {
-			const countryWithCities = {
-				...location,
-				type: 'country',
-				cities: location.cities.map((city: any) => ({
+		locations = locations.map((location: any) => ({
+			...location,
+			type: 'country',
+			cities:
+				location.cities?.map((city: any) => ({
 					...city,
 					type: 'city',
-					parts: city.parts.map((part: any) => ({
-						...part,
-						type: 'cityPart',
-					})),
-				})),
-			};
-
-			return countryWithCities;
-		});
+					cityParts:
+						city.cityParts?.map((part: any) => ({
+							...part,
+							type: 'cityPart',
+							marketplaces:
+								part.marketplaces?.map((marketplace: any) => ({
+									...marketplace,
+									type: 'marketplace',
+								})) || [],
+						})) || [],
+				})) || [],
+		}));
 
 		return NextResponse.json(locations);
 	} catch (error) {

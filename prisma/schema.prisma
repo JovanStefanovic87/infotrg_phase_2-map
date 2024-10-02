@@ -15,31 +15,6 @@ model User {
   createdAt DateTime @default(now())
 }
 
-model Data {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String
-  createdAt DateTime @default(now())
-}
-
-model MapMarker {
-  id          String   @id @default(uuid())
-  position    Json
-  title       String
-  description String
-  locationId  String
-  location    Location @relation(fields: [locationId], references: [id])
-}
-
-model Location {
-  id      String      @id @default(uuid())
-  address String
-  city    String
-  phone   String?
-  website String?
-  markers MapMarker[]
-}
-
 model Language {
   id          Int           @id @default(autoincrement())
   code        String        @unique
@@ -59,6 +34,7 @@ model Label {
   countries    Country[]     @relation("CountryToLabel")
   cities       City[]        @relation("CityToLabel")
   cityParts    CityPart[]    @relation("CityPartToLabel")
+  Marketplace  Marketplace[]
 
   @@index([name])
 }
@@ -95,7 +71,7 @@ model City {
   postCode  String?
   countryId Int
   country   Country    @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  parts     CityPart[]
+  cityParts CityPart[] // This should be the correct field name
   createdAt DateTime   @default(now())
 
   iconId Int? // Foreign key for Icon
@@ -113,10 +89,27 @@ model CityPart {
   city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  iconId Int? // Foreign key for Icon
-  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  iconId       Int? // Foreign key for Icon
+  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  marketplaces Marketplace[] // This should be defined here as well
 
   @@unique([labelId, cityId])
+}
+
+model Marketplace {
+  id         Int      @id @default(autoincrement())
+  name       String // Name of the marketplace
+  address    String // Address of the marketplace
+  cityPartId Int // Foreign key to CityPart
+  cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  iconId  Int? // Optional foreign key for Icon
+  icon    Icon? @relation(fields: [iconId], references: [id]) // Relation with Icon
+  labelId Int // Required foreign key for Label
+  label   Label @relation(fields: [labelId], references: [id]) // Relation with Label
+
+  @@index([name]) // Optional index for marketplace name
 }
 
 model Category {
@@ -152,14 +145,15 @@ model RelatedCategory {
 }
 
 model Icon {
-  id        Int        @id @default(autoincrement())
-  name      String
-  url       String // e.g., 'icon.png'
-  createdAt DateTime   @default(now())
-  Category  Category[] // Relations with Categories (if needed)
-  Country   Country[] // Relation with Country
-  City      City[] // Relation with City
-  CityPart  CityPart[] // Relation with CityPart
+  id          Int           @id @default(autoincrement())
+  name        String
+  url         String // e.g., 'icon.png'
+  createdAt   DateTime      @default(now())
+  Category    Category[] // Relations with Categories (if needed)
+  Country     Country[] // Relation with Country
+  City        City[] // Relation with City
+  CityPart    CityPart[] // Relation with CityPart
+  Marketplace Marketplace[]
 
   @@index([name])
 }
