@@ -1,13 +1,17 @@
 'use client';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
 import NewLocationForm from '../forms/NewLocationForm';
-import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import H1 from '@/app/components/text/H1';
+
+// Import the API hooks from TanStack
+import { useFetchLocations, useCreateLocation } from '@/app/helpers/api/location';
+import { useFetchLanguages } from '@/app/helpers/api/language';
+import { useFetchIcons, useUploadIcon } from '@/app/helpers/api/icon';
 
 interface Props {
 	prefix: string;
@@ -15,6 +19,7 @@ interface Props {
 }
 
 const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
+	// Keep the useState hooks unchanged
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [address, setAddress] = useState<string>('');
@@ -33,7 +38,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [cityPartId, setCityPartId] = useState<number | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set());
@@ -43,54 +47,17 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
 	const [initialExpandedLocations, setInitialExpandedLocations] = useState<Set<number>>(new Set());
 
-	const fetchLocations = async () => {
-		try {
-			const response = await apiClient<Location[]>({
-				method: 'GET',
-				url: `/api/locations?prefix=${prefix}&languageId=${languageId}`,
-			});
-			return response;
-		} catch (error) {
-			console.error('Error fetching locations:', error);
-			throw error;
-		}
-	};
+	// Use TanStack Query for fetching data
+	const { data: locationsData, refetch: refetchLocations } = useFetchLocations({
+		prefix,
+		languageId,
+	});
+	const { data: languagesData } = useFetchLanguages();
+	const { data: iconsData } = useFetchIcons({ directory: 'locations' });
 
-	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
-	const fetchIcons = () =>
-		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=locations' });
-
-	const refetchData = useCallback(async () => {
-		setLoading(true);
-		try {
-			const [locationsData, iconsData] = await Promise.all([fetchLocations(), fetchIcons()]);
-			setLocations(locationsData);
-			setIcons(iconsData);
-		} catch (error) {
-			console.error('Failed to refetch data', error);
-		} finally {
-			setLoading(false);
-		}
-	}, [languageId, prefix]);
-
-	useEffect(() => {
-		refetchData();
-	}, [refetchData]);
-
-	useEffect(() => {
-		const fetchLanguagesData = async () => {
-			setLoading(true);
-			try {
-				const data = await fetchLanguages();
-				setLanguages(data);
-			} catch (err) {
-				console.error('Failed to fetch languages', err);
-			} finally {
-				setLoading(false);
-			}
-		};
-		fetchLanguagesData();
-	}, []);
+	// Use TanStack Mutation hooks for creating locations and uploading icons
+	const createLocationMutation = useCreateLocation();
+	const uploadIconMutation = useUploadIcon();
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -98,26 +65,30 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		try {
 			let iconId = currentIcon.iconId;
 
-			if (icon) {
-				const formData = new FormData();
-				formData.append('icon', icon);
-				formData.append('directory', 'locations');
-				const { data } = await axios.post('/api/icons', formData, {
-					headers: { 'Content-Type': 'multipart/form-data' },
+			// If new icon is selected, upload it using the TanStack Mutation
+			if (newIcon) {
+				const { data: iconResponse } = await uploadIconMutation.mutateAsync({
+					icon: newIcon,
+					directory: 'locations',
 				});
-				iconId = data.iconId;
+				iconId = iconResponse.iconId;
 			}
 
-			const { data: labelData } = await axios.post('/api/labels', { name, prefix });
-			const newLabelId = labelData.id;
-			if (!newLabelId) throw new Error('Failed to create label');
+			// Ensure the Label exists and get its numeric ID
+			const { data: labelResponse } = await axios.post('/api/labels', {
+				name,
+				prefix,
+			});
+			const labelId = labelResponse.id; // Make sure `labelId` is now a number
 
+			// Prepare location data for the API request
 			const locationData: Record<string, any> = {
-				labelId: newLabelId,
+				labelId, // Pass the numeric labelId here
 				iconId,
 				name,
 				type,
 			};
+
 			if (type === 'city' && countryId) {
 				locationData.countryId = countryId;
 				locationData.postCode = postCode;
@@ -129,21 +100,23 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				locationData.address = address;
 			}
 
-			const { data: newLocationData } = await axios.post('/api/locations', locationData);
-			if (!newLocationData) throw new Error('Failed to create location');
+			// Create location using TanStack Mutation
+			await createLocationMutation.mutateAsync(locationData);
 
+			// Prepare and send translations
 			const translations = languages.map(language => ({
-				labelId: newLabelId,
-				languageId: language.id,
+				labelId, // Use the numeric labelId for translations as well
+				languageId: 1,
 				translation: name,
 			}));
 
 			await axios.post('/api/translation', { translations });
 
+			// Reset the form and show success message
 			resetForm();
 			setSuccessMessage('Location successfully saved.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
-			await refetchData();
+			refetchLocations(); // Refetch locations after successful creation
 		} catch (err) {
 			console.error('Submission Error:', err);
 			setError(
@@ -168,6 +141,13 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setIsIconPickerOpen(false);
 	};
 
+	// Ensure states are updated after the data is fetched
+	useEffect(() => {
+		if (locationsData) setLocations(locationsData);
+		if (languagesData) setLanguages(languagesData);
+		if (iconsData) setIcons(iconsData);
+	}, [locationsData, languagesData, iconsData]);
+
 	return (
 		<PageContainer>
 			<H1 title={title} />
@@ -183,7 +163,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setCountryId={setCountryId}
 				type={type}
 				setType={setType}
-				countries={countries}
+				countries={countries || []}
 				cityId={cityId}
 				setCityId={setCityId}
 				cityPartId={cityPartId}
@@ -197,6 +177,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				cities={cities}
 				locations={locations}
 			/>
+
 			<div className='mt-8'>
 				<LocationList
 					locations={locations}
@@ -205,11 +186,13 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
 					languageId={languageId}
-					refetchLocations={refetchData}
+					refetchLocations={async () => {
+						await refetchLocations();
+					}}
 					onDeleteLocation={async id => {
 						try {
 							await axios.delete(`/api/locations/${id}`);
-							await refetchData();
+							refetchLocations();
 						} catch (err) {
 							console.error('Failed to delete location', err);
 						}
@@ -231,6 +214,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setAddress={setAddress}
 				/>
 			</div>
+
 			<ImagePickerForm
 				icons={icons}
 				isOpen={isIconPickerOpen}

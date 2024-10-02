@@ -56,28 +56,37 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const createdTranslations = [];
+		const createdOrUpdatedTranslations = [];
 
 		for (const translation of translations) {
 			const { labelId, languageId, translation: translationText } = translation;
 
 			if (typeof labelId !== 'number' || typeof languageId !== 'number') {
-				// Ensure labelId and languageId are numbers
-				continue;
+				continue; // Ensure labelId and languageId are numbers
 			}
 
-			const newTranslation = await prisma.translation.create({
-				data: {
+			// Koristi upsert umesto create da bi se prevod kreirao ili ažurirao
+			const upsertedTranslation = await prisma.translation.upsert({
+				where: {
+					labelId_languageId: {
+						labelId,
+						languageId,
+					},
+				},
+				update: {
+					translation: translationText,
+				},
+				create: {
 					labelId,
 					languageId,
-					translation: typeof translationText === 'string' ? translationText : '', // Ensure translationText is a string
+					translation: translationText,
 				},
 			});
 
-			createdTranslations.push(newTranslation);
+			createdOrUpdatedTranslations.push(upsertedTranslation);
 		}
 
-		return NextResponse.json(createdTranslations);
+		return NextResponse.json(createdOrUpdatedTranslations);
 	} catch (error) {
 		console.error('Error in POST /api/translation:', error);
 		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
