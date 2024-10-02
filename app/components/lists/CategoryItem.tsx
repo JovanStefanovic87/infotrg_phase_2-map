@@ -143,13 +143,16 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				`/api/translation/labels/${category.labelId}`
 			);
 
-			const existingTranslations = categoryTranslations.map(t => ({
-				translationId: t.id,
-				languageId: t.languageId,
-				translation: t.translation,
-				description: t.description || '',
-				synonyms: t.synonyms.map(s => s.synonym),
-			}));
+			const existingTranslations = languages.map(language => {
+				const translationData = categoryTranslations.find(t => t.languageId === language.id);
+				return {
+					translationId: translationData?.id || 0,
+					languageId: language.id,
+					translation: translationData?.translation || '',
+					description: translationData?.description || '',
+					synonyms: translationData?.synonyms.map(s => s.synonym) || [],
+				};
+			});
 
 			setNewTranslations(existingTranslations);
 

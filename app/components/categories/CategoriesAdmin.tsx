@@ -146,7 +146,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
-				relatedIds, // Send relatedIds along with the request
+				relatedIds,
 				labelId: newLabelId,
 				iconId,
 				name,
@@ -154,22 +154,25 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 
 			if (!categoryData) throw new Error('Failed to create category');
 
+			// Send translations only for the selected language or where translation is not null
 			const translationsArray = [
 				{
 					labelId: newLabelId,
 					languageId: languageId,
-					translation: name,
+					translation: name, // Main translation for the selected language
 				},
+				// Filter out languages that don't need a translation
 				...languages
-					.filter(lang => lang.id !== languageId)
+					.filter(lang => lang.id !== languageId && lang.id === 1) // Ensure it's only for languageId 1
 					.map(lang => ({
 						labelId: newLabelId,
 						languageId: lang.id,
-						translation: null,
+						translation: null, // For other languages, set the translation to null if not needed
 					})),
 			];
 
-			if (translationsArray.length) {
+			// Post translations if needed
+			if (translationsArray.length > 0) {
 				await axios.post('/api/translation', { translations: translationsArray });
 			}
 
@@ -196,57 +199,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 		setIcon(null);
 		setError('');
 	};
-
-	const handleEditCategory = useCallback(
-		async (
-			id: number,
-			data: {
-				translations: { translationId: number | null; languageId: number; translation: string }[];
-				icon?: File | null;
-				parentIds: number[];
-				relatedIds: number[];
-			}
-		) => {
-			const { translations, icon: newIcon, parentIds, relatedIds } = data;
-
-			try {
-				let iconId: number | null = currentIcon.iconId;
-
-				if (newIcon) {
-					const formData = new FormData();
-					formData.append('icon', newIcon);
-					const { data: iconData } = await axios.post('/api/icons', formData, {
-						headers: { 'Content-Type': 'multipart/form-data' },
-					});
-					iconId = iconData.iconId;
-				}
-
-				const translationsArray = translations.map(translation => ({
-					translationId: translation.translationId,
-					languageId: translation.languageId,
-					translation: translation.translation ?? '',
-				}));
-
-				await axios.put(`/api/categories/${id}`, {
-					iconId,
-					parentIds,
-					relatedIds, // Include relatedIds in update
-					translations: translationsArray,
-					labelId: id,
-				});
-
-				setSuccessMessage('Category updated successfully.');
-				await refetchData();
-			} catch (err) {
-				console.error('Failed to update category', err);
-				setError(
-					`Update Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
-				);
-				setSuccessMessage(null);
-			}
-		},
-		[currentIcon, refetchData]
-	);
 
 	return (
 		<PageContainer>
