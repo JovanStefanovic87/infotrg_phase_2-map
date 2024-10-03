@@ -1,46 +1,50 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getWithParams, postData } from '@/app/helpers/api/common/base';
+import { deleteData, getWithParams, postData, putData } from '@/app/helpers/api/common/base';
+import { Category } from '@/utils/helpers/types';
 
-export const useFetchCategories = (prefix: string) => {
+const fetchCategories = async (prefix: string): Promise<Category[]> => {
+	return await getWithParams(`/api/categories`, { prefix });
+};
+
+export const useCategories = (prefix: string) => {
 	return useQuery({
 		queryKey: ['categories', prefix],
-		queryFn: () => getWithParams(`/api/categories`, { prefix }),
-		staleTime: 1000 * 60 * 5,
-		refetchOnWindowFocus: false,
+		queryFn: () => fetchCategories(prefix),
+		staleTime: 1000 * 60 * 5, // Cache for 5 minutes
 	});
 };
 
 interface CreateCategoryData {
-	parentIds: number[];
+	parentIds?: number[];
 	labelId: number;
 	iconId?: number;
 	relatedIds?: number[];
 }
 
+const createCategory = async (categoryData: CreateCategoryData): Promise<Category> => {
+	return await postData('/api/categories', categoryData);
+};
+
 export const useCreateCategory = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (data: CreateCategoryData) => {
-			return postData('/api/categories', data);
-		},
+		mutationFn: (newCategory: CreateCategoryData) => createCategory(newCategory),
 		onSuccess: () => {
+			// Invalidate and refetch the category data after a new category is created
 			queryClient.invalidateQueries({ queryKey: ['categories'] });
-		},
-		onError: error => {
-			console.error('Error creating category:', error);
 		},
 	});
 };
 
 interface UpdateCategoryData {
 	id: number;
-	parentIds: number[];
+	parentIds?: number[];
 	labelId: number;
 	iconId?: number;
 	relatedIds?: number[];
 	translations: {
-		translationId: number;
+		translationId?: number;
 		languageId: number;
 		translation: string;
 		description?: string;
@@ -48,18 +52,18 @@ interface UpdateCategoryData {
 	}[];
 }
 
+const updateCategory = async (categoryData: UpdateCategoryData): Promise<Category> => {
+	return await putData(`/api/categories/${categoryData.id}`, categoryData);
+};
+
 export const useUpdateCategory = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (data: UpdateCategoryData) => {
-			return postData(`/api/categories/${data.id}`, data);
-		},
+		mutationFn: (updatedCategory: UpdateCategoryData) => updateCategory(updatedCategory),
 		onSuccess: () => {
+			// Invalidate and refetch the category data after updating
 			queryClient.invalidateQueries({ queryKey: ['categories'] });
-		},
-		onError: error => {
-			console.error('Error updating category:', error);
 		},
 	});
 };
@@ -73,51 +77,18 @@ export const useFetchCategory = (id: number) => {
 	});
 };
 
+const deleteCategoryById = async (id: number) => {
+	return await deleteData(`/api/categories/${id}`);
+};
+
 export const useDeleteCategory = () => {
 	const queryClient = useQueryClient();
 
-	return useMutation<void, Error, { id: number }>({
-		mutationFn: async (data: { id: number }) => {
-			const url = `/api/categories/${data.id}`;
-			await postData(url, { action: 'delete' });
-		},
+	return useMutation({
+		mutationFn: (id: number) => deleteCategoryById(id),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['categories'], exact: true });
-		},
-		onError: error => {
-			console.error('Error deleting category:', error);
-		},
-	});
-};
-
-interface UpdateCategoryByIdData {
-	id: number;
-	parentIds: number[];
-	relatedIds: number[];
-	labelId: number;
-	iconId?: number;
-	translations: {
-		translationId: number;
-		languageId: number;
-		translation: string;
-		description?: string;
-		synonyms?: string[];
-	}[];
-}
-
-export const useUpdateCategoryById = () => {
-	const queryClient = useQueryClient();
-
-	return useMutation<void, Error, any>({
-		mutationFn: async (data: any) => {
-			const url = `/api/categories/${data.id}`;
-			await postData(url, data);
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['categories'], exact: true });
-		},
-		onError: error => {
-			console.error('Error updating category:', error);
+			// Invalidate and refetch the categories after a category is deleted
+			queryClient.invalidateQueries({ queryKey: ['categories'] });
 		},
 	});
 };

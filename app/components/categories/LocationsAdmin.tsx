@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
@@ -66,12 +66,14 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			let iconId = currentIcon.iconId;
 
 			// If new icon is selected, upload it using the TanStack Mutation
-			if (newIcon) {
-				const { data: iconResponse } = await uploadIconMutation.mutateAsync({
-					icon: newIcon,
-					directory: 'locations',
+			if (icon) {
+				const formData = new FormData();
+				formData.append('icon', icon);
+				formData.append('directory', 'locations');
+				const { data } = await axios.post('/api/icons', formData, {
+					headers: { 'Content-Type': 'multipart/form-data' },
 				});
-				iconId = iconResponse.iconId;
+				iconId = data.iconId;
 			}
 
 			// Ensure the Label exists and get its numeric ID
@@ -106,7 +108,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			// Prepare and send translations
 			const translations = languages.map(language => ({
 				labelId, // Use the numeric labelId for translations as well
-				languageId: 1,
+				languageId: language.id,
 				translation: name,
 			}));
 

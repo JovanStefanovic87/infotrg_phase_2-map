@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import CategoryList from '../lists/CategoryList';
-import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
+import { CategoryByLanguageAndPrefix, Language, CurrentIcon } from '@/utils/helpers/types';
 import PageContainer from '@/app/components/containers/PageContainer';
 import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
@@ -20,10 +20,8 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [categories, setCategories] = useState<Category[]>([]);
+	const [categories, setCategories] = useState<CategoryByLanguageAndPrefix[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
-	const [translations, setTranslations] = useState<Translation[]>([]);
-	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [relatedIds, setRelatedIds] = useState<number[]>([]);
@@ -34,57 +32,33 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
-	const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+	const [filteredCategories, setFilteredCategories] = useState<CategoryByLanguageAndPrefix[]>([]);
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
 
-	// Fetch categories, languages, icons, etc.
-	const fetchCategories = () =>
-		apiClient<Category[]>({
+	// Fetch categories by language and prefix
+	const fetchCategoriesbyLanguage = () =>
+		apiClient<CategoryByLanguageAndPrefix[]>({
 			method: 'GET',
-			url: `/api/categories?prefix=${prefix}`,
+			url: `/api/categoriesByLanguage?prefix=${prefix}&languageId=${languageId}`,
 		});
 
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
-	const fetchIcons = () =>
-		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=articles' });
-	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
-		const labels = await apiClient<{ id: number }[]>({
-			method: 'GET',
-			url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
-		});
 
-		const translationsPromises = labels.map(({ id }) =>
-			apiClient<Translation>({
-				method: 'GET',
-				url: `/api/translation?languageId=${languageId}&labelId=${id}`,
-			})
-		);
-
-		return (await Promise.all(translationsPromises)).map(res => res);
-	};
-
+	// Refetch data function to get categories and languages
 	const refetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [categoriesData, translationsData, iconsData] = await Promise.all([
-				fetchCategories(),
-				fetchTranslations(languageId),
-				fetchIcons(),
-			]);
+			const categoriesData = await fetchCategoriesbyLanguage();
 			setCategories(categoriesData);
-			setTranslations(translationsData);
-			setIcons(iconsData);
-
-			// Filter fetched categories and retain expanded categories
 			setFilteredCategories(categoriesData);
 		} catch (error) {
 			console.error('Failed to refetch data', error);
 		} finally {
 			setLoading(false);
 		}
-	}, [languageId]);
+	}, [languageId, prefix]);
 
 	useEffect(() => {
 		refetchData();
@@ -105,24 +79,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 		};
 		fetchLanguagesData();
 	}, []);
-
-	useEffect(() => {
-		if (languageId) {
-			const fetchTranslationsData = async () => {
-				setLoading(true);
-				try {
-					const data = await fetchTranslations(languageId);
-					setTranslations(data);
-				} catch (err) {
-					console.error('Failed to fetch translations', err);
-				} finally {
-					setLoading(false);
-				}
-			};
-			fetchTranslationsData();
-		}
-	}, [languageId]);
-	console.log('parentIds:', parentIds);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -153,28 +109,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			});
 
 			if (!categoryData) throw new Error('Failed to create category');
-
-			// Send translations only for the selected language or where translation is not null
-			const translationsArray = [
-				{
-					labelId: newLabelId,
-					languageId: languageId,
-					translation: name, // Main translation for the selected language
-				},
-				// Filter out languages that don't need a translation
-				...languages
-					.filter(lang => lang.id !== languageId && lang.id === 1) // Ensure it's only for languageId 1
-					.map(lang => ({
-						labelId: newLabelId,
-						languageId: lang.id,
-						translation: null, // For other languages, set the translation to null if not needed
-					})),
-			];
-
-			// Post translations if needed
-			if (translationsArray.length > 0) {
-				await axios.post('/api/translation', { translations: translationsArray });
-			}
 
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
@@ -211,8 +145,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 				setName={setName}
 				parentIds={parentIds}
 				setParentIds={setParentIds}
-				translations={translations}
-				icons={icons}
+				categories={categories}
 				onFileChange={handleFileChange}
 				onFileReset={handleResetFileName}
 				onSubmit={handleSubmit}
@@ -222,8 +155,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			<div className='mt-8'>
 				<CategoryList
 					categories={categories}
-					translations={translations}
-					icons={icons}
 					currentIcon={currentIcon}
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
@@ -231,7 +162,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					relatedIds={relatedIds}
 					setRelatedIds={setRelatedIds}
 					refetchCategories={refetchData}
-					onDeleteCategory={async id => {
+					onDeleteCategory={async (id: number) => {
 						try {
 							await axios.delete(`/api/categories/${id}`);
 							await refetchData();
@@ -251,12 +182,12 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 					setInitialExpandedCategories={setInitialExpandedCategories}
 				/>
 			</div>
-			<ImagePickerForm
+			{/* <ImagePickerForm
 				icons={icons}
 				isOpen={isIconPickerOpen}
 				onSelect={setCurrentIcon}
 				onClose={() => setIsIconPickerOpen(false)}
-			/>
+			/> */}
 		</PageContainer>
 	);
 };
