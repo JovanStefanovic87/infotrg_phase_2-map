@@ -237,6 +237,23 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		);
 	};
 
+	const toggleCategory = useCallback(
+		(id: number) => {
+			// If the category is already expanded, remove it from the expanded set (collapse it)
+			if (expandedCategories.has(id)) {
+				const newExpandedCategories = new Set(expandedCategories);
+				newExpandedCategories.delete(id);
+				setExpandedCategories(newExpandedCategories);
+			} else {
+				// If the category is not expanded, add it to the expanded set (expand it)
+				const newExpandedCategories = new Set(expandedCategories);
+				newExpandedCategories.add(id);
+				setExpandedCategories(newExpandedCategories);
+			}
+		},
+		[expandedCategories, setExpandedCategories]
+	);
+
 	return (
 		<div>
 			<div className='mb-4'>
@@ -262,9 +279,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					setNewTranslations={setNewTranslations}
 					expandedCategories={expandedCategories}
 					setRelatedIds={setRelatedIds}
-					toggleCategory={function (id: number): void {
-						throw new Error('Function not implemented.');
-					}}
+					toggleCategory={toggleCategory}
 				/>
 			))}
 
