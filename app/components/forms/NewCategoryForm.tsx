@@ -12,11 +12,8 @@ interface CategoryFormProps {
 	parentIds: number[];
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
 	translations: Translation[];
-	icons: Icon[];
 	onFileChange: (file: File | null) => void;
-	onFileReset: () => void;
 	onSubmit: (event: React.FormEvent) => Promise<void>;
-	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
 }
 
@@ -26,11 +23,8 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	parentIds,
 	setParentIds,
 	translations,
-	icons,
 	onFileChange,
-	onFileReset,
 	onSubmit,
-	isIconPickerOpen,
 	setIsIconPickerOpen,
 }) => {
 	// Convert parentIds to selected translations for Combobox

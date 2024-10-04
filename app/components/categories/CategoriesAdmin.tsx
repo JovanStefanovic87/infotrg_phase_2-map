@@ -8,13 +8,15 @@ import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import H1 from '@/app/components/text/H1';
+import ErrorDisplay from '@/app/components/modals/systemModals/ErrorDisplay';
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
 
 interface Props {
 	prefix: string;
 	title: string;
 }
 
-const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
+const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
@@ -27,7 +29,7 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const [icon, setIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [relatedIds, setRelatedIds] = useState<number[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
@@ -38,6 +40,8 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
+
+	const clearError = () => setError('');
 
 	// Fetch categories, languages, icons, etc.
 	const fetchCategories = () =>
@@ -93,14 +97,11 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	// Fetch languages when component is mounted
 	useEffect(() => {
 		const fetchLanguagesData = async () => {
-			setLoading(true);
 			try {
 				const data = await fetchLanguages();
 				setLanguages(data);
 			} catch (err) {
 				console.error('Failed to fetch languages', err);
-			} finally {
-				setLoading(false);
 			}
 		};
 		fetchLanguagesData();
@@ -109,14 +110,11 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	useEffect(() => {
 		if (languageId) {
 			const fetchTranslationsData = async () => {
-				setLoading(true);
 				try {
 					const data = await fetchTranslations(languageId);
 					setTranslations(data);
 				} catch (err) {
 					console.error('Failed to fetch translations', err);
-				} finally {
-					setLoading(false);
 				}
 			};
 			fetchTranslationsData();
@@ -185,64 +183,67 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 	};
 
 	return (
-		<PageContainer>
-			<H1 title={title} />
-			{error && <p className='text-red-500 mb-4'>{error}</p>}
-			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
+		<>
+			{loading ? (
+				<LoadingSpinner />
+			) : (
+				<PageContainer>
+					<H1 title={title} />
+					<ErrorDisplay error={error} clearError={clearError} />
+					{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
 
-			<NewCategoryForm
-				name={name}
-				setName={setName}
-				parentIds={parentIds}
-				setParentIds={setParentIds}
-				translations={translations}
-				icons={icons}
-				onFileChange={handleFileChange}
-				onFileReset={handleResetFileName}
-				onSubmit={handleSubmit}
-				isIconPickerOpen={isIconPickerOpen}
-				setIsIconPickerOpen={setIsIconPickerOpen}
-			/>
-			<div className='mt-8'>
-				<CategoryList
-					categories={categories}
-					translations={translations}
-					icons={icons}
-					currentIcon={currentIcon}
-					setCurrentIcon={setCurrentIcon}
-					languages={languages}
-					languageId={languageId}
-					relatedIds={relatedIds}
-					setRelatedIds={setRelatedIds}
-					refetchCategories={refetchData}
-					onDeleteCategory={async id => {
-						try {
-							await axios.delete(`/api/categories/${id}`);
-							await refetchData();
-						} catch (err) {
-							console.error('Failed to delete category', err);
-						}
-					}}
-					isIconPickerOpen={isIconPickerOpen}
-					setIsIconPickerOpen={setIsIconPickerOpen}
-					expandedCategories={expandedCategories}
-					setExpandedCategories={setExpandedCategories}
-					manuallyExpandedCategories={manuallyExpandedCategories}
-					setManuallyExpandedCategories={setManuallyExpandedCategories}
-					filteredCategories={filteredCategories}
-					setFilteredCategories={setFilteredCategories}
-					initialExpandedCategories={initialExpandedCategories}
-					setInitialExpandedCategories={setInitialExpandedCategories}
-				/>
-			</div>
-			<ImagePickerForm
-				icons={icons}
-				isOpen={isIconPickerOpen}
-				onSelect={setCurrentIcon}
-				onClose={() => setIsIconPickerOpen(false)}
-			/>
-		</PageContainer>
+					<NewCategoryForm
+						name={name}
+						setName={setName}
+						parentIds={parentIds}
+						setParentIds={setParentIds}
+						translations={translations}
+						onFileChange={handleFileChange}
+						onSubmit={handleSubmit}
+						setIsIconPickerOpen={setIsIconPickerOpen}
+					/>
+					<div className='mt-8'>
+						<CategoryList
+							categories={categories}
+							translations={translations}
+							icons={icons}
+							currentIcon={currentIcon}
+							setCurrentIcon={setCurrentIcon}
+							languages={languages}
+							languageId={languageId}
+							relatedIds={relatedIds}
+							setRelatedIds={setRelatedIds}
+							refetchCategories={refetchData}
+							onDeleteCategory={async id => {
+								try {
+									await axios.delete(`/api/categories/${id}`);
+									await refetchData();
+								} catch (err) {
+									console.error('Failed to delete category', err);
+								}
+							}}
+							isIconPickerOpen={isIconPickerOpen}
+							setIsIconPickerOpen={setIsIconPickerOpen}
+							expandedCategories={expandedCategories}
+							setExpandedCategories={setExpandedCategories}
+							manuallyExpandedCategories={manuallyExpandedCategories}
+							setManuallyExpandedCategories={setManuallyExpandedCategories}
+							filteredCategories={filteredCategories}
+							setFilteredCategories={setFilteredCategories}
+							initialExpandedCategories={initialExpandedCategories}
+							setInitialExpandedCategories={setInitialExpandedCategories}
+						/>
+					</div>
+					<ImagePickerForm
+						icons={icons}
+						isOpen={isIconPickerOpen}
+						onSelect={setCurrentIcon}
+						onClose={() => setIsIconPickerOpen(false)}
+					/>
+				</PageContainer>
+			)}
+		</>
 	);
 };
 
-export default ArticleCategories;
+export default CategoriesAdmin;
