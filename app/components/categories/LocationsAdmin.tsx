@@ -66,12 +66,19 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			let iconId = currentIcon.iconId;
 
 			// If new icon is selected, upload it using the TanStack Mutation
-			if (newIcon) {
-				const { data: iconResponse } = await uploadIconMutation.mutateAsync({
-					icon: newIcon,
+			if (icon) {
+				const iconResponse = await uploadIconMutation.mutateAsync({
+					icon: icon,
 					directory: 'locations',
 				});
-				iconId = iconResponse.iconId;
+				console.log(iconResponse); // This should show the correct structure
+
+				if (iconResponse.data.iconId) {
+					// Access iconId directly
+					iconId = iconResponse.data.iconId;
+				} else {
+					throw new Error('Icon upload failed, iconId is missing.');
+				}
 			}
 
 			// Ensure the Label exists and get its numeric ID

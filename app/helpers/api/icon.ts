@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getWithParams, postData } from '@/app/helpers/api/common/base';
+import axios from 'axios';
 
 interface FetchIconsParams {
 	directory: string;
@@ -28,15 +29,17 @@ export const useUploadIcon = () => {
 			formData.append('icon', data.icon);
 			formData.append('directory', data.directory);
 
-			// Uklonili smo ručno postavljanje Content-Type zaglavlja
-			return postData('/api/icons', formData);
+			return axios.post('/api/icons', formData); // Use axios directly
 		},
 		onSuccess: () => {
-			// Invalidate and refetch icons after successful upload
 			queryClient.invalidateQueries({ queryKey: ['icons'] });
 		},
 		onError: error => {
-			console.error('Error uploading icon:', error);
+			if (axios.isAxiosError(error)) {
+				console.error('Error uploading icon:', error.response?.data || error.message);
+			} else {
+				console.error('Error uploading icon:', error.message);
+			}
 		},
 	});
 };
