@@ -1,15 +1,7 @@
 'use client';
 import React, { useCallback, useState, useEffect } from 'react';
-import axios from 'axios';
 import Image from 'next/image';
-import {
-	Category,
-	Icon,
-	Language,
-	Translation,
-	TranslationUpdate,
-} from '../../../utils/helpers/types';
-import { getCategoryIconUrl } from '../../../utils/helpers/universalFunctions';
+import { CategoryByLanguageAndPrefix, TranslationUpdate } from '../../../utils/helpers/types';
 import H4 from '../text/H4';
 import TextNormal from '../text/TextNormal';
 import TextWrapped from '../text/TextWrapped';
@@ -19,13 +11,10 @@ import DeleteButton from '../buttons/DeleteButton';
 import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
 
 interface CategoryItemProps {
-	category: Category;
-	icons: Icon[];
-	translations: Translation[];
-	languages: Language[];
+	category: CategoryByLanguageAndPrefix;
 	languageId: number;
 	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
-	setCurrentEditCategory: React.Dispatch<React.SetStateAction<Category | null>>;
+	setCurrentEditCategory: React.Dispatch<React.SetStateAction<CategoryByLanguageAndPrefix | null>>;
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
 	setNewTranslations: React.Dispatch<React.SetStateAction<TranslationUpdate[]>>;
 	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
@@ -38,9 +27,6 @@ interface CategoryItemProps {
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
 	category,
-	icons,
-	translations,
-	languages,
 	languageId,
 	setCurrentIcon,
 	setCurrentEditCategory,
@@ -54,12 +40,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	toggleCategory, // Function to toggle category
 }) => {
 	// State for displaying related categories
-	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
-
-	// State for editing related categories
-	const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
-
-	const iconUrl = getCategoryIconUrl(category.iconId, icons);
+	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<
+		CategoryByLanguageAndPrefix[]
+	>([]);
 
 	// Check if the category is expanded based on expandedCategories
 	const isCategoryExpanded = useCallback(
@@ -69,120 +52,71 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[expandedCategories]
 	);
 
-	// Function to fetch related categories for display
-	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
-		try {
-			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
-			const relatedData = await Promise.all(promises);
-
-			const categories = relatedData.map(response => response.data);
-			setDisplayRelatedCategories(categories);
-		} catch (error) {
-			console.error('Failed to fetch related categories for display', error);
-			setDisplayRelatedCategories([]);
-		}
-	}, []);
-
-	// Automatically fetch related categories on component mount
-	useEffect(() => {
-		if (category.relatedIds && category.relatedIds.length > 0) {
-			fetchRelatedCategoriesForDisplay(category.relatedIds);
-		} else {
-			setDisplayRelatedCategories([]);
-		}
-	}, [category.relatedIds, fetchRelatedCategoriesForDisplay]);
-
-	// Function to fetch and set related categories for editing
-	const fetchRelatedCategoriesForEdit = useCallback(
-		async (relatedIds: number[]) => {
-			try {
-				const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
-				const relatedData = await Promise.all(promises);
-
-				const categories = relatedData.map(response => response.data);
-				setRelatedCategories(categories);
-				setRelatedIds(relatedIds);
-			} catch (error) {
-				console.error('Failed to fetch related categories for edit', error);
-				setRelatedCategories([]);
-				setRelatedIds([]);
-			}
-		},
-		[setRelatedIds]
-	);
+	// Get the category icon URL directly from the `category.icon`
+	const iconUrl = category.icon?.url || '';
 
 	const getCategoryName = useCallback(
-		(labelId: number, languageId: number) => {
-			const translation = translations.find(
-				t => t.labelId === labelId && t.languageId === languageId
-			);
-			if (translation && translation.translation) {
-				return translation.translation.charAt(0).toUpperCase() + translation.translation.slice(1);
-			}
-			return 'Unknown';
+		(labelId: number) => {
+			// Use the category name directly from the `category` state
+			return category.name.charAt(0).toUpperCase() + category.name.slice(1);
 		},
-		[translations]
+		[category]
 	);
 
-	const getParentCategoryNames = useCallback(
-		(parents: Category[], languageId: number): string => {
-			if (parents.length === 0) return 'Ovo je glavna kategorija';
-			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
-		},
-		[getCategoryName]
-	);
+	const getParentCategoryNames = useCallback((): string => {
+		if (category.parents.length === 0) return 'Ovo je glavna kategorija';
+		return category.parents.map(parent => parent.name).join(', ');
+	}, [category.parents]);
 
 	// Handle opening the edit modal
 	const handleOpenEditModal = useCallback(
-		async (category: Category) => {
+		(category: CategoryByLanguageAndPrefix) => {
 			setCurrentEditCategory(category);
 			setParentIds(category.parents.map(parent => parent.id));
 
-			// Fetch translations for editing
-			const { data: categoryTranslations } = await axios.get<Translation[]>(
-				`/api/translation/labels/${category.labelId}`
-			);
-
-			const existingTranslations = categoryTranslations.map(t => ({
-				translationId: t.id,
-				languageId: t.languageId,
-				translation: t.translation,
-				description: t.description || '',
-				synonyms: t.synonyms.map(s => s.synonym),
+			// Set translations for editing
+			const existingTranslations = (category.synonyms || []).map(synonym => ({
+				translationId: 0, // Assume no translation ID for simplicity
+				languageId: languageId,
+				translation: synonym || '',
+				description: '', // No description in this structure
+				synonyms: [],
 			}));
 
 			setNewTranslations(existingTranslations);
 
-			// Fetch related categories for editing
-			if (category.relatedIds && category.relatedIds.length > 0) {
-				await fetchRelatedCategoriesForEdit(category.relatedIds);
-			} else {
-				setRelatedCategories([]);
-			}
+			// Set related categories for editing
+			setRelatedIds(category.relatedIds || []);
 
 			// Set icon for editing
-			const iconId = category.iconId || null;
-			const iconUrl = getCategoryIconUrl(iconId, icons);
+			const iconId = category.icon?.id || null;
+			const iconUrl = category.icon?.url || '';
 			setCurrentIcon({ iconId, iconUrl });
 
 			setNewIcon(null);
 			setIsModalOpen(true);
 		},
-		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon]
+		[
+			category,
+			setCurrentEditCategory,
+			setParentIds,
+			setNewTranslations,
+			setCurrentIcon,
+			setNewIcon,
+			setIsModalOpen,
+			setRelatedIds,
+			languageId,
+		]
 	);
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
-			<H4 text={getCategoryName(category.labelId, languageId)} color='black' shouldBreak />
+			<H4 text={getCategoryName(category.labelId)} color='black' shouldBreak />
 
 			{/* Display Icon */}
 			<div className='mt-2'>
-				{category.iconId ? (
-					iconUrl ? (
-						<Image src={iconUrl} alt='Category Icon' width={50} height={50} priority={false} />
-					) : (
-						<p className='text-gray-500'>Ikonica nije izabrana</p>
-					)
+				{category.icon ? (
+					<Image src={iconUrl} alt='Category Icon' width={50} height={50} priority={false} />
 				) : (
 					<p className='text-gray-500'>Ikonica ne postoji</p>
 				)}
@@ -190,14 +124,14 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 			{/* Parent Categories */}
 			<TextNormal text={`Natkategorije:`} weight='bold' />
-			<TextWrapped block={getParentCategoryNames(category.parents, languageId)} />
+			<TextWrapped block={getParentCategoryNames()} />
 
 			{/* Related Categories */}
 			<TextNormal text={`Povezane kategorije:`} weight='bold' />
 			{displayRelatedCategories.length > 0 ? (
 				<ul className='list-disc pl-5 text-gray-800'>
 					{displayRelatedCategories.map(relatedCategory => (
-						<li key={relatedCategory.id}>{getCategoryName(relatedCategory.labelId, languageId)}</li>
+						<li key={relatedCategory.id}>{relatedCategory.name}</li>
 					))}
 				</ul>
 			) : (
@@ -213,8 +147,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			{/* Toggle Subcategory Button */}
 			{category.children && category.children.length > 0 && (
 				<ToggleButtonContainer
-					data={{ id: category.id.toString() }} // Konvertuj id u string
-					toggleFunction={(id: string) => toggleCategory(parseInt(id))} // Konvertuj nazad u number kada koristiš funkciju
+					data={{ id: category.id.toString() }} // Convert id to string
+					toggleFunction={(id: string) => toggleCategory(parseInt(id))} // Convert back to number
 				>
 					<ArrowToggleButton isOpen={isCategoryExpanded(category.id)} onClick={() => {}} />
 				</ToggleButtonContainer>
@@ -227,9 +161,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 						<CategoryItem
 							key={subCategory.id}
 							category={subCategory}
-							icons={icons}
-							translations={translations}
-							languages={languages}
 							languageId={languageId}
 							setCurrentIcon={setCurrentIcon}
 							setCurrentEditCategory={setCurrentEditCategory}
