@@ -60,8 +60,9 @@ model Country {
   cities    City[]
   createdAt DateTime @default(now())
 
-  iconId Int? // Foreign key for Icon
-  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  iconId      Int? // Foreign key for Icon
+  icon        Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  RetailStore RetailStore[]
 }
 
 model City {
@@ -74,8 +75,9 @@ model City {
   cityParts CityPart[] // This should be the correct field name
   createdAt DateTime   @default(now())
 
-  iconId Int? // Foreign key for Icon
-  icon   Icon? @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  iconId      Int? // Foreign key for Icon
+  icon        Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  RetailStore RetailStore[]
 
   @@unique([labelId, countryId])
 }
@@ -92,6 +94,7 @@ model CityPart {
   iconId       Int? // Foreign key for Icon
   icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   marketplaces Marketplace[] // This should be defined here as well
+  RetailStore  RetailStore[]
 
   @@unique([labelId, cityId])
 }
@@ -104,10 +107,11 @@ model Marketplace {
   cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
-  iconId  Int? // Optional foreign key for Icon
-  icon    Icon? @relation(fields: [iconId], references: [id]) // Relation with Icon
-  labelId Int // Required foreign key for Label
-  label   Label @relation(fields: [labelId], references: [id]) // Relation with Label
+  iconId      Int? // Optional foreign key for Icon
+  icon        Icon?         @relation(fields: [iconId], references: [id]) // Relation with Icon
+  labelId     Int // Required foreign key for Label
+  label       Label         @relation(fields: [labelId], references: [id]) // Relation with Label
+  RetailStore RetailStore[]
 
   @@index([name]) // Optional index for marketplace name
 }
@@ -122,6 +126,7 @@ model Category {
   childCategories   ParentCategory[]  @relation("Child")
   relatedCategories RelatedCategory[] @relation("CategoryRelated") // Related categories
   relatedTo         RelatedCategory[] @relation("RelatedToCategory") // Reverse relation for related categories
+  retailStores      RetailStore[]     @relation("RetailStoreCategories")
   createdAt         DateTime          @default(now())
 }
 
@@ -166,4 +171,90 @@ model Synonym {
   createdAt     DateTime    @default(now())
 
   @@index([translationId])
+}
+
+model Company {
+  id                Int      @id @default(autoincrement())
+  name              String
+  businessActivity  String
+  countryFounded    String
+  cityFounded       String
+  responsiblePerson String
+  email             String   @unique
+  website           String?
+  aboutCompany      String?
+  logo              String? // Store path or URL of the logo image
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  retailStores RetailStore[]
+}
+
+model RetailStore {
+  id            Int           @id @default(autoincrement())
+  name          String
+  storeTypeId   Int?
+  storeType     StoreType?    @relation(fields: [storeTypeId], references: [id], onDelete: SetNull)
+  addressId     Int
+  address       Address       @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  phoneNumber   String
+  email         String?
+  homeDelivery  HomeDelivery
+  images        Image[]
+  companyId     Int
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  countryId     Int
+  country       Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cityId        Int
+  city          City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  cityPartId    Int?
+  cityPart      CityPart?     @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+  marketplaceId Int?
+  marketplace   Marketplace?  @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  categories    Category[]    @relation("RetailStoreCategories")
+  workingTimes  WorkingTime[]
+  viewCount     Int           @default(0) // Tracks number of views
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([name])
+}
+
+model StoreType {
+  id     Int           @id @default(autoincrement())
+  type   String        @unique
+  stores RetailStore[]
+}
+
+enum HomeDelivery {
+  Yes
+  No
+  Conditional
+}
+
+model Address {
+  id                 Int           @id @default(autoincrement())
+  streetAddress      String
+  addressDescription String?
+  latitude           Float
+  longitude          Float
+  retailStores       RetailStore[]
+}
+
+model Image {
+  id          Int          @id @default(autoincrement())
+  url         String
+  description String?
+  storeId     Int?
+  store       RetailStore? @relation(fields: [storeId], references: [id])
+  createdAt   DateTime     @default(now())
+}
+
+model WorkingTime {
+  id            Int         @id @default(autoincrement())
+  dayOfWeek     String // e.g., Monday, Tuesday
+  openingTime   String // e.g., 09:00
+  closingTime   String // e.g., 17:00
+  retailStoreId Int
+  retailStore   RetailStore @relation(fields: [retailStoreId], references: [id], onDelete: Cascade)
 }
