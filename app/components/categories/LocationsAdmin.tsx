@@ -112,10 +112,12 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			// Prepare and send translations
 			const translations = languages.map(language => ({
-				labelId, // Use the numeric labelId for translations as well
-				languageId: 1,
+				labelId,
+				languageId: language.id,
 				translation: name,
 			}));
+
+			console.log('Translations in Locations:', translations);
 
 			await axios.post('/api/translation', { translations });
 

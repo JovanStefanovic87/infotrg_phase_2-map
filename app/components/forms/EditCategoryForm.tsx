@@ -52,6 +52,7 @@ const EditCategoryForm: React.FC<Props> = ({
 	relatedIds,
 	setRelatedIds,
 }) => {
+	console.log(newTranslations);
 	return (
 		<form
 			onSubmit={handleSubmitEdit}

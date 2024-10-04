@@ -143,13 +143,19 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 				`/api/translation/labels/${category.labelId}`
 			);
 
-			const existingTranslations = categoryTranslations.map(t => ({
-				translationId: t.id,
-				languageId: t.languageId,
-				translation: t.translation,
-				description: t.description || '',
-				synonyms: t.synonyms.map(s => s.synonym),
-			}));
+			// Kreiraj listu prevoda za postojeće i prazne prevode
+			const existingTranslations = languages.map(language => {
+				const translation = categoryTranslations.find(t => t.languageId === language.id);
+
+				// Ako postoji prevod, koristimo ga, inače kreiramo prazan prevod za jezik
+				return {
+					translationId: translation?.id || 0, // Ako nema prevoda, postavi podrazumevani ID
+					languageId: language.id,
+					translation: translation?.translation || '', // Ako nema prevoda, postavi prazan string
+					description: translation?.description || '', // Ako nema opisa, postavi prazan string
+					synonyms: translation?.synonyms?.map(s => s.synonym) || [], // Ako nema sinonima, koristi prazan niz
+				};
+			});
 
 			setNewTranslations(existingTranslations);
 
@@ -168,7 +174,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			setNewIcon(null);
 			setIsModalOpen(true);
 		},
-		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon]
+		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon, languages]
 	);
 
 	return (

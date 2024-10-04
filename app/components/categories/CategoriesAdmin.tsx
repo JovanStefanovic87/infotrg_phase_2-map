@@ -122,7 +122,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			fetchTranslationsData();
 		}
 	}, [languageId]);
-	console.log('parentIds:', parentIds);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -142,7 +141,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 			const newLabelId = labelData.id;
 
 			if (!newLabelId) throw new Error('Failed to create label');
-			console.log('parentIds:', parentIds);
 
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
@@ -154,24 +152,16 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 
 			if (!categoryData) throw new Error('Failed to create category');
 
-			const translationsArray = [
-				{
-					labelId: newLabelId,
-					languageId: languageId,
-					translation: name,
-				},
-				...languages
-					.filter(lang => lang.id !== languageId)
-					.map(lang => ({
-						labelId: newLabelId,
-						languageId: lang.id,
-						translation: null,
-					})),
-			];
+			const translations = languages.map(language => ({
+				labelId: newLabelId, // Proslijedite ovde labelId
+				languageId: language.id, // Koristimo jezik ID
+				translation: language.id === 1 ? name : '', // Postavljamo prevod za osnovni jezik
+			}));
 
-			if (translationsArray.length) {
-				await axios.post('/api/translation', { translations: translationsArray });
-			}
+			console.log('Translations in Categories:', translations);
+
+			// Poslati prevode
+			await axios.post('/api/translation', { translations });
 
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
@@ -196,57 +186,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 		setIcon(null);
 		setError('');
 	};
-
-	const handleEditCategory = useCallback(
-		async (
-			id: number,
-			data: {
-				translations: { translationId: number | null; languageId: number; translation: string }[];
-				icon?: File | null;
-				parentIds: number[];
-				relatedIds: number[];
-			}
-		) => {
-			const { translations, icon: newIcon, parentIds, relatedIds } = data;
-
-			try {
-				let iconId: number | null = currentIcon.iconId;
-
-				if (newIcon) {
-					const formData = new FormData();
-					formData.append('icon', newIcon);
-					const { data: iconData } = await axios.post('/api/icons', formData, {
-						headers: { 'Content-Type': 'multipart/form-data' },
-					});
-					iconId = iconData.iconId;
-				}
-
-				const translationsArray = translations.map(translation => ({
-					translationId: translation.translationId,
-					languageId: translation.languageId,
-					translation: translation.translation ?? '',
-				}));
-
-				await axios.put(`/api/categories/${id}`, {
-					iconId,
-					parentIds,
-					relatedIds, // Include relatedIds in update
-					translations: translationsArray,
-					labelId: id,
-				});
-
-				setSuccessMessage('Category updated successfully.');
-				await refetchData();
-			} catch (err) {
-				console.error('Failed to update category', err);
-				setError(
-					`Update Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
-				);
-				setSuccessMessage(null);
-			}
-		},
-		[currentIcon, refetchData]
-	);
 
 	return (
 		<PageContainer>

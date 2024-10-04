@@ -22,6 +22,8 @@ export async function GET(request: Request) {
 		},
 	});
 
+	console.log('translation:', translation);
+
 	// If no translation is found, return a 404 error
 	if (!translation) {
 		return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
@@ -49,6 +51,8 @@ export async function POST(request: Request) {
 	try {
 		const { translations } = await request.json();
 
+		console.log('translations:', translations);
+
 		if (!Array.isArray(translations)) {
 			return NextResponse.json(
 				{ error: 'Invalid request body. Must be an array.' },
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
 				continue; // Ensure labelId and languageId are numbers
 			}
 
-			// Koristi upsert umesto create da bi se prevod kreirao ili ažurirao
+			// Upsert to create or update translation
 			const upsertedTranslation = await prisma.translation.upsert({
 				where: {
 					labelId_languageId: {
@@ -77,7 +81,7 @@ export async function POST(request: Request) {
 					translation: translationText,
 				},
 				create: {
-					labelId,
+					labelId, // Prosledite samo labelId
 					languageId,
 					translation: translationText,
 				},
