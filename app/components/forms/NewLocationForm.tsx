@@ -248,14 +248,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				<ImageUploadButton
 					id='upload-icon'
 					label='Upload Icon'
-					onChange={e => {
-						const file = e.target.files?.[0];
-						if (file) {
-							handleIconChange(file);
-						} else {
-							handleIconChange(null); // Handle the case where no file is selected
-						}
-					}}
+					onChange={e => handleIconChange(e.target.files?.[0] || null)}
 				/>
 				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Choose Existing Icon' />
 			</div>

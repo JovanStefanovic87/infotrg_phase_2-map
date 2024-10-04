@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
@@ -113,7 +113,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			// Prepare and send translations
 			const translations = languages.map(language => ({
 				labelId, // Use the numeric labelId for translations as well
-				languageId: language.id,
+				languageId: 1,
 				translation: name,
 			}));
 

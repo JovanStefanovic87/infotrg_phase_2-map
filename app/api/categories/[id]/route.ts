@@ -269,49 +269,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				})),
 			});
 
-			// Handle related categories more efficiently
-			const existingRelatedCategories = await prisma.relatedCategory.findMany({
-				where: {
-					OR: [{ categoryId: Number(id) }, { relatedId: Number(id) }],
-				},
-				select: {
-					categoryId: true,
-					relatedId: true,
-				},
+			// Handle related categories
+			await prisma.relatedCategory.deleteMany({
+				where: { categoryId: Number(id) },
 			});
 
-			// Filter out existing relationships that are already stored in any direction
-			const newRelatedIds = relatedIds.filter(
-				newRelatedId =>
-					!existingRelatedCategories.some(
-						rc =>
-							(rc.categoryId === Number(id) && rc.relatedId === newRelatedId) ||
-							(rc.relatedId === Number(id) && rc.categoryId === newRelatedId)
-					)
-			);
-
-			// Remove relationships that were deleted from the relatedIds array
-			const relationshipsToRemove = existingRelatedCategories.filter(
-				rc =>
-					(rc.categoryId === Number(id) && !relatedIds.includes(rc.relatedId)) ||
-					(rc.relatedId === Number(id) && !relatedIds.includes(rc.categoryId))
-			);
-
-			if (relationshipsToRemove.length > 0) {
-				await prisma.relatedCategory.deleteMany({
-					where: {
-						OR: relationshipsToRemove.map(rc => ({
-							categoryId: rc.categoryId,
-							relatedId: rc.relatedId,
-						})),
-					},
-				});
-			}
-
-			// Add new related categories only if not already stored
-			if (newRelatedIds.length > 0) {
+			if (relatedIds.length > 0) {
 				await prisma.relatedCategory.createMany({
-					data: newRelatedIds.map((relatedId: number) => ({
+					data: relatedIds.map((relatedId: number) => ({
 						categoryId: Number(id),
 						relatedId: relatedId,
 					})),
@@ -328,9 +293,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					synonyms,
 				} = translation;
 
-				// Upsert translation and retrieve the resulting translationId
-				const upsertedTranslation = await prisma.translation.upsert({
-					where: { id: translationId || 0 }, // Use 0 as a fallback if translationId is null
+				await prisma.translation.upsert({
+					where: { id: translationId },
 					update: { translation: translationText, description },
 					create: {
 						labelId,
@@ -338,20 +302,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 						translation: translationText,
 						description,
 					},
-					select: { id: true }, // Ensure we get the new or existing translation ID
 				});
 
-				const newTranslationId = upsertedTranslation.id;
-
-				// Handle synonyms for the translation
+				// Handle synonyms
 				await prisma.synonym.deleteMany({
-					where: { translationId: newTranslationId }, // Use the correct translationId
+					where: { translationId },
 				});
 
-				if (Array.isArray(synonyms) && synonyms.length > 0) {
+				if (Array.isArray(synonyms)) {
 					await prisma.synonym.createMany({
 						data: synonyms.map((synonym: string) => ({
-							translationId: newTranslationId, // Use the correct translationId
+							translationId,
 							synonym,
 						})),
 					});

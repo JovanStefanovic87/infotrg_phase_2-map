@@ -194,24 +194,6 @@ export interface Category {
 	children: Category[]; // Array of child categories
 }
 
-export interface CategoryByLanguageAndPrefix {
-	id: number;
-	iconId: number | null;
-	icon: {
-		id: number | null; // icon could be nullable if not present
-		name: string;
-		url: string;
-		createdAt: string;
-	} | null; // Allow icon to be null if not provided
-	labelId: number;
-	name: string;
-	parents: CategoryByLanguageAndPrefix[]; // Use CategoryByLanguageAndPrefix instead of Category
-	relatedIds?: number[]; // Add relatedIds to Category interface
-	children: CategoryByLanguageAndPrefix[]; // Use CategoryByLanguageAndPrefix instead of Category
-	synonyms?: string[];
-	description?: string;
-}
-
 export interface Synonym {
 	id: number;
 	translationId: number;
