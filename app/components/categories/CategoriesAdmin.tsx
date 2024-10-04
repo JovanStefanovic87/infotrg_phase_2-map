@@ -158,9 +158,6 @@ const ArticleCategories: React.FC<Props> = ({ prefix, title }) => {
 				translation: language.id === 1 ? name : '', // Postavljamo prevod za osnovni jezik
 			}));
 
-			console.log('Translations in Categories:', translations);
-
-			// Poslati prevode
 			await axios.post('/api/translation', { translations });
 
 			resetForm();

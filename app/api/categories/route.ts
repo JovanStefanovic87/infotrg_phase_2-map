@@ -43,7 +43,6 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 
 // Function to build the category tree
 const buildCategoryTree = async (parentId: number | null, prefix: string): Promise<Category[]> => {
-	console.log(parentId);
 	const categories = await prisma.category.findMany({
 		where: {
 			...(parentId === null
@@ -138,8 +137,6 @@ export async function POST(request: Request) {
 
 			// Map the found parent categories to their categoryId
 			parentCategoryIds = parentCategories.map(category => category.id);
-
-			console.log('Valid parent category IDs:', parentCategoryIds);
 
 			if (parentCategoryIds.length !== parentIds.length) {
 				throw new Error('Some parent categories do not exist');

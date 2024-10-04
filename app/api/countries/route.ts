@@ -26,8 +26,6 @@ export const POST = async (req: NextRequest) => {
 		const { labelName, translationData } = await req.json();
 		const { name } = labelName;
 
-		console.log('Creating country:', name, translationData);
-
 		const newCountry = await prisma.$transaction(async prisma => {
 			const newLabel = await prisma.label.create({
 				data: {

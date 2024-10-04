@@ -11,7 +11,6 @@ export async function GET(request: Request) {
 		return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
 	}
 
-	// Find a single translation
 	const translation = await prisma.translation.findFirst({
 		where: {
 			labelId,
@@ -22,14 +21,10 @@ export async function GET(request: Request) {
 		},
 	});
 
-	console.log('translation:', translation);
-
-	// If no translation is found, return a 404 error
 	if (!translation) {
 		return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
 	}
 
-	// Format the response (for a single object)
 	const response = {
 		id: translation.id,
 		labelId: translation.labelId,
@@ -50,8 +45,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
 	try {
 		const { translations } = await request.json();
-
-		console.log('translations:', translations);
 
 		if (!Array.isArray(translations)) {
 			return NextResponse.json(

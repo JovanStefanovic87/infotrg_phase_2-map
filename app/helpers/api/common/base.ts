@@ -43,17 +43,54 @@ export async function getWithParams(url: string, params?: any) {
 			}, {} as any)
 		).toString();
 
-		console.log('queryString', queryString);
-
 		const urlConstructed = `${url}${queryString ? '?' + queryString : ''}`;
-
-		console.log('urlConstructed', urlConstructed);
 
 		const response = await fetch(urlConstructed, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
 			},
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error:', error);
+		throw error;
+	}
+}
+
+export async function deleteData(url: string) {
+	try {
+		const response = await fetch(url, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error:', error);
+		throw error;
+	}
+}
+
+export async function putData(url: string, data: any) {
+	try {
+		const response = await fetch(url, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
 		});
 
 		if (!response.ok) {

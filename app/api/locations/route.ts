@@ -9,14 +9,6 @@ export async function POST(req: Request) {
 	try {
 		const { countryId, cityId, labelId, type, iconId, postCode, cityPartId, address } =
 			await req.json();
-		console.log('cityPartId:', cityPartId);
-		console.log('address:', address);
-		console.log('labelId:', labelId);
-		console.log('type:', type);
-		console.log('iconId:', iconId);
-		console.log('postCode:', postCode);
-		console.log('countryId:', countryId);
-		console.log('cityId:', cityId);
 
 		// Validation
 		if (!labelId) {

@@ -87,7 +87,6 @@ export const useDeleteCategory = () => {
 	return useMutation({
 		mutationFn: (id: number) => deleteCategoryById(id),
 		onSuccess: () => {
-			// Invalidate and refetch the categories after a category is deleted
 			queryClient.invalidateQueries({ queryKey: ['categories'] });
 		},
 	});

@@ -9,7 +9,6 @@ export async function PUT(request: Request) {
 		const data = await request.json();
 		const translations = data.translations;
 
-		// Process each translation update
 		for (const translation of translations) {
 			await prisma.translation.update({
 				where: { id: translation.translationId },

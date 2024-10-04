@@ -52,7 +52,6 @@ const EditCategoryForm: React.FC<Props> = ({
 	relatedIds,
 	setRelatedIds,
 }) => {
-	console.log(newTranslations);
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -228,8 +227,7 @@ const EditCategoryForm: React.FC<Props> = ({
 						})}
 					onSelect={selectedOptions => {
 						const newRelatedIds = selectedOptions.map(option => option.id);
-						console.log('New Related Ids:', newRelatedIds); // Ensure it is correct
-						setRelatedIds(newRelatedIds); // Make sure this update happens before submission
+						setRelatedIds(newRelatedIds);
 					}}
 					placeholder='Select related categories'
 				/>
