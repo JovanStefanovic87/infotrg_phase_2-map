@@ -1,9 +1,12 @@
 'use client';
 import { ChangeEvent } from 'react';
-import { Country, City, CityPart, Location } from '@/utils/helpers/types';
+import { Country, Location } from '@/utils/helpers/types';
 import SubmitButton from '../buttons/SubmitButton';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
+import Label from '../text/Label';
+import SelectInput from '../input/SelectInput';
+import LabelInputDefault from '../input/LabelInputDefault';
 
 interface NewLocationFormProps {
 	languageId: number;
@@ -16,8 +19,6 @@ interface NewLocationFormProps {
 	setCountryId: React.Dispatch<React.SetStateAction<number | null>>;
 	type: 'country' | 'city' | 'cityPart' | 'marketplace';
 	setType: React.Dispatch<React.SetStateAction<'country' | 'city' | 'cityPart' | 'marketplace'>>;
-	countries: Country[];
-	cities: City[];
 	cityId: number | null;
 	setCityId: React.Dispatch<React.SetStateAction<number | null>>;
 	cityPartId: number | null;
@@ -40,7 +41,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 	setCountryId,
 	type,
 	setType,
-	countries,
 	cityId,
 	setCityId,
 	cityPartId,
@@ -114,31 +114,26 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
 			{/* Location Type */}
 			<div className='flex flex-col'>
-				<label htmlFor='type' className='font-medium text-gray-700'>
-					Tip lokacije
-				</label>
-				<select
+				<Label htmlFor='type'>Tip lokacije</Label>
+				<SelectInput
 					id='type'
 					value={type}
 					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart' | 'marketplace')}
-					className='mt-1 p-2 border border-gray-300 rounded text-black'>
-					<option value='country'>Država</option>
-					<option value='city'>Mesto</option>
-					<option value='cityPart'>Deo mesta</option>
-					<option value='marketplace'>Pijaca</option>
-				</select>
+					options={[
+						{ value: 'country', label: 'Država' },
+						{ value: 'city', label: 'Mesto' },
+						{ value: 'cityPart', label: 'Deo mesta' },
+						{ value: 'marketplace', label: 'Pijaca' },
+					]}
+				/>
 			</div>
 			{/* Location Name */}
 			<div className='flex flex-col'>
-				<label htmlFor='location' className='font-medium text-gray-700'>
-					Naziv lokacije
-				</label>
-				<input
-					type='text'
-					id='location'
+				<LabelInputDefault
+					label='Naziv lokacije'
 					value={name}
 					onChange={handleNameChange}
-					className='mt-1 p-2 border border-gray-300 rounded text-black'
+					placeholder=''
 					required
 				/>
 			</div>
@@ -146,15 +141,11 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			{/* Marketplace Address */}
 			{type === 'marketplace' && (
 				<div className='flex flex-col'>
-					<label htmlFor='address' className='font-medium text-gray-700'>
-						Adresa pijace
-					</label>
-					<input
-						type='text'
-						id='address'
+					<LabelInputDefault
+						label='Adresa pijace'
 						value={address}
 						onChange={handleAddressChange}
-						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						placeholder=''
 						required
 					/>
 				</div>
@@ -163,9 +154,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			{/* Country Selection */}
 			{(type === 'city' || type === 'cityPart' || type === 'marketplace') && (
 				<div className='flex flex-col'>
-					<label htmlFor='countryId' className='font-medium text-gray-700'>
-						Izaberite državu
-					</label>
+					<Label htmlFor='countryId'>Izaberite državu</Label>
 					<select
 						id='countryId'
 						value={countryId ?? ''}
@@ -185,9 +174,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			{/* City Selection */}
 			{(type === 'cityPart' || type === 'marketplace') && (
 				<div className='flex flex-col'>
-					<label htmlFor='cityId' className='font-medium text-gray-700'>
-						Izaberite mesto
-					</label>
+					<Label htmlFor='countryId'>Izaberite mesto</Label>
 					<select
 						id='cityId'
 						value={cityId ?? ''}
@@ -207,9 +194,7 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			{/* City Part Selection */}
 			{type === 'marketplace' && (
 				<div className='flex flex-col'>
-					<label htmlFor='cityPartId' className='font-medium text-gray-700'>
-						Izaberite deo mesta
-					</label>
+					<Label htmlFor='countryId'>Izaberite deo mesta</Label>
 					<select
 						id='cityPartId'
 						value={cityPartId ?? ''}
@@ -229,16 +214,11 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			{/* Post Code */}
 			{(type === 'cityPart' || type === 'city') && (
 				<div className='flex flex-col'>
-					<label htmlFor='postCode' className='font-medium text-gray-700'>
-						Postanski kod
-					</label>
-					<input
-						type='text'
-						id='postCode'
+					<LabelInputDefault
+						label='Poštanski kod'
 						value={postCode}
 						onChange={handlePostCodeChange}
-						className='mt-1 p-2 border border-gray-300 rounded text-black'
-						required
+						placeholder=''
 					/>
 				</div>
 			)}

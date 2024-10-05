@@ -2,15 +2,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
-import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
+import { Location, Language, Icon, CurrentIcon } from '@/utils/helpers/types';
 import NewLocationForm from '../forms/NewLocationForm';
 import ImagePickerForm from '../forms/ImagePickerForm';
+import DynamicPageContainer from '../containers/DynamicPageContainer.';
+import { handleError } from '@/utils/helpers/universalFunctions';
 
 // Import the API hooks from TanStack
 import { useFetchLocations, useCreateLocation } from '@/app/helpers/api/location';
 import { useFetchLanguages } from '@/app/helpers/api/language';
 import { useFetchIcons, useUploadIcon } from '@/app/helpers/api/icon';
-import DynamicPageContainer from '../containers/DynamicPageContainer.';
 
 interface Props {
 	prefix: string;
@@ -30,9 +31,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [type, setType] = useState<'country' | 'city' | 'cityPart' | 'marketplace'>('country');
-	const [countries, setCountries] = useState<Country[]>([]);
 	const [countryId, setCountryId] = useState<number | null>(null);
-	const [cities, setCities] = useState<City[]>([]);
 	const [cityId, setCityId] = useState<number | null>(null);
 	const [cityPartId, setCityPartId] = useState<number | null>(null);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
@@ -62,8 +61,18 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const createLocationMutation = useCreateLocation();
 	const uploadIconMutation = useUploadIcon();
 
+	const handleDeleteLocation = async (id: number) => {
+		try {
+			await axios.delete(`/api/locations/${id}`);
+			await refetchLocations();
+			setSuccessMessage('Lokacija uspešno obrisana.');
+			setError('');
+		} catch (err) {
+			handleError(err, setError, setSuccessMessage);
+		}
+	};
+
 	useEffect(() => {
-		// Set loading state based on the loading status of TanStack Query hooks
 		setLoading(isLoadingLocations || isLoadingLanguages || isLoadingIcons);
 	}, [isLoadingLocations, isLoadingLanguages, isLoadingIcons]);
 
@@ -73,32 +82,27 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		try {
 			let iconId = currentIcon.iconId;
 
-			// If new icon is selected, upload it using the TanStack Mutation
 			if (icon) {
 				const iconResponse = await uploadIconMutation.mutateAsync({
 					icon: icon,
 					directory: 'locations',
 				});
-				console.log(iconResponse); // This should show the correct structure
 
 				if (iconResponse.data.iconId) {
-					// Access iconId directly
 					iconId = iconResponse.data.iconId;
 				} else {
 					throw new Error('Icon upload failed, iconId is missing.');
 				}
 			}
 
-			// Ensure the Label exists and get its numeric ID
 			const { data: labelResponse } = await axios.post('/api/labels', {
 				name,
 				prefix,
 			});
-			const labelId = labelResponse.id; // Make sure `labelId` is now a number
+			const labelId = labelResponse.id;
 
-			// Prepare location data for the API request
 			const locationData: Record<string, any> = {
-				labelId, // Pass the numeric labelId here
+				labelId,
 				iconId,
 				name,
 				type,
@@ -118,7 +122,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			// Create location using TanStack Mutation
 			await createLocationMutation.mutateAsync(locationData);
 
-			// Prepare and send translations
 			const translations = languages.map(language => ({
 				labelId,
 				languageId: language.id,
@@ -129,15 +132,11 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			// Reset the form and show success message
 			resetForm();
-			setSuccessMessage('Location successfully saved.');
+			setSuccessMessage('Lokacija uspešno sačuvana.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
-			refetchLocations(); // Refetch locations after successful creation
+			refetchLocations();
 		} catch (err) {
-			console.error('Submission Error:', err);
-			setError(
-				`Submission Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
-			);
-			setSuccessMessage(null);
+			handleError(err, setError, setSuccessMessage);
 		}
 	};
 
@@ -180,7 +179,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setCountryId={setCountryId}
 				type={type}
 				setType={setType}
-				countries={countries || []}
 				cityId={cityId}
 				setCityId={setCityId}
 				cityPartId={cityPartId}
@@ -191,14 +189,12 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setPostCode={setPostCode}
 				address={address}
 				setAddress={setAddress}
-				cities={cities}
 				locations={locations}
 			/>
 
 			<div className='mt-8'>
 				<LocationList
 					locations={locations}
-					icons={icons}
 					currentIcon={currentIcon}
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
@@ -206,19 +202,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					refetchLocations={async () => {
 						await refetchLocations();
 					}}
-					onDeleteLocation={async id => {
-						try {
-							await axios.delete(`/api/locations/${id}`);
-							refetchLocations();
-						} catch (err) {
-							console.error('Failed to delete location', err);
-						}
-					}}
 					expandedLocations={expandedLocations}
 					setExpandedLocations={setExpandedLocations}
 					manuallyExpandedLocations={manuallyExpandedLocations}
 					setManuallyExpandedLocations={setManuallyExpandedLocations}
-					filteredLocations={filteredLocations}
 					setFilteredLocations={setFilteredLocations}
 					initialExpandedLocations={initialExpandedLocations}
 					setInitialExpandedLocations={setInitialExpandedLocations}
@@ -229,6 +216,8 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setPostCode={setPostCode}
 					address={address}
 					setAddress={setAddress}
+					setSuccessMessage={setSuccessMessage}
+					setError={setError}
 				/>
 			</div>
 

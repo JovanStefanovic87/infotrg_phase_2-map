@@ -2,13 +2,12 @@ import React from 'react';
 
 interface LabelProps {
 	htmlFor: string;
-	className?: string;
 	children: React.ReactNode;
 }
 
-const Label: React.FC<LabelProps> = ({ htmlFor, className, children }) => {
+const Label: React.FC<LabelProps> = ({ htmlFor, children }) => {
 	return (
-		<label htmlFor={htmlFor} className='block mb-2'>
+		<label htmlFor={htmlFor} className='block mb-2 font-semibold text-black'>
 			{children}
 		</label>
 	);

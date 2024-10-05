@@ -17,6 +17,7 @@ import ArrowToggleButton from '../buttons/ArrowToggleButton';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
 import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
+import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryItemProps {
 	category: Category;
@@ -32,8 +33,11 @@ interface CategoryItemProps {
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	handleDelete: (categoryId: number) => void;
 	setRelatedIds: (relatedIds: number[]) => void;
-	expandedCategories: Set<number>; // Expanded categories
-	toggleCategory: (id: number) => void; // Function to toggle category expand/collapse
+	expandedCategories: Set<number>;
+	toggleCategory: (id: number) => void;
+	setError: (error: string) => void;
+	setSuccessMessage: (message: string | null) => void;
+	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
@@ -50,18 +54,16 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setIsModalOpen,
 	handleDelete,
 	setRelatedIds,
-	expandedCategories, // Use expandedCategories instead of manuallyExpandedCategories or expandedCategoriesForSearch
-	toggleCategory, // Function to toggle category
+	expandedCategories,
+	toggleCategory,
+	setError,
+	setSuccessMessage,
+	setLoading,
 }) => {
-	// State for displaying related categories
 	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
-
-	// State for editing related categories
-	const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
 
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
 
-	// Check if the category is expanded based on expandedCategories
 	const isCategoryExpanded = useCallback(
 		(id: number) => {
 			return expandedCategories.has(id);
@@ -69,7 +71,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[expandedCategories]
 	);
 
-	// Function to fetch related categories for display
 	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
 		try {
 			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
@@ -78,12 +79,11 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			const categories = relatedData.map(response => response.data);
 			setDisplayRelatedCategories(categories);
 		} catch (error) {
-			console.error('Failed to fetch related categories for display', error);
+			handleError(error, setError, setSuccessMessage);
 			setDisplayRelatedCategories([]);
 		}
 	}, []);
 
-	// Automatically fetch related categories on component mount
 	useEffect(() => {
 		if (category.relatedIds && category.relatedIds.length > 0) {
 			fetchRelatedCategoriesForDisplay(category.relatedIds);
@@ -92,19 +92,12 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		}
 	}, [category.relatedIds, fetchRelatedCategoriesForDisplay]);
 
-	// Function to fetch and set related categories for editing
 	const fetchRelatedCategoriesForEdit = useCallback(
 		async (relatedIds: number[]) => {
 			try {
-				const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
-				const relatedData = await Promise.all(promises);
-
-				const categories = relatedData.map(response => response.data);
-				setRelatedCategories(categories);
 				setRelatedIds(relatedIds);
 			} catch (error) {
-				console.error('Failed to fetch related categories for edit', error);
-				setRelatedCategories([]);
+				handleError(error, setError, setSuccessMessage);
 				setRelatedIds([]);
 			}
 		},
@@ -132,47 +125,41 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[getCategoryName]
 	);
 
-	// Handle opening the edit modal
 	const handleOpenEditModal = useCallback(
 		async (category: Category) => {
+			setLoading(true);
 			setCurrentEditCategory(category);
 			setParentIds(category.parents.map(parent => parent.id));
 
-			// Fetch translations for editing
 			const { data: categoryTranslations } = await axios.get<Translation[]>(
 				`/api/translation/labels/${category.labelId}`
 			);
 
-			// Kreiraj listu prevoda za postojeće i prazne prevode
 			const existingTranslations = languages.map(language => {
 				const translation = categoryTranslations.find(t => t.languageId === language.id);
 
-				// Ako postoji prevod, koristimo ga, inače kreiramo prazan prevod za jezik
 				return {
-					translationId: translation?.id || 0, // Ako nema prevoda, postavi podrazumevani ID
+					translationId: translation?.id || 0,
 					languageId: language.id,
-					translation: translation?.translation || '', // Ako nema prevoda, postavi prazan string
-					description: translation?.description || '', // Ako nema opisa, postavi prazan string
-					synonyms: translation?.synonyms?.map(s => s.synonym) || [], // Ako nema sinonima, koristi prazan niz
+					translation: translation?.translation || '',
+					description: translation?.description || '',
+					synonyms: translation?.synonyms?.map(s => s.synonym) || [],
 				};
 			});
 
 			setNewTranslations(existingTranslations);
 
-			// Fetch related categories for editing
 			if (category.relatedIds && category.relatedIds.length > 0) {
 				await fetchRelatedCategoriesForEdit(category.relatedIds);
-			} else {
-				setRelatedCategories([]);
 			}
 
-			// Set icon for editing
 			const iconId = category.iconId || null;
 			const iconUrl = getCategoryIconUrl(iconId, icons);
 			setCurrentIcon({ iconId, iconUrl });
 
 			setNewIcon(null);
 			setIsModalOpen(true);
+			setLoading(false);
 		},
 		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon, languages]
 	);
@@ -187,10 +174,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 					iconUrl ? (
 						<Image src={iconUrl} alt='Category Icon' width={50} height={50} priority={false} />
 					) : (
-						<p className='text-gray-500'>Ikonica nije izabrana</p>
+						<TextWrapped block='Ikonica nije izabrana' />
 					)
 				) : (
-					<p className='text-gray-500'>Ikonica ne postoji</p>
+					<TextWrapped block='Ikonica ne postoji' />
 				)}
 			</div>
 
@@ -219,9 +206,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			{/* Toggle Subcategory Button */}
 			{category.children && category.children.length > 0 && (
 				<ToggleButtonContainer
-					data={{ id: category.id.toString() }} // Konvertuj id u string
-					toggleFunction={(id: string) => toggleCategory(parseInt(id))} // Konvertuj nazad u number kada koristiš funkciju
-				>
+					data={{ id: category.id.toString() }}
+					toggleFunction={(id: string) => toggleCategory(parseInt(id))}>
 					<ArrowToggleButton isOpen={isCategoryExpanded(category.id)} onClick={() => {}} />
 				</ToggleButtonContainer>
 			)}
@@ -247,6 +233,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							setRelatedIds={setRelatedIds}
 							expandedCategories={expandedCategories}
 							toggleCategory={toggleCategory}
+							setError={setError}
+							setSuccessMessage={setSuccessMessage}
+							setLoading={setLoading}
 						/>
 					))}
 				</div>

@@ -1,18 +1,14 @@
 import H2 from '../../components/text/H2';
 import Image from 'next/image';
 import TextBlockItem from '../../ulaganje/collapsible/TextBlockItem';
-import ImageUploadButton from '../../components/buttons/ImageUploadButton';
 import ChooseImageButton from '../../components/buttons/ChooseImageButton';
 import CustomCombobox from '../../components/input/CustomCombobox';
 import SumbitButton from '../../components/buttons/SubmitButton';
-import {
-	Translation,
-	Category,
-	Icon,
-	Language,
-	TranslationUpdate,
-} from '../../../utils/helpers/types';
+import { Translation, Category, Language, TranslationUpdate } from '../../../utils/helpers/types';
 import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
+import LabelInputDefault from '../input/LabelInputDefault';
+import Label from '../text/Label';
+import H3 from '../text/H3';
 
 interface Props {
 	currentIcon: {
@@ -52,6 +48,27 @@ const EditCategoryForm: React.FC<Props> = ({
 	relatedIds,
 	setRelatedIds,
 }) => {
+	const handleTranslationChange = (languageId: number, translation: string) => {
+		setNewTranslations(prevTranslations =>
+			prevTranslations.map(t => (t.languageId === languageId ? { ...t, translation } : t))
+		);
+	};
+
+	const handleDescriptionChange = (languageId: number, description: string) => {
+		setNewTranslations(prevTranslations =>
+			prevTranslations.map(t => (t.languageId === languageId ? { ...t, description } : t))
+		);
+	};
+
+	const handleSynonymsChange = (languageId: number, synonyms: string) => {
+		const synonymsArray = synonyms.split(',').map(synonym => synonym.trim());
+		setNewTranslations(prevTranslations =>
+			prevTranslations.map(t =>
+				t.languageId === languageId ? { ...t, synonyms: synonymsArray } : t
+			)
+		);
+	};
+
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -66,16 +83,15 @@ const EditCategoryForm: React.FC<Props> = ({
 						<TextBlockItem content='Trenutna ikonica:' />
 						<Image src={currentIcon.iconUrl} alt='Current Icon' width={50} height={50} />
 					</div>
-				) : (
-					<p className='text-gray-500 mb-4'>No icon selected</p>
-				)}
+				) : undefined}
 				{newIcon && (
 					<div className='mt-4'>
-						<p>New Icon:</p>
-						<img
+						<p>Ikonica za upload:</p>
+						<Image
 							src={URL.createObjectURL(newIcon)}
 							alt='New Icon Preview'
-							className='w-16 h-16 object-cover'
+							width={100}
+							height={100}
 						/>
 					</div>
 				)}
@@ -91,79 +107,42 @@ const EditCategoryForm: React.FC<Props> = ({
 					<div key={language.id} className='flex flex-col text-black space-y-4'>
 						{/* Translation Input */}
 						<div>
-							<label
-								htmlFor={`translation-${language.id}`}
-								className='font-semibold mb-1 block text-lg'>
-								{`${language.name.charAt(0).toUpperCase()}${language.name
+							<LabelInputDefault
+								label={`${language.name.charAt(0).toUpperCase()}${language.name
 									.slice(1)
 									.toLocaleLowerCase()} naziv`}
-							</label>
-							<input
-								type='text'
-								id={`translation-${language.id}`}
-								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+								onChange={e => handleTranslationChange(language.id, e.target.value)}
 								value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
-								name='category-name'
-								onChange={e => {
-									const translation = e.target.value;
-									setNewTranslations(prevTranslations =>
-										prevTranslations.map(t =>
-											t.languageId === language.id ? { ...t, translation } : t
-										)
-									);
-								}}
+								id={`translation-${language.id}`}
+								placeholder=''
 							/>
 						</div>
 
 						{/* Description Input */}
 						<div>
-							<label
-								htmlFor={`description-${language.id}`}
-								className='font-semibold mb-1 block text-lg'>
-								{`${language.name.charAt(0).toUpperCase()}${language.name
-									.slice(1)
-									.toLocaleLowerCase()} opis`}
-							</label>
+							<Label htmlFor={`description-${language.id}`}>{`${language.name
+								.charAt(0)
+								.toUpperCase()}${language.name.slice(1).toLocaleLowerCase()} opis`}</Label>
 							<textarea
 								id={`description-${language.id}`}
 								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
 								value={newTranslations.find(t => t.languageId === language.id)?.description || ''}
-								onChange={e => {
-									const description = e.target.value;
-									setNewTranslations(prevTranslations =>
-										prevTranslations.map(t =>
-											t.languageId === language.id ? { ...t, description } : t
-										)
-									);
-								}}
+								onChange={e => handleDescriptionChange(language.id, e.target.value)}
 							/>
 						</div>
 
 						{/* Synonyms Input */}
 						<div>
-							<label
-								htmlFor={`synonyms-${language.id}`}
-								className='font-semibold mb-1 block text-lg'>
-								{`${language.name.charAt(0).toUpperCase()}${language.name
+							<LabelInputDefault
+								label={`${language.name.charAt(0).toUpperCase()}${language.name
 									.slice(1)
 									.toLocaleLowerCase()} sinonimi`}
-							</label>
-							<input
-								type='text'
-								name='translation'
-								placeholder='Odvojite ih zarezom'
-								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
+								onChange={e => handleSynonymsChange(language.id, e.target.value)}
 								value={
 									newTranslations.find(t => t.languageId === language.id)?.synonyms.join(', ') || ''
 								}
-								onChange={e => {
-									const synonyms = e.target.value.split(',').map(synonym => synonym.trim());
-									setNewTranslations(prevTranslations =>
-										prevTranslations.map(t =>
-											t.languageId === language.id ? { ...t, synonyms } : t
-										)
-									);
-								}}
+								id={`synonyms-${language.id}`}
+								placeholder='Odvojite ih zarezom'
 							/>
 						</div>
 					</div>
@@ -171,7 +150,7 @@ const EditCategoryForm: React.FC<Props> = ({
 			</div>
 
 			<div className='mb-6 w-full'>
-				<label className='font-semibold text-lg mb-3 block text-black'>Povezane kategorije:</label>
+				<H3 text='Povezane kategorije' />
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{relatedIds.map(relatedId => {
 						const relatedCategory = categories.find(cat => cat.id === relatedId);
@@ -235,9 +214,7 @@ const EditCategoryForm: React.FC<Props> = ({
 
 			{/* Parent Categories Section */}
 			<div className='mb-6 w-full'>
-				<label className='font-semibold text-lg mb-3 block text-black'>
-					Izabrane natkategorije:
-				</label>
+				<H3 text='Izabrane natkategorije:' />
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{[...new Set(parentIds)].length > 0 ? (
 						[...new Set(parentIds)].map(parentId => {

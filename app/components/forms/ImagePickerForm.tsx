@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '../../../utils/helpers/types';
-import CustomModal from '@/app/components/modals/CustomModal'; // Adjust the import path as needed
+import CustomModal from '@/app/components/modals/CustomModal';
+import InputDefault from '../input/InputDefault';
 
 interface ImagePickerProps {
 	icons: Icon[];
@@ -14,25 +15,26 @@ interface ImagePickerProps {
 const ImagePickerForm: React.FC<ImagePickerProps> = ({ icons, isOpen, onSelect, onClose }) => {
 	const [searchTerm, setSearchTerm] = useState<string>('');
 
-	// Filter icons based on the search term
 	const filteredIcons = icons.filter(icon =>
 		icon.name.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
-	return (
-		<CustomModal isOpen={isOpen} onRequestClose={onClose}>
-			<div className='mt-2 h-1/2 w-screen'>
-				{/* Search Input */}
-				<input
-					type='text'
-					placeholder='Search icons...'
-					value={searchTerm}
-					onChange={e => setSearchTerm(e.target.value)}
-					className='border p-2 rounded mb-4 w-full text-black'
-				/>
+	const handleClose = () => {
+		setSearchTerm('');
+		onClose();
+	};
 
-				{/* Display filtered icons */}
-				<div className='mt-2'>
+	return (
+		<CustomModal isOpen={isOpen} onRequestClose={handleClose}>
+			<div className='flex flex-col'>
+				<div className='m-2 h-1/2'>
+					<InputDefault
+						placeholder='Brza pretraga...'
+						value={searchTerm}
+						onChange={e => setSearchTerm(e.target.value)}
+					/>
+				</div>
+				<div className='mt-2 w-full'>
 					{filteredIcons.map(icon => (
 						<div key={icon.id} className='inline-block p-2'>
 							<Image

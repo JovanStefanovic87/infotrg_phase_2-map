@@ -7,6 +7,7 @@ import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import DynamicPageContainer from '../containers/DynamicPageContainer.';
+import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface Props {
 	prefix: string;
@@ -37,8 +38,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
-
-	// Fetch categories, languages, icons, etc.
 	const fetchCategories = () =>
 		apiClient<Category[]>({
 			method: 'GET',
@@ -75,11 +74,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			setCategories(categoriesData);
 			setTranslations(translationsData);
 			setIcons(iconsData);
-
-			// Filter fetched categories and retain expanded categories
 			setFilteredCategories(categoriesData);
-		} catch (error) {
-			console.error('Failed to refetch data', error);
+		} catch (err) {
+			handleError(err, setError, setSuccessMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -89,14 +86,13 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		refetchData();
 	}, [refetchData]);
 
-	// Fetch languages when component is mounted
 	useEffect(() => {
 		const fetchLanguagesData = async () => {
 			try {
 				const data = await fetchLanguages();
 				setLanguages(data);
 			} catch (err) {
-				console.error('Failed to fetch languages', err);
+				handleError(err, setError, setSuccessMessage);
 			}
 		};
 		fetchLanguagesData();
@@ -109,7 +105,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 					const data = await fetchTranslations(languageId);
 					setTranslations(data);
 				} catch (err) {
-					console.error('Failed to fetch translations', err);
+					handleError(err, setError, setSuccessMessage);
 				}
 			};
 			fetchTranslationsData();
@@ -137,7 +133,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
-				relatedIds, // Send relatedIds along with the request
+				relatedIds,
 				labelId: newLabelId,
 				iconId,
 				name,
@@ -146,9 +142,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			if (!categoryData) throw new Error('Failed to create category');
 
 			const translations = languages.map(language => ({
-				labelId: newLabelId, // Proslijedite ovde labelId
-				languageId: language.id, // Koristimo jezik ID
-				translation: language.id === 1 ? name : '', // Postavljamo prevod za osnovni jezik
+				labelId: newLabelId,
+				languageId: language.id,
+				translation: language.id === 1 ? name : '',
 			}));
 
 			await axios.post('/api/translation', { translations });
@@ -158,10 +154,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
 			await refetchData();
 		} catch (err) {
-			setError(
-				`Submission Error: ${err instanceof Error ? err.message : 'An unexpected error occurred.'}`
-			);
-			setSuccessMessage(null);
+			handleError(err, setError, setSuccessMessage);
 		}
 	};
 
@@ -175,6 +168,15 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setLanguageId(1);
 		setIcon(null);
 		setError('');
+	};
+
+	const handleDeleteCategory = async (id: number) => {
+		try {
+			await axios.delete(`/api/categories/${id}`);
+			await refetchData();
+		} catch (err) {
+			handleError(err, setError, setSuccessMessage);
+		}
 	};
 
 	return (
@@ -207,14 +209,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 					relatedIds={relatedIds}
 					setRelatedIds={setRelatedIds}
 					refetchCategories={refetchData}
-					onDeleteCategory={async id => {
-						try {
-							await axios.delete(`/api/categories/${id}`);
-							await refetchData();
-						} catch (err) {
-							console.error('Failed to delete category', err);
-						}
-					}}
+					onDeleteCategory={(id: number) => handleDeleteCategory(id)}
 					isIconPickerOpen={isIconPickerOpen}
 					setIsIconPickerOpen={setIsIconPickerOpen}
 					expandedCategories={expandedCategories}
@@ -225,6 +220,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setFilteredCategories={setFilteredCategories}
 					initialExpandedCategories={initialExpandedCategories}
 					setInitialExpandedCategories={setInitialExpandedCategories}
+					setError={setError}
+					setSuccessMessage={setSuccessMessage}
+					setLoading={setLoading}
 				/>
 			</div>
 			<ImagePickerForm

@@ -11,22 +11,20 @@ import {
 import CustomModal from '@/app/components/modals/CustomModal';
 import LocationItem from './LocationItem';
 import EditLocationForm from '../forms/EditLocationForm';
+import { handleError } from '@/utils/helpers/universalFunctions';
 import axios from 'axios';
 
 interface LocationListProps {
 	locations: Location[];
-	icons: Icon[];
 	currentIcon: CurrentIcon;
 	setCurrentIcon: React.Dispatch<React.SetStateAction<CurrentIcon>>;
 	languages: Language[];
 	languageId: number;
 	refetchLocations: () => Promise<void>;
-	onDeleteLocation: (id: number) => Promise<void>;
 	expandedLocations: Set<number>;
 	setExpandedLocations: React.Dispatch<React.SetStateAction<Set<number>>>;
 	manuallyExpandedLocations: Set<number>;
 	setManuallyExpandedLocations: React.Dispatch<React.SetStateAction<Set<number>>>;
-	filteredLocations: Location[];
 	setFilteredLocations: React.Dispatch<React.SetStateAction<Location[]>>;
 	initialExpandedLocations: Set<number>;
 	setInitialExpandedLocations: React.Dispatch<React.SetStateAction<Set<number>>>;
@@ -37,22 +35,21 @@ interface LocationListProps {
 	setPostCode: React.Dispatch<React.SetStateAction<string>>;
 	address: string;
 	setAddress: React.Dispatch<React.SetStateAction<string>>;
+	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
+	setError: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const LocationList: React.FC<LocationListProps> = ({
 	locations,
-	icons,
 	currentIcon,
 	setCurrentIcon,
 	languages,
 	languageId,
 	refetchLocations,
-	onDeleteLocation,
 	expandedLocations,
 	setExpandedLocations,
 	manuallyExpandedLocations,
 	setManuallyExpandedLocations,
-	filteredLocations,
 	setFilteredLocations,
 	initialExpandedLocations,
 	setInitialExpandedLocations,
@@ -63,13 +60,13 @@ const LocationList: React.FC<LocationListProps> = ({
 	setPostCode,
 	address,
 	setAddress,
+	setSuccessMessage,
+	setError,
 }) => {
-	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditLocation, setCurrentEditLocation] = useState<Location | null>(null);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const [isTranslationModalOpen, setIsTranslationModalOpen] = useState<boolean>(false);
 
-	// Otvaranje modala za prevode, prevodi su već deo lokacije
 	const handleOpenTranslationModal = (location: Location) => {
 		setCurrentEditLocation(location);
 		setIsTranslationModalOpen(true);
@@ -129,8 +126,9 @@ const LocationList: React.FC<LocationListProps> = ({
 
 			setIsTranslationModalOpen(false);
 			await refetchLocations();
-		} catch (error) {
-			console.error('Failed to update translations and icon', error);
+			setSuccessMessage('Lokacija uspešno ažurirana.');
+		} catch (err) {
+			handleError(err, setError, setSuccessMessage);
 		}
 	};
 
@@ -141,8 +139,9 @@ const LocationList: React.FC<LocationListProps> = ({
 		try {
 			await axios.delete(`/api/locations/${id}?type=${type}`);
 			await refetchLocations();
-		} catch (error) {
-			console.error('Greška prilikom brisanja lokacije:', error);
+			setSuccessMessage('Lokacija uspešno obrisana.');
+		} catch (err) {
+			handleError(err, setError, setSuccessMessage);
 		}
 	};
 
@@ -360,6 +359,8 @@ const LocationList: React.FC<LocationListProps> = ({
 						setPostCode={setPostCode}
 						address={address}
 						setAddress={setAddress}
+						setError={setError}
+						setSuccessMessage={setSuccessMessage}
 					/>
 				</CustomModal>
 			)}

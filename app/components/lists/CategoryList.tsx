@@ -5,6 +5,8 @@ import CustomModal from '@/app/components/modals/CustomModal';
 import axios from 'axios';
 import CategoryItem from './CategoryItem';
 import EditCategoryForm from '../forms/EditCategoryForm';
+import InputDefault from '../input/InputDefault';
+import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryListProps {
 	categories: Category[];
@@ -31,6 +33,9 @@ interface CategoryListProps {
 	setManuallyExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 	expandedCategories: Set<number>;
 	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	setError: React.Dispatch<React.SetStateAction<string>>;
+	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
+	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 interface TranslationUpdate {
@@ -62,6 +67,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setInitialExpandedCategories,
 	expandedCategories,
 	setExpandedCategories,
+	setError,
+	setSuccessMessage,
+	setLoading,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
@@ -108,12 +116,10 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		}
 	}, [manuallyExpandedCategories]);
 
-	// Search logic and reset state when search is cleared
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			// Sortiraj kategorije po abecednom redosledu (po imenu)
 			const sortedCategories = [...categories].sort((a, b) => {
-				return a.name.localeCompare(b.name); // Sortiranje po imenu
+				return a.name.localeCompare(b.name);
 			});
 
 			setFilteredCategories(sortedCategories);
@@ -124,7 +130,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				searchQuery
 			);
 
-			// Sortiraj filtrirane kategorije po abecednom redosledu
 			const sortedFiltered = filtered.sort((a, b) => {
 				return a.name.localeCompare(b.name);
 			});
@@ -134,10 +139,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		}
 	}, [searchQuery, categories, initialExpandedCategories]);
 
-	// Save expanded categories on initial load or refetch
 	useEffect(() => {
 		if (!searchQuery.trim()) {
-			// This will only set expandedCategories if manuallyExpandedCategories has changed
 			setExpandedCategories(prev => {
 				const manuallyExpanded = manuallyExpandedCategories;
 
@@ -145,9 +148,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					prev.size !== manuallyExpanded.size ||
 					[...prev].some(id => !manuallyExpanded.has(id))
 				) {
-					return new Set(manuallyExpanded); // Create a new Set only if it has changed
+					return new Set(manuallyExpanded);
 				}
-				return prev; // No update needed
+				return prev;
 			});
 		}
 	}, [manuallyExpandedCategories, searchQuery]);
@@ -160,14 +163,13 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	const handleCloseModal = () => {
 		setIsModalOpen(false);
-		setNewIcon(null); // Reset newIcon when closing the modal
-		setCurrentIcon({ iconId: null, iconUrl: null }); // Optionally reset currentIcon
-		setRelatedIds([]); // Reset relatedIds
-		setParentIds([]); // Reset parent categories
-		setNewTranslations([]); // Clear translation updates
+		setNewIcon(null);
+		setCurrentIcon({ iconId: null, iconUrl: null });
+		setRelatedIds([]);
+		setParentIds([]);
+		setNewTranslations([]);
 	};
 
-	// Handle the edit form submission
 	const handleSubmitEdit = useCallback(
 		async (event: React.FormEvent) => {
 			event.preventDefault();
@@ -210,7 +212,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 				setRelatedIds([]);
 				await refetchCategories();
 			} catch (err) {
-				console.error('Failed to edit category', err);
+				handleError(err, setError, setSuccessMessage);
 			}
 		},
 		[
@@ -229,52 +231,48 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		if (event.target.files && event.target.files.length > 0) {
 			const selectedFile = event.target.files[0];
 			setNewIcon(selectedFile);
-		} else {
-			console.log('No file selected');
 		}
 	};
 
 	const handleDelete = useCallback(
 		async (id: number) => {
-			if (confirm('Are you sure you want to delete this category?')) {
+			if (
+				confirm('Da li ste sigurni da želite obrisati ovu kategoriju i njene moguće potkategorije?')
+			) {
 				try {
 					await onDeleteCategory(id);
 					await refetchCategories();
 				} catch (err) {
-					console.error('Failed to delete category', err);
+					handleError(err, setError, setSuccessMessage);
 				}
 			}
 		},
 		[onDeleteCategory, refetchCategories]
 	);
 
-	// Helper function to filter categories for the select input (avoiding circular references)
 	const filterCategoriesForSelect = () => {
 		const allCategories: Category[] = [];
 
 		const traverseCategories = (categoryList: Category[]) => {
 			categoryList.forEach(cat => {
-				allCategories.push(cat); // Add the current category to the list
+				allCategories.push(cat);
 
 				if (cat.children && cat.children.length > 0) {
-					traverseCategories(cat.children); // Recursively add subcategories
+					traverseCategories(cat.children);
 				}
 			});
 		};
 
-		traverseCategories(categories); // Start from the root categories
+		traverseCategories(categories);
 
-		// Filter out categories that are already related, selected as parent categories,
-		// and the category being edited (currentEditCategory).
 		return allCategories.filter(
 			cat =>
 				!relatedIds.includes(cat.id) &&
 				!parentIds.includes(cat.id) &&
-				cat.id !== currentEditCategory?.id // Exclude the category being edited
+				cat.id !== currentEditCategory?.id
 		);
 	};
 
-	// Recursive function to get all descendants of a category
 	const getDescendants = (
 		category: Category,
 		descendants: Set<number> = new Set()
@@ -302,18 +300,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		return ancestors;
 	};
 
-	// Function to get the complete branch of a category (descendants + ancestors)
-	const getCompleteBranch = (category: Category): Set<number> => {
-		const branch = new Set<number>();
-		branch.add(category.id); // Add the category itself
-		const descendants = getDescendants(category);
-		const ancestors = getAncestors(category);
-		descendants.forEach(id => branch.add(id));
-		ancestors.forEach(id => branch.add(id));
-		return branch;
-	};
-
-	// Get the category name in the current language
 	const getCategoryName = useCallback(
 		(labelId: number, languageId: number) => {
 			const translation = translations.find(
@@ -322,7 +308,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			if (translation && translation.translation) {
 				return translation.translation.charAt(0).toUpperCase() + translation.translation.slice(1);
 			}
-			return 'Unknown';
+			return 'Nedostaje naziv kategorije';
 		},
 		[translations]
 	);
@@ -349,14 +335,14 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	};
 
 	return (
-		<div>
+		<>
 			<div className='mb-4'>
-				<input
-					type='text'
+				<InputDefault
 					placeholder='Brza pretraga kategorija'
 					value={searchQuery}
-					onChange={e => setSearchQuery(e.target.value)}
-					className='border p-2 w-full text-black'
+					onChange={(e: { target: { value: React.SetStateAction<string> } }) =>
+						setSearchQuery(e.target.value)
+					}
 				/>
 			</div>
 			{filteredCategories.map(category => (
@@ -377,6 +363,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					toggleCategory={toggleCategory}
 					expandedCategories={expandedCategories}
 					setRelatedIds={setRelatedIds}
+					setError={setError}
+					setSuccessMessage={setSuccessMessage}
+					setLoading={setLoading}
 				/>
 			))}
 
@@ -401,7 +390,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					/>
 				</CustomModal>
 			)}
-		</div>
+		</>
 	);
 };
 

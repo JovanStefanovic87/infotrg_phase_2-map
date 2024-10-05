@@ -5,6 +5,7 @@ import Combobox from '@/app/components/input/CustomCombobox';
 import { Translation, Icon } from '@/utils/helpers/types';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
 import Label from '../../components/text/Label';
+import LabelInputDefault from '../input/LabelInputDefault';
 
 interface CategoryFormProps {
 	name: string;
@@ -27,19 +28,20 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	onSubmit,
 	setIsIconPickerOpen,
 }) => {
-	// Convert parentIds to selected translations for Combobox
 	const selectedParents = translations.filter(t => parentIds.includes(t.labelId));
+
+	const handleSelectParents = (newSelectedOptions: { labelId: number }[]) => {
+		const newParentIds = newSelectedOptions.map(option => option.labelId);
+		setParentIds(newParentIds);
+	};
 
 	return (
 		<form onSubmit={onSubmit} className='space-y-4'>
 			<div>
-				<Label htmlFor='name'>Naziv kategrorije:</Label>
-				<input
-					type='text'
-					id='name'
+				<LabelInputDefault
+					label='Naziv kategorije'
 					value={name}
 					onChange={e => setName(e.target.value)}
-					className='block w-full p-3 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-blue-500'
 					placeholder='Unesite naziv'
 				/>
 			</div>
@@ -47,11 +49,8 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 				<Label htmlFor='parentId'>Naziv natkategorije (opciono):</Label>
 				<Combobox
 					options={translations}
-					selectedOptions={selectedParents} // Pass selected parent translations
-					onSelect={newSelectedOptions => {
-						const newParentIds = newSelectedOptions.map(option => option.labelId);
-						setParentIds(newParentIds);
-					}}
+					selectedOptions={selectedParents}
+					onSelect={handleSelectParents}
 					placeholder='Izaberite natkategoriju'
 				/>
 			</div>
@@ -62,11 +61,7 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 					onChange={e => onFileChange(e.target.files ? e.target.files[0] : null)}
 				/>
 
-				{/* Use ChooseImageButton for selecting images from the library */}
-				<ChooseImageButton
-					onClick={() => setIsIconPickerOpen(true)}
-					label='Izbor ikonice' // Custom label
-				/>
+				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Izbor ikonice' />
 			</div>
 			<div>
 				<SubmitButton>Sačuvaj</SubmitButton>

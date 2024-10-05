@@ -64,6 +64,17 @@ export const getCategoryIconUrl = (iconId: number | null, icons: Icon[]): string
 
 export const clearError = (setError: (arg: string) => void) => setError('');
 
+export const handleError = (
+	err: unknown,
+	setError: (message: string) => void,
+	setSuccessMessage: (message: string | null) => void
+) => {
+	const errorMessage = err instanceof Error ? err.message : 'Obratite se administratoru.';
+	setError(errorMessage);
+	setSuccessMessage(null);
+	console.error('Error:', err);
+};
+
 /* export const formatCategoryOptions = (categories: Category[], searchTerm: string): any[] => {
 	const categoryMap = new Map<string, any>();
 	const lowercasedSearch = searchTerm.toLowerCase();

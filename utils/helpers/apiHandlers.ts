@@ -2,6 +2,7 @@
 import { useEffect, useState, SyntheticEvent } from 'react';
 import { Category, CategoryData, HandleAddCategoryProps, Language } from '@/utils/helpers/types';
 import axios from 'axios';
+import { QueryObserverResult, RefetchOptions } from '@tanstack/react-query';
 
 export const handleAddCategory = (
 	getCategoryData: () => CategoryData,
