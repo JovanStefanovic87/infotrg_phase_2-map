@@ -3,13 +3,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import CategoryList from '../lists/CategoryList';
 import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
-import PageContainer from '@/app/components/containers/PageContainer';
 import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
-import H1 from '@/app/components/text/H1';
-import ErrorDisplay from '@/app/components/modals/systemModals/ErrorDisplay';
-import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
+import DynamicPageContainer from '../containers/DynamicPageContainer.';
 
 interface Props {
 	prefix: string;
@@ -40,8 +37,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
-
-	const clearError = () => setError('');
 
 	// Fetch categories, languages, icons, etc.
 	const fetchCategories = () =>
@@ -183,66 +178,62 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	};
 
 	return (
-		<>
-			{loading ? (
-				<LoadingSpinner />
-			) : (
-				<PageContainer>
-					<H1 title={title} />
-					<ErrorDisplay error={error} clearError={clearError} />
-					{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
-
-					<NewCategoryForm
-						name={name}
-						setName={setName}
-						parentIds={parentIds}
-						setParentIds={setParentIds}
-						translations={translations}
-						onFileChange={handleFileChange}
-						onSubmit={handleSubmit}
-						setIsIconPickerOpen={setIsIconPickerOpen}
-					/>
-					<div className='mt-8'>
-						<CategoryList
-							categories={categories}
-							translations={translations}
-							icons={icons}
-							currentIcon={currentIcon}
-							setCurrentIcon={setCurrentIcon}
-							languages={languages}
-							languageId={languageId}
-							relatedIds={relatedIds}
-							setRelatedIds={setRelatedIds}
-							refetchCategories={refetchData}
-							onDeleteCategory={async id => {
-								try {
-									await axios.delete(`/api/categories/${id}`);
-									await refetchData();
-								} catch (err) {
-									console.error('Failed to delete category', err);
-								}
-							}}
-							isIconPickerOpen={isIconPickerOpen}
-							setIsIconPickerOpen={setIsIconPickerOpen}
-							expandedCategories={expandedCategories}
-							setExpandedCategories={setExpandedCategories}
-							manuallyExpandedCategories={manuallyExpandedCategories}
-							setManuallyExpandedCategories={setManuallyExpandedCategories}
-							filteredCategories={filteredCategories}
-							setFilteredCategories={setFilteredCategories}
-							initialExpandedCategories={initialExpandedCategories}
-							setInitialExpandedCategories={setInitialExpandedCategories}
-						/>
-					</div>
-					<ImagePickerForm
-						icons={icons}
-						isOpen={isIconPickerOpen}
-						onSelect={setCurrentIcon}
-						onClose={() => setIsIconPickerOpen(false)}
-					/>
-				</PageContainer>
-			)}
-		</>
+		<DynamicPageContainer
+			clearSuccess={() => setSuccessMessage(null)}
+			successMessage={successMessage}
+			error={error}
+			clearError={() => setError('')}
+			loading={loading}
+			title={title}>
+			<NewCategoryForm
+				name={name}
+				setName={setName}
+				parentIds={parentIds}
+				setParentIds={setParentIds}
+				translations={translations}
+				onFileChange={handleFileChange}
+				onSubmit={handleSubmit}
+				setIsIconPickerOpen={setIsIconPickerOpen}
+			/>
+			<div className='mt-8'>
+				<CategoryList
+					categories={categories}
+					translations={translations}
+					icons={icons}
+					currentIcon={currentIcon}
+					setCurrentIcon={setCurrentIcon}
+					languages={languages}
+					languageId={languageId}
+					relatedIds={relatedIds}
+					setRelatedIds={setRelatedIds}
+					refetchCategories={refetchData}
+					onDeleteCategory={async id => {
+						try {
+							await axios.delete(`/api/categories/${id}`);
+							await refetchData();
+						} catch (err) {
+							console.error('Failed to delete category', err);
+						}
+					}}
+					isIconPickerOpen={isIconPickerOpen}
+					setIsIconPickerOpen={setIsIconPickerOpen}
+					expandedCategories={expandedCategories}
+					setExpandedCategories={setExpandedCategories}
+					manuallyExpandedCategories={manuallyExpandedCategories}
+					setManuallyExpandedCategories={setManuallyExpandedCategories}
+					filteredCategories={filteredCategories}
+					setFilteredCategories={setFilteredCategories}
+					initialExpandedCategories={initialExpandedCategories}
+					setInitialExpandedCategories={setInitialExpandedCategories}
+				/>
+			</div>
+			<ImagePickerForm
+				icons={icons}
+				isOpen={isIconPickerOpen}
+				onSelect={setCurrentIcon}
+				onClose={() => setIsIconPickerOpen(false)}
+			/>
+		</DynamicPageContainer>
 	);
 };
 

@@ -1,5 +1,5 @@
 import { NextPage } from 'next';
-import CategoriesAdmin from '../../components/categories/CategoriesAdmin';
+import CategoriesAdmin from '../../components/pageContent/CategoriesAdmin';
 import { prefixAticleCategory } from '@/app/api/prefix';
 
 const AticleCategoriesAdminPage: NextPage = () => {

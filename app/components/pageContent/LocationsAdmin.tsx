@@ -1,17 +1,16 @@
 'use client';
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon, Country, City } from '@/utils/helpers/types';
-import PageContainer from '@/app/components/containers/PageContainer';
 import NewLocationForm from '../forms/NewLocationForm';
 import ImagePickerForm from '../forms/ImagePickerForm';
-import H1 from '@/app/components/text/H1';
 
 // Import the API hooks from TanStack
 import { useFetchLocations, useCreateLocation } from '@/app/helpers/api/location';
 import { useFetchLanguages } from '@/app/helpers/api/language';
 import { useFetchIcons, useUploadIcon } from '@/app/helpers/api/icon';
+import DynamicPageContainer from '../containers/DynamicPageContainer.';
 
 interface Props {
 	prefix: string;
@@ -19,13 +18,13 @@ interface Props {
 }
 
 const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
-	// Keep the useState hooks unchanged
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [address, setAddress] = useState<string>('');
 	const [postCode, setPostCode] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 	const [locations, setLocations] = useState<Location[]>([]);
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
@@ -48,16 +47,25 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [initialExpandedLocations, setInitialExpandedLocations] = useState<Set<number>>(new Set());
 
 	// Use TanStack Query for fetching data
-	const { data: locationsData, refetch: refetchLocations } = useFetchLocations({
+	const {
+		data: locationsData,
+		isLoading: isLoadingLocations,
+		refetch: refetchLocations,
+	} = useFetchLocations({
 		prefix,
 		languageId,
 	});
-	const { data: languagesData } = useFetchLanguages();
-	const { data: iconsData } = useFetchIcons({ directory: 'locations' });
+	const { data: languagesData, isLoading: isLoadingLanguages } = useFetchLanguages();
+	const { data: iconsData, isLoading: isLoadingIcons } = useFetchIcons({ directory: 'locations' });
 
 	// Use TanStack Mutation hooks for creating locations and uploading icons
 	const createLocationMutation = useCreateLocation();
 	const uploadIconMutation = useUploadIcon();
+
+	useEffect(() => {
+		// Set loading state based on the loading status of TanStack Query hooks
+		setLoading(isLoadingLocations || isLoadingLanguages || isLoadingIcons);
+	}, [isLoadingLocations, isLoadingLanguages, isLoadingIcons]);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -117,8 +125,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				translation: name,
 			}));
 
-			console.log('Translations in Locations:', translations);
-
 			await axios.post('/api/translation', { translations });
 
 			// Reset the form and show success message
@@ -158,11 +164,13 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	}, [locationsData, languagesData, iconsData]);
 
 	return (
-		<PageContainer>
-			<H1 title={title} />
-			{error && <p className='text-red-500 mb-4'>{error}</p>}
-			{successMessage && <p className='text-green-500 mb-4'>{successMessage}</p>}
-
+		<DynamicPageContainer
+			clearSuccess={() => setSuccessMessage(null)}
+			successMessage={successMessage}
+			error={error}
+			clearError={() => setError('')}
+			loading={loading}
+			title={title}>
 			<NewLocationForm
 				languageId={languageId}
 				onSubmit={handleSubmit}
@@ -230,7 +238,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				onSelect={setCurrentIcon}
 				onClose={() => setIsIconPickerOpen(false)}
 			/>
-		</PageContainer>
+		</DynamicPageContainer>
 	);
 };
 

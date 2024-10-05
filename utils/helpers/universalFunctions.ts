@@ -62,6 +62,8 @@ export const getCategoryIconUrl = (iconId: number | null, icons: Icon[]): string
 	return icon ? icon.url : '';
 };
 
+export const clearError = (setError: (arg: string) => void) => setError('');
+
 /* export const formatCategoryOptions = (categories: Category[], searchTerm: string): any[] => {
 	const categoryMap = new Map<string, any>();
 	const lowercasedSearch = searchTerm.toLowerCase();
