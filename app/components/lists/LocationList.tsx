@@ -13,8 +13,9 @@ import LocationItem from './LocationItem';
 import EditLocationForm from '../forms/EditLocationForm';
 import { handleError } from '@/utils/helpers/universalFunctions';
 import axios from 'axios';
+import InputDefault from '../input/InputDefault';
 
-interface LocationListProps {
+interface Props {
 	locations: Location[];
 	currentIcon: CurrentIcon;
 	setCurrentIcon: React.Dispatch<React.SetStateAction<CurrentIcon>>;
@@ -39,7 +40,7 @@ interface LocationListProps {
 	setError: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const LocationList: React.FC<LocationListProps> = ({
+const LocationList: React.FC<Props> = ({
 	locations,
 	currentIcon,
 	setCurrentIcon,
@@ -315,12 +316,10 @@ const LocationList: React.FC<LocationListProps> = ({
 	return (
 		<div>
 			<div className='mb-4'>
-				<input
-					type='text'
-					placeholder='Search locations'
+				<InputDefault
+					placeholder='Brza pretraga lokacija'
 					value={searchQuery}
 					onChange={e => setSearchQuery(e.target.value)}
-					className='border p-2 w-full text-black'
 				/>
 			</div>
 

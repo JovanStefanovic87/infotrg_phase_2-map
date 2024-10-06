@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
 import ErrorDisplay from '@/app/components/modals/systemModals/ErrorDisplay';
-import SuccessDisplay from '../pageContent/SuccessDisplay';
+import SuccessDisplay from '../modals/systemModals/SuccessDisplay';
 import H1 from '../text/H1';
 
 interface Props {
@@ -25,7 +25,6 @@ const DynamicPageContainer: React.FC<Props> = ({
 }) => {
 	return (
 		<div className='container mx-auto px-3 pt-0 lg:pt-6 lg:px-6 w-screen'>
-			{/* Sadržaj je uvek prikazan */}
 			<ErrorDisplay error={error} clearError={clearError} />
 			<SuccessDisplay success={successMessage || ''} clearSuccess={clearSuccess} />
 			<H1 title={title} />

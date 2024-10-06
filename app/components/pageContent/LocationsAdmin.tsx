@@ -19,31 +19,31 @@ interface Props {
 }
 
 const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<string>('');
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [languages, setLanguages] = useState<Language[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
+	const [locations, setLocations] = useState<Location[]>([]);
 	const [name, setName] = useState<string>('');
 	const [address, setAddress] = useState<string>('');
 	const [postCode, setPostCode] = useState<string>('');
-	const [error, setError] = useState<string>('');
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [locations, setLocations] = useState<Location[]>([]);
-	const [languages, setLanguages] = useState<Language[]>([]);
 	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
+	const [newIcon, setNewIcon] = useState<File | null>(null);
+	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
+	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [type, setType] = useState<'country' | 'city' | 'cityPart' | 'marketplace'>('country');
 	const [countryId, setCountryId] = useState<number | null>(null);
 	const [cityId, setCityId] = useState<number | null>(null);
 	const [cityPartId, setCityPartId] = useState<number | null>(null);
-	const [newIcon, setNewIcon] = useState<File | null>(null);
-	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
-	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set());
 	const [manuallyExpandedLocations, setManuallyExpandedLocations] = useState<Set<number>>(
 		new Set()
 	);
 	const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
 	const [initialExpandedLocations, setInitialExpandedLocations] = useState<Set<number>>(new Set());
+	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
 	// Use TanStack Query for fetching data
 	const {
@@ -60,17 +60,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	// Use TanStack Mutation hooks for creating locations and uploading icons
 	const createLocationMutation = useCreateLocation();
 	const uploadIconMutation = useUploadIcon();
-
-	const handleDeleteLocation = async (id: number) => {
-		try {
-			await axios.delete(`/api/locations/${id}`);
-			await refetchLocations();
-			setSuccessMessage('Lokacija uspešno obrisana.');
-			setError('');
-		} catch (err) {
-			handleError(err, setError, setSuccessMessage);
-		}
-	};
 
 	useEffect(() => {
 		setLoading(isLoadingLocations || isLoadingLanguages || isLoadingIcons);

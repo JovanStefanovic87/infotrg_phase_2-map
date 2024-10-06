@@ -227,10 +227,13 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			<div className='flex flex-col'>
 				<ImageUploadButton
 					id='upload-icon'
-					label='Upload Icon'
+					label='Dodajte novi logo'
 					onChange={e => handleIconChange(e.target.files?.[0] || null)}
 				/>
-				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Choose Existing Icon' />
+				<ChooseImageButton
+					onClick={() => setIsIconPickerOpen(true)}
+					label='Izaberite postojeći logo'
+				/>
 			</div>
 
 			{/* Submit Button */}
