@@ -9,6 +9,7 @@ import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
 import LabelInputDefault from '../input/LabelInputDefault';
 import Label from '../text/Label';
 import H3 from '../text/H3';
+import DeleteTextButton from '../buttons/DeleteTextButton';
 
 interface Props {
 	currentIcon: {
@@ -160,12 +161,11 @@ const EditCategoryForm: React.FC<Props> = ({
 									{translations.find(t => t.labelId === relatedCategory?.labelId)?.translation ||
 										'Unknown'}
 								</span>
-								<button
-									type='button'
-									onClick={() => setRelatedIds(relatedIds.filter(id => id !== relatedId))}
-									className='ml-4 text-red-500 hover:text-red-700'>
-									Ukloni
-								</button>
+								<DeleteTextButton
+									relatedId={relatedId}
+									relatedIds={relatedIds}
+									setRelatedIds={setRelatedIds}
+								/>
 							</li>
 						);
 					})}
@@ -228,12 +228,11 @@ const EditCategoryForm: React.FC<Props> = ({
 									<span className='text-sm text-gray-800'>
 										{translation ? translation.translation : 'Translation not available'}
 									</span>
-									<button
-										type='button'
-										onClick={() => setParentIds(parentIds.filter(id => id !== parentId))}
-										className='ml-4 text-red-500 hover:text-red-700 focus:outline-none'>
-										Ukloni
-									</button>
+									<DeleteTextButton
+										relatedId={parentId}
+										relatedIds={parentIds}
+										setRelatedIds={setParentIds}
+									/>
 								</li>
 							);
 						})
@@ -261,7 +260,7 @@ const EditCategoryForm: React.FC<Props> = ({
 					selectedOptions={translations.filter(t => parentIds.includes(t.labelId))}
 					onSelect={selectedOptions => {
 						const newParentIds = selectedOptions.map(option => option.labelId);
-						setParentIds(newParentIds);
+						setParentIds(prevParentIds => [...new Set([...prevParentIds, ...newParentIds])]);
 					}}
 					placeholder='Izaberite natkategorije'
 				/>
