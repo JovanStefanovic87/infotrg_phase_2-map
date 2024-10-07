@@ -294,15 +294,29 @@ export interface CityPart extends LocationBase {
 }
 
 export interface Marketplace extends LocationBase {
-	name: string; // Name of the marketplace
-	address: string; // Address of the marketplace
-	cityPartId: number; // Foreign key to CityPart
-	createdAt: string; // Creation date
-	iconId?: number; // Optional foreign key for Icon
-	icon?: Icon; // Optional relation with Icon
-	labelId: number; // Foreign key for Label (make this required)
-	label: Label; // Relation with Label (make this required)
-	type: string; // Type of location
+	name: string;
+	address: string;
+	cityPartId: number;
+	createdAt: string;
+	iconId?: number;
+	icon?: Icon;
+	labelId: number;
+	label: Label;
+	type: string;
 }
 
 export type Location = Country | City | CityPart | Marketplace;
+
+export interface AdType {
+	id: number;
+	name: string;
+}
+
+export interface RetailLocationData {
+	countryId: number;
+	cityId: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
+	latitude?: number;
+	longitude?: number;
+}
