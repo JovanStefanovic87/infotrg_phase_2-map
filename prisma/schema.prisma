@@ -60,9 +60,9 @@ model Country {
   cities    City[]
   createdAt DateTime @default(now())
 
-  iconId      Int? // Foreign key for Icon
-  icon        Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  RetailStore RetailStore[]
+  iconId       Int? // Foreign key for Icon
+  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  RetailStores RetailStore[]
 }
 
 model City {
@@ -75,9 +75,9 @@ model City {
   cityParts CityPart[] // This should be the correct field name
   createdAt DateTime   @default(now())
 
-  iconId      Int? // Foreign key for Icon
-  icon        Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  RetailStore RetailStore[]
+  iconId       Int? // Foreign key for Icon
+  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  RetailStores RetailStore[]
 
   @@unique([labelId, countryId])
 }
@@ -94,7 +94,7 @@ model CityPart {
   iconId       Int? // Foreign key for Icon
   icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   marketplaces Marketplace[] // This should be defined here as well
-  RetailStore  RetailStore[]
+  RetailStores RetailStore[]
 
   @@unique([labelId, cityId])
 }
@@ -107,11 +107,11 @@ model Marketplace {
   cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
-  iconId      Int? // Optional foreign key for Icon
-  icon        Icon?         @relation(fields: [iconId], references: [id]) // Relation with Icon
-  labelId     Int // Required foreign key for Label
-  label       Label         @relation(fields: [labelId], references: [id]) // Relation with Label
-  RetailStore RetailStore[]
+  iconId       Int? // Optional foreign key for Icon
+  icon         Icon?         @relation(fields: [iconId], references: [id]) // Relation with Icon
+  labelId      Int // Required foreign key for Label
+  label        Label         @relation(fields: [labelId], references: [id]) // Relation with Label
+  RetailStores RetailStore[]
 
   @@index([name]) // Optional index for marketplace name
 }
@@ -124,8 +124,8 @@ model Category {
   label             Label             @relation("CategoryToLabel", fields: [labelId], references: [id])
   parentCategories  ParentCategory[]  @relation("Parent")
   childCategories   ParentCategory[]  @relation("Child")
-  relatedCategories RelatedCategory[] @relation("CategoryRelated") // Related categories
-  relatedTo         RelatedCategory[] @relation("RelatedToCategory") // Reverse relation for related categories
+  relatedCategories RelatedCategory[] @relation("CategoryRelated")
+  relatedTo         RelatedCategory[] @relation("RelatedToCategory")
   retailStores      RetailStore[]     @relation("RetailStoreCategories")
   createdAt         DateTime          @default(now())
 }
@@ -137,7 +137,7 @@ model ParentCategory {
   parent Category @relation("Parent", fields: [parentId], references: [id], onDelete: Cascade)
   child  Category @relation("Child", fields: [childId], references: [id], onDelete: Cascade)
 
-  @@id([parentId, childId]) // Composite primary key to ensure unique parent-child pairs
+  @@id([parentId, childId])
 }
 
 model RelatedCategory {
@@ -146,18 +146,18 @@ model RelatedCategory {
   category   Category @relation("CategoryRelated", fields: [categoryId], references: [id], onDelete: Cascade)
   related    Category @relation("RelatedToCategory", fields: [relatedId], references: [id], onDelete: Cascade)
 
-  @@id([categoryId, relatedId]) // Composite key to ensure unique relations
+  @@id([categoryId, relatedId])
 }
 
 model Icon {
   id          Int           @id @default(autoincrement())
   name        String
-  url         String // e.g., 'icon.png'
+  url         String
   createdAt   DateTime      @default(now())
-  Category    Category[] // Relations with Categories (if needed)
-  Country     Country[] // Relation with Country
-  City        City[] // Relation with City
-  CityPart    CityPart[] // Relation with CityPart
+  Category    Category[]
+  Country     Country[]
+  City        City[]
+  CityPart    CityPart[]
   Marketplace Marketplace[]
 
   @@index([name])
@@ -186,45 +186,39 @@ model Company {
   aboutCompany      String?
   logoId            Int?
   retailStores      RetailStore[]
-  logo              Logo[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model RetailStore {
-  id                 Int           @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   name               String
-  storeTypeId        Int?
-  storeType          StoreType?    @relation(fields: [storeTypeId], references: [id], onDelete: SetNull)
+  retailStoreTypeId  Int?
+  retailStoreType    RetailStoreType? @relation(fields: [retailStoreTypeId], references: [id], onDelete: SetNull)
   addressId          Int
-  address            Address       @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  address            Address          @relation(fields: [addressId], references: [id], onDelete: Cascade)
   phoneNumber        String?
   email              String?
   website            String?
-  homeDelivery       HomeDelivery
-  images             Image[]
-  logoId             Int?
-  logo               Logo[]
-  companyId          Int
-  company            Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          Int?
+  company            Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   countryId          Int
-  country            Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  country            Country          @relation(fields: [countryId], references: [id], onDelete: Cascade)
   cityId             Int
-  city               City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  city               City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
   cityPartId         Int?
-  cityPart           CityPart?     @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+  cityPart           CityPart?        @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   marketplaceId      Int?
-  marketplace        Marketplace?  @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
-  categories         Category[]    @relation("RetailStoreCategories")
-  workingTimes       WorkingTime[]
-  viewCount          Int           @default(0)
-  isSubscribedForAds Boolean       @default(false)
+  marketplace        Marketplace?     @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  categories         Category[]       @relation("RetailStoreCategories")
+  viewCount          Int              @default(0)
+  isSubscribedForAds Boolean          @default(false)
   adType             AdType?
-  isPhoneConfirmed   Boolean       @default(false)
-  isEmailConfirmed   Boolean       @default(false)
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  isPhoneConfirmed   Boolean          @default(false)
+  isEmailConfirmed   Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   latitude  Float
   longitude Float
@@ -240,16 +234,10 @@ enum AdType {
   Sponsor
 }
 
-model StoreType {
-  id     Int           @id @default(autoincrement())
-  type   String        @unique
-  stores RetailStore[]
-}
-
-enum HomeDelivery {
-  Yes
-  No
-  Conditional
+model RetailStoreType {
+  id           Int           @id @default(autoincrement())
+  type         String        @unique
+  reatilStores RetailStore[]
 }
 
 model Address {
@@ -259,33 +247,4 @@ model Address {
   latitude           Float
   longitude          Float
   retailStores       RetailStore[]
-}
-
-model Logo {
-  id          Int      @id @default(autoincrement())
-  url         String // Putanja do logotipa
-  description String? // Opis logotipa (npr. verzija, tip)
-  createdAt   DateTime @default(now())
-
-  companyId   Int?
-  Company     Company?      @relation(fields: [companyId], references: [id])
-  RetailStore RetailStore[]
-}
-
-model Image {
-  id          Int          @id @default(autoincrement())
-  url         String
-  description String?
-  storeId     Int?
-  store       RetailStore? @relation(fields: [storeId], references: [id])
-  createdAt   DateTime     @default(now())
-}
-
-model WorkingTime {
-  id            Int         @id @default(autoincrement())
-  dayOfWeek     String
-  openingTime   String
-  closingTime   String
-  retailStoreId Int
-  retailStore   RetailStore @relation(fields: [retailStoreId], references: [id], onDelete: Cascade)
 }

@@ -6,7 +6,7 @@ import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/help
 import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
-import DynamicPageContainer from '../containers/DynamicPageContainer.';
+import DynamicPageContainer from '../containers/DynamicPageContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface Props {

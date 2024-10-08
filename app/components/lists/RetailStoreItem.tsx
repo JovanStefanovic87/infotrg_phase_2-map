@@ -1,79 +1,51 @@
 import React, { useCallback } from 'react';
-import Image from 'next/image';
-import { Location, Translation } from '@/utils/helpers/types';
-import { getCategoryIconUrl } from '../../../utils/helpers/universalFunctions';
-import TextNormal from '../text/TextNormal';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
-import ArrowToggleButton from '../buttons/ArrowToggleButton';
-import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
 import H4 from '../text/H4';
-import TextWrapped from '../text/TextWrapped';
+import TextList from '../text/TextList';
+import { CategoryData } from '@/utils/helpers/types';
+import { mockLocations } from '@/utils/mockData/location';
+import { mockCategories } from '@/utils/mockData/category';
+import H3 from '../text/H3';
+import H3Title from '../text/H3Title';
 
 interface RetailStoreItemProps {
 	retail: any;
-	expandedRetails: Set<number>;
-	logos: any[];
 }
 
-const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail, expandedRetails, logos }) => {
-	const isRetailExpanded = useCallback((id: number) => expandedRetails.has(id), [expandedRetails]);
+const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail }) => {
+	// Find the categories for the retail store based on category IDs
+	const retailCategories = retail.categories.map((catId: number) => {
+		return mockCategories.find(category => category.id === catId);
+	});
 
-	const getRetailName = (retail: any): string => {
-		const translations = Array.isArray(retail.label.translations)
-			? (retail.label.translations as unknown as Translation[])
-			: [];
+	// Find the retail store's location data
+	const retailLocation = mockLocations.countries.find(country =>
+		country.cities.some(city => city.id === retail.cityId)
+	);
 
-		const primaryTranslation = translations.find(
-			(translation: Translation) => translation.languageId === 1
-		);
-
-		return primaryTranslation?.translation
-			? primaryTranslation.translation.charAt(0).toUpperCase() +
-					primaryTranslation.translation.slice(1)
-			: retail.label.name;
-	};
-
-	const iconUrl = getCategoryIconUrl(retail.logoId, logos);
 	return (
-		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
-			<H4 text={getRetailName(retail.labelId)} color='black' shouldBreak />
-			<div className='mt-2'>
-				{retail.iconId ? (
-					iconUrl ? (
-						<Image
-							src={iconUrl}
-							alt='Category Icon'
-							width={50}
-							height={50}
-							priority={false}
-							style={{ width: '50px', height: '50px' }}
-						/>
-					) : (
-						<TextWrapped block='Ikonica nije izabrana' />
-					)
-				) : (
-					<TextWrapped block='Ikonica ne postoji' />
-				)}
+		<div className='bg-white p-6 shadow-lg rounded-xl transition-transform transform flex flex-col justify-between'>
+			<div className='text-center p-4 mb-4 bg-yellowLighter rounded-3xl shadow-md'>
+				<H3Title text={retail.name} />
 			</div>
 
-			<div className='mt-4 flex space-x-2'>
+			<div className='space-y-3 mb-6'>
+				<TextList label='Telefon' value={retail.phoneNumber || 'N/A'} />
+				<TextList label='Email' value={retail.email || 'N/A'} />
+				<TextList
+					label='Grad'
+					value={`${retailLocation?.cities?.[0]?.name || 'N/A'} - ${
+						retailLocation?.cities?.[0]?.cityParts?.[0]?.name || ''
+					}`}
+				/>
+				<TextList label='Pregledi' value={retail.viewCount} />
+			</div>
+
+			<div className='flex justify-between items-end mt-auto'>
 				<EditButton onClick={() => {}} />
 				<DeleteButton onClick={() => {}} />
 			</div>
-
-			{retail.children && isRetailExpanded(retail.id) && (
-				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
-					{retail.children.map((item: { id: React.Key | null | undefined }) => (
-						<RetailStoreItem
-							key={item.id}
-							retail={item}
-							expandedRetails={expandedRetails}
-							logos={logos}
-						/>
-					))}
-				</div>
-			)}
 		</div>
 	);
 };

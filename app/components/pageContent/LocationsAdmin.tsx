@@ -5,7 +5,7 @@ import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon } from '@/utils/helpers/types';
 import NewLocationForm from '../forms/NewLocationForm';
 import ImagePickerForm from '../forms/ImagePickerForm';
-import DynamicPageContainer from '../containers/DynamicPageContainer.';
+import DynamicPageContainer from '../containers/DynamicPageContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
 
 // Import the API hooks from TanStack
