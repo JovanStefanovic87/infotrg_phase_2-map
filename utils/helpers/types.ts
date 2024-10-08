@@ -189,9 +189,9 @@ export interface Category {
 	iconId: number | null;
 	labelId: number;
 	name: string;
-	parents: Category[]; // Array of parent categories
-	relatedIds?: number[]; // Add relatedIds to Category interface
-	children: Category[]; // Array of child categories
+	parents: Category[];
+	relatedIds?: number[];
+	children: Category[];
 }
 
 export interface Synonym {
@@ -200,13 +200,19 @@ export interface Synonym {
 	synonym: string;
 }
 
+export interface Label {
+	id: number;
+	name: string;
+	translations: Translation[];
+}
+
 export interface Translation {
-	translationId: number | null; // Add this line
+	translationId: number | null;
 	id: number;
 	labelId: number;
 	languageId: number;
 	translation: string;
-	description?: string; // Add if you need descriptions as well
+	description?: string;
 	createdAt: Date;
 	synonyms: Synonym[];
 }
@@ -231,10 +237,14 @@ export interface CurrentIcon {
 }
 
 export interface CategoryData {
+	id: number;
 	name: string;
+	language: string;
 	description: string;
-	parentIds: string[]; // Updated to handle multiple parent IDs
+	parentIds: string[];
+	children: Category[];
 	synonyms: string[];
+	iconUrl?: string;
 }
 
 export interface HandleAddCategoryProps {
@@ -255,12 +265,6 @@ export interface RenderCategoryListProps {
 	depth?: number;
 	onEdit: (category: Category) => void;
 	onDelete: (id: string) => void;
-}
-
-export interface Label {
-	id: number;
-	name: string;
-	translations: Translation[];
 }
 
 export interface LocationBase {
@@ -310,6 +314,43 @@ export type Location = Country | City | CityPart | Marketplace;
 export interface AdType {
 	id: number;
 	name: string;
+}
+
+export interface RetailAdmin {
+	id: number;
+	name: string;
+	phoneNumber?: string;
+	email?: string;
+	website?: string;
+	storeTypeId: number;
+	countryId: number;
+	cityId: number;
+	cityPartId?: number;
+	marketplaceId?: number;
+	address: string;
+	latitude: number;
+	longitude: number;
+	categories: number[];
+	viewCount: number;
+	isSubscribedForAds: boolean;
+	adType?: AdType;
+}
+
+export interface UpdateRetailAdmin {
+	id?: number;
+	name: string;
+	phoneNumber?: string;
+	email?: string;
+	website?: string;
+	storeTypeId: number;
+	countryId: number;
+	cityId: number;
+	cityPartId?: number;
+	marketplaceId?: number;
+	address: string;
+	isSubscribedForAds: boolean;
+	adType: AdType;
+	articleCategories: number[];
 }
 
 export interface RetailLocationData {

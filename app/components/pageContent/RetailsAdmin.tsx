@@ -5,48 +5,17 @@ import {
 	Icon,
 	Language,
 	AdType,
+	RetailAdmin,
 	RetailLocationData,
 	Location,
 } from '@/utils/helpers/types';
 import { retailLocationInit } from '@/utils/helpers/initialStates';
-import DynamicPageContainer from '../containers/DynamicPageContainer.';
+import DynamicPageContainer from '../containers/DynamicPageContainer';
 import RetailStoreList from '../lists/RetailStoreList';
+import { ReatilMockData } from '@/utils/mockData/retail';
 
 interface Props {
 	title: string;
-}
-
-interface RetailAdmin {
-	id: number;
-	companyId: number;
-	name: string;
-	phoneNumber: string;
-	email: string;
-	website: string;
-	storeTypeId: number;
-	countryId: number;
-	cityId: number;
-	cityPartId?: number;
-	marketplaceId?: number;
-	viewCount: number;
-	isSubscribedForAds: boolean;
-	adType: AdType;
-}
-
-interface UpdateRetailAdmin {
-	id?: number;
-	companyId: number;
-	name: string;
-	phoneNumber: string;
-	email: string;
-	website: string;
-	storeTypeId: number;
-	city: string;
-	cityPartId?: number;
-	marketplaceId?: number;
-	viewCount: number;
-	isSubscribedForAds: boolean;
-	adType: AdType;
 }
 
 const RetailsAdmin: React.FC<Props> = ({ title }) => {
@@ -54,19 +23,10 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [locations, setLocations] = useState<Location[]>([]);
-	const [retails, setRetails] = useState<[]>([]);
-	const [logos, setLogos] = useState<Icon[]>([]);
-	const [logo, setLogo] = useState<File | null>(null);
-	const [logoId, setLogoId] = useState<number | null>(null);
-	const [currentLogo, setCurrentLogo] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
-	const [newLogo, setNewLogo] = useState<File | null>(null);
-	const [isLogoPickerOpen, setIsLogoPickerOpen] = useState(false);
+	const [retails, setRetails] = useState<RetailAdmin[]>(ReatilMockData); // Mock podaci
 	const [languages, setLanguages] = useState<Language[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
-	const [expandedRetails, setExpandedRetails] = useState<Set<number>>(new Set());
-	const [manuallyExpandedRetails, setManuallyExpandedRetails] = useState<Set<number>>(new Set());
 	const [filteredRetails, setFilteredRetails] = useState<Location[]>([]);
-	const [initialExpandedRetails, setInitialExpandedRetails] = useState<Set<number>>(new Set());
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
 	const [storeName, setStoreName] = useState<string>('');
@@ -95,11 +55,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 				<RetailStoreList
 					setSuccessMessage={setSuccessMessage}
 					setError={setError}
-					expandedRetails={expandedRetails}
-					setExpandedRetails={setExpandedRetails}
 					retails={retails}
-					setLogo={setLogo}
-					logos={logos}
 				/>
 			</div>
 		</DynamicPageContainer>
