@@ -60,9 +60,9 @@ model Country {
   cities    City[]
   createdAt DateTime @default(now())
 
-  iconId       Int? // Foreign key for Icon
-  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  RetailStores RetailStore[]
+  iconId   Int? // Foreign key for Icon
+  icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  Location Location[]
 }
 
 model City {
@@ -75,9 +75,9 @@ model City {
   cityParts CityPart[] // This should be the correct field name
   createdAt DateTime   @default(now())
 
-  iconId       Int? // Foreign key for Icon
-  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  RetailStores RetailStore[]
+  iconId   Int? // Foreign key for Icon
+  icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
+  Location Location[]
 
   @@unique([labelId, countryId])
 }
@@ -94,40 +94,25 @@ model CityPart {
   iconId       Int? // Foreign key for Icon
   icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   marketplaces Marketplace[] // This should be defined here as well
-  RetailStores RetailStore[]
+  Location     Location[]
 
   @@unique([labelId, cityId])
 }
 
 model Marketplace {
   id         Int      @id @default(autoincrement())
-  name       String // Name of the marketplace
-  address    String // Address of the marketplace
-  cityPartId Int // Foreign key to CityPart
+  name       String
+  cityPartId Int
   cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
-  iconId       Int? // Optional foreign key for Icon
-  icon         Icon?         @relation(fields: [iconId], references: [id]) // Relation with Icon
-  labelId      Int // Required foreign key for Label
-  label        Label         @relation(fields: [labelId], references: [id]) // Relation with Label
-  RetailStores RetailStore[]
+  iconId   Int?
+  icon     Icon?      @relation(fields: [iconId], references: [id])
+  labelId  Int
+  label    Label      @relation(fields: [labelId], references: [id])
+  Location Location[]
 
-  @@index([name]) // Optional index for marketplace name
-}
-
-model Category {
-  id                Int               @id @default(autoincrement())
-  labelId           Int
-  iconId            Int?
-  icon              Icon?             @relation(fields: [iconId], references: [id])
-  label             Label             @relation("CategoryToLabel", fields: [labelId], references: [id])
-  parentCategories  ParentCategory[]  @relation("Parent")
-  childCategories   ParentCategory[]  @relation("Child")
-  relatedCategories RelatedCategory[] @relation("CategoryRelated")
-  relatedTo         RelatedCategory[] @relation("RelatedToCategory")
-  retailStores      RetailStore[]     @relation("RetailStoreCategories")
-  createdAt         DateTime          @default(now())
+  @@index([name])
 }
 
 model ParentCategory {
@@ -173,58 +158,75 @@ model Synonym {
   @@index([translationId])
 }
 
-model Company {
-  id                Int           @id @default(autoincrement())
-  name              String
-  businessActivity  String
-  countryFounded    String
-  cityFounded       String
-  responsiblePerson String?
-  phoneNumber       String?
-  email             String
-  website           String?
-  aboutCompany      String?
-  logoId            Int?
-  retailStores      RetailStore[]
+model Category {
+  id                Int               @id @default(autoincrement())
+  labelId           Int
+  iconId            Int?
+  icon              Icon?             @relation(fields: [iconId], references: [id])
+  label             Label             @relation("CategoryToLabel", fields: [labelId], references: [id])
+  parentCategories  ParentCategory[]  @relation("Parent")
+  childCategories   ParentCategory[]  @relation("Child")
+  relatedCategories RelatedCategory[] @relation("CategoryRelated")
+  relatedTo         RelatedCategory[] @relation("RelatedToCategory")
+
+  // Različite relacije prema RetailStore modelu sa unikatnim imenima
+  articleRetailStores    RetailStore[] @relation("RetailStoreArticleCategories")
+  activityRetailStores   RetailStore[] @relation("RetailStoreActivityCategories")
+  objectTypeRetailStores RetailStore[] @relation("RetailStoreObjectTypeCategories")
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model RetailStore {
-  id                 Int              @id @default(autoincrement())
-  name               String
-  retailStoreTypeId  Int?
-  retailStoreType    RetailStoreType? @relation(fields: [retailStoreTypeId], references: [id], onDelete: SetNull)
-  addressId          Int
-  address            Address          @relation(fields: [addressId], references: [id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  name       String
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
   phoneNumber        String?
   email              String?
   website            String?
-  companyId          Int?
-  company            Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  countryId          Int
-  country            Country          @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  cityId             Int
-  city               City             @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  cityPartId         Int?
-  cityPart           CityPart?        @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
-  marketplaceId      Int?
-  marketplace        Marketplace?     @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
-  categories         Category[]       @relation("RetailStoreCategories")
-  viewCount          Int              @default(0)
-  isSubscribedForAds Boolean          @default(false)
+  viewCount          Int      @default(0)
+  isSubscribedForAds Boolean  @default(false)
   adType             AdType?
-  isPhoneConfirmed   Boolean          @default(false)
-  isEmailConfirmed   Boolean          @default(false)
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  isPhoneConfirmed   Boolean  @default(false)
+  isEmailConfirmed   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  latitude  Float
-  longitude Float
+  coordinatesId Int?
+  coordinates   Coordinates? @relation(fields: [coordinatesId], references: [id], onDelete: Cascade)
+
+  // Relacije sa različitim kategorijama
+  articleCategories    Category[] @relation("RetailStoreArticleCategories")
+  activityCategories   Category[] @relation("RetailStoreActivityCategories")
+  objectTypeCategories Category[] @relation("RetailStoreObjectTypeCategories")
+}
+
+model Location {
+  id            Int           @id @default(autoincrement())
+  countryId     Int
+  country       Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  cityId        Int
+  city          City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  cityPartId    Int?
+  cityPart      CityPart?     @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+  marketplaceId Int?
+  marketplace   Marketplace?  @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  address       String?
+  RetailStore   RetailStore[]
+
+  @@index([countryId, cityId, cityPartId, marketplaceId])
+}
+
+model Coordinates {
+  id                  Int           @id @default(autoincrement())
+  latitude            Float
+  longitude           Float
+  locationDescription String?
+  RetailStore         RetailStore[]
 
   @@unique([latitude, longitude])
-  @@index([name])
 }
 
 enum AdType {
@@ -232,19 +234,4 @@ enum AdType {
   Big
   Premium
   Sponsor
-}
-
-model RetailStoreType {
-  id           Int           @id @default(autoincrement())
-  type         String        @unique
-  reatilStores RetailStore[]
-}
-
-model Address {
-  id                 Int           @id @default(autoincrement())
-  streetAddress      String
-  addressDescription String?
-  latitude           Float
-  longitude          Float
-  retailStores       RetailStore[]
 }
