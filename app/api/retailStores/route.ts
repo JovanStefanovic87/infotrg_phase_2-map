@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
 			},
 		});
 
-		console.log(JSON.stringify(retailStores, null, 2)); // Ispisuje sve retail store podatke
+		console.log(JSON.stringify(retailStores, null, 2));
 
 		return NextResponse.json(retailStores);
 	} catch (error) {
