@@ -122,3 +122,117 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
 	}
 }
+
+export async function GET(req: NextRequest) {
+	const { searchParams } = new URL(req.url);
+	const languageId = parseInt(searchParams.get('languageId') ?? '1'); // Default to 1 if not provided
+
+	try {
+		const retailStores = await prisma.retailStore.findMany({
+			include: {
+				location: {
+					include: {
+						country: {
+							include: {
+								label: {
+									include: {
+										translations: {
+											where: {
+												languageId: 1,
+											},
+										},
+									},
+								},
+							},
+						},
+						city: {
+							include: {
+								label: {
+									include: {
+										translations: {
+											where: {
+												languageId: 1,
+											},
+										},
+									},
+								},
+							},
+						},
+						cityPart: {
+							include: {
+								label: {
+									include: {
+										translations: {
+											where: {
+												languageId: 1,
+											},
+										},
+									},
+								},
+							},
+						},
+						marketplace: {
+							include: {
+								label: {
+									include: {
+										translations: {
+											where: {
+												languageId: 1,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				articleCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+				activityCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+				objectTypeCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		console.log(JSON.stringify(retailStores, null, 2)); // Ispisuje sve retail store podatke
+
+		return NextResponse.json(retailStores);
+	} catch (error) {
+		console.error('Error fetching retail stores:', error);
+		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+	}
+}
