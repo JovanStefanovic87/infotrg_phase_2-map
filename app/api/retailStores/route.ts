@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
 	const { searchParams } = new URL(req.url);
-	const languageId = parseInt(searchParams.get('languageId') ?? '1'); // Default to 1 if not provided
+	const languageId = parseInt(searchParams.get('languageId') ?? '1');
 
 	try {
 		const retailStores = await prisma.retailStore.findMany({
@@ -138,7 +138,7 @@ export async function GET(req: NextRequest) {
 									include: {
 										translations: {
 											where: {
-												languageId: 1,
+												languageId: languageId,
 											},
 										},
 									},
@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
 									include: {
 										translations: {
 											where: {
-												languageId: 1,
+												languageId: languageId,
 											},
 										},
 									},
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
 									include: {
 										translations: {
 											where: {
-												languageId: 1,
+												languageId: languageId,
 											},
 										},
 									},
@@ -177,7 +177,7 @@ export async function GET(req: NextRequest) {
 									include: {
 										translations: {
 											where: {
-												languageId: 1,
+												languageId: languageId,
 											},
 										},
 									},
@@ -186,13 +186,20 @@ export async function GET(req: NextRequest) {
 						},
 					},
 				},
+				coordinates: {
+					// Uključi koordinate da dobiješ latitude i longitude
+					select: {
+						latitude: true,
+						longitude: true,
+					},
+				},
 				articleCategories: {
 					include: {
 						label: {
 							include: {
 								translations: {
 									where: {
-										languageId: 1,
+										languageId: languageId,
 									},
 								},
 							},
@@ -205,7 +212,7 @@ export async function GET(req: NextRequest) {
 							include: {
 								translations: {
 									where: {
-										languageId: 1,
+										languageId: languageId,
 									},
 								},
 							},
@@ -218,7 +225,7 @@ export async function GET(req: NextRequest) {
 							include: {
 								translations: {
 									where: {
-										languageId: 1,
+										languageId: languageId,
 									},
 								},
 							},

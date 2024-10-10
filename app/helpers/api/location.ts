@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getWithParams, postData } from '@/app/helpers/api/common/base';
 
-// Example for fetching locations
 export const useFetchLocations = (params: any) => {
 	return useQuery({
 		queryKey: ['locations', params],
@@ -35,7 +34,7 @@ export function useUpdateLocation() {
 			await postData(url, data);
 		},
 		onSuccess: (_, data) => {
-			queryClient.invalidateQueries({ queryKey: ['locations'], exact: true }); // Osvježavanje liste lokacija
+			queryClient.invalidateQueries({ queryKey: ['locations'], exact: true });
 		},
 		onError: error => {
 			console.error('Error updating location:', error);
@@ -49,10 +48,10 @@ export function useDeleteLocation() {
 	return useMutation<void, Error, { id: number; type: string }>({
 		mutationFn: async (data: { id: number; type: string }) => {
 			const url = `/api/locations/${data.id}?type=${data.type}`;
-			await postData(url, { action: 'delete' }); // Koristimo 'action' da naznačimo brisanje
+			await postData(url, { action: 'delete' });
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['locations'], exact: true }); // Osvježavanje liste lokacija
+			queryClient.invalidateQueries({ queryKey: ['locations'], exact: true });
 		},
 		onError: error => {
 			console.error('Error deleting location:', error);

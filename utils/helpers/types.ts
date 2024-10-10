@@ -322,18 +322,24 @@ export interface RetailAdmin {
 	phoneNumber?: string;
 	email?: string;
 	website?: string;
-	storeTypeId: number;
-	countryId: number;
-	cityId: number;
-	cityPartId?: number;
-	marketplaceId?: number;
 	address: string;
-	latitude: number;
-	longitude: number;
-	categories: number[];
+	latitude?: number;
+	longitude?: number;
 	viewCount: number;
 	isSubscribedForAds: boolean;
 	adType?: AdType;
+	country: LocationDetail;
+	city: LocationDetail;
+	cityPart?: LocationDetail | null;
+	marketplace?: LocationDetail | null;
+	articleCategories: Category[];
+	activityCategories: Category[];
+	objectTypeCategories: Category[];
+}
+
+export interface LocationDetail {
+	id: number;
+	translation: string;
 }
 
 export interface UpdateRetailAdmin {

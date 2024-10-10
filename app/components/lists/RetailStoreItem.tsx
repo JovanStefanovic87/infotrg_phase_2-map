@@ -3,7 +3,7 @@ import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
 import H4 from '../text/H4';
 import TextList from '../text/TextList';
-import { CategoryData } from '@/utils/helpers/types';
+import { CategoryData, Label } from '@/utils/helpers/types';
 import { mockLocations } from '@/utils/mockData/location';
 import { mockCategories } from '@/utils/mockData/category';
 import H3 from '../text/H3';
@@ -14,10 +14,16 @@ interface RetailStoreItemProps {
 }
 
 const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail }) => {
-	// Find the categories for the retail store based on category IDs
-	const retailCategories = retail.categories.map((catId: number) => {
-		return mockCategories.find(category => category.id === catId);
-	});
+	const country = retail.country?.translation || 'N/A';
+	const city = retail.city?.translation || 'N/A';
+	const cityPart = retail.cityPart?.translation || 'N/A';
+	const marketplace = retail.marketplace?.translation || 'N/A';
+
+	// Proveri da li postoje kategorije pre nego što pokušaš da ih mapiraš
+	const retailCategories =
+		retail.categories?.map((catId: number) => {
+			return mockCategories.find(category => category.id === catId);
+		}) ?? [];
 
 	// Find the retail store's location data
 	const retailLocation = mockLocations.countries.find(country =>
@@ -33,13 +39,14 @@ const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail }) => {
 			<div className='space-y-3 mb-6'>
 				<TextList label='Telefon' value={retail.phoneNumber || 'N/A'} />
 				<TextList label='Email' value={retail.email || 'N/A'} />
+				<TextList label='Lokacija' value={`${country} - ${city} (${cityPart}, ${marketplace})`} />
+				<TextList label='Pregledi' value={retail.viewCount.toString()} />
+
+				{/* Prikaz kategorija */}
 				<TextList
-					label='Grad'
-					value={`${retailLocation?.cities?.[0]?.name || 'N/A'} - ${
-						retailLocation?.cities?.[0]?.cityParts?.[0]?.name || ''
-					}`}
+					label='Kategorije'
+					value={retailCategories.map((cat: { label: Label }) => cat?.label || 'N/A').join(', ')}
 				/>
-				<TextList label='Pregledi' value={retail.viewCount} />
 			</div>
 
 			<div className='flex justify-between items-end mt-auto'>
