@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@faker-js/faker": "^9.0.1",
 		"@googlemaps/markerwithlabel": "^2.0.28",
+		"@headlessui/react": "^2.1.9",
 		"@prisma/client": "^5.20.0",
 		"@react-google-maps/api": "^2.19.3",
 		"@reduxjs/toolkit": "^2.2.7",

@@ -54,8 +54,6 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 		setLoading(isLoading);
 	}, [isLoading]);
 
-	console.log(retails);
-
 	const formattedRetails = retails?.map(
 		(retail: any): RetailAdmin => ({
 			id: retail.id,
@@ -111,8 +109,6 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 				})) ?? [],
 		})
 	);
-
-	console.log(formattedRetails);
 
 	return (
 		<DynamicPageContainer
