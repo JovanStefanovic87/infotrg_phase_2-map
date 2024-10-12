@@ -1,3 +1,4 @@
+'use client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { postData, getWithParams, deleteData, putData } from './common/base';
 
@@ -30,7 +31,7 @@ interface RetailStoreData {
 }
 
 const postRetailStore = async (data: RetailStoreData) => {
-	const response = await postData('/api/retail-store', data);
+	const response = await postData('/api/retailStores', data);
 	return response;
 };
 

@@ -357,6 +357,8 @@ export interface UpdateRetailAdmin {
 	isSubscribedForAds: boolean;
 	adType: AdType;
 	articleCategories: number[];
+	longitude: number;
+	latitude: number;
 }
 
 export interface RetailLocationData {

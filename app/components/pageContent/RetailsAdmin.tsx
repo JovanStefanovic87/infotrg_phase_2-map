@@ -10,15 +10,9 @@ import {
 	RetailLocationData,
 	Location,
 } from '@/utils/helpers/types';
-import {
-	prefixAticleCategory,
-	prefixActivityCategory,
-	prefixObjectTypeCategory,
-} from '@/app/api/prefix';
-import { retailLocationInit } from '@/utils/helpers/initialStates';
 import DynamicPageContainer from '../containers/DynamicPageContainer';
 import RetailStoreList from '../lists/RetailStoreList';
-import { ReatilMockData } from '@/utils/mockData/retail';
+import NewRetailStoreForm from '../forms/NewRetailStoreForm'; // Nova komponenta
 
 interface Props {
 	title: string;
@@ -28,25 +22,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [locations, setLocations] = useState<Location[]>([]);
-	const [languages, setLanguages] = useState<Language[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
-	const [filteredRetails, setFilteredRetails] = useState<Location[]>([]);
-	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
-
-	const [storeName, setStoreName] = useState<string>('');
-	const [phoneNumber, setPhoneNumber] = useState<string>('');
-	const [email, setEmail] = useState<string | null>(null);
-	const [website, setWebsite] = useState<string | null>(null);
-	const [companyId, setCompanyId] = useState<number>(0);
-	const [storeTypeId, setStoreTypeId] = useState<number | null>(null);
-	const [marketplaceId, setMarketplaceId] = useState<number | null>(null);
-	const [viewCount, setViewCount] = useState<number>(0);
-	const [isSubscribedForAds, setIsSubscribedForAds] = useState<boolean>(false);
-	const [adType, setAdType] = useState<AdType | null>(null);
-
-	const [retailLocationData, setRetailLocationData] =
-		useState<RetailLocationData>(retailLocationInit);
 
 	const { data: retails, isLoading, isError } = useFetchRetailStores(languageId);
 
@@ -119,6 +95,20 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			loading={loading}
 			title={title}>
 			{isError && <p>Error fetching retail stores.</p>}
+
+			{/* Dodajemo formu za unos novog retail store-a */}
+			<div className='mt-8'>
+				<NewRetailStoreForm
+					successMessage={successMessage}
+					setSuccessMessage={setSuccessMessage}
+					setError={setError}
+					loading={loading}
+					setLoading={setLoading}
+					error={error}
+				/>
+			</div>
+
+			{/* Prikaz postojeće liste retail store-a */}
 			<div className='mt-8'>
 				<RetailStoreList
 					setSuccessMessage={setSuccessMessage}

@@ -73,9 +73,9 @@ export async function POST(req: Request) {
 		}
 		// Handle the creation of a marketplace
 		else if (type === 'marketplace') {
-			if (!cityPartId || !address || !labelId) {
+			if (!cityPartId || !labelId) {
 				return NextResponse.json(
-					{ error: 'CityPart ID, address, and label ID are required for creating a marketplace.' },
+					{ error: 'CityPart ID, and label ID are required for creating a marketplace.' },
 					{ status: 400 }
 				);
 			}
@@ -85,10 +85,9 @@ export async function POST(req: Request) {
 
 			locationData = await prisma.marketplace.create({
 				data: {
-					labelId, // Add the labelId for the marketplace
-					cityPartId, // Use cityPartId for the marketplace
-					name: address, // Set name to address or provide a separate name if needed
-					address, // Include address for the marketplace
+					labelId,
+					cityPartId,
+					name: address,
 					iconId,
 					createdAt: new Date(),
 				},
