@@ -123,7 +123,9 @@ const buildCategoryTree = async (
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const prefix = searchParams.get('prefix') || 'article_category_';
-	const languageId = Number(searchParams.get('languageId')) || 1; // Default to language ID 1
+	const languageId = Number(searchParams.get('languageId')) || 1;
+
+	console.log('prefix:', prefix, 'languageId:', languageId);
 
 	try {
 		const topLevelCategories: Category[] = await buildCategoryTree(null, prefix, languageId);

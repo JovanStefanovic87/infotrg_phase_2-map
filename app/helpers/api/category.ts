@@ -2,6 +2,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteData, getWithParams, postData, putData } from '@/app/helpers/api/common/base';
 import { Category } from '@/utils/helpers/types';
 
+export const fetchCategoriesByPrefixAndLanguage = async (prefix: string, languageId: number) => {
+	const response = await fetch(
+		`/api/categoriesByLanguage?prefix=${prefix}&languageId=${languageId}`
+	);
+	if (!response.ok) {
+		throw new Error('Failed to fetch categories');
+	}
+	return response.json();
+};
+
+interface UseCategoriesParams {
+	prefix: string;
+	languageId: number;
+}
+
+export const useCategoriesByPrefixAndLanguage = ({ prefix, languageId }: UseCategoriesParams) => {
+	return useQuery({
+		queryKey: ['categories', prefix, languageId], // Unique key for the query
+		queryFn: () => fetchCategoriesByPrefixAndLanguage(prefix, languageId),
+		staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+	});
+};
+
 const fetchCategories = async (prefix: string): Promise<Category[]> => {
 	return await getWithParams(`/api/categories`, { prefix });
 };
@@ -10,7 +33,7 @@ export const useCategories = (prefix: string) => {
 	return useQuery({
 		queryKey: ['categories', prefix],
 		queryFn: () => fetchCategories(prefix),
-		staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+		staleTime: 1000 * 60 * 5,
 	});
 };
 

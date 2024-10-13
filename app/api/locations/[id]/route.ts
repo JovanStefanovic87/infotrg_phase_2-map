@@ -83,7 +83,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 				where: { id: Number(id) },
 				data: {
 					iconId: iconId,
-					address: address || undefined,
 				},
 			});
 		} else {

@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
 
 		return NextResponse.json(retailStore, { status: 201 });
 	} catch (error) {
-		console.error('Server error:', error); // Logovanje detaljne greške
+		console.error('Server error:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
 	}
 }
@@ -234,8 +234,6 @@ export async function GET(req: NextRequest) {
 				},
 			},
 		});
-
-		console.log(JSON.stringify(retailStores, null, 2));
 
 		return NextResponse.json(retailStores);
 	} catch (error) {

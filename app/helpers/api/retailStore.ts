@@ -42,7 +42,6 @@ export const useCreateRetailStore = () => {
 		mutationFn: postRetailStore,
 		onSuccess: data => {
 			queryClient.invalidateQueries({ queryKey: ['retailStores'] });
-			console.log('Retail store successfully created:', data);
 		},
 		onError: error => {
 			console.error('Error creating retail store:', error);
@@ -147,7 +146,6 @@ export const useUpdateRetailStore = () => {
 			updateRetailStore(id, data),
 		onSuccess: data => {
 			queryClient.invalidateQueries({ queryKey: ['retailStores'] });
-			console.log('Retail store successfully updated:', data);
 		},
 		onError: error => {
 			console.error('Error updating retail store:', error);
@@ -167,7 +165,6 @@ export const useDeleteRetailStore = () => {
 		mutationFn: (id: string) => deleteRetailStore(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['retailStores'] });
-			console.log('Retail store deleted successfully');
 		},
 		onError: error => {
 			console.error('Error deleting retail store:', error);
