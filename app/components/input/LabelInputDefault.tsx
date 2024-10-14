@@ -10,6 +10,7 @@ interface Props {
 	placeholder: string;
 	className?: string;
 	required?: boolean;
+	type?: string;
 }
 
 const LabelInputDefault: React.FC<Props> = ({
@@ -20,16 +21,19 @@ const LabelInputDefault: React.FC<Props> = ({
 	placeholder,
 	className,
 	required,
+	type,
 }) => {
 	return (
-		<div>
-			<Label htmlFor='name'>{label}</Label>
+		<div className='flex flex-col'>
+			<Label htmlFor={label}>{label}</Label>
 			<InputDefault
 				id={id}
+				name={label}
 				value={value}
 				onChange={onChange}
 				placeholder={placeholder}
 				className={className}
+				type={type}
 				required={required}
 			/>
 		</div>

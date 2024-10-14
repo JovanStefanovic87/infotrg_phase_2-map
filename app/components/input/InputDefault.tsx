@@ -7,6 +7,8 @@ interface TextInputProps {
 	placeholder: string;
 	className?: string;
 	required?: boolean;
+	type?: string;
+	name?: string;
 }
 
 const InputDefault: React.FC<TextInputProps> = ({
@@ -16,15 +18,21 @@ const InputDefault: React.FC<TextInputProps> = ({
 	placeholder,
 	className = '',
 	required = false,
+	type = 'text',
+	name,
 }) => {
 	return (
 		<input
 			id={id?.toString()}
-			type='text'
+			name={name}
+			type={type}
 			placeholder={placeholder}
 			value={value}
-			onChange={onChange}
-			className={`block w-full mb-4 p-3 border border-grayMidLight rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black ${className}`}
+			onChange={e => {
+				console.log('Input changed:', e.target.value);
+				onChange(e);
+			}}
+			className={`block w-full mb-4 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-black ${className}`}
 			required={required}
 		/>
 	);

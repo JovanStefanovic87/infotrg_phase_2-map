@@ -10,6 +10,8 @@ import {
 } from '@/app/api/prefix';
 import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
 import CustomModalAdmin from '../modals/CustomModalAdmin';
+import LabelInputForm from '../input/LabelInputForm';
+import SelectInputForm from '../input/SelectInputForm';
 
 interface Category {
 	id: number;
@@ -107,7 +109,20 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 		category.name.toLowerCase().includes(objectTypeSearchQuery.toLowerCase())
 	);
 
-	const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+		const { name, value, type } = e.target;
+		setFormData(prevFormData => ({
+			...prevFormData,
+			[name]:
+				type === 'number' && value === ''
+					? ''
+					: type === 'number'
+					? parseFloat(value) || ''
+					: value,
+		}));
+	};
+
+	const handleSelectChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
 		const { name, value, type } = e.target;
 		setFormData(prevFormData => ({
 			...prevFormData,
@@ -237,187 +252,123 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 	const toggleObjectTypeModal = () => setIsObjectTypeModalOpen(!isObjectTypeModalOpen);
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-8 bg-white p-8 rounded-lg shadow-md'>
+		<form onSubmit={handleSubmit} className='space-y-2 bg-white p-8 rounded-lg shadow-md'>
 			{/* Store Name */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='name' className='text-black font-semibold'>
-					Store Name
-				</label>
-				<input
-					id='name'
-					name='name'
-					type='text'
-					value={formData.name}
-					onChange={handleChange}
-					placeholder='Enter store name'
-					required
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
-
+			<LabelInputForm
+				id='name'
+				name='name'
+				label='Naziv'
+				value={formData.name}
+				onChange={handleChange}
+				placeholder='Unesite ime prodajnog objekta'
+				required
+			/>
 			{/* Phone Number */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='phoneNumber' className='text-black font-semibold'>
-					Phone Number
-				</label>
-				<input
-					id='phoneNumber'
-					name='phoneNumber'
-					type='text'
-					value={formData.phoneNumber}
-					onChange={handleChange}
-					placeholder='Enter phone number'
-					required
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
-
+			<LabelInputForm
+				id='phoneNumber'
+				name='phoneNumber'
+				label='Broj telefona'
+				value={formData.phoneNumber}
+				onChange={handleChange}
+				placeholder='Unesite broj telefona'
+			/>
 			{/* Email */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='email' className='text-black font-semibold'>
-					Email
-				</label>
-				<input
-					id='email'
-					name='email'
-					type='email'
-					value={formData.email}
-					onChange={handleChange}
-					placeholder='Enter email'
-					required
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
+			<LabelInputForm
+				id='email'
+				name='email'
+				label='Email'
+				value={formData.email}
+				onChange={handleChange}
+				placeholder='Unesite email'
+				type='email'
+			/>
 
 			{/* Website */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='website' className='text-black font-semibold'>
-					Website
-				</label>
-				<input
-					id='website'
-					name='website'
-					type='text'
-					value={formData.website}
-					onChange={handleChange}
-					placeholder='Enter website'
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
+			<LabelInputForm
+				id='website'
+				name='website'
+				label='Website'
+				value={formData.website}
+				onChange={handleChange}
+				placeholder='Unesite website'
+			/>
 
 			{/* Latitude */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='latitude' className='text-black font-semibold'>
-					Latitude
-				</label>
-				<input
-					id='latitude'
-					name='latitude'
-					type='number'
-					step='any'
-					value={formData.latitude}
-					onChange={handleChange}
-					placeholder='Enter latitude'
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
+			<LabelInputForm
+				id='latitude'
+				name='latitude'
+				label='Latitude'
+				value={formData.latitude}
+				onChange={handleChange}
+				placeholder='Unesite latitude'
+				type='number'
+			/>
 
 			{/* Longitude */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='longitude' className='text-black font-semibold'>
-					Longitude
-				</label>
-				<input
-					id='longitude'
-					name='longitude'
-					type='number'
-					step='any'
-					value={formData.longitude}
-					onChange={handleChange}
-					placeholder='Enter longitude'
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-				/>
-			</div>
+			<LabelInputForm
+				id='longitude'
+				name='longitude'
+				label='Longitude'
+				value={formData.longitude}
+				onChange={handleChange}
+				placeholder='Unesite longitude'
+			/>
 
 			{/* Country Selection */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='countryId' className='text-black font-semibold'>
-					Select Country
-				</label>
-				<select
-					id='countryId'
-					name='countryId'
-					value={formData.countryId}
-					onChange={handleChange}
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'>
-					<option value={0}>Select Country</option>
-					{locations?.map((location: any) => (
-						<option key={location.id} value={location.id}>
-							{location.label.translations[0]?.translation || location.label.name}
-						</option>
-					))}
-				</select>
-			</div>
+			<SelectInputForm
+				id='countryId'
+				label='Izaberite državu'
+				value={formData.countryId}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite državu</option>
+				{locations?.map((location: any) => (
+					<option key={location.id} value={location.id}>
+						{location.label.translations[0]?.translation || location.label.name}
+					</option>
+				))}
+			</SelectInputForm>
 
 			{/* City Selection */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='cityId' className='text-black font-semibold'>
-					Select City
-				</label>
-				<select
-					id='cityId'
-					name='cityId'
-					value={formData.cityId}
-					onChange={handleChange}
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'>
-					<option value={0}>Select City</option>
-					{filteredCities.map((city: any) => (
-						<option key={city.id} value={city.id}>
-							{city.label.translations[0]?.translation || city.label.name}
-						</option>
-					))}
-				</select>
-			</div>
+			<SelectInputForm
+				id='cityId'
+				label='Izaberite grad'
+				value={formData.cityId}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite grad</option>
+				{filteredCities.map((city: any) => (
+					<option key={city.id} value={city.id}>
+						{city.label.translations[0]?.translation || city.label.name}
+					</option>
+				))}
+			</SelectInputForm>
 
 			{/* City Part Selection */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='cityPartId' className='text-black font-semibold'>
-					Select City Part
-				</label>
-				<select
-					id='cityPartId'
-					name='cityPartId'
-					value={formData.cityPartId}
-					onChange={handleChange}
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'>
-					<option value={0}>Select City Part</option>
-					{filteredCityParts.map((cityPart: any) => (
-						<option key={cityPart.id} value={cityPart.id}>
-							{cityPart.label.translations[0]?.translation || cityPart.label.name}
-						</option>
-					))}
-				</select>
-			</div>
+			<SelectInputForm
+				id='cityPartId'
+				label='Izaberite deo grada'
+				value={formData.cityPartId}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite deo grada</option>
+				{filteredCityParts.map((cityPart: any) => (
+					<option key={cityPart.id} value={cityPart.id}>
+						{cityPart.label.translations[0]?.translation || cityPart.label.name}
+					</option>
+				))}
+			</SelectInputForm>
 
 			{/* Marketplace Selection */}
-			<div className='flex flex-col space-y-2'>
-				<label htmlFor='marketplaceId' className='text-black font-semibold'>
-					Select Marketplace
-				</label>
-				<select
-					id='marketplaceId'
-					name='marketplaceId'
-					value={formData.marketplaceId}
-					onChange={handleChange}
-					className='border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'>
-					<option value={0}>Select Marketplace</option>
-					{filteredMarketplaces.map((marketplace: any) => (
-						<option key={marketplace.id} value={marketplace.id}>
-							{marketplace.label.translations[0]?.translation || marketplace.label.name}
-						</option>
-					))}
-				</select>
-			</div>
+			<SelectInputForm
+				id='marketplaceId'
+				label='Izaberite tržni centar'
+				value={formData.marketplaceId}
+				onChange={handleSelectChange}>
+				<option value={0}>Select Marketplace</option>
+				{filteredMarketplaces.map((marketplace: any) => (
+					<option key={marketplace.id} value={marketplace.id}>
+						{marketplace.label.translations[0]?.translation || marketplace.label.name}
+					</option>
+				))}
+			</SelectInputForm>
 
 			{/* Category Selection Buttons */}
 			<div className='flex justify-between'>
