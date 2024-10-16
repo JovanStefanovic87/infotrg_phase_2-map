@@ -5,8 +5,7 @@ import React from 'react';
 interface Props {
 	children: React.ReactNode;
 	onClick?: () => void;
-	type?: 'button' | 'submit' | 'reset'; // Added type prop for flexibility
-	// Add other props if needed
+	type?: 'button' | 'submit' | 'reset';
 }
 
 const DefaultButton: React.FC<Props> = ({ children, onClick, type = 'button' }) => {

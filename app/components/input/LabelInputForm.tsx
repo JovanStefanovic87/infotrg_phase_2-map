@@ -3,8 +3,8 @@ import React from 'react';
 interface Props {
 	id: string;
 	name: string;
-	label: string;
-	value: string;
+	label: string | number;
+	value: string | number;
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	placeholder: string;
 	className?: string;

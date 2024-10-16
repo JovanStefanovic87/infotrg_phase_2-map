@@ -27,7 +27,7 @@ const DynamicPageContainer: React.FC<Props> = ({
 		<div className='container mx-auto px-3 pt-0 lg:pt-6 lg:px-6 w-screen'>
 			<ErrorDisplay error={error} clearError={clearError} />
 			<SuccessDisplay success={successMessage || ''} clearSuccess={clearSuccess} />
-			<H1 title={title} />
+			<H1 title={title} pb='0' />
 			{children}
 
 			{/* Spinner se prikazuje kao overlay */}

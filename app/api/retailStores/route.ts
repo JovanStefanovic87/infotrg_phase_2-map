@@ -67,8 +67,10 @@ export async function POST(req: NextRequest) {
 				data: {
 					countryId: newLocation.countryId,
 					cityId: newLocation.cityId,
-					cityPartId: newLocation.cityPartId,
-					marketplaceId: newLocation.marketplaceId,
+					// Uslovno dodavanje cityPartId ako postoji
+					...(newLocation.cityPartId && { cityPartId: newLocation.cityPartId }),
+					// Uslovno dodavanje marketplaceId ako postoji
+					...(newLocation.marketplaceId && { marketplaceId: newLocation.marketplaceId }),
 					address: newLocation.address,
 				},
 			});
@@ -84,7 +86,6 @@ export async function POST(req: NextRequest) {
 			  })
 			: undefined;
 
-		// Try creating the retail store without categories to isolate the problem
 		const retailStore = await prisma.retailStore.create({
 			data: {
 				name,
@@ -94,8 +95,8 @@ export async function POST(req: NextRequest) {
 							create: {
 								countryId: newLocation.countryId,
 								cityId: newLocation.cityId,
-								cityPartId: newLocation.cityPartId,
-								marketplaceId: newLocation.marketplaceId,
+								...(newLocation.cityPartId && { cityPartId: newLocation.cityPartId }),
+								...(newLocation.marketplaceId && { marketplaceId: newLocation.marketplaceId }),
 								address: newLocation.address,
 							},
 					  },

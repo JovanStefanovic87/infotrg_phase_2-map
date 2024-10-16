@@ -5,7 +5,6 @@ import DefaultButton from './DefaultButton';
 
 interface Props {
 	children: React.ReactNode;
-	// You can add any additional props if needed
 }
 
 const SubmitButton: React.FC<Props> = ({ children }) => {

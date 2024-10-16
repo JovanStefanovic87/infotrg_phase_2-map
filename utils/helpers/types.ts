@@ -369,3 +369,19 @@ export interface RetailLocationData {
 	latitude?: number;
 	longitude?: number;
 }
+
+export interface RetailFormState {
+	name: string;
+	phoneNumber: string;
+	email: string;
+	website: string;
+	countryId: number;
+	cityId: number;
+	cityPartId: number;
+	marketplaceId: number;
+	latitude: number;
+	longitude: number;
+	articleCategoryIds: number[];
+	activityCategoryIds: number[];
+	objectTypeCategoryIds: number[];
+}

@@ -4,7 +4,6 @@ import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
 import TextList from '../text/TextList';
 import H3Title from '../text/H3Title';
-import TextWrapped from '../text/TextWrapped';
 import { RetailAdmin } from '@/utils/helpers/types';
 import PopoverButtonDefault from '../popovers/PopoverButtonDefault';
 import PopoverPanelList from '../popovers/PopoverPanelList';
@@ -12,17 +11,22 @@ import PopoverContainerBackdrop from '../popovers/PopoverContainerBackdrop';
 
 interface RetailStoreItemProps {
 	retail: RetailAdmin;
+	onEditClick: (retail: RetailAdmin) => void;
 }
 
-const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail }) => {
+const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail, onEditClick }) => {
 	const country = retail.country?.translation || 'N/A';
 	const city = retail.city?.translation || 'N/A';
-	const cityPart = retail.cityPart?.translation || 'N/A';
-	const marketplace = retail.marketplace?.translation || 'N/A';
+	const cityPart = retail.cityPart?.translation;
+	const marketplace = retail.marketplace?.translation;
 
-	// Kombinovani prikaz lokacije
-	const shortLocation = `${city}, ${marketplace}`;
-	const fullLocation = `${country} - ${city} (${cityPart}, ${marketplace})`;
+	const shortLocation = `${city ? city : ''}${marketplace ? `, ${marketplace}` : ''}`;
+
+	const fullLocation = `${country ? `${country}` : ''}${city ? ` - ${city}` : ''}${
+		cityPart || marketplace
+			? ` (${cityPart ? cityPart : ''}${marketplace ? `, ${marketplace}` : ''})`
+			: ''
+	}`;
 
 	// Prikaz kategorija
 	const articleCategories = retail.articleCategories?.map(
@@ -100,7 +104,7 @@ const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail }) => {
 			</div>
 
 			<div className='flex justify-between items-end mt-auto'>
-				<EditButton onClick={() => {}} />
+				<EditButton onClick={() => onEditClick(retail)} />
 				<DeleteButton onClick={() => {}} />
 			</div>
 		</div>

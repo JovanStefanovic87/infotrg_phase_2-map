@@ -10,9 +10,16 @@ import {
 	RetailLocationData,
 	Location,
 } from '@/utils/helpers/types';
+import {
+	prefixActivityCategory,
+	prefixAticleCategory,
+	prefixObjectTypeCategory,
+} from '@/app/api/prefix';
 import DynamicPageContainer from '../containers/DynamicPageContainer';
 import RetailStoreList from '../lists/RetailStoreList';
-import NewRetailStoreForm from '../forms/NewRetailStoreForm'; // Nova komponenta
+import CollapsibleFormContainer from '../forms/CollapsibleFormContainer';
+import { useFetchLocations } from '@/app/helpers/api/location';
+import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
 
 interface Props {
 	title: string;
@@ -23,6 +30,26 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [languageId, setLanguageId] = useState<number>(1);
+
+	const { data: locations } = useFetchLocations({
+		prefix: '',
+		languageId: languageId,
+	});
+
+	const { data: articleCategories } = useCategoriesByPrefixAndLanguage({
+		prefix: prefixAticleCategory,
+		languageId: 1,
+	});
+
+	const { data: activityCategories } = useCategoriesByPrefixAndLanguage({
+		prefix: prefixActivityCategory,
+		languageId: 1,
+	});
+
+	const { data: objectTypeCategories } = useCategoriesByPrefixAndLanguage({
+		prefix: prefixObjectTypeCategory,
+		languageId: 1,
+	});
 
 	const { data: retails, isLoading, isError } = useFetchRetailStores(languageId);
 
@@ -96,24 +123,36 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			title={title}>
 			{isError && <p>Error fetching retail stores.</p>}
 
-			{/* Dodajemo formu za unos novog retail store-a */}
 			<div className='mt-8'>
-				<NewRetailStoreForm
+				<CollapsibleFormContainer
 					successMessage={successMessage}
 					setSuccessMessage={setSuccessMessage}
 					setError={setError}
 					loading={loading}
 					setLoading={setLoading}
-					error={error}
+					articleCategories={articleCategories || []}
+					activityCategories={activityCategories || []}
+					objectTypeCategories={objectTypeCategories || []}
+					locations={locations || []}
+					formData={undefined}
+					setFormData={function (value: any): void {
+						throw new Error('Function not implemented.');
+					}}
 				/>
 			</div>
 
-			{/* Prikaz postojeće liste retail store-a */}
 			<div className='mt-8'>
+				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4'>
+					Lista prodajnih objekata
+				</h2>
 				<RetailStoreList
 					setSuccessMessage={setSuccessMessage}
 					setError={setError}
 					retails={formattedRetails || []}
+					articleCategories={articleCategories || []}
+					activityCategories={activityCategories || []}
+					objectTypeCategories={objectTypeCategories || []}
+					locations={locations}
 				/>
 			</div>
 		</DynamicPageContainer>
