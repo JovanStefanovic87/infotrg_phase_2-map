@@ -12,9 +12,14 @@ import PopoverContainerBackdrop from '../popovers/PopoverContainerBackdrop';
 interface RetailStoreItemProps {
 	retail: RetailAdmin;
 	onEditClick: (retail: RetailAdmin) => void;
+	onDeleteClick: () => void;
 }
 
-const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail, onEditClick }) => {
+const RetailStoreItem: React.FC<RetailStoreItemProps> = ({
+	retail,
+	onEditClick,
+	onDeleteClick,
+}) => {
 	const country = retail.country?.translation || 'N/A';
 	const city = retail.city?.translation || 'N/A';
 	const cityPart = retail.cityPart?.translation;
@@ -105,7 +110,7 @@ const RetailStoreItem: React.FC<RetailStoreItemProps> = ({ retail, onEditClick }
 
 			<div className='flex justify-between items-end mt-auto'>
 				<EditButton onClick={() => onEditClick(retail)} />
-				<DeleteButton onClick={() => {}} />
+				<DeleteButton onClick={onDeleteClick} />
 			</div>
 		</div>
 	);

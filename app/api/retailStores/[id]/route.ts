@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
 	try {
-		// Extract the retail store ID from the params
 		const retailStoreId = parseInt(params.id, 10);
 
 		if (isNaN(retailStoreId)) {
@@ -13,8 +12,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 		const body = await req.json();
 		const {
 			name,
-			locationId,
-			updatedLocation,
 			phoneNumber,
 			email,
 			website,
@@ -23,7 +20,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			adType,
 			isPhoneConfirmed,
 			isEmailConfirmed,
-			coordinates,
+			countryId,
+			cityId,
+			cityPartId,
+			marketplaceId,
+			latitude, // Use latitude from the body directly
+			longitude, // Use longitude from the body directly
 			articleCategoryIds,
 			activityCategoryIds,
 			objectTypeCategoryIds,
@@ -38,54 +40,52 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Retail Store not found' }, { status: 404 });
 		}
 
-		// Update the location only if locationId is valid
-		let updatedLocationRecord;
-		if (updatedLocation && locationId) {
-			updatedLocationRecord = await prisma.location.update({
-				where: { id: locationId },
-				data: {
-					countryId: updatedLocation.countryId,
-					cityId: updatedLocation.cityId,
-					cityPartId: updatedLocation.cityPartId,
-					marketplaceId: updatedLocation.marketplaceId,
-					address: updatedLocation.address,
-				},
-			});
+		const updateData: any = {
+			name,
+			phoneNumber,
+			email,
+			website,
+			viewCount,
+			isSubscribedForAds,
+			adType,
+			isPhoneConfirmed,
+			isEmailConfirmed,
+			countryId: countryId || retailStore.countryId,
+			cityId: cityId || retailStore.cityId,
+			cityPartId: cityPartId || null,
+			marketplaceId: marketplaceId || null,
+			articleCategories: { set: articleCategoryIds.map((id: number) => ({ id })) },
+			activityCategories: { set: activityCategoryIds.map((id: number) => ({ id })) },
+			objectTypeCategories: { set: objectTypeCategoryIds.map((id: number) => ({ id })) },
+		};
+
+		// Handle latitude and longitude updates
+		if (latitude && longitude) {
+			// If coordinates already exist, update them
+			if (retailStore.coordinatesId !== null) {
+				await prisma.coordinates.update({
+					where: { id: retailStore.coordinatesId },
+					data: {
+						latitude,
+						longitude,
+					},
+				});
+			} else {
+				// If coordinates don't exist, create new ones
+				const newCoordinates = await prisma.coordinates.create({
+					data: {
+						latitude,
+						longitude,
+					},
+				});
+				// Update the retail store with the new coordinates ID
+				updateData.coordinatesId = newCoordinates.id;
+			}
 		}
 
-		// Update coordinates if they exist
-		let updatedCoordinatesRecord;
-		if (coordinates && retailStore.coordinatesId !== null) {
-			updatedCoordinatesRecord = await prisma.coordinates.update({
-				where: { id: retailStore.coordinatesId },
-				data: {
-					latitude: coordinates.latitude,
-					longitude: coordinates.longitude,
-					locationDescription: coordinates.locationDescription,
-				},
-			});
-		}
-
-		// Update retail store data
 		const updatedRetailStore = await prisma.retailStore.update({
 			where: { id: retailStoreId },
-			data: {
-				name,
-				phoneNumber,
-				email,
-				website,
-				viewCount,
-				isSubscribedForAds,
-				adType,
-				isPhoneConfirmed,
-				isEmailConfirmed,
-				coordinates: updatedCoordinatesRecord
-					? { connect: { id: updatedCoordinatesRecord.id } }
-					: undefined,
-				articleCategories: { set: articleCategoryIds.map((id: number) => ({ id })) },
-				activityCategories: { set: activityCategoryIds.map((id: number) => ({ id })) },
-				objectTypeCategories: { set: objectTypeCategoryIds.map((id: number) => ({ id })) },
-			},
+			data: updateData,
 		});
 
 		return NextResponse.json(updatedRetailStore, { status: 200 });
@@ -99,7 +99,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 	try {
 		const { id } = params;
 
-		// Proveri da li postoji prodavnica sa datim ID-om
 		const retailStore = await prisma.retailStore.findUnique({
 			where: { id: Number(id) },
 		});

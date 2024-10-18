@@ -101,42 +101,39 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		mutation.mutate(
-			{
-				name: formData.name,
-				phoneNumber: formData.phoneNumber,
-				email: formData.email,
-				website: formData.website,
-				newLocation: {
-					countryId: formData.countryId,
-					cityId: formData.cityId,
-					cityPartId: formData.cityPartId,
-					marketplaceId: formData.marketplaceId,
-					address: 'Some Address',
-				},
-				coordinates: {
-					latitude: formData.latitude,
-					longitude: formData.longitude,
-					locationDescription: 'Some location description',
-				},
-				articleCategoryIds: selectedArticleCategoryIds,
-				activityCategoryIds: selectedActivityCategoryIds,
-				objectTypeCategoryIds: selectedObjectTypeCategoryIds,
+		const newRetailStore = {
+			name: formData.name,
+			phoneNumber: formData.phoneNumber,
+			email: formData.email,
+			website: formData.website,
+			// Direktne veze sa country, city, cityPart i marketplace umesto location
+			countryId: formData.countryId,
+			cityId: formData.cityId,
+			cityPartId: formData.cityPartId || null,
+			marketplaceId: formData.marketplaceId || null,
+			coordinates: {
+				latitude: formData.latitude,
+				longitude: formData.longitude,
+				locationDescription: 'Some location description',
 			},
-			{
-				onSuccess: () => {
-					setSuccessMessage('Retail store created successfully!');
+			articleCategoryIds: selectedArticleCategoryIds,
+			activityCategoryIds: selectedActivityCategoryIds,
+			objectTypeCategoryIds: selectedObjectTypeCategoryIds,
+		};
 
-					setFormData(retailInit);
-					setSelectedArticleCategoryIds([]);
-					setSelectedActivityCategoryIds([]);
-					setSelectedObjectTypeCategoryIds([]);
-				},
-				onError: error => {
-					setError(error.message);
-				},
-			}
-		);
+		mutation.mutate(newRetailStore, {
+			onSuccess: () => {
+				setSuccessMessage('Retail store created successfully!');
+
+				setFormData(retailInit);
+				setSelectedArticleCategoryIds([]);
+				setSelectedActivityCategoryIds([]);
+				setSelectedObjectTypeCategoryIds([]);
+			},
+			onError: error => {
+				setError(error.message);
+			},
+		});
 	};
 
 	const findAllParents = (category: Category, allCategories: Category[]): Category[] => {
@@ -185,7 +182,6 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 
 				<RetailStoreForm
 					formData={formData}
-					setFormData={setFormData}
 					locations={locations}
 					handleChange={handleChange}
 					handleSelectChange={handleSelectChange}

@@ -134,7 +134,7 @@ interface RetailStoreUpdateData {
 }
 
 const updateRetailStore = async (id: string, data: RetailStoreUpdateData) => {
-	const response = await putData(`/api/retail-store/${id}`, data);
+	const response = await putData(`/api/retailStores/${id}`, data);
 	return response;
 };
 
@@ -154,7 +154,7 @@ export const useUpdateRetailStore = () => {
 };
 
 const deleteRetailStore = async (id: string) => {
-	const response = await deleteData(`/api/retail-store/${id}`);
+	const response = await deleteData(`/api/retailStores/${id}`);
 	return response;
 };
 

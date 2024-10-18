@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useState } from 'react';
 import { RetailAdmin, RetailFormState } from '@/utils/helpers/types';
+import { useUpdateRetailStore, useDeleteRetailStore } from '@/app/helpers/api/retailStore';
 import InputDefault from '../input/InputDefault';
 import RetailStoreItem from './RetailStoreItem';
 import RetailStoreForm from '../forms/RetailStoreForm';
@@ -7,6 +8,7 @@ import EditModalContainer from '../forms/EditModalContainer';
 import { retailInit } from '@/utils/helpers/initialStates';
 import FormDefaultButton from '../buttons/FormDefaultButton';
 import CategoryModal from '../modals/CategoryModal';
+import ConfirmationModal from '../modals/systemModals/ConfirmationModal';
 
 interface Category {
 	id: number;
@@ -34,6 +36,8 @@ const RetailStoreList: React.FC<Props> = ({
 	objectTypeCategories,
 	locations,
 }) => {
+	const mutation = useUpdateRetailStore();
+	const deleteMutation = useDeleteRetailStore();
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const [formData, setFormData] = useState(retailInit);
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -53,15 +57,55 @@ const RetailStoreList: React.FC<Props> = ({
 	const [articleSearchQuery, setArticleSearchQuery] = useState('');
 	const [activitySearchQuery, setActivitySearchQuery] = useState('');
 	const [objectTypeSearchQuery, setObjectTypeSearchQuery] = useState('');
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+	const [retailToDelete, setRetailToDelete] = useState<RetailAdmin | null>(null);
 
-	const filteredRetails = retails.filter(
-		retail =>
-			retail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			retail.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			retail.email?.toLowerCase().includes(searchQuery.toLowerCase())
-	);
+	const filteredRetails = retails
+		.filter(
+			retail =>
+				retail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				retail.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				retail.email?.toLowerCase().includes(searchQuery.toLowerCase())
+		)
+		.sort((a, b) => a.name.localeCompare(b.name));
 
-	console.log('locations', locations);
+	const handleSubmitEdit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		// Priprema podataka za ažuriranje
+		const updatedRetailStoreData: RetailFormState = {
+			id: currentRetail?.id || 0,
+			name: formData.name,
+			phoneNumber: formData.phoneNumber,
+			email: formData.email,
+			website: formData.website,
+			latitude: formData.latitude,
+			longitude: formData.longitude,
+			countryId: formData.countryId,
+			cityId: formData.cityId,
+			cityPartId: formData.cityPartId || null, // Osiguraj da je cityPartId opcionalan
+			marketplaceId: formData.marketplaceId || null, // Osiguraj da je marketplaceId opcionalan
+			articleCategoryIds: selectedArticleCategoryIds,
+			activityCategoryIds: selectedActivityCategoryIds,
+			objectTypeCategoryIds: selectedObjectTypeCategoryIds,
+		};
+
+		mutation.mutate(
+			{
+				id: currentRetail?.id?.toString() || '', // Proveri da li id postoji i konvertuj ga u string
+				data: updatedRetailStoreData, // Pošalji ažurirane podatke
+			},
+			{
+				onSuccess: () => {
+					setSuccessMessage('Prodajni objekat uspešno ažuriran!');
+					handleModalClose(); // Zatvaranje modala nakon uspešnog ažuriranja
+				},
+				onError: error => {
+					setError(error.message || 'Greška prilikom ažuriranja prodajnog objekta');
+				},
+			}
+		);
+	};
 
 	const handleEditClick = (retail: RetailAdmin) => {
 		setFormData({
@@ -79,12 +123,15 @@ const RetailStoreList: React.FC<Props> = ({
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
 		});
+
 		setSelectedArticleCategoryIds(retail.articleCategories?.map(category => category.id) || []);
 		setSelectedActivityCategoryIds(retail.activityCategories?.map(category => category.id) || []);
 		setSelectedObjectTypeCategoryIds(
 			retail.objectTypeCategories?.map(category => category.id) || []
 		);
+
 		setCurrentRetail({
+			id: retail.id,
 			name: retail.name || '',
 			phoneNumber: retail.phoneNumber || '',
 			email: retail.email || '',
@@ -99,15 +146,34 @@ const RetailStoreList: React.FC<Props> = ({
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
 		});
+
 		setIsModalOpen(true);
+	};
+
+	const handleDeleteClick = (retail: RetailAdmin) => {
+		// Otvori modal i postavi retail koji treba da se obriše
+		setRetailToDelete(retail);
+		setIsDeleteModalOpen(true);
+	};
+
+	const confirmDelete = () => {
+		if (retailToDelete) {
+			deleteMutation.mutate(retailToDelete.id.toString(), {
+				onSuccess: () => {
+					setSuccessMessage('Prodajni objekat uspešno obrisan!');
+					setIsDeleteModalOpen(false); // Zatvori modal
+				},
+				onError: error => {
+					setError(error.message || 'Greška prilikom brisanja prodajnog objekta');
+				},
+			});
+		}
 	};
 
 	const handleModalClose = () => {
 		setIsModalOpen(false);
 		setCurrentRetail(null);
 	};
-
-	console.log('formData', formData);
 
 	const filteredCities = formData.countryId
 		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
@@ -185,10 +251,22 @@ const RetailStoreList: React.FC<Props> = ({
 					className='border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500'
 				/>
 			</div>
-
+			<ConfirmationModal
+				isOpen={isDeleteModalOpen}
+				onRequestClose={() => setIsDeleteModalOpen(false)}
+				onConfirm={confirmDelete}
+				mainText='Da li ste sigurni da želite da obrišete'
+				subject='prodajni objekat'
+				subjectName={retailToDelete?.name || ''}
+			/>
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
 				{filteredRetails.map(retail => (
-					<RetailStoreItem key={retail.id} retail={retail} onEditClick={handleEditClick} />
+					<RetailStoreItem
+						key={retail.id}
+						retail={retail}
+						onEditClick={handleEditClick}
+						onDeleteClick={() => handleDeleteClick(retail)}
+					/>
 				))}
 			</div>
 			{currentRetail && (
@@ -207,7 +285,7 @@ const RetailStoreList: React.FC<Props> = ({
 							locations={locations}
 							handleChange={handleChange}
 							handleSelectChange={handleSelectChange}
-							handleSubmit={() => {}}
+							handleSubmit={handleSubmitEdit}
 							loading={false}
 							mutation={{}}
 							successMessage={null}

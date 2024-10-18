@@ -8,8 +8,10 @@ export async function POST(req: NextRequest) {
 		const body = await req.json();
 		const {
 			name,
-			locationId,
-			newLocation,
+			countryId,
+			cityId,
+			cityPartId,
+			marketplaceId,
 			phoneNumber,
 			email,
 			website,
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
 			objectTypeCategoryIds,
 		} = body;
 
-		// Proverite da li svi ID-ovi kategorija postoje u bazi
+		// Validate categories
 		const articleCategories = await prisma.category.findMany({
 			where: { id: { in: articleCategoryIds } },
 		});
@@ -55,27 +57,7 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		// Handle location creation or selection
-		let location;
-		if (locationId) {
-			location = await prisma.location.findUnique({ where: { id: locationId } });
-			if (!location) {
-				return NextResponse.json({ error: 'Location not found' }, { status: 400 });
-			}
-		} else if (newLocation) {
-			location = await prisma.location.create({
-				data: {
-					countryId: newLocation.countryId,
-					cityId: newLocation.cityId,
-					// Uslovno dodavanje cityPartId ako postoji
-					...(newLocation.cityPartId && { cityPartId: newLocation.cityPartId }),
-					// Uslovno dodavanje marketplaceId ako postoji
-					...(newLocation.marketplaceId && { marketplaceId: newLocation.marketplaceId }),
-					address: newLocation.address,
-				},
-			});
-		}
-
+		// Kreiraj koordinate ako postoje
 		const coordinatesRecord = coordinates
 			? await prisma.coordinates.create({
 					data: {
@@ -86,20 +68,18 @@ export async function POST(req: NextRequest) {
 			  })
 			: undefined;
 
+		// Kreiraj retail store sa direktnim vezama ka country, city, itd.
 		const retailStore = await prisma.retailStore.create({
 			data: {
 				name,
-				location: location
-					? { connect: { id: location.id } }
-					: {
-							create: {
-								countryId: newLocation.countryId,
-								cityId: newLocation.cityId,
-								...(newLocation.cityPartId && { cityPartId: newLocation.cityPartId }),
-								...(newLocation.marketplaceId && { marketplaceId: newLocation.marketplaceId }),
-								address: newLocation.address,
-							},
-					  },
+				country: {
+					connect: { id: countryId },
+				},
+				city: {
+					connect: { id: cityId },
+				},
+				cityPart: cityPartId ? { connect: { id: cityPartId } } : undefined,
+				marketplace: marketplaceId ? { connect: { id: marketplaceId } } : undefined,
 				phoneNumber,
 				email,
 				website,
@@ -131,56 +111,52 @@ export async function GET(req: NextRequest) {
 	try {
 		const retailStores = await prisma.retailStore.findMany({
 			include: {
-				location: {
+				country: {
 					include: {
-						country: {
+						label: {
 							include: {
-								label: {
-									include: {
-										translations: {
-											where: {
-												languageId: languageId,
-											},
-										},
+								translations: {
+									where: {
+										languageId: languageId,
 									},
 								},
 							},
 						},
-						city: {
+					},
+				},
+				city: {
+					include: {
+						label: {
 							include: {
-								label: {
-									include: {
-										translations: {
-											where: {
-												languageId: languageId,
-											},
-										},
+								translations: {
+									where: {
+										languageId: languageId,
 									},
 								},
 							},
 						},
-						cityPart: {
+					},
+				},
+				cityPart: {
+					include: {
+						label: {
 							include: {
-								label: {
-									include: {
-										translations: {
-											where: {
-												languageId: languageId,
-											},
-										},
+								translations: {
+									where: {
+										languageId: languageId,
 									},
 								},
 							},
 						},
-						marketplace: {
+					},
+				},
+				marketplace: {
+					include: {
+						label: {
 							include: {
-								label: {
-									include: {
-										translations: {
-											where: {
-												languageId: languageId,
-											},
-										},
+								translations: {
+									where: {
+										languageId: languageId,
 									},
 								},
 							},

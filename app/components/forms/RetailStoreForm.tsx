@@ -94,6 +94,7 @@ const RetailStoreForm: React.FC<Props> = ({
 				value={formData.longitude}
 				onChange={handleChange}
 				placeholder='Unesite geografsku dužinu'
+				type='number'
 			/>
 
 			{/* Country Selection */}

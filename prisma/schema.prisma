@@ -60,6 +60,9 @@ model Country {
   cities    City[]
   createdAt DateTime @default(now())
 
+  // Veza sa RetailStore
+  retailStores RetailStore[]
+
   iconId   Int? // Foreign key for Icon
   icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   Location Location[]
@@ -75,11 +78,12 @@ model City {
   cityParts CityPart[] // This should be the correct field name
   createdAt DateTime   @default(now())
 
+  // Veza sa RetailStore
+  retailStores RetailStore[]
+
   iconId   Int? // Foreign key for Icon
   icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   Location Location[]
-
-  @@unique([labelId, countryId])
 }
 
 model CityPart {
@@ -91,12 +95,13 @@ model CityPart {
   city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  // Veza sa RetailStore
+  retailStores RetailStore[]
+
   iconId       Int? // Foreign key for Icon
   icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
   marketplaces Marketplace[] // This should be defined here as well
   Location     Location[]
-
-  @@unique([labelId, cityId])
 }
 
 model Marketplace {
@@ -106,13 +111,14 @@ model Marketplace {
   cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
+  // Veza sa RetailStore
+  retailStores RetailStore[]
+
   iconId   Int?
   icon     Icon?      @relation(fields: [iconId], references: [id])
   labelId  Int
   label    Label      @relation(fields: [labelId], references: [id])
   Location Location[]
-
-  @@index([name])
 }
 
 model ParentCategory {
@@ -178,11 +184,8 @@ model Category {
 }
 
 model RetailStore {
-  id         Int      @id @default(autoincrement())
-  name       String
-  locationId Int
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-
+  id                 Int      @id @default(autoincrement())
+  name               String
   phoneNumber        String?
   email              String?
   website            String?
@@ -194,13 +197,28 @@ model RetailStore {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  // Relacije sa lokacijom
+  countryId Int
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  cityId Int
+  city   City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  cityPartId Int?
+  cityPart   CityPart? @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+
+  marketplaceId Int?
+  marketplace   Marketplace? @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+
   coordinatesId Int?
   coordinates   Coordinates? @relation(fields: [coordinatesId], references: [id], onDelete: Cascade)
 
-  // Relacije sa različitim kategorijama
+  // Relacije sa kategorijama
   articleCategories    Category[] @relation("RetailStoreArticleCategories")
   activityCategories   Category[] @relation("RetailStoreActivityCategories")
   objectTypeCategories Category[] @relation("RetailStoreObjectTypeCategories")
+  Location             Location?  @relation(fields: [locationId], references: [id])
+  locationId           Int?
 }
 
 model Location {

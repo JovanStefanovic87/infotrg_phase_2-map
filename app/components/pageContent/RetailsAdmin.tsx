@@ -64,30 +64,32 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			phoneNumber: retail.phoneNumber,
 			email: retail.email,
 			website: retail.website,
-			address: retail.location.address,
+			// Direktno koristiš `address` iz `RetailStore`
+			address: retail.address ?? 'N/A',
 			latitude: retail.coordinates?.latitude ?? null,
 			longitude: retail.coordinates?.longitude ?? null,
 			viewCount: retail.viewCount,
 			isSubscribedForAds: retail.isSubscribedForAds ?? false,
 			adType: retail.adType ?? null,
+			// Koristi direktno `country`, `city`, `cityPart`, i `marketplace`
 			country: {
-				id: retail.location.country.id,
-				translation: retail.location.country.label.translations[0]?.translation || 'N/A',
+				id: retail.country.id,
+				translation: retail.country.label.translations[0]?.translation || 'N/A',
 			},
 			city: {
-				id: retail.location.city.id,
-				translation: retail.location.city.label.translations[0]?.translation || 'N/A',
+				id: retail.city.id,
+				translation: retail.city.label.translations[0]?.translation || 'N/A',
 			},
-			cityPart: retail.location.cityPart
+			cityPart: retail.cityPart
 				? {
-						id: retail.location.cityPart.id,
-						translation: retail.location.cityPart.label.translations[0]?.translation || 'N/A',
+						id: retail.cityPart.id,
+						translation: retail.cityPart.label.translations[0]?.translation || 'N/A',
 				  }
 				: null,
-			marketplace: retail.location.marketplace
+			marketplace: retail.marketplace
 				? {
-						id: retail.location.marketplace.id,
-						translation: retail.location.marketplace.label.translations[0]?.translation || 'N/A',
+						id: retail.marketplace.id,
+						translation: retail.marketplace.label.translations[0]?.translation || 'N/A',
 				  }
 				: null,
 			articleCategories:

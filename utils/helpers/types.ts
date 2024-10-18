@@ -342,23 +342,25 @@ export interface LocationDetail {
 	translation: string;
 }
 
-export interface UpdateRetailAdmin {
-	id?: number;
+export interface RetailAdmin {
+	id: number;
 	name: string;
 	phoneNumber?: string;
 	email?: string;
 	website?: string;
-	storeTypeId: number;
-	countryId: number;
-	cityId: number;
-	cityPartId?: number;
-	marketplaceId?: number;
 	address: string;
+	latitude?: number;
+	longitude?: number;
+	viewCount: number;
 	isSubscribedForAds: boolean;
-	adType: AdType;
-	articleCategories: number[];
-	longitude: number;
-	latitude: number;
+	adType?: AdType;
+	country: LocationDetail;
+	city: LocationDetail;
+	cityPart?: LocationDetail | null;
+	marketplace?: LocationDetail | null;
+	articleCategories: Category[];
+	activityCategories: Category[];
+	objectTypeCategories: Category[];
 }
 
 export interface RetailLocationData {
@@ -371,14 +373,15 @@ export interface RetailLocationData {
 }
 
 export interface RetailFormState {
+	id?: number;
 	name: string;
 	phoneNumber: string;
 	email: string;
 	website: string;
 	countryId: number;
 	cityId: number;
-	cityPartId: number;
-	marketplaceId: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
 	latitude: number;
 	longitude: number;
 	articleCategoryIds: number[];
