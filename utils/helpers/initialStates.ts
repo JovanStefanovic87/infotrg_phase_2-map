@@ -1,4 +1,4 @@
-import { RetailLocationData, RetailAdmin, RetailFormState } from './types';
+import { RetailLocationData, RetailFormState, AdvertiseFormState, AdType } from './types';
 
 export const retailLocationInit: RetailLocationData = {
 	countryId: 0,
@@ -19,6 +19,21 @@ export const retailInit: RetailFormState = {
 	marketplaceId: 0,
 	latitude: 0,
 	longitude: 0,
+	articleCategoryIds: [] as number[],
+	activityCategoryIds: [] as number[],
+	objectTypeCategoryIds: [] as number[],
+};
+
+export const advertiseInit: AdvertiseFormState = {
+	name: '',
+	url: '',
+	imageId: undefined,
+	newImageFile: null,
+	adType: 'NONE',
+	countryId: 1,
+	cityId: 1,
+	cityPartId: 0,
+	marketplaceId: 0,
 	articleCategoryIds: [] as number[],
 	activityCategoryIds: [] as number[],
 	objectTypeCategoryIds: [] as number[],

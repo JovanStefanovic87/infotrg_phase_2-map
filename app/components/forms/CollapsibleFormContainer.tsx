@@ -1,21 +1,8 @@
 'use client';
-import React, { useState, ChangeEvent } from 'react';
-import { useCreateRetailStore } from '@/app/helpers/api/retailStore';
-import { useFetchLocations } from '@/app/helpers/api/location';
-import {
-	prefixActivityCategory,
-	prefixAticleCategory,
-	prefixObjectTypeCategory,
-} from '@/app/api/prefix';
-import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
-import LabelInputForm from '../input/LabelInputForm';
-import SelectInputForm from '../input/SelectInputForm';
+import React, { useState, useEffect } from 'react';
 import FormDefaultButton from '../buttons/FormDefaultButton';
-import SubmitButton from '../buttons/SubmitButton';
 import CategoryModal from '../modals/CategoryModal';
 import H3Title from '../text/H3Title';
-import { retailInit } from '@/utils/helpers/initialStates';
-import RetailStoreForm from './RetailStoreForm';
 
 interface Category {
 	id: number;
@@ -24,30 +11,22 @@ interface Category {
 	parents?: Category[];
 }
 
-interface NewRetailStoreFormProps {
-	successMessage: string | null;
-	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
-	setError: React.Dispatch<React.SetStateAction<string>>;
-	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-	loading: boolean;
+interface Props {
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
-	locations: any[];
-	formData: any;
 	setFormData: React.Dispatch<React.SetStateAction<any>>;
+	submitTrigger: boolean;
+	children: React.ReactNode;
 }
 
-const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
-	successMessage,
-	setSuccessMessage,
-	setError,
-	setLoading,
-	loading,
+const CollapsibleFormContainer: React.FC<Props> = ({
 	articleCategories,
 	activityCategories,
 	objectTypeCategories,
-	locations,
+	setFormData,
+	submitTrigger,
+	children,
 }) => {
 	const [isFormOpen, setIsFormOpen] = useState(false);
 	const [selectedArticleCategoryIds, setSelectedArticleCategoryIds] = useState<number[]>([]);
@@ -59,113 +38,36 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 	const [articleSearchQuery, setArticleSearchQuery] = useState('');
 	const [activitySearchQuery, setActivitySearchQuery] = useState('');
 	const [objectTypeSearchQuery, setObjectTypeSearchQuery] = useState('');
-	const mutation = useCreateRetailStore();
 
-	const [formData, setFormData] = useState(retailInit);
-
-	// Logika za filtriranje gradova, delova grada i pijaca na osnovu odabira
-	const filteredCities = formData.countryId
-		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
-		: [];
-
-	const filteredCityParts = formData.cityId
-		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.cityParts || []
-		: [];
-
-	const filteredMarketplaces = formData.cityPartId
-		? filteredCityParts.find((cityPart: { id: number }) => cityPart.id === formData.cityPartId)
-				?.marketplaces || []
-		: [];
-
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value, type } = e.target;
-		setFormData(prevFormData => ({
+	// Sync formData with selected categories when they change
+	useEffect(() => {
+		setFormData((prevFormData: any) => ({
 			...prevFormData,
-			[name]:
-				type === 'number' && value === ''
-					? ''
-					: type === 'number'
-					? parseFloat(value) || ''
-					: value,
-		}));
-	};
-
-	const handleSelectChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-		const { name, value, type } = e.target;
-		setFormData(prevFormData => ({
-			...prevFormData,
-			[name]: type === 'number' || name.endsWith('Id') ? parseInt(value, 10) || 0 : value,
-		}));
-	};
-
-	const handleSubmit = (e: React.FormEvent) => {
-		e.preventDefault();
-
-		const newRetailStore = {
-			name: formData.name,
-			phoneNumber: formData.phoneNumber,
-			email: formData.email,
-			website: formData.website,
-			// Direktne veze sa country, city, cityPart i marketplace umesto location
-			countryId: formData.countryId,
-			cityId: formData.cityId,
-			cityPartId: formData.cityPartId || null,
-			marketplaceId: formData.marketplaceId || null,
-			coordinates: {
-				latitude: formData.latitude,
-				longitude: formData.longitude,
-				locationDescription: 'Some location description',
-			},
 			articleCategoryIds: selectedArticleCategoryIds,
 			activityCategoryIds: selectedActivityCategoryIds,
 			objectTypeCategoryIds: selectedObjectTypeCategoryIds,
-		};
+		}));
+	}, [
+		selectedArticleCategoryIds,
+		selectedActivityCategoryIds,
+		selectedObjectTypeCategoryIds,
+		setFormData,
+	]);
 
-		mutation.mutate(newRetailStore, {
-			onSuccess: () => {
-				setSuccessMessage('Retail store created successfully!');
-
-				setFormData(retailInit);
-				setSelectedArticleCategoryIds([]);
-				setSelectedActivityCategoryIds([]);
-				setSelectedObjectTypeCategoryIds([]);
-			},
-			onError: error => {
-				setError(error.message);
-			},
-		});
-	};
-
-	const findAllParents = (category: Category, allCategories: Category[]): Category[] => {
-		let parents: Category[] = [];
-
-		if (category.parents && category.parents.length > 0) {
-			category.parents.forEach((parent: Category) => {
-				parents.push(parent);
-				parents = [...parents, ...findAllParents(parent, allCategories)];
-			});
-		}
-
-		return parents;
-	};
-
-	const findAllChildren = (category: Category): number[] => {
-		let childrenIds: number[] = [];
-
-		if (category.children && category.children.length > 0) {
-			category.children.forEach(child => {
-				childrenIds.push(child.id);
-				childrenIds = [...childrenIds, ...findAllChildren(child)];
-			});
-		}
-
-		return childrenIds;
-	};
+	useEffect(() => {
+		resetSelectedCategories();
+	}, [submitTrigger]);
 
 	const toggleFormVisibility = () => setIsFormOpen(!isFormOpen);
 	const toggleArticleModal = () => setIsArticleModalOpen(!isArticleModalOpen);
 	const toggleActivityModal = () => setIsActivityModalOpen(!isActivityModalOpen);
 	const toggleObjectTypeModal = () => setIsObjectTypeModalOpen(!isObjectTypeModalOpen);
+
+	const resetSelectedCategories = () => {
+		setSelectedArticleCategoryIds([]);
+		setSelectedActivityCategoryIds([]);
+		setSelectedObjectTypeCategoryIds([]);
+	};
 
 	return (
 		<div className='bg-white rounded-lg pt-4 flex flex-col'>
@@ -179,21 +81,9 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 					<FormDefaultButton onClick={toggleActivityModal} label='Kategorije delatnosti' />
 					<FormDefaultButton onClick={toggleObjectTypeModal} label='Tip pr. objekata' />
 				</div>
-
-				<RetailStoreForm
-					formData={formData}
-					locations={locations}
-					handleChange={handleChange}
-					handleSelectChange={handleSelectChange}
-					handleSubmit={handleSubmit}
-					loading={loading}
-					mutation={mutation}
-					successMessage={successMessage}
-					filteredCities={filteredCities}
-					filteredCityParts={filteredCityParts}
-					filteredMarketplaces={filteredMarketplaces}
-				/>
+				{children}
 			</div>
+
 			<CategoryModal
 				isOpen={isArticleModalOpen}
 				onClose={toggleArticleModal}
@@ -204,20 +94,22 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 				selectedCategories={selectedArticleCategoryIds}
 				setSelectedCategories={setSelectedArticleCategoryIds}
 			/>
+
 			<CategoryModal
 				isOpen={isActivityModalOpen}
 				onClose={toggleActivityModal}
-				title='Select Article Categories'
+				title='Select Activity Categories'
 				searchQuery={activitySearchQuery}
 				setSearchQuery={setActivitySearchQuery}
 				categories={activityCategories || []}
 				selectedCategories={selectedActivityCategoryIds}
 				setSelectedCategories={setSelectedActivityCategoryIds}
 			/>
+
 			<CategoryModal
 				isOpen={isObjectTypeModalOpen}
 				onClose={toggleObjectTypeModal}
-				title='Select Article Categories'
+				title='Select Object Type Categories'
 				searchQuery={objectTypeSearchQuery}
 				setSearchQuery={setObjectTypeSearchQuery}
 				categories={objectTypeCategories || []}
@@ -240,4 +132,4 @@ const NewRetailStoreForm: React.FC<NewRetailStoreFormProps> = ({
 	);
 };
 
-export default NewRetailStoreForm;
+export default CollapsibleFormContainer;

@@ -1,35 +1,32 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import { useFetchRetailStores } from '@/app/helpers/api/retailStore';
-import {
-	CurrentIcon,
-	Icon,
-	Language,
-	AdType,
-	RetailAdmin,
-	RetailLocationData,
-	Location,
-} from '@/utils/helpers/types';
+import React, { useState } from 'react';
+import { useFetchLocations } from '@/app/helpers/api/location';
 import {
 	prefixActivityCategory,
 	prefixAticleCategory,
 	prefixObjectTypeCategory,
 } from '@/app/api/prefix';
-import DynamicPageContainer from '../containers/DynamicPageContainer';
-import RetailStoreList from '../lists/RetailStoreList';
-import CollapsibleFormContainer from '../forms/CollapsibleFormContainer';
-import { useFetchLocations } from '@/app/helpers/api/location';
 import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
+import DynamicPageContainer from '../containers/DynamicPageContainer';
+import CollapsibleFormContainer from '../forms/CollapsibleFormContainer';
+import RetailStoreForm from '../forms/RetailStoreForm';
+import { retailInit } from '@/utils/helpers/initialStates';
+import RetailStoreList from '../lists/RetailStoreList';
+import { RetailAdmin } from '@/utils/helpers/types';
+import { useCreateRetailStore, useFetchRetailStores } from '@/app/helpers/api/retailStore';
 
 interface Props {
 	title: string;
 }
 
 const RetailsAdmin: React.FC<Props> = ({ title }) => {
-	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [error, setError] = useState<string>('');
+	const [loading, setLoading] = useState<boolean>(false);
+	const [formData, setFormData] = useState(retailInit);
 	const [languageId, setLanguageId] = useState<number>(1);
+	const [submitTrigger, setSubmitTrigger] = useState<boolean>(false);
+	const mutation = useCreateRetailStore();
 
 	const { data: locations } = useFetchLocations({
 		prefix: '',
@@ -51,11 +48,55 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 		languageId: 1,
 	});
 
-	const { data: retails, isLoading, isError } = useFetchRetailStores(languageId);
+	const { data: retails } = useFetchRetailStores(languageId);
 
-	useEffect(() => {
-		setLoading(isLoading);
-	}, [isLoading]);
+	// Logika za filtriranje gradova, delova grada i tržnih centara na osnovu odabira
+	const filteredCities = formData.countryId
+		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
+		: [];
+
+	const filteredCityParts = formData.cityId
+		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.cityParts || []
+		: [];
+
+	const filteredMarketplaces = formData.cityPartId
+		? filteredCityParts.find((cityPart: { id: number }) => cityPart.id === formData.cityPartId)
+				?.marketplaces || []
+		: [];
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		const newRetailStore = {
+			name: formData.name,
+			phoneNumber: formData.phoneNumber,
+			email: formData.email,
+			website: formData.website,
+			countryId: formData.countryId,
+			cityId: formData.cityId,
+			cityPartId: formData.cityPartId || null,
+			marketplaceId: formData.marketplaceId || null,
+			coordinates: {
+				latitude: parseFloat(formData.latitude.toString()),
+				longitude: parseFloat(formData.longitude.toString()),
+				locationDescription: 'Some location description',
+			},
+			articleCategoryIds: formData.articleCategoryIds,
+			activityCategoryIds: formData.activityCategoryIds,
+			objectTypeCategoryIds: formData.objectTypeCategoryIds,
+		};
+
+		mutation.mutate(newRetailStore, {
+			onSuccess: () => {
+				setSuccessMessage('Retail store created successfully!');
+				setFormData(retailInit);
+				setSubmitTrigger(prev => !prev);
+			},
+			onError: (error: any) => {
+				setError(error?.message || 'Došlo je do greške prilikom čuvanja.');
+			},
+		});
+	};
 
 	const formattedRetails = retails?.map(
 		(retail: any): RetailAdmin => ({
@@ -64,14 +105,12 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			phoneNumber: retail.phoneNumber,
 			email: retail.email,
 			website: retail.website,
-			// Direktno koristiš `address` iz `RetailStore`
 			address: retail.address ?? 'N/A',
 			latitude: retail.coordinates?.latitude ?? null,
 			longitude: retail.coordinates?.longitude ?? null,
 			viewCount: retail.viewCount,
 			isSubscribedForAds: retail.isSubscribedForAds ?? false,
 			adType: retail.adType ?? null,
-			// Koristi direktno `country`, `city`, `cityPart`, i `marketplace`
 			country: {
 				id: retail.country.id,
 				translation: retail.country.label.translations[0]?.translation || 'N/A',
@@ -123,26 +162,29 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			clearError={() => setError('')}
 			loading={loading}
 			title={title}>
-			{isError && <p>Error fetching retail stores.</p>}
-
-			<div className='mt-8'>
-				<CollapsibleFormContainer
-					successMessage={successMessage}
-					setSuccessMessage={setSuccessMessage}
-					setError={setError}
+			{/* CollapsibleFormContainer */}
+			<CollapsibleFormContainer
+				articleCategories={articleCategories || []}
+				activityCategories={activityCategories || []}
+				objectTypeCategories={objectTypeCategories || []}
+				setFormData={setFormData}
+				submitTrigger={submitTrigger}>
+				<RetailStoreForm
+					formData={formData}
+					locations={locations}
+					handleChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+					handleSelectChange={e =>
+						setFormData({ ...formData, [e.target.name]: parseInt(e.target.value) })
+					}
 					loading={loading}
-					setLoading={setLoading}
-					articleCategories={articleCategories || []}
-					activityCategories={activityCategories || []}
-					objectTypeCategories={objectTypeCategories || []}
-					locations={locations || []}
-					formData={undefined}
-					setFormData={function (value: any): void {
-						throw new Error('Function not implemented.');
-					}}
+					filteredCities={filteredCities}
+					filteredCityParts={filteredCityParts}
+					filteredMarketplaces={filteredMarketplaces}
+					successMessage={successMessage}
+					handleSubmit={handleSubmit}
+					mutation={undefined}
 				/>
-			</div>
-
+			</CollapsibleFormContainer>
 			<div className='mt-8'>
 				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4'>
 					Lista prodajnih objekata

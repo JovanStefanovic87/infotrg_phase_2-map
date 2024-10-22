@@ -163,8 +163,8 @@ const RetailStoreForm: React.FC<Props> = ({
 			</div>
 
 			{/* Error and Success Messages */}
-			{mutation.isError && <p className='text-red-500'>{mutation.error?.message}</p>}
-			{mutation.isSuccess && <p className='text-green-500'>{successMessage}</p>}
+			{mutation?.isError && <p className='text-red-500'>{mutation.error?.message}</p>}
+			{mutation?.isSuccess && <p className='text-green-500'>{successMessage}</p>}
 		</form>
 	);
 };

@@ -311,11 +311,6 @@ export interface Marketplace extends LocationBase {
 
 export type Location = Country | City | CityPart | Marketplace;
 
-export interface AdType {
-	id: number;
-	name: string;
-}
-
 export interface RetailAdmin {
 	id: number;
 	name: string;
@@ -382,9 +377,53 @@ export interface RetailFormState {
 	cityId: number;
 	cityPartId?: number | null;
 	marketplaceId?: number | null;
+	retailStoreId?: number;
 	latitude: number;
 	longitude: number;
 	articleCategoryIds: number[];
 	activityCategoryIds: number[];
 	objectTypeCategoryIds: number[];
+	imageFile?: File | null;
+	imageId?: number;
+}
+
+export enum AdType {
+	NONE = 'NONE',
+	SMALL = 'SMALL',
+	BIG = 'BIG',
+	PREMIUM = 'PREMIUM',
+	SPONSOR = 'SPONSOR',
+}
+
+export interface AdvertiseAdmin {
+	id: number;
+	name: string;
+	url: string;
+	imageId?: number;
+	adType: AdType;
+	viewCount: number;
+	country: LocationDetail;
+	city: LocationDetail | null;
+	cityPart?: LocationDetail | null;
+	marketplace?: LocationDetail | null;
+	articleCategories: Category[];
+	activityCategories: Category[];
+	objectTypeCategories: Category[];
+}
+
+export interface AdvertiseFormState {
+	name: string;
+	url: string;
+	imageId?: number;
+	newImageFile?: File | null;
+	adType: string;
+	countryId: number;
+	cityId: number;
+	cityPartId?: number;
+	marketplaceId?: number;
+	retailStoreId?: number;
+	articleCategoryIds: number[];
+	activityCategoryIds: number[];
+	objectTypeCategoryIds: number[];
+	imageFile?: File;
 }

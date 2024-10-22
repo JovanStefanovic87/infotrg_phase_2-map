@@ -1,4 +1,4 @@
-// app\api\icons\route.ts
+// app\api\images\route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
@@ -58,54 +58,54 @@ const uploadFile = async (file: File, uploadDirectory: string): Promise<number> 
 
 		// Construct the correct URL path
 		const relativeFilePath = path.relative(process.cwd(), finalFilePath);
-		const urlPath = `/icons/${path.basename(path.dirname(relativeFilePath))}/${path.basename(
+		const urlPath = `/images/${path.basename(path.dirname(relativeFilePath))}/${path.basename(
 			relativeFilePath
 		)}`;
 
-		// Save icon data in the database using Prisma
-		const icon = await prisma.icon.create({
+		// Save image data in the database using Prisma
+		const image = await prisma.image.create({
 			data: {
 				name: fileName,
 				url: urlPath,
 			},
 		});
 
-		return icon.id;
+		return image.id;
 	} catch (error) {
 		console.error('File upload and processing error:', error);
 		throw new Error('Failed to upload and process file');
 	}
 };
 
-// GET method to fetch all icons
+// GET method to fetch all images
 export async function GET(request: NextRequest) {
 	try {
 		// Get the directory from the query parameters
 		const { searchParams } = new URL(request.url);
 		const directory = searchParams.get('directory');
 
-		// Fetch only icons from the specified directory
-		const icons = await prisma.icon.findMany({
+		// Fetch only images from the specified directory
+		const images = await prisma.image.findMany({
 			where: {
 				url: {
-					contains: `/icons/${directory}`,
+					contains: `/images/${directory}`,
 				},
 			},
 		});
 
-		// Return the icons data
-		return NextResponse.json(icons);
+		// Return the images data
+		return NextResponse.json(images);
 	} catch (error) {
-		console.error('Error fetching icons:', error);
-		return NextResponse.json({ error: 'Failed to fetch icons' }, { status: 500 });
+		console.error('Error fetching images:', error);
+		return NextResponse.json({ error: 'Failed to fetch images' }, { status: 500 });
 	}
 }
 
-// POST method to upload a new icon
+// POST method to upload a new image
 export async function POST(request: NextRequest) {
 	try {
 		const formData = await request.formData();
-		const file = formData.get('icon') as File;
+		const file = formData.get('image') as File;
 		const directory = formData.get('directory') as string;
 
 		if (!file) {
@@ -117,15 +117,14 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Define the upload directory path using the directory from form data
-		const uploadDirectory = path.join(process.cwd(), `public/icons/${directory}`);
+		const uploadDirectory = path.join(process.cwd(), `public/images/${directory}`);
 
 		// Ensure the upload directory exists
 		await fs.promises.mkdir(uploadDirectory, { recursive: true });
 
-		// Upload the file and save icon data to the database
-		const iconId = await uploadFile(file, uploadDirectory);
-
-		return NextResponse.json({ message: 'File uploaded successfully', iconId });
+		// Upload the file and save image data to the database
+		const imageId = await uploadFile(file, uploadDirectory);
+		return NextResponse.json({ message: 'File uploaded successfully', imageId });
 	} catch (error) {
 		console.error('File upload error:', error);
 		return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });

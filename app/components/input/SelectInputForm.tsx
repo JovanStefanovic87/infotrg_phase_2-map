@@ -9,7 +9,6 @@ interface Props {
 }
 
 const SelectInputForm: React.FC<Props> = ({ id, label, value, onChange, children }) => {
-	console.log('id', value);
 	return (
 		<div className='flex flex-col space-y-2'>
 			<label htmlFor={id} className='text-black font-semibold'>

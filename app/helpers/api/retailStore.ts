@@ -52,28 +52,55 @@ export const useCreateRetailStore = () => {
 interface RetailStore {
 	id: number;
 	name: string;
-	location: {
-		country: {
-			label: {
-				translations: { translation: string }[];
-			};
-		};
-		city: {
-			label: {
-				translations: { translation: string }[];
-			};
-		};
-		cityPart: {
-			label: {
-				translations: { translation: string }[];
-			};
-		};
-		marketplace?: {
-			label: {
-				translations: { translation: string }[];
-			};
+	phoneNumber: string;
+	email: string;
+	website?: string;
+	viewCount: number;
+	isPhoneConfirmed: boolean;
+	isEmailConfirmed: boolean;
+	createdAt: string;
+	updatedAt: string;
+
+	// Direct top-level IDs
+	countryId: number;
+	cityId: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
+	coordinatesId?: number | null;
+
+	// Related entities as objects
+	country: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
 		};
 	};
+	city: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	};
+	cityPart?: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	} | null;
+	marketplace?: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	} | null;
+
+	// Coordinates object
+	coordinates?: {
+		latitude: number;
+		longitude: number;
+	} | null;
+
+	// Categories
 	articleCategories: {
 		label: {
 			translations: { translation: string }[];

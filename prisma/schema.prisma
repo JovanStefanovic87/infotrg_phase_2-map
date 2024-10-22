@@ -60,12 +60,11 @@ model Country {
   cities    City[]
   createdAt DateTime @default(now())
 
-  // Veza sa RetailStore
   retailStores RetailStore[]
-
-  iconId   Int? // Foreign key for Icon
-  icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  Location Location[]
+  iconId       Int?
+  icon         Icon?         @relation(fields: [iconId], references: [id])
+  Location     Location[]
+  Advertising  Advertising[]
 }
 
 model City {
@@ -81,9 +80,10 @@ model City {
   // Veza sa RetailStore
   retailStores RetailStore[]
 
-  iconId   Int? // Foreign key for Icon
-  icon     Icon?      @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  Location Location[]
+  iconId      Int? // Foreign key for Icon
+  icon        Icon?         @relation(fields: [iconId], references: [id])
+  Location    Location[]
+  Advertising Advertising[]
 }
 
 model CityPart {
@@ -95,13 +95,13 @@ model CityPart {
   city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  // Veza sa RetailStore
   retailStores RetailStore[]
 
-  iconId       Int? // Foreign key for Icon
-  icon         Icon?         @relation(fields: [iconId], references: [id]) // Optional relation with Icon
-  marketplaces Marketplace[] // This should be defined here as well
+  iconId       Int?
+  icon         Icon?         @relation(fields: [iconId], references: [id])
+  marketplaces Marketplace[]
   Location     Location[]
+  Advertising  Advertising[]
 }
 
 model Marketplace {
@@ -111,14 +111,14 @@ model Marketplace {
   cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
 
-  // Veza sa RetailStore
   retailStores RetailStore[]
 
-  iconId   Int?
-  icon     Icon?      @relation(fields: [iconId], references: [id])
-  labelId  Int
-  label    Label      @relation(fields: [labelId], references: [id])
-  Location Location[]
+  iconId      Int?
+  icon        Icon?         @relation(fields: [iconId], references: [id])
+  labelId     Int
+  label       Label         @relation(fields: [labelId], references: [id])
+  Location    Location[]
+  Advertising Advertising[]
 }
 
 model ParentCategory {
@@ -175,29 +175,29 @@ model Category {
   relatedCategories RelatedCategory[] @relation("CategoryRelated")
   relatedTo         RelatedCategory[] @relation("RelatedToCategory")
 
-  // Različite relacije prema RetailStore modelu sa unikatnim imenima
   articleRetailStores    RetailStore[] @relation("RetailStoreArticleCategories")
   activityRetailStores   RetailStore[] @relation("RetailStoreActivityCategories")
   objectTypeRetailStores RetailStore[] @relation("RetailStoreObjectTypeCategories")
 
-  createdAt DateTime @default(now())
+  createdAt              DateTime      @default(now())
+  advertisingId          Int?
+  articleAdvertisings    Advertising[] @relation("AdvertisingArticleCategories")
+  activityAdvertisings   Advertising[] @relation("AdvertisingActivityCategories")
+  objectTypeAdvertisings Advertising[] @relation("AdvertisingObjectTypeCategories")
 }
 
 model RetailStore {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  phoneNumber        String?
-  email              String?
-  website            String?
-  viewCount          Int      @default(0)
-  isSubscribedForAds Boolean  @default(false)
-  adType             AdType?
-  isPhoneConfirmed   Boolean  @default(false)
-  isEmailConfirmed   Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  name             String
+  phoneNumber      String?
+  email            String?
+  website          String?
+  viewCount        Int      @default(0)
+  isPhoneConfirmed Boolean  @default(false)
+  isEmailConfirmed Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  // Relacije sa lokacijom
   countryId Int
   country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
 
@@ -213,12 +213,13 @@ model RetailStore {
   coordinatesId Int?
   coordinates   Coordinates? @relation(fields: [coordinatesId], references: [id], onDelete: Cascade)
 
-  // Relacije sa kategorijama
   articleCategories    Category[] @relation("RetailStoreArticleCategories")
   activityCategories   Category[] @relation("RetailStoreActivityCategories")
   objectTypeCategories Category[] @relation("RetailStoreObjectTypeCategories")
-  Location             Location?  @relation(fields: [locationId], references: [id])
-  locationId           Int?
+
+  Location    Location?     @relation(fields: [locationId], references: [id])
+  locationId  Int?
+  Advertising Advertising[]
 }
 
 model Location {
@@ -247,9 +248,43 @@ model Coordinates {
   @@unique([latitude, longitude])
 }
 
-enum AdType {
-  Small
-  Big
-  Premium
-  Sponsor
+model Advertising {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  viewCount   Int      @default(0)
+  adType      String
+  url         String? // URL for the ad if it's a link
+  createdAt   DateTime @default(now())
+  validTo     DateTime
+
+  articleCategories    Category[] @relation("AdvertisingArticleCategories")
+  activityCategories   Category[] @relation("AdvertisingActivityCategories")
+  objectTypeCategories Category[] @relation("AdvertisingObjectTypeCategories")
+
+  countryId Int
+  country   Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  cityId Int
+  city   City? @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  cityPartId Int?
+  cityPart   CityPart? @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+
+  marketplaceId Int?
+  marketplace   Marketplace? @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+
+  retailStoreId Int?
+  RetailStore   RetailStore? @relation(fields: [retailStoreId], references: [id])
+  Image         Image?       @relation(fields: [imageId], references: [id])
+  imageId       Int?
+}
+
+model Image {
+  id          Int           @id @default(autoincrement())
+  name        String
+  url         String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  advertising Advertising[]
 }
