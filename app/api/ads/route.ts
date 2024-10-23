@@ -115,3 +115,109 @@ export async function POST(req: NextRequest) {
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
 	}
 }
+
+export async function GET() {
+	try {
+		const advertisings = await prisma.advertising.findMany({
+			select: {
+				id: true,
+				name: true,
+				adType: true,
+				viewCount: true,
+				url: true,
+				createdAt: true,
+				validTo: true,
+				imageId: true, // Ensure imageId is selected
+				Image: {
+					// Ensure the Image relation is selected
+					select: {
+						id: true,
+						name: true,
+						url: true,
+					},
+				},
+				RetailStore: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+				country: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				city: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				cityPart: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				marketplace: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				articleCategories: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				activityCategories: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				objectTypeCategories: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return NextResponse.json(advertisings, { status: 200 });
+	} catch (error) {
+		console.error('Error fetching advertisings:', error);
+		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+	}
+}

@@ -10,24 +10,26 @@ import CollapsibleFormContainer from '../forms/CollapsibleFormContainer';
 import { useFetchLocations } from '@/app/helpers/api/location';
 import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
 import { useFetchRetailStores } from '@/app/helpers/api/retailStore';
-import { advertiseInit } from '@/utils/helpers/initialStates';
+import { adInit } from '@/utils/helpers/initialStates';
 import { useFetchImages, useUploadImages } from '@/app/helpers/api/images';
-import { useCreateAdvertisment } from '@/app/helpers/api/advertisment';
-import AdvertisingForm from '../forms/AdvertisingForm';
+import { useCreateAd, useFetchAds } from '@/app/helpers/api/ads';
+import AdForm from '../forms/AdForm';
+import AdsList from '../lists/AdsList';
+import { AdFormState } from '@/utils/helpers/types';
 
 interface Props {
 	title: string;
 }
 
-const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
+const AdsAdmin: React.FC<Props> = ({ title }) => {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [languageId, setLanguageId] = useState<number>(1);
-	const [formData, setFormData] = useState(advertiseInit);
+	const [formData, setFormData] = useState(adInit);
 	const [submitTrigger, setSubmitTrigger] = useState<boolean>(false);
 
-	const { mutate: createAdvertisment } = useCreateAdvertisment();
+	const { mutate: createAd } = useCreateAd();
 	const { mutate: uploadImage } = useUploadImages();
 
 	const { data: locations } = useFetchLocations({
@@ -51,9 +53,11 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 	});
 
 	const { data: retails } = useFetchRetailStores(languageId);
-	const { data: imagesData, isLoading: isLoadingImages } = useFetchImages({
+	const { data: imagesData } = useFetchImages({
 		directory: 'advertisments',
 	});
+
+	const { data: ads } = useFetchAds();
 
 	const filteredCities = formData.countryId
 		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
@@ -70,7 +74,7 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 
 	const handleAdTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const { value } = e.target;
-		setFormData(prev => ({
+		setFormData((prev: AdFormState) => ({
 			...prev,
 			adType: value, // Ensure that value is treated as a string
 		}));
@@ -145,7 +149,7 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 				formDataToSend.append('imageId', imageId.toString());
 			}
 
-			submitAdvertisment(formDataToSend);
+			submitAd(formDataToSend);
 		} catch (error) {
 			console.error('Form submission error:', error);
 			setError('Something went wrong while submitting the form.');
@@ -153,17 +157,17 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 		}
 	};
 
-	const submitAdvertisment = (formDataToSend: FormData) => {
-		createAdvertisment(formDataToSend, {
+	const submitAd = (formDataToSend: FormData) => {
+		createAd(formDataToSend, {
 			onSuccess: (response: any) => {
-				setSuccessMessage('Advertisement created successfully!');
+				setSuccessMessage('Reklama uspešno kreirana.');
 				setLoading(false);
-				setFormData(advertiseInit);
+				setFormData(adInit);
 				setSubmitTrigger(prev => !prev);
 			},
 			onError: (err: any) => {
 				console.error('Error in creating advertisement:', err);
-				setError('Failed to create advertisement.');
+				setError('Reklama nije uspešno kreirana.');
 				setLoading(false);
 			},
 		});
@@ -201,7 +205,7 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 			clearError={() => setError('')}
 			loading={loading}
 			title={title}>
-			{error && <p>Error fetching advertisings.</p>}
+			{error && <p>Greška prilikom učitavanja podataka.</p>}
 
 			<div className='mt-8'>
 				<CollapsibleFormContainer
@@ -210,7 +214,7 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 					objectTypeCategories={objectTypeCategories || []}
 					setFormData={setFormData}
 					submitTrigger={submitTrigger}>
-					<AdvertisingForm
+					<AdForm
 						formData={formData}
 						setFormData={setFormData}
 						locations={locations}
@@ -231,8 +235,9 @@ const AdvertisingAdmin: React.FC<Props> = ({ title }) => {
 					/>
 				</CollapsibleFormContainer>
 			</div>
+			<AdsList ads={ads} setSuccessMessage={setSuccessMessage} setError={setError} />
 		</DynamicPageContainer>
 	);
 };
 
-export default AdvertisingAdmin;
+export default AdsAdmin;

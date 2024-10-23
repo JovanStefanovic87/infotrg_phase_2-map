@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import LabelInputForm from '../input/LabelInputForm';
 import SelectInputForm from '../input/SelectInputForm';
 import SubmitButton from '../buttons/SubmitButton';
-import ImagePickerForm from '../forms/ImagePickerForm';
-import { AdvertiseFormState, AdType, Icon } from '@/utils/helpers/types';
+import ImagePickerForm from './ImagePickerForm';
+import { AdFormState, AdType, Icon } from '@/utils/helpers/types';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
 
 interface Props {
-	formData: AdvertiseFormState;
-	setFormData: React.Dispatch<React.SetStateAction<AdvertiseFormState>>;
+	formData: AdFormState;
+	setFormData: React.Dispatch<React.SetStateAction<AdFormState>>;
 	locations: any[];
 	filteredCities: any[];
 	filteredCityParts: any[];
@@ -33,7 +33,7 @@ const adTypeOptions = {
 	'Sponzorska reklama': AdType.SPONSOR,
 };
 
-const AdvertisingForm: React.FC<Props> = ({
+const AdForm: React.FC<Props> = ({
 	formData,
 	setFormData,
 	locations,
@@ -52,9 +52,8 @@ const AdvertisingForm: React.FC<Props> = ({
 }) => {
 	const [isImagePickerOpen, setIsImagePickerOpen] = useState<boolean>(false);
 	const [previewImage, setPreviewImage] = useState<string | null>(null);
-	const [errorMessage, setErrorMessage] = useState<string | null>(null); // Za prikaz grešaka
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-	// Handle image selection from ImagePickerForm
 	const handleImageSelect = (icon: { iconId: number; iconUrl: string }) => {
 		setPreviewImage(null);
 		setFormData(prev => ({
@@ -108,14 +107,12 @@ const AdvertisingForm: React.FC<Props> = ({
 			return;
 		}
 
-		// Ako su svi podaci validni, poziva se handleSubmit
 		setErrorMessage(null);
 		handleSubmit(e);
 	};
 
 	return (
 		<form onSubmit={handleFormSubmit} className='space-y-2 px-8 py-4 shadow-md'>
-			{/* Error Message */}
 			{errorMessage && <p className='text-red-500'>{errorMessage}</p>}
 
 			{/* Ad Name */}
@@ -280,4 +277,4 @@ const AdvertisingForm: React.FC<Props> = ({
 	);
 };
 
-export default AdvertisingForm;
+export default AdForm;

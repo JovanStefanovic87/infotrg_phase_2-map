@@ -1,8 +1,8 @@
 import { NextPage } from 'next';
-import AdvertisingAdmin from '@/app/components/pageContent/AdvertisingAdmin';
+import AdsAdmin from '@/app/components/pageContent/AdsAdmin';
 
-const CategoriesAdminPage: NextPage = () => {
-	return <AdvertisingAdmin title='OGLAŠAVANJE' />;
+const AdsAdminPage: NextPage = () => {
+	return <AdsAdmin title='OGLAŠAVANJE' />;
 };
 
-export default CategoriesAdminPage;
+export default AdsAdminPage;

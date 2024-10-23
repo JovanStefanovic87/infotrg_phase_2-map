@@ -185,6 +185,7 @@ export interface Language {
 }
 
 export interface Category {
+	label?: any;
 	id: number;
 	iconId: number | null;
 	labelId: number;
@@ -333,6 +334,7 @@ export interface RetailAdmin {
 }
 
 export interface LocationDetail {
+	label?: any;
 	id: number;
 	translation: string;
 }
@@ -395,7 +397,9 @@ export enum AdType {
 	SPONSOR = 'SPONSOR',
 }
 
-export interface AdvertiseAdmin {
+export interface AdAdmin {
+	validTo: string | number | Date;
+	Image: any;
 	id: number;
 	name: string;
 	url: string;
@@ -411,7 +415,11 @@ export interface AdvertiseAdmin {
 	objectTypeCategories: Category[];
 }
 
-export interface AdvertiseFormState {
+export interface AdFormState {
+	marketplace: any;
+	city: any;
+	country: any;
+	id: number | string;
 	name: string;
 	url: string;
 	imageId?: number;
@@ -426,4 +434,5 @@ export interface AdvertiseFormState {
 	activityCategoryIds: number[];
 	objectTypeCategoryIds: number[];
 	imageFile?: File;
+	validTo: string;
 }
