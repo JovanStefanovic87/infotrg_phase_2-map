@@ -114,3 +114,47 @@ export const handleError = (
 	return filteredCategories;
 };
  */
+
+export const getCategoryTranslations = (
+	categories:
+		| Array<{ label?: { translations: Array<{ translation: string; languageId: number }> } }>
+		| undefined,
+	languageId: number = 1
+): string[] => {
+	if (!categories || categories.length === 0) {
+		return ['Nije definisano'];
+	}
+
+	return categories.map(cat => {
+		if (!cat.label || !cat.label.translations) {
+			return 'Nije definisano';
+		}
+		const translation = cat.label.translations.find(t => t.languageId === languageId);
+		return translation ? translation.translation : 'Nije definisano';
+	});
+};
+
+export const getCategoryTranslationString = (
+	categories:
+		| Array<{ label?: { translations?: Array<{ translation: string; languageId: number }> } }>
+		| undefined,
+	languageId: number = 1, // Podrazumevani jezik
+	limit: number = 3 // Podrazumevano ograničenje na 3 stavke
+): string => {
+	if (!categories || categories.length === 0) {
+		return 'Nije definisano';
+	}
+
+	const translations = categories
+		.map(cat => {
+			if (cat?.label?.translations) {
+				const translation = cat.label.translations.find(t => t.languageId === languageId);
+				return translation ? translation.translation : 'Nije definisano';
+			}
+			return 'Nije definisano';
+		})
+		.slice(0, limit)
+		.join(', ');
+
+	return translations.length > 0 ? translations : 'Nije definisano';
+};

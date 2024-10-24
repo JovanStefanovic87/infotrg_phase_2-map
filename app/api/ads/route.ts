@@ -9,12 +9,25 @@ export const config = {
 	},
 };
 
+const convertKeysToLowerCase = (obj: any): any => {
+	if (Array.isArray(obj)) {
+		return obj.map(convertKeysToLowerCase);
+	} else if (obj !== null && obj.constructor === Object) {
+		return Object.keys(obj).reduce((acc, key) => {
+			acc[key.charAt(0).toLowerCase() + key.slice(1)] = convertKeysToLowerCase(obj[key]);
+			return acc;
+		}, {} as any);
+	}
+	return obj;
+};
+
 export async function POST(req: NextRequest) {
 	try {
 		const form = await req.formData();
 		const file = form.get('image') as File;
 		const imageIdFromForm = form.get('imageId')?.toString() || null;
 		const name = form.get('name')?.toString() || '';
+		const description = form.get('description')?.toString() || '';
 		const adType = form.get('adType')?.toString() || 'SMALL';
 		const url = form.get('url')?.toString() || '';
 		const countryId = form.get('countryId') ? parseInt(form.get('countryId') as string, 10) : null;
@@ -90,6 +103,7 @@ export async function POST(req: NextRequest) {
 
 		const data: any = {
 			name,
+			description,
 			adType,
 			url,
 			validTo,
@@ -102,6 +116,7 @@ export async function POST(req: NextRequest) {
 		};
 
 		if (retailStoreId) data.RetailStore = { connect: { id: retailStoreId } };
+
 		if (countryId) data.country = { connect: { id: countryId } };
 		if (cityId) data.city = { connect: { id: cityId } };
 		if (cityPartId) data.cityPart = { connect: { id: cityPartId } };
@@ -122,14 +137,14 @@ export async function GET() {
 			select: {
 				id: true,
 				name: true,
+				description: true,
 				adType: true,
 				viewCount: true,
 				url: true,
 				createdAt: true,
 				validTo: true,
-				imageId: true, // Ensure imageId is selected
+				imageId: true,
 				Image: {
-					// Ensure the Image relation is selected
 					select: {
 						id: true,
 						name: true,
@@ -214,8 +229,8 @@ export async function GET() {
 				},
 			},
 		});
-
-		return NextResponse.json(advertisings, { status: 200 });
+		const normalizedResponse = convertKeysToLowerCase(advertisings);
+		return NextResponse.json(normalizedResponse, { status: 200 });
 	} catch (error) {
 		console.error('Error fetching advertisings:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

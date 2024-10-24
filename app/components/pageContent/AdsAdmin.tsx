@@ -15,7 +15,7 @@ import { useFetchImages, useUploadImages } from '@/app/helpers/api/images';
 import { useCreateAd, useFetchAds } from '@/app/helpers/api/ads';
 import AdForm from '../forms/AdForm';
 import AdsList from '../lists/AdsList';
-import { AdFormState } from '@/utils/helpers/types';
+import { AdAdmin, AdFormState, AdType } from '@/utils/helpers/types';
 
 interface Props {
 	title: string;
@@ -76,7 +76,7 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 		const { value } = e.target;
 		setFormData((prev: AdFormState) => ({
 			...prev,
-			adType: value, // Ensure that value is treated as a string
+			adType: value,
 		}));
 	};
 
@@ -117,11 +117,11 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 				});
 			}
 
-			// Sada kreiramo reklamu koristeći dobijeni ili postojeći imageId
 			const formDataToSend = new FormData();
 
 			formDataToSend.append('name', formData.name);
 			formDataToSend.append('adType', formData.adType);
+			formDataToSend.append('description', formData.description);
 			formDataToSend.append('url', formData.url);
 			formDataToSend.append('countryId', formData.countryId.toString());
 			formDataToSend.append('cityId', formData.cityId.toString());
@@ -197,6 +197,26 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 		return true;
 	});
 
+	console.log(ads);
+	const transformedAds: AdAdmin[] = (ads || []).map(ad => ({
+		...ad,
+		id: typeof ad.id === 'string' ? parseInt(ad.id) : ad.id,
+		retailStore: ad.retailStore,
+		Image:
+			ad.imageId && ad.image ? { id: ad.image.id, name: ad.image.name, url: ad.image.url } : null,
+		description: ad.description,
+		viewCount: ad.viewCount || 0,
+		country: ad.country ? ad.country : { id: ad.countryId, translation: '' },
+		city: ad.city ? ad.city : { id: ad.cityId, translation: '' },
+		cityPart: ad.cityPartId ? { id: ad.cityPartId, translation: '' } : null,
+		marketplace: ad.marketplaceId ? { id: ad.marketplaceId, translation: '' } : null,
+		articleCategories: ad.articleCategories.map((category: any) => category),
+		activityCategories: ad.activityCategories.map((category: any) => category),
+		objectTypeCategories: ad.objectTypeCategories.map((category: any) => category),
+		validTo: ad.validTo,
+		adType: ad.adType as AdType,
+	}));
+
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}
@@ -235,7 +255,7 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 					/>
 				</CollapsibleFormContainer>
 			</div>
-			<AdsList ads={ads} setSuccessMessage={setSuccessMessage} setError={setError} />
+			<AdsList ads={transformedAds} setSuccessMessage={setSuccessMessage} setError={setError} />
 		</DynamicPageContainer>
 	);
 };

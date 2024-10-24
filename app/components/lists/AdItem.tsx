@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { differenceInDays } from 'date-fns';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
 import TextList from '../text/TextList';
@@ -8,6 +9,12 @@ import PopoverButtonDefault from '../popovers/PopoverButtonDefault';
 import PopoverPanelList from '../popovers/PopoverPanelList';
 import PopoverContainerBackdrop from '../popovers/PopoverContainerBackdrop';
 import { AdAdmin } from '@/utils/helpers/types';
+import { reverseAdTypeOptions } from '@/utils/helpers/varStrings';
+import {
+	getCategoryTranslations,
+	getCategoryTranslationString,
+} from '@/utils/helpers/universalFunctions';
+import { useExtendAd } from '@/app/helpers/api/ads';
 
 interface Props {
 	ad: AdAdmin;
@@ -16,10 +23,10 @@ interface Props {
 }
 
 const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
-	// Provera lokacije
+	const extendAdMutation = useExtendAd();
 	const country = ad.country?.label.translations[0].translation;
 	const city = ad.city?.label.translations[0].translation;
-	const cityPart = ad.city?.label.translations[0].translation;
+	const cityPart = ad.cityPart?.label.translations[0].translation;
 	const marketplace = ad.marketplace?.label.translations[0].translation;
 
 	const shortLocation = `${city}${marketplace ? `, ${marketplace}` : ''}`;
@@ -29,47 +36,25 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 			: ''
 	}`;
 
-	// Prikaz kategorija
-	const articleCategories = ad.articleCategories.length
-		? ad.articleCategories.map(
-				category =>
-					category.label.translations.find(
-						(translation: { languageId: number }) => translation.languageId === 1
-					)?.translation || 'Nije definisano'
-		  )
-		: ['Nije definisano'];
-
-	const activityCategories = ad.activityCategories.length
-		? ad.activityCategories.map(
-				category =>
-					category.label.translations.find(
-						(translation: { languageId: number }) => translation.languageId === 1
-					)?.translation || 'Nije definisano'
-		  )
-		: ['Nije definisano'];
-
-	const objectTypeCategories = ad.objectTypeCategories.length
-		? ad.objectTypeCategories.map(
-				category =>
-					category.label.translations.find(
-						(translation: { languageId: number }) => translation.languageId === 1
-					)?.translation || 'Nije definisano'
-		  )
-		: ['Nije definisano'];
-
-	// Računanje razlike u danima između trenutnog datuma i validTo
 	const currentDate = new Date();
 	const validToDate = new Date(ad.validTo);
-	const differenceInTime = validToDate.getTime() - currentDate.getTime();
-	const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+	const daysLeft = differenceInDays(validToDate, currentDate);
 
-	// Indikator da li su svi podaci prisutni
-	const isComplete =
-		!!ad.name.trim() &&
-		city !== 'N/A' &&
-		articleCategories.length > 0 &&
-		objectTypeCategories.length > 0;
-	const lampColor = isComplete ? 'bg-green-500' : 'bg-red-500';
+	const activityCategories = getCategoryTranslationString(ad.activityCategories, 1);
+	const articleCategories = getCategoryTranslationString(ad.articleCategories, 1);
+	const objectTypeCategories = getCategoryTranslationString(ad.objectTypeCategories, 1);
+
+	const lampColor = daysLeft > 3 ? 'bg-green-500' : 'bg-red-500';
+
+	const handleExtendAd = async () => {
+		const newValidTo =
+			daysLeft > 0
+				? new Date(validToDate.setDate(validToDate.getDate() + 30))
+				: new Date(currentDate.setDate(currentDate.getDate() + 30));
+
+		// Pozivamo mutation za produžavanje reklame
+		await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: newValidTo } });
+	};
 
 	return (
 		<div className='bg-white p-6 shadow-lg rounded-xl transition-transform transform flex flex-col justify-between'>
@@ -77,16 +62,16 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 
 			<div className='flex justify-between items-center'>
 				<div className='text-center p-4 mb-4 bg-yellowLighter rounded-3xl shadow-md w-full'>
-					<H3Title text={ad.name} />
+					<H3Title text={ad.retailStore.name} />
 				</div>
 			</div>
 
 			{/* Display Image */}
-			{ad.Image && ad.Image.url && (
+			{ad.image && ad.image.url && (
 				<div className='mb-4'>
 					<Image
-						src={ad.Image.url}
-						alt={ad.Image.name}
+						src={ad.image.url}
+						alt={ad.image.name}
 						width={400}
 						height={300}
 						className='rounded-lg'
@@ -95,10 +80,15 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 			)}
 
 			<div className='space-y-3 mb-6'>
-				<TextList label='Tip reklame' value={ad.adType || 'N/A'} />
-				<TextList label='URL' value={ad.url || 'N/A'} />
-				<TextList label='Pregledi' value={ad.viewCount.toString()} />
-				<TextList label='Preostalo dana' value={`${differenceInDays} dana`} />
+				<TextList
+					label='Tip reklame'
+					value={
+						reverseAdTypeOptions[ad.adType as keyof typeof reverseAdTypeOptions] ||
+						'Nije definisano'
+					}
+				/>
+				<TextList label='Ističe za' value={ad.validTo ? `${daysLeft} dana` : 'Nije definisano'} />
+				<TextList label='Broj pregleda' value={ad.viewCount.toString()} />
 
 				<PopoverContainerBackdrop>
 					<PopoverButtonDefault>
@@ -106,38 +96,70 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 					</PopoverButtonDefault>
 					<PopoverPanelList list={[fullLocation]} label='Puna Lokacija' />
 				</PopoverContainerBackdrop>
-
-				<PopoverContainerBackdrop>
-					<PopoverButtonDefault>
-						<TextList label='Artikli' value={articleCategories.slice(0, 3).join(', ') || 'N/A'} />
-					</PopoverButtonDefault>
-					<PopoverPanelList list={articleCategories} label='Svi Artikli' />
-				</PopoverContainerBackdrop>
-
-				<PopoverContainerBackdrop>
-					<PopoverButtonDefault>
-						<TextList
-							label='Aktivnosti'
-							value={activityCategories.slice(0, 3).join(', ') || 'N/A'}
+				{ad.articleCategories.length && (
+					<PopoverContainerBackdrop>
+						<PopoverButtonDefault>
+							<TextList
+								label='Kategorije proizvoda'
+								value={articleCategories || 'Nije definisano'}
+							/>
+						</PopoverButtonDefault>
+						<PopoverPanelList
+							list={getCategoryTranslations(ad.articleCategories)}
+							label='Sve kategorije proizvoda'
 						/>
-					</PopoverButtonDefault>
-					<PopoverPanelList list={activityCategories} label='Sve Aktivnosti' />
-				</PopoverContainerBackdrop>
+					</PopoverContainerBackdrop>
+				)}
 
-				<PopoverContainerBackdrop>
-					<PopoverButtonDefault>
-						<TextList
-							label='Vrsta objekta'
-							value={objectTypeCategories.slice(0, 3).join(', ') || 'N/A'}
+				{ad.activityCategories.length > 0 && (
+					<PopoverContainerBackdrop>
+						<PopoverButtonDefault>
+							<TextList label='Vrsta delatnosti' value={activityCategories || 'Nije definisano'} />
+						</PopoverButtonDefault>
+						<PopoverPanelList
+							list={getCategoryTranslations(ad.activityCategories)}
+							label='Sve vrste delatnosti'
 						/>
-					</PopoverButtonDefault>
-					<PopoverPanelList list={objectTypeCategories} label='Sve Vrste Objekta' />
-				</PopoverContainerBackdrop>
+					</PopoverContainerBackdrop>
+				)}
+
+				{ad.objectTypeCategories.length > 0 && (
+					<PopoverContainerBackdrop>
+						<PopoverButtonDefault>
+							<TextList label='Tip objekta' value={objectTypeCategories || 'Nije definisano'} />
+						</PopoverButtonDefault>
+						<PopoverPanelList
+							list={getCategoryTranslations(ad.objectTypeCategories)}
+							label='Svi tipovi objekata'
+						/>
+					</PopoverContainerBackdrop>
+				)}
 			</div>
 
-			<div className='flex justify-between items-end mt-auto'>
-				<EditButton onClick={() => onEditClick(ad)} />
-				<DeleteButton onClick={onDeleteClick} />
+			<div className='flex flex-col mt-auto p-4 border-t border-gray-300 bg-gray-100 rounded-b-lg'>
+				<div className='flex justify-between mb-2 space-x-2'>
+					<EditButton
+						onClick={handleExtendAd} // Ispravno pozivanje funkcije
+						value='Produži'
+						className='bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
+					/>
+					<EditButton
+						onClick={() => onEditClick(ad)}
+						value='Stopiraj'
+						className='bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
+					/>
+				</div>
+				<div className='flex justify-between space-x-2'>
+					<EditButton
+						onClick={() => onEditClick(ad)}
+						value='Izmeni'
+						className='bg-sky-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
+					/>
+					<DeleteButton
+						onClick={onDeleteClick}
+						className='bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
+					/>
+				</div>
 			</div>
 		</div>
 	);

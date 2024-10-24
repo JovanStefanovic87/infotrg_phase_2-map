@@ -1,3 +1,5 @@
+import { RetailStore } from '@prisma/client';
+
 export interface LinkData {
 	text: string;
 	url: string;
@@ -397,13 +399,20 @@ export enum AdType {
 	SPONSOR = 'SPONSOR',
 }
 
-export interface AdAdmin {
-	validTo: string | number | Date;
-	Image: any;
+export interface Image {
 	id: number;
 	name: string;
 	url: string;
+}
+
+export interface AdAdmin {
+	id: number;
+	name: string;
+	description: string;
+	retailStore: RetailStore;
+	url: string;
 	imageId?: number;
+	image: Image | null;
 	adType: AdType;
 	viewCount: number;
 	country: LocationDetail;
@@ -413,14 +422,22 @@ export interface AdAdmin {
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
+	validTo: string | number | Date;
 }
 
 export interface AdFormState {
+	retailStore: RetailStore;
+	objectTypeCategories: any;
+	articleCategories: any;
+	activityCategories: any;
+	image: Image | null;
+	viewCount: number;
 	marketplace: any;
 	city: any;
 	country: any;
 	id: number | string;
 	name: string;
+	description: string;
 	url: string;
 	imageId?: number;
 	newImageFile?: File | null;

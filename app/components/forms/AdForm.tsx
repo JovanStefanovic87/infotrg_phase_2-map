@@ -6,6 +6,8 @@ import ImagePickerForm from './ImagePickerForm';
 import { AdFormState, AdType, Icon } from '@/utils/helpers/types';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
+import { adTypeOptions } from '@/utils/helpers/varStrings';
+import Image from 'next/image';
 
 interface Props {
 	formData: AdFormState;
@@ -24,14 +26,6 @@ interface Props {
 	existingImages: Icon[];
 	successMessage: string | null;
 }
-
-const adTypeOptions = {
-	'Ni jedno': AdType.NONE,
-	'Mala reklama': AdType.SMALL,
-	'Velika reklama': AdType.BIG,
-	'Premium reklama': AdType.PREMIUM,
-	'Sponzorska reklama': AdType.SPONSOR,
-};
 
 const AdForm: React.FC<Props> = ({
 	formData,
@@ -142,6 +136,15 @@ const AdForm: React.FC<Props> = ({
 				))}
 			</SelectInputForm>
 
+			<LabelInputForm
+				id='description'
+				name='description'
+				label='Opis reklame ili link ka eksternom sadržaju'
+				value={formData.description}
+				onChange={handleChange}
+				placeholder='Unesite saržaj'
+			/>
+
 			{/* Image Picker */}
 			<div>
 				<ImageUploadButton
@@ -159,11 +162,7 @@ const AdForm: React.FC<Props> = ({
 			{previewImage && (
 				<div className='mt-4'>
 					<p className='text-gray-700'>Pregled odabrane nove slike:</p>
-					<img
-						src={previewImage}
-						alt='Preview'
-						className='mt-2 h-32 w-32 object-contain border border-gray-300 rounded'
-					/>
+					<Image src={previewImage} alt='Preview' width={128} height={128} />
 				</div>
 			)}
 
@@ -171,10 +170,11 @@ const AdForm: React.FC<Props> = ({
 			{formData.imageId && !previewImage && (
 				<div className='mt-4'>
 					<p className='text-gray-700'>Odabrana postojeća slika:</p>
-					<img
+					<Image
 						src={existingImages.find(icon => icon.id === formData.imageId)?.url || ''}
 						alt='Odabrana slika'
-						className='mt-2 h-32 w-32 object-contain border border-gray-300 rounded'
+						width={128}
+						height={128}
 					/>
 				</div>
 			)}

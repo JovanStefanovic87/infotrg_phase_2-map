@@ -41,3 +41,40 @@ export const useFetchAds = () => {
 		queryFn: fetchAds,
 	});
 };
+
+const deleteAd = async (adId: number): Promise<void> => {
+	await deleteData(`/api/ads/${adId}`);
+};
+
+export const useDeleteAd = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationKey: ['deleteAd'],
+		mutationFn: (adId: number) => deleteAd(adId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['ads'] });
+		},
+		onError: err => {
+			console.error('Error in delete mutation:', err);
+		},
+	});
+};
+
+const extendAd = async (adId: number, updatedData: { validTo: Date }): Promise<void> => {
+	await putData(`/api/ads/${adId}`, updatedData);
+};
+
+export const useExtendAd = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationKey: ['extendAd'],
+		mutationFn: ({ adId, updatedData }: { adId: number; updatedData: { validTo: Date } }) =>
+			extendAd(adId, updatedData),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['ads'] });
+		},
+		onError: err => {
+			console.error('Error in extend mutation:', err);
+		},
+	});
+};

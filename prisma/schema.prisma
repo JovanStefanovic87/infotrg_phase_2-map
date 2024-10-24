@@ -256,6 +256,7 @@ model Advertising {
   adType      String
   url         String? // URL for the ad if it's a link
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
   validTo     DateTime
 
   articleCategories    Category[] @relation("AdvertisingArticleCategories")

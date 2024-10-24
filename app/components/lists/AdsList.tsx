@@ -4,6 +4,7 @@ import EditModalContainer from '../forms/EditModalContainer';
 import AdItem from './AdItem';
 import InputDefault from '../input/InputDefault';
 import ConfirmationModal from '../modals/systemModals/ConfirmationModal';
+import { useDeleteAd } from '@/app/helpers/api/ads';
 
 interface Props {
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
@@ -12,10 +13,11 @@ interface Props {
 }
 
 const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
+	const { mutate: deleteAd } = useDeleteAd();
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-	const [adToDelete, setAdToDelete] = useState<AdFormState | null>(null);
+	const [adToDelete, setAdToDelete] = useState<AdAdmin | null>(null);
 
 	// Filter ads based on the search query
 	const filteredAds = ads
@@ -23,20 +25,28 @@ const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
 		.sort((a, b) => a.name.localeCompare(b.name));
 
 	const handleDeleteClick = (ad: AdAdmin) => {
-		console.log('delete');
+		setAdToDelete(ad);
+		setIsDeleteModalOpen(true); // Otvorite modal za potvrdu
+	};
+
+	const confirmDelete = () => {
+		if (adToDelete) {
+			deleteAd(adToDelete.id, {
+				onSuccess: () => {
+					setSuccessMessage('Reklama uspešno obrisana!');
+					setIsDeleteModalOpen(false);
+				},
+				onError: error => {
+					setError('Greška prilikom brisanja reklame.');
+					setIsDeleteModalOpen(false);
+				},
+			});
+		}
 	};
 
 	const handleEditClick = (ad: AdAdmin) => {
 		// Logika za uređivanje reklame, na primer otvaranje modalnog prozora
 		console.log('Editing ad:', ad);
-	};
-
-	const confirmDelete = () => {
-		if (adToDelete) {
-			// Implement the deletion logic here
-			setSuccessMessage('Reklama uspešno obrisana!');
-			setIsDeleteModalOpen(false);
-		}
 	};
 
 	return (
