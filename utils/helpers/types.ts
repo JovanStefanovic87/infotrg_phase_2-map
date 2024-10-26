@@ -426,7 +426,7 @@ export interface AdAdmin {
 }
 
 export interface AdFormState {
-	retailStore: RetailStore;
+	retailStore?: RetailStore;
 	objectTypeCategories: any;
 	articleCategories: any;
 	activityCategories: any;
@@ -435,7 +435,7 @@ export interface AdFormState {
 	marketplace: any;
 	city: any;
 	country: any;
-	id: number | string;
+	id?: number | string;
 	name: string;
 	description: string;
 	url: string;

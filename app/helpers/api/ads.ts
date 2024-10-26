@@ -4,7 +4,8 @@ import {
 	getWithParams,
 	getData,
 	postDataMultipart,
-	putData,
+	patchData,
+	putDataMultipart,
 } from '@/app/helpers/api/common/base';
 import { AdFormState } from '@/utils/helpers/types';
 
@@ -61,10 +62,11 @@ export const useDeleteAd = () => {
 };
 
 const extendAd = async (adId: number, updatedData: { validTo: Date }): Promise<void> => {
-	await putData(`/api/ads/${adId}`, updatedData);
+	await patchData(`/api/ads/${adId}`, updatedData);
 };
 
 export const useExtendAd = () => {
+	console.log('useExtendAd');
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationKey: ['extendAd'],
@@ -75,6 +77,24 @@ export const useExtendAd = () => {
 		},
 		onError: err => {
 			console.error('Error in extend mutation:', err);
+		},
+	});
+};
+
+const updateAd = async (adId: number, adData: FormData): Promise<AdFormState> => {
+	return await putDataMultipart(`/api/ads/${adId}`, adData);
+};
+
+export const useUpdateAd = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationKey: ['updateAd'],
+		mutationFn: ({ adId, adData }: { adId: number; adData: FormData }) => updateAd(adId, adData),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['ads'] });
+		},
+		onError: err => {
+			console.error('Error in update mutation:', err);
 		},
 	});
 };

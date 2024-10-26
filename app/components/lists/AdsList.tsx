@@ -4,20 +4,70 @@ import EditModalContainer from '../forms/EditModalContainer';
 import AdItem from './AdItem';
 import InputDefault from '../input/InputDefault';
 import ConfirmationModal from '../modals/systemModals/ConfirmationModal';
-import { useDeleteAd } from '@/app/helpers/api/ads';
+import { useDeleteAd, useUpdateAd } from '@/app/helpers/api/ads';
+import FormDefaultButton from '../buttons/FormDefaultButton';
+import AdForm from '../forms/AdForm';
+import CategoryModal from '../modals/CategoryModal';
+import { adInit } from '@/utils/helpers/initialStates';
 
 interface Props {
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
+	successMessage: string | null;
 	setError: React.Dispatch<React.SetStateAction<string>>;
 	ads: AdAdmin[];
+	locations: any[];
+	articleCategories: any[];
+	activityCategories: any[];
+	objectTypeCategories: any[];
+	retails: any[];
+	imagesData: any[];
+	filteredCities: any[];
+	filteredCityParts: any[];
+	filteredMarketplaces: any[];
+	filteredStores?: any[];
 }
 
-const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
+const AdsList: React.FC<Props> = ({
+	setSuccessMessage,
+	successMessage,
+	setError,
+	ads,
+	locations,
+	articleCategories,
+	activityCategories,
+	objectTypeCategories,
+	retails,
+	imagesData,
+	filteredCities,
+	filteredCityParts,
+	filteredMarketplaces,
+	filteredStores,
+}) => {
 	const { mutate: deleteAd } = useDeleteAd();
+	const { mutate: updateAd } = useUpdateAd();
+	const [formData, setFormData] = useState<AdFormState>(adInit);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+	const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+	const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+	const [isObjectTypeModalOpen, setIsObjectTypeModalOpen] = useState(false);
+	const [selectedArticleCategoryIds, setSelectedArticleCategoryIds] = useState<number[]>(
+		formData.articleCategoryIds || []
+	);
+	const [selectedActivityCategoryIds, setSelectedActivityCategoryIds] = useState<number[]>(
+		formData.activityCategoryIds || []
+	);
+	const [selectedObjectTypeCategoryIds, setSelectedObjectTypeCategoryIds] = useState<number[]>(
+		formData.objectTypeCategoryIds || []
+	);
+	const [articleSearchQuery, setArticleSearchQuery] = useState('');
+	const [activitySearchQuery, setActivitySearchQuery] = useState('');
+	const [objectTypeSearchQuery, setObjectTypeSearchQuery] = useState('');
 	const [adToDelete, setAdToDelete] = useState<AdAdmin | null>(null);
+
+	const [currentAd, setCurrentAd] = useState<AdAdmin | null>(null);
 
 	// Filter ads based on the search query
 	const filteredAds = ads
@@ -44,10 +94,91 @@ const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
 		}
 	};
 
-	const handleEditClick = (ad: AdAdmin) => {
-		// Logika za uređivanje reklame, na primer otvaranje modalnog prozora
-		console.log('Editing ad:', ad);
+	const handleAdTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		const { value } = e.target;
+		setFormData((prev: AdFormState) => ({
+			...prev,
+			adType: value,
+		}));
 	};
+
+	const handleEditClick = (ad: AdAdmin) => {
+		// Set the current ad
+		setCurrentAd(ad);
+
+		// Populate formData with current ad data for editing
+		setFormData({
+			id: ad.id, // Ensure the ID is included in formData
+			name: ad.name || '',
+			description: ad.description || '',
+			adType: ad.adType,
+			url: ad.url || '',
+			validTo: ad.validTo ? new Date(ad.validTo).toISOString() : new Date().toISOString(),
+			articleCategoryIds: ad.articleCategories.map(category => category.id) || [],
+			activityCategoryIds: ad.activityCategories.map(category => category.id) || [],
+			objectTypeCategoryIds: ad.objectTypeCategories.map(category => category.id) || [],
+			imageId: ad.imageId || undefined,
+			newImageFile: null,
+			countryId: ad.country?.id || 1, // Default to 1 if country ID is not available
+			cityId: ad.city?.id || 1, // Default to 1 if city ID is not available
+			cityPartId: ad.cityPart?.id || 0, // Default to 0 if city part ID is not available
+			marketplaceId: ad.marketplace?.id || 0, // Default to 0 if marketplace ID is not available
+			retailStoreId: ad.retailStore?.id || 0, // Ensure retailStoreId is included
+			image: ad.image || null,
+			viewCount: ad.viewCount || 0,
+			marketplace: ad.marketplace || null,
+			city: ad.city || null,
+			country: ad.country || null,
+			objectTypeCategories: ad.objectTypeCategories || [],
+			articleCategories: ad.articleCategories || [],
+			activityCategories: ad.activityCategories || [],
+		});
+
+		// Open the modal for editing
+		setIsModalOpen(true);
+	};
+
+	const handleSubmitEdit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		// Ensure currentAd is not null before proceeding
+		if (!currentAd) {
+			setError('Current advertisement is not available.');
+			return;
+		}
+
+		// Create a FormData object to send with the PUT request
+		const adData = new FormData();
+		adData.append('name', formData.name);
+		adData.append('description', formData.description);
+		adData.append('adType', formData.adType);
+		adData.append('url', formData.url);
+
+		// Ensure validTo is a Date object before calling toISOString
+		if (formData.validTo) {
+			adData.append('validTo', formData.validTo.toString());
+		} else {
+			adData.append('validTo', 'null'); // Send 'null' string if you don't want to update
+		}
+
+		// Append other necessary fields
+		adData.append('articleCategoryIds', JSON.stringify(selectedArticleCategoryIds));
+		adData.append('activityCategoryIds', JSON.stringify(selectedActivityCategoryIds));
+		adData.append('objectTypeCategoryIds', JSON.stringify(selectedObjectTypeCategoryIds));
+
+		try {
+			// Pass adId and adData to updateAd
+			await updateAd({ adId: currentAd.id, adData }); // Ensure currentAd is defined
+			setSuccessMessage('Reklama uspešno ažurirana!');
+			setIsModalOpen(false);
+		} catch (error) {
+			setError(`Greška prilikom ažuriranja reklame: ${error}`);
+		}
+	};
+
+	const toggleArticleModal = () => setIsArticleModalOpen(!isArticleModalOpen);
+	const toggleActivityModal = () => setIsActivityModalOpen(!isActivityModalOpen);
+	const toggleObjectTypeModal = () => setIsObjectTypeModalOpen(!isObjectTypeModalOpen);
 
 	return (
 		<div>
@@ -74,6 +205,7 @@ const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
 						ad={ad}
 						onDeleteClick={() => handleDeleteClick(ad)}
 						onEditClick={() => handleEditClick(ad)}
+						setIsModalOpen={setIsModalOpen}
 					/>
 				))}
 			</div>
@@ -82,7 +214,62 @@ const AdsList: React.FC<Props> = ({ setSuccessMessage, setError, ads }) => {
 					isOpen={isModalOpen}
 					onClose={() => setIsModalOpen(false)}
 					title='Izmeni reklamu'>
-					<div></div>
+					<>
+						<div className='flex justify-between gap-1 px-8 pt-4'>
+							<FormDefaultButton onClick={toggleArticleModal} label='Kategorije proizvoda' />
+							<FormDefaultButton onClick={toggleActivityModal} label='Kategorije delatnosti' />
+							<FormDefaultButton onClick={toggleObjectTypeModal} label='Tip pr. objekata' />
+						</div>
+						<AdForm
+							formData={formData}
+							setFormData={setFormData}
+							locations={locations}
+							handleChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+							handleSelectChange={e =>
+								setFormData({ ...formData, [e.target.name]: parseInt(e.target.value) })
+							}
+							handleAdTypeChange={handleAdTypeChange}
+							loading={loading}
+							filteredCities={filteredCities}
+							filteredCityParts={filteredCityParts}
+							filteredMarketplaces={filteredMarketplaces}
+							filteredStores={filteredStores || []}
+							successMessage={successMessage}
+							handleSubmit={handleSubmitEdit}
+							mutation={undefined}
+							existingImages={imagesData}
+						/>
+						<CategoryModal
+							isOpen={isArticleModalOpen}
+							onClose={toggleArticleModal}
+							title='Select Article Categories'
+							searchQuery={articleSearchQuery}
+							setSearchQuery={setArticleSearchQuery}
+							categories={articleCategories || []}
+							selectedCategories={selectedArticleCategoryIds}
+							setSelectedCategories={setSelectedArticleCategoryIds}
+						/>
+						<CategoryModal
+							isOpen={isActivityModalOpen}
+							onClose={toggleActivityModal}
+							title='Select Article Categories'
+							searchQuery={activitySearchQuery}
+							setSearchQuery={setActivitySearchQuery}
+							categories={activityCategories || []}
+							selectedCategories={selectedActivityCategoryIds}
+							setSelectedCategories={setSelectedActivityCategoryIds}
+						/>
+						<CategoryModal
+							isOpen={isObjectTypeModalOpen}
+							onClose={toggleObjectTypeModal}
+							title='Select Article Categories'
+							searchQuery={objectTypeSearchQuery}
+							setSearchQuery={setObjectTypeSearchQuery}
+							categories={objectTypeCategories || []}
+							selectedCategories={selectedObjectTypeCategoryIds}
+							setSelectedCategories={setSelectedObjectTypeCategoryIds}
+						/>
+					</>
 				</EditModalContainer>
 			)}
 		</div>

@@ -120,3 +120,42 @@ export async function putData(url: string, data: any) {
 		throw error;
 	}
 }
+
+export async function putDataMultipart(url: string, data: any) {
+	try {
+		const response = await fetch(url, {
+			method: 'PUT',
+			body: data,
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error:', error);
+		throw error;
+	}
+}
+
+export async function patchData(url: string, data: any) {
+	try {
+		const response = await fetch(url, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error:', error);
+		throw error;
+	}
+}

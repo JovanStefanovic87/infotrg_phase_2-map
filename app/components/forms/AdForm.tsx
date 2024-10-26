@@ -73,6 +73,8 @@ const AdForm: React.FC<Props> = ({
 		}
 	};
 
+	console.log(formData);
+
 	// Provera da li su svi obavezni podaci prisutni
 	const isFormValid = () => {
 		if (

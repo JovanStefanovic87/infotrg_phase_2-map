@@ -20,9 +20,10 @@ interface Props {
 	ad: AdAdmin;
 	onDeleteClick: () => void;
 	onEditClick: (ad: AdAdmin) => void;
+	setIsModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
+const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpen }) => {
 	const extendAdMutation = useExtendAd();
 	const country = ad.country?.label.translations[0].translation;
 	const city = ad.city?.label.translations[0].translation;
@@ -50,10 +51,22 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 		const newValidTo =
 			daysLeft > 0
 				? new Date(validToDate.setDate(validToDate.getDate() + 30))
-				: new Date(currentDate.setDate(currentDate.getDate() + 30));
+				: new Date(currentDate.setDate(currentDate.getDate() + 31));
 
-		// Pozivamo mutation za produžavanje reklame
-		await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: newValidTo } });
+		try {
+			await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: newValidTo } });
+		} catch (error) {
+			console.error('Error extending ad:', error);
+		}
+	};
+
+	const handleStopAd = async () => {
+		const currentDate = new Date();
+		try {
+			await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: currentDate } });
+		} catch (error) {
+			console.error('Error stopping ad:', error);
+		}
 	};
 
 	return (
@@ -144,14 +157,19 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick }) => {
 						className='bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
 					/>
 					<EditButton
-						onClick={() => onEditClick(ad)}
+						onClick={handleStopAd}
 						value='Stopiraj'
 						className='bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
 					/>
 				</div>
 				<div className='flex justify-between space-x-2'>
 					<EditButton
-						onClick={() => onEditClick(ad)}
+						onClick={() => {
+							onEditClick(ad);
+							if (setIsModalOpen) {
+								setIsModalOpen(true);
+							}
+						}}
 						value='Izmeni'
 						className='bg-sky-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200 w-full'
 					/>
