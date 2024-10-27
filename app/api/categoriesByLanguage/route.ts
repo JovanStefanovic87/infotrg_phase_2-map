@@ -125,8 +125,6 @@ export async function GET(request: Request) {
 	const prefix = searchParams.get('prefix') || 'article_category_';
 	const languageId = Number(searchParams.get('languageId')) || 1;
 
-	console.log('prefix:', prefix, 'languageId:', languageId);
-
 	try {
 		const topLevelCategories: Category[] = await buildCategoryTree(null, prefix, languageId);
 		return NextResponse.json(topLevelCategories);

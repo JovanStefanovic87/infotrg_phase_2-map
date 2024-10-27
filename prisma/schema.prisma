@@ -220,6 +220,7 @@ model RetailStore {
   Location    Location?     @relation(fields: [locationId], references: [id])
   locationId  Int?
   Advertising Advertising[]
+  Images      Image[]
 }
 
 model Location {
@@ -282,10 +283,12 @@ model Advertising {
 }
 
 model Image {
-  id          Int           @id @default(autoincrement())
-  name        String
-  url         String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  advertising Advertising[]
+  id            Int           @id @default(autoincrement())
+  name          String
+  url           String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  advertising   Advertising[]
+  RetailStore   RetailStore?  @relation(fields: [retailStoreId], references: [id])
+  retailStoreId Int?
 }

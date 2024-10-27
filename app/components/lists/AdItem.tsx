@@ -88,6 +88,7 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpe
 						width={400}
 						height={300}
 						className='rounded-lg'
+						priority
 					/>
 				</div>
 			)}

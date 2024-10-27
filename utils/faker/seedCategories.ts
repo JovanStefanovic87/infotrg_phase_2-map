@@ -36,6 +36,3 @@ const generateTopLevelCategories = (startId: number, count: number): Category[] 
 
 // Generate 2000 categories and subcategories
 const categories = generateTopLevelCategories(1000, 2000);
-
-// Output first few categories to see structure
-console.log(JSON.stringify(categories.slice(0, 10), null, 2));

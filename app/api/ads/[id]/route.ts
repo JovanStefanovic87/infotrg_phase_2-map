@@ -69,44 +69,46 @@ export const config = {
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
 	const adId = parseInt(params.id);
-	console.log('Parsed adId:', adId); // Log parsed adId
 
 	if (isNaN(adId)) {
-		console.error('Invalid ID:', params.id); // Log invalid ID
+		console.error('Invalid ID:', params.id);
 		return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 	}
 
 	try {
 		const form = await req.formData();
-		console.log('Form Data:', Object.fromEntries(form)); // Log form data
 
 		const name = form.get('name')?.toString() || '';
 		const description = form.get('description')?.toString() || '';
 		const adType = form.get('adType')?.toString() || '';
 		const url = form.get('url')?.toString() || '';
 		const validTo = form.get('validTo')?.toString() || '';
-		console.log('Extracted values:', { name, description, adType, url, validTo }); // Log extracted values
+		const imageIdFromLibrary = form.get('imageId')?.toString() || '';
+		const retailStoreId = parseInt(form.get('retailStoreId')?.toString() || '0');
 
 		const articleCategoryIds = JSON.parse(form.get('articleCategoryIds')?.toString() || '[]');
 		const activityCategoryIds = JSON.parse(form.get('activityCategoryIds')?.toString() || '[]');
 		const objectTypeCategoryIds = JSON.parse(form.get('objectTypeCategoryIds')?.toString() || '[]');
 		const file = form.get('image') as File;
-
-		console.log('Category IDs:', {
-			articleCategoryIds,
-			activityCategoryIds,
-			objectTypeCategoryIds,
-		}); // Log category IDs
-
 		if (!name || !adType) {
-			console.error('Missing required fields:', { name, adType, url }); // Log missing fields
+			console.error('Missing required fields:', { name, adType });
 			return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
+		}
+
+		// Check if the retail store exists
+		const retailStoreExists = await prisma.retailStore.findUnique({
+			where: { id: retailStoreId },
+		});
+
+		if (!retailStoreExists) {
+			console.error('Retail store not found:', retailStoreId);
+			return NextResponse.json({ error: 'Retail store not found' }, { status: 400 });
 		}
 
 		let imageId: number | null = null;
 
+		// Handle image upload or selection
 		if (file) {
-			console.log('Uploading file:', file); // Log file upload
 			const uploadDirectory = path.join(process.cwd(), 'public/images/advertisments');
 			await uploadImage(file, uploadDirectory);
 
@@ -116,45 +118,50 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 					url: `/images/advertisments/${file.name}`,
 				},
 			});
-
 			imageId = createdImage.id;
-			console.log('Created image ID:', imageId); // Log created image ID
+		} else if (imageIdFromLibrary) {
+			imageId = parseInt(imageIdFromLibrary);
 		}
 
+		// Prepare data for updating the advertisement
 		const updateData: any = {
 			name,
 			description,
 			adType,
 			url,
-			articleCategories: {
-				connect: articleCategoryIds.map((id: number) => ({ id })),
-			},
-			activityCategories: {
-				connect: activityCategoryIds.map((id: number) => ({ id })),
-			},
-			objectTypeCategories: {
-				connect: objectTypeCategoryIds.map((id: number) => ({ id })),
-			},
+			retailStoreId,
 			...(imageId && { imageId }),
+			...(validTo && validTo !== 'null' && { validTo: new Date(validTo) }),
 		};
 
-		// Only update validTo if it is not 'null'
-		if (validTo !== 'null') {
-			updateData.validTo = new Date(validTo);
-			console.log('Updated validTo:', updateData.validTo); // Log validTo
-		} else {
-			console.log('No validTo update'); // Log when validTo is not updated
+		// Update categories
+		if (articleCategoryIds.length) {
+			updateData.articleCategories = {
+				set: articleCategoryIds.map((id: any) => ({ id })),
+			};
 		}
 
+		if (activityCategoryIds.length) {
+			updateData.activityCategories = {
+				set: activityCategoryIds.map((id: any) => ({ id })),
+			};
+		}
+
+		if (objectTypeCategoryIds.length) {
+			updateData.objectTypeCategories = {
+				set: objectTypeCategoryIds.map((id: any) => ({ id })),
+			};
+		}
+
+		// Perform the update
 		const updatedAd = await prisma.advertising.update({
 			where: { id: adId },
 			data: updateData,
 		});
 
-		console.log('Updated ad:', updatedAd); // Log updated ad
 		return NextResponse.json(updatedAd, { status: 200 });
 	} catch (error) {
-		console.error('Error updating ad:', error); // Log the error
+		console.error('Error updating ad:', error);
 		return NextResponse.json({ error: 'Failed to update ad' }, { status: 500 });
 	}
 }

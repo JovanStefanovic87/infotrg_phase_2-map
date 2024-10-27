@@ -3,7 +3,7 @@ import LabelInputForm from '../input/LabelInputForm';
 import SelectInputForm from '../input/SelectInputForm';
 import SubmitButton from '../buttons/SubmitButton';
 import ImagePickerForm from './ImagePickerForm';
-import { AdFormState, AdType, Icon } from '@/utils/helpers/types';
+import { AdFormState, Icon } from '@/utils/helpers/types';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
 import { adTypeOptions } from '@/utils/helpers/varStrings';
@@ -12,6 +12,7 @@ import Image from 'next/image';
 interface Props {
 	formData: AdFormState;
 	setFormData: React.Dispatch<React.SetStateAction<AdFormState>>;
+	editMode?: boolean;
 	locations: any[];
 	filteredCities: any[];
 	filteredCityParts: any[];
@@ -30,6 +31,7 @@ interface Props {
 const AdForm: React.FC<Props> = ({
 	formData,
 	setFormData,
+	editMode = false,
 	locations,
 	filteredCities,
 	filteredCityParts,
@@ -54,6 +56,7 @@ const AdForm: React.FC<Props> = ({
 			...prev,
 			imageId: icon.iconId,
 			newImageFile: undefined,
+			image: { id: icon.iconId, name: '', url: icon.iconUrl },
 		}));
 		setIsImagePickerOpen(false);
 	};
@@ -65,15 +68,13 @@ const AdForm: React.FC<Props> = ({
 			setPreviewImage(imageUrl);
 			setFormData(prev => ({
 				...prev,
-				newImageFile: file,
-				imageId: undefined,
+				newImageFile: file, // Postavlja novu sliku
+				imageId: undefined, // Resetovanje ID-a slike
 			}));
 		} else {
 			setPreviewImage(null);
 		}
 	};
-
-	console.log(formData);
 
 	// Provera da li su svi obavezni podaci prisutni
 	const isFormValid = () => {
@@ -149,11 +150,13 @@ const AdForm: React.FC<Props> = ({
 
 			{/* Image Picker */}
 			<div>
-				<ImageUploadButton
-					id='upload-icon'
-					label='Dodajte novu sliku'
-					onChange={handleImagePreview}
-				/>
+				{!editMode && (
+					<ImageUploadButton
+						id='upload-icon'
+						label='Dodajte novu sliku'
+						onChange={handleImagePreview}
+					/>
+				)}
 				<ChooseImageButton
 					onClick={() => setIsImagePickerOpen(true)}
 					label={formData.imageId ? 'Promeni postojeću sliku' : 'Izaberite postojeću sliku'}

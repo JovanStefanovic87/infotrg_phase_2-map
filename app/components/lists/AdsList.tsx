@@ -9,6 +9,7 @@ import FormDefaultButton from '../buttons/FormDefaultButton';
 import AdForm from '../forms/AdForm';
 import CategoryModal from '../modals/CategoryModal';
 import { adInit } from '@/utils/helpers/initialStates';
+import { useFetchImages, useUploadImages } from '@/app/helpers/api/images';
 
 interface Props {
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
@@ -45,6 +46,7 @@ const AdsList: React.FC<Props> = ({
 }) => {
 	const { mutate: deleteAd } = useDeleteAd();
 	const { mutate: updateAd } = useUpdateAd();
+	const { mutate: uploadImage } = useUploadImages();
 	const [formData, setFormData] = useState<AdFormState>(adInit);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [searchQuery, setSearchQuery] = useState<string>('');
@@ -103,12 +105,10 @@ const AdsList: React.FC<Props> = ({
 	};
 
 	const handleEditClick = (ad: AdAdmin) => {
-		// Set the current ad
 		setCurrentAd(ad);
 
-		// Populate formData with current ad data for editing
 		setFormData({
-			id: ad.id, // Ensure the ID is included in formData
+			id: ad.id,
 			name: ad.name || '',
 			description: ad.description || '',
 			adType: ad.adType,
@@ -118,12 +118,12 @@ const AdsList: React.FC<Props> = ({
 			activityCategoryIds: ad.activityCategories.map(category => category.id) || [],
 			objectTypeCategoryIds: ad.objectTypeCategories.map(category => category.id) || [],
 			imageId: ad.imageId || undefined,
-			newImageFile: null,
-			countryId: ad.country?.id || 1, // Default to 1 if country ID is not available
-			cityId: ad.city?.id || 1, // Default to 1 if city ID is not available
-			cityPartId: ad.cityPart?.id || 0, // Default to 0 if city part ID is not available
-			marketplaceId: ad.marketplace?.id || 0, // Default to 0 if marketplace ID is not available
-			retailStoreId: ad.retailStore?.id || 0, // Ensure retailStoreId is included
+			newImageFile: null, // Resetujte novo učitanu sliku
+			countryId: ad.country?.id || 1,
+			cityId: ad.city?.id || 1,
+			cityPartId: ad.cityPart?.id || 0,
+			marketplaceId: ad.marketplace?.id || 0,
+			retailStoreId: ad.retailStore?.id || 0,
 			image: ad.image || null,
 			viewCount: ad.viewCount || 0,
 			marketplace: ad.marketplace || null,
@@ -133,53 +133,93 @@ const AdsList: React.FC<Props> = ({
 			articleCategories: ad.articleCategories || [],
 			activityCategories: ad.activityCategories || [],
 		});
-
-		// Open the modal for editing
+		setSelectedArticleCategoryIds(ad.articleCategories.map(category => category.id) || []);
+		setSelectedActivityCategoryIds(ad.activityCategories.map(category => category.id) || []);
+		setSelectedObjectTypeCategoryIds(ad.objectTypeCategories.map(category => category.id) || []);
 		setIsModalOpen(true);
 	};
 
 	const handleSubmitEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Ensure currentAd is not null before proceeding
 		if (!currentAd) {
 			setError('Current advertisement is not available.');
 			return;
 		}
 
-		// Create a FormData object to send with the PUT request
-		const adData = new FormData();
-		adData.append('name', formData.name);
-		adData.append('description', formData.description);
-		adData.append('adType', formData.adType);
-		adData.append('url', formData.url);
-
-		// Ensure validTo is a Date object before calling toISOString
-		if (formData.validTo) {
-			adData.append('validTo', formData.validTo.toString());
-		} else {
-			adData.append('validTo', 'null'); // Send 'null' string if you don't want to update
-		}
-
-		// Append other necessary fields
-		adData.append('articleCategoryIds', JSON.stringify(selectedArticleCategoryIds));
-		adData.append('activityCategoryIds', JSON.stringify(selectedActivityCategoryIds));
-		adData.append('objectTypeCategoryIds', JSON.stringify(selectedObjectTypeCategoryIds));
+		setLoading(true);
+		setError('');
+		setSuccessMessage(null);
 
 		try {
-			// Pass adId and adData to updateAd
-			await updateAd({ adId: currentAd.id, adData }); // Ensure currentAd is defined
+			let imageId = formData.imageId;
+
+			if (formData.newImageFile) {
+				const imageUploadData = {
+					image: formData.newImageFile,
+					directory: 'advertisments',
+				};
+
+				await new Promise<void>((resolve, reject) => {
+					uploadImage(imageUploadData, {
+						onSuccess: (response: any) => {
+							imageId = response?.data?.imageId;
+							if (imageId) {
+								resolve();
+							} else {
+								setError('Image upload failed. No ID returned.');
+								setLoading(false);
+								reject();
+							}
+						},
+						onError: (err: any) => {
+							setError('Failed to upload image');
+							setLoading(false);
+							console.error('Image upload error:', err);
+							reject();
+						},
+					});
+				});
+			}
+
+			const adData = new FormData();
+			adData.append('name', formData.name);
+			adData.append('description', formData.description);
+			adData.append('adType', formData.adType);
+			adData.append('url', formData.url);
+
+			adData.append('articleCategoryIds', JSON.stringify(selectedArticleCategoryIds));
+			adData.append('activityCategoryIds', JSON.stringify(selectedActivityCategoryIds));
+			adData.append('objectTypeCategoryIds', JSON.stringify(selectedObjectTypeCategoryIds));
+
+			if (formData.retailStoreId) {
+				adData.append('retailStoreId', formData.retailStoreId.toString());
+			}
+
+			if (imageId) {
+				adData.append('imageId', imageId.toString());
+			}
+
+			if (formData.validTo) {
+				adData.append('validTo', formData.validTo.toString());
+			} else {
+				adData.append('validTo', 'null');
+			}
+
+			await updateAd({ adId: currentAd.id, adData });
+
 			setSuccessMessage('Reklama uspešno ažurirana!');
 			setIsModalOpen(false);
 		} catch (error) {
 			setError(`Greška prilikom ažuriranja reklame: ${error}`);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const toggleArticleModal = () => setIsArticleModalOpen(!isArticleModalOpen);
 	const toggleActivityModal = () => setIsActivityModalOpen(!isActivityModalOpen);
 	const toggleObjectTypeModal = () => setIsObjectTypeModalOpen(!isObjectTypeModalOpen);
-
 	return (
 		<div>
 			<div className='mb-4'>
@@ -222,6 +262,7 @@ const AdsList: React.FC<Props> = ({
 						</div>
 						<AdForm
 							formData={formData}
+							editMode={true}
 							setFormData={setFormData}
 							locations={locations}
 							handleChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}

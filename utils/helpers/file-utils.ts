@@ -133,8 +133,6 @@ export const uploadImage = async (
 			},
 		});
 
-		// Vraćamo ID slike
-		console.log('Upload successful, image ID:', icon.id); // Dodajemo log za praćenje
 		return icon.id;
 	} catch (error) {
 		console.error('Image upload error:', error);

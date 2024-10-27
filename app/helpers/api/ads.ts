@@ -66,7 +66,6 @@ const extendAd = async (adId: number, updatedData: { validTo: Date }): Promise<v
 };
 
 export const useExtendAd = () => {
-	console.log('useExtendAd');
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationKey: ['extendAd'],
@@ -90,6 +89,7 @@ export const useUpdateAd = () => {
 	return useMutation({
 		mutationKey: ['updateAd'],
 		mutationFn: ({ adId, adData }: { adId: number; adData: FormData }) => updateAd(adId, adData),
+
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['ads'] });
 		},
