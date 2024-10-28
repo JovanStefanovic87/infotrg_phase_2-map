@@ -1,4 +1,4 @@
-import { ContentBlocksData, MemberData } from '@/utils/helpers/types';
+import { ContentBlocksData, MemberData } from '@/app/helpers/types';
 
 const bolderLine = 4;
 
@@ -12,7 +12,7 @@ const MIROSLAV: Omit<MemberData, 'id'> = {
   infotrgEngagements: 'Od 01.08.2022. godine',
   phone: '0601451349',
   email: 'suinfotrg@gmail.com',
-  image: '/images/members/avatar_miroslav.bmp',
+  image: '/images/members/avatar_miroslav.webp',
 };
 
 const JOVAN: Omit<MemberData, 'id'> = {
@@ -26,7 +26,7 @@ const JOVAN: Omit<MemberData, 'id'> = {
   infotrgEngagements: 'Od 27.08.2022. godine',
   phone: '0691120296',
   email: 'jovanstefanovic024@gmail.com',
-  image: '/images/members/avatar_jovan.bmp',
+  image: '/images/members/avatar_jovan.webp',
 };
 
 const NEBOJSA: Omit<MemberData, 'id'> = {
@@ -34,7 +34,7 @@ const NEBOJSA: Omit<MemberData, 'id'> = {
   birth: '',
   infotrgEngagements: 'Od 27.08.2022. godine',
   phone: '0611366166',
-  image: '/images/members/avatar_nebojsa.bmp',
+  image: '/images/members/avatar_nebojsa.webp',
 };
 
 const NEMANJA: Omit<MemberData, 'id'> = {
@@ -44,7 +44,33 @@ const NEMANJA: Omit<MemberData, 'id'> = {
   infotrgEngagements: 'Od 01.02.2024. godine',
   phone: '0642922747',
   email: 'komazecnemanja22@gmail.com',
-  image: '/images/members/avatar_nemanja.bmp',
+  image: '/images/members/avatar_nemanja.webp',
+};
+
+const NORBERT: Omit<MemberData, 'id'> = {
+  name: 'Norbert Takač',
+  birth: '28.04.1989.',
+  education:
+    'Tehničar za pripremu štampe, digitalni tipograf i dizajner - Politehnička škola, Informatičko inženjerstvo - Visoka tehnička škola strukovnih studija',
+  affinities:
+    'Grafički dizajn, priprema za štampu, Microsoft word, Excel, Power Point, web dizajn (CSS, HTML), Corel Draw, Adobe Photoshop, Autodesc Fusion 360, programiranje i servisiranje fiskalnih kasa',
+  previousEngagements:
+    'GTL export - import (elektrotehničar računara i serviser za fiskalnie kase), šteler - tehničar (Continental Contitech Fluid)',
+  infotrgEngagements: 'Od 14.10.2024. godine',
+  /* phone: '069709380', */
+  email: 'bosqeee@gmail.com',
+  image: '/images/members/avatar_norbert.webp',
+};
+
+const ATILA: Omit<MemberData, 'id'> = {
+  name: 'Atila Sekula',
+  birth: '23.12.1985.',
+  profession: 'Team leader (Continental Subotica)',
+  affinities: 'Administracija, izrada dokumenata, Office paket, korišćenje AI, timski rad.',
+  infotrgEngagements: 'Od 14.10.2024. godine',
+  phone: '0655577446',
+  email: 'sekula1985@yahoo.com',
+  image: '/images/members/avatar_atila.webp',
 };
 
 export const contentData: MemberData[] = [
@@ -59,10 +85,7 @@ export const contentData: MemberData[] = [
   {
     id: 'administrator',
     title: 'ADMINISTRATOR',
-    ...MIROSLAV,
-    affinities: 'Administracija, grafički dizajn, leksikografija, izrada dokumenata',
-    previousEngagements:
-      'Kasarna “Vojvoda Živojin Mišić” (četni evidentičar), trgovina “KMS d.o.o.” (magacioner/referent)',
+    ...ATILA,
   },
   {
     id: 'vebmaster',
@@ -72,18 +95,15 @@ export const contentData: MemberData[] = [
   {
     id: 'graficki-dizajner',
     title: 'GRAFIČKI DIZAJNER',
-    ...MIROSLAV,
-    affinities: 'Grafički dizajn, slikarstvo, crtanje, tehničko crtanje, arhitektura',
-    previousEngagements:
-      'Projekat “MICKEY“ (dizajner), kviz “KVIZANTIJA“ (illustrator), strip “Zeutron“ (crtač)',
+    ...NORBERT,
   },
   {
     id: 'koordinator',
     title: 'KOORDINATOR',
     ...MIROSLAV,
-    affinities: 'Administracija, trgovina, preduzetništvo, grafički dizajn',
+    affinities: 'Administracija, trgovina, preduzetništvo, grafički dizajn, likovna umetnost',
     previousEngagements:
-      'Trgovina “KMS d.o.o.” (šef magacina), proizvodnja “JADROPLAST” d.o.o. (smenovođa)',
+      'Kasarna “Vojvoda Živojin Mišić” (četni evidentičar), trgovina “KMS d.o.o.” (šef magacina), proizvodnja “JADROPLAST” d.o.o. (smenovođa), projekat “MICKEY“ (dizajner), kviz “KVIZANTIJA“ (autor / ilustrator), strip “Zeutron“ (scenarista / crtač)',
   },
   {
     id: 'pr-menadzer',
@@ -100,38 +120,21 @@ export const contentBlocksData: ContentBlocksData = {
   autor: [
     {
       type: 'h3',
-      content: 'ADMINISTRATIVNA MANIPULACIJA',
+      content: 'IZRADA DOKUMENATA',
     },
     {
       type: 'pNormal',
-      content: 'Administrativna kategorizacija',
+      content: 'Izrada plana rada',
       paddingLeft: marginLeftMedium,
     },
     {
       type: 'pNormal',
-      content: 'Administrativna priprema spiskova',
+      content: 'Izrada projektne dokumentacije',
       paddingLeft: marginLeftMedium,
     },
     {
       type: 'pNormal',
-      content: 'Administrativna dopuna spiskova',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'OTVARANJE DATOTEKA NA PLATFORMI',
-    },
-    {
-      type: 'pNormal',
-      content: 'Otvaranje probnih stranica enciklopedije proizvoda',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Otvaranje privremenih veb izloga prodajnih objekata',
+      content: 'Izrada investicionog plana i programa',
       paddingLeft: marginLeftMedium,
     },
     {
@@ -139,143 +142,11 @@ export const contentBlocksData: ContentBlocksData = {
     },
     {
       type: 'h3',
-      content: 'POPUNJAVANJE STRANICA NA PLATFORMI',
+      content: 'DOPUNA DOKUMENATA',
     },
     {
       type: 'pNormal',
-      content: 'Popunjavanje početnih stranica funkcija',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Popunjavanje bazičnih stranica',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Popunjavanje stranica investicionog fonda',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'UNOS PODATAKA NA PLATFORMU',
-    },
-    {
-      type: 'pNormal',
-      content: 'Unos podataka o artiklima',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Unos podataka o prodajnim objektima',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Unos artikala na probne stranice enciklopedije proizvoda',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Unos artikala u privremene veb izloge',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'OBJAVLJIVANJE NA PLATFORMI',
-    },
-    {
-      type: 'pNormal',
-      content: 'Objavljivanje lokacija prodaje',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Objavljivanje reklama',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Objavljivanje projektne dokumentacije',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Objavljivanje radnih pozicija saradnika',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'AŽURIRANJE',
-    },
-    {
-      type: 'pNormal',
-      content: 'Ažuriranje spiskova proizvoda',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Ažuriranje spiskova prodajnih objekata',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Ažuriranje reklama',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'MODERACIJA',
-    },
-    {
-      type: 'pNormal',
-      content: 'Moderacija veb izloga',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Moderacija enciklopedije proizvoda',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'SELEKCIJA PROIZVODA',
-    },
-    {
-      type: 'pNormal',
-      content: 'Selekcija proizvoda za besplatno oglašavanje',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'POPISIVANJE',
-    },
-    {
-      type: 'pNormal',
-      content: 'Popisivanje prodajnih objekata',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Popisivanje proizvoda',
+      content: 'Dopuna tehničkog plana',
       paddingLeft: marginLeftMedium,
     },
     {
@@ -287,7 +158,7 @@ export const contentBlocksData: ContentBlocksData = {
     },
     {
       type: 'pNormal',
-      content: 'Razmatranje projektne dokumentacije',
+      content: 'Razmatranje nacrta ugovora o saradnji',
       paddingLeft: marginLeftMedium,
     },
     {
@@ -295,11 +166,16 @@ export const contentBlocksData: ContentBlocksData = {
     },
     {
       type: 'h3',
-      content: 'PRIPREMA DOKUMENATA',
+      content: 'ŠTAMPANJE DOKUMENATA',
     },
     {
       type: 'pNormal',
-      content: 'Priprema plana rada',
+      content: 'Štampanje prezentacionog materijala za okupljanje saradnika',
+      paddingLeft: marginLeftMedium,
+    },
+    {
+      type: 'pNormal',
+      content: 'Štampanje projektne dokumentacije',
       paddingLeft: marginLeftMedium,
     },
     {
@@ -316,7 +192,36 @@ export const contentBlocksData: ContentBlocksData = {
     },
     {
       type: 'pNormal',
-      content: 'Potpisivanje ugovora o delu',
+      content: 'Potpisivanje investicionog plana i programa',
+      paddingLeft: marginLeftMedium,
+    },
+    {
+      type: 'pNormal',
+      content: 'Potpisivanje ugovora',
+      paddingLeft: marginLeftMedium,
+    },
+    {
+      type: 'hr',
+    },
+    {
+      type: 'h3',
+      content: 'PERIODIČNA OBNOVA ELEKTRONSKIH FORMI',
+    },
+    {
+      type: 'pNormal',
+      content: 'Obnova internet domena',
+      paddingLeft: marginLeftMedium,
+    },
+    {
+      type: 'hr',
+    },
+    {
+      type: 'h3',
+      content: 'ZAŠTITA PROJEKTA',
+    },
+    {
+      type: 'pNormal',
+      content: 'Zaštita autorskih prava',
       paddingLeft: marginLeftMedium,
     },
     {
@@ -325,6 +230,11 @@ export const contentBlocksData: ContentBlocksData = {
     {
       type: 'h3',
       content: 'KONTAKTIRANJE SARADNIKA',
+    },
+    {
+      type: 'pNormal',
+      content: 'Inicijalno okupljanje saradnika',
+      paddingLeft: marginLeftMedium,
     },
     {
       type: 'pNormal',
@@ -901,23 +811,6 @@ export const contentBlocksData: ContentBlocksData = {
     {
       type: 'pNormal',
       content: 'Periodično izveštavanje investitorima',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'hr',
-    },
-    {
-      type: 'h3',
-      content: 'OPREMANJE INVENTARA',
-    },
-    {
-      type: 'pNormal',
-      content: 'Opremanje kancelarijskim priborom',
-      paddingLeft: marginLeftMedium,
-    },
-    {
-      type: 'pNormal',
-      content: 'Opremanje kancelarijskim materijalom',
       paddingLeft: marginLeftMedium,
     },
     {

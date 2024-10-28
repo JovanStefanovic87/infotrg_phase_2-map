@@ -101,7 +101,7 @@ const PageContent: React.FC = () => {
 							) : block.type === 'h2' ? (
 								<H2 text={block.content} align='center' color={block.color} />
 							) : block.type === 'H2BoldCenter' ? (
-								<H2 text={block.content} align='center' weight='bold' />
+								<H2 text={block.content} align='center' weight='bold' color={block.color} />
 							) : block.type === 'h3' ? (
 								<H3 text={block.content} align='center' />
 							) : block.type === 'h4' ? (

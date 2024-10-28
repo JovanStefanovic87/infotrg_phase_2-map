@@ -7,6 +7,7 @@ import renderGridSystem from '@/utils/helpers/renderGridSystem';
 import { BasicInformation } from '@/utils/helpers/types';
 import useScrollToTop from '@/utils/helpers/useScrollToTop';
 import useResponsiveColumns from '@/utils/helpers/useResponsiveColumns';
+import H2 from '@/app/components/text/H2';
 import ContentDescriptionText from '@/app/components/text/ContentDescriptionText';
 
 const ServiceActivities: React.FC = () => {

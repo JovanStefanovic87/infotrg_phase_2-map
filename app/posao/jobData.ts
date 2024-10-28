@@ -1,54 +1,54 @@
 import { BasicInformation } from '@/utils/helpers/types';
 
 export const contentData: BasicInformation[] = [
-	{
-		id: 'graphic-designer',
-		title: 'GRAFIČKI DIZAJNER',
-		isLink: false,
-		opisPosla: [
-			'Grafička priprema promotivnog materijala (flajeri, bilbordi)',
-			'Grafička priprema dokumenata',
-			'Dizajn i grafička priprema ilustracija',
-			'Grafička obrada slika',
-			'Realizacija štampanja promotivnog materijala',
-		],
-		usloviRada: [
-			'Angažman prema potrebi',
-			'Rad od kuće',
-			'Proizvoljno radno vreme',
-			'Honorar: 5 evra/sat',
-		],
-		potrebneKvalifikacije: [
-			'Poznavanje programa za grafičku pripremu i dizajn',
-			'Posedovanje sopstvenog računara',
-			'Poželjno posedovanje sopstvene opreme za štampanje',
-			'Prebivalište u Subotici',
-		],
-	},
-	{
-		id: 'assistant-administrator',
-		title: 'ASISTENT ADMINISTRATORA',
-		isLink: false,
-		opisPosla: [
-			'Obilazak terena i prikupljanje informacija o prodajnim objektima i proizvodima',
-			'Administrativna obrada prikupljenih podataka',
-			'Unos podataka na elektronsku platformu Infotrga',
-			'Moderacija veb izloga i enciklopedije proizvoda',
-			'Uređivanje veb izloga po nalogu vlasnika prodajnih objekata',
-		],
-		usloviRada: [
-			'Angažman prema potrebi',
-			'Rad od kuće',
-			'Povremeni rad na terenu',
-			'Proizvoljno radno vreme',
-			'Honorar: 5 evra/sat',
-		],
-		potrebneKvalifikacije: [
-			'Poznavanje programa u Office paketu (Word, Excel)',
-			'Posedovanje sopstvenog računara',
-			'Prebivalište u Subotici',
-		],
-	},
+	/* {
+    id: 'graphic-designer',
+    title: 'GRAFIČKI DIZAJNER',
+    isLink: false,
+    opisPosla: [
+      'Grafička priprema promotivnog materijala (flajeri, bilbordi)',
+      'Grafička priprema dokumenata',
+      'Dizajn i grafička priprema ilustracija',
+      'Grafička obrada slika',
+      'Realizacija štampanja promotivnog materijala',
+    ],
+    usloviRada: [
+      'Angažman prema potrebi',
+      'Rad od kuće',
+      'Proizvoljno radno vreme',
+      'Honorar: 5 evra/sat',
+    ],
+    potrebneKvalifikacije: [
+      'Poznavanje programa za grafičku pripremu i dizajn',
+      'Posedovanje sopstvenog računara',
+      'Poželjno posedovanje sopstvene opreme za štampanje',
+      'Prebivalište u Subotici',
+    ],
+  }, */
+	/* {
+    id: 'assistant-administrator',
+    title: 'ASISTENT ADMINISTRATORA',
+    isLink: false,
+    opisPosla: [
+      'Obilazak terena i prikupljanje informacija o prodajnim objektima i proizvodima',
+      'Administrativna obrada prikupljenih podataka',
+      'Unos podataka na elektronsku platformu Infotrga',
+      'Moderacija veb izloga i enciklopedije proizvoda',
+      'Uređivanje veb izloga po nalogu vlasnika prodajnih objekata',
+    ],
+    usloviRada: [
+      'Angažman prema potrebi',
+      'Rad od kuće',
+      'Povremeni rad na terenu',
+      'Proizvoljno radno vreme',
+      'Honorar: 5 evra/sat',
+    ],
+    potrebneKvalifikacije: [
+      'Poznavanje programa u Office paketu (Word, Excel)',
+      'Posedovanje sopstvenog računara',
+      'Prebivalište u Subotici',
+    ],
+  }, */
 	{
 		id: 'pr-manager',
 		title: 'PR MENADŽER',

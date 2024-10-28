@@ -149,7 +149,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -185,7 +185,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 7,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -283,7 +283,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -319,7 +319,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -355,7 +355,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -391,7 +391,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -442,7 +442,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -492,7 +492,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -542,7 +542,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -592,7 +592,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -642,7 +642,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -678,7 +678,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -728,7 +728,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -778,7 +778,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -829,7 +829,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 15 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -877,7 +877,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -927,7 +927,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -977,7 +977,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(11,5 h - 115,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1030,7 +1030,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20,5 h - 200 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1089,7 +1089,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(12 h - 116,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1127,7 +1127,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(10 h - 57 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1165,7 +1165,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8,5 h - 50 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1201,7 +1201,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8,5 h - 50 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1237,7 +1237,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8,5 h - 50 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1273,7 +1273,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(17 h - 50 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1311,7 +1311,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(30 h - 300 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1349,7 +1349,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 15 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1384,7 +1384,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8 h - 80 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1422,7 +1422,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(6 h - 30 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1580,7 +1580,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(96 h - 511 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1802,7 +1802,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(6 h - 30 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -1838,7 +1838,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(38 h - 299 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2246,7 +2246,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(6 h - 30 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2384,7 +2384,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(3 h - 18 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2522,7 +2522,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(89 h - 888 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2742,7 +2742,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 37,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2880,7 +2880,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(22,5 h - 120 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -2997,7 +2997,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(4 h - 20 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -3052,7 +3052,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(22 h - 203 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -3502,7 +3502,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -3577,7 +3577,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -3652,7 +3652,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(113,5 h - 1.141,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -3811,7 +3811,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(97 h - 611,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4011,7 +4011,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4065,7 +4065,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(1 h - 5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4099,7 +4099,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(13 h - 101,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4465,7 +4465,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4540,7 +4540,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4615,7 +4615,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(113,5 h - 1.141,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4733,7 +4733,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(178,5 h - 1.109 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4893,7 +4893,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4927,7 +4927,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -4960,7 +4960,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(17 h - 125,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5387,7 +5387,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5441,7 +5441,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5495,7 +5495,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(113,5 h - 1.142 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5613,7 +5613,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(138 h - 689,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{ type: 'hr' },
 		{
@@ -5732,7 +5732,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5766,7 +5766,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(4 h - 20 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -5800,7 +5800,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20,5 h - 153,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6084,7 +6084,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(53,5 h - 520,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6285,7 +6285,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6319,7 +6319,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(78,5 h - 870,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6479,7 +6479,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(159 h - 795 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6597,7 +6597,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6631,7 +6631,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(50 h - 250 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6664,7 +6664,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20 h - 153,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -6948,7 +6948,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(191 h - 1.086 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7150,7 +7150,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(100 h - 600 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7228,7 +7228,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(78,5 h - 870,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7347,7 +7347,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(142,5 h - 764,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7506,7 +7506,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7540,7 +7540,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(21,5 h - 161,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -7865,7 +7865,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(191,5 h - 967,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8046,7 +8046,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(33,5 h - 199,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8164,7 +8164,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(78,5 h - 871 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8283,7 +8283,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(113,5 h - 570 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8442,7 +8442,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8476,7 +8476,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(21 h - 161,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8801,7 +8801,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(13,5 h - 67,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8877,7 +8877,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(31,5 h - 187,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -8974,7 +8974,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(78,5 h - 870,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9092,7 +9092,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(267 h - 1.335 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9315,7 +9315,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9349,7 +9349,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(22,5 h - 169,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9718,7 +9718,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(10 h - 164 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9798,7 +9798,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(31,5 h - 187,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -9916,7 +9916,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(78,5 h - 870,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10098,7 +10098,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(138,5 h - 746 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10354,7 +10354,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10390,7 +10390,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8 h - 40 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10445,7 +10445,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(21 h - 161,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10772,7 +10772,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(169 h - 855 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -10913,7 +10913,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(69,5 h - 414,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11096,7 +11096,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(34 h - 428 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11316,7 +11316,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(300 h - 1.402,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11604,7 +11604,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11638,7 +11638,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(3 h - 15 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11671,7 +11671,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(21,5 h - 153,3 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -11955,7 +11955,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(9 h - 45 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12010,7 +12010,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(37,5 h - 225 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12086,7 +12086,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(34 h - 428 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12204,7 +12204,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(284 h - 1.376 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12426,7 +12426,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 16 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12480,7 +12480,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(22 h - 170 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12846,7 +12846,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(9 h - 45 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -12901,7 +12901,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(123,5 h - 957 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -13020,7 +13020,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(34 h - 427,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -13138,7 +13138,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(335,5 h - 1.678,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -13423,7 +13423,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -13457,7 +13457,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(24 h - 120 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -13532,7 +13532,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(28,5 h - 348 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14084,7 +14084,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(9 h - 45 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14180,7 +14180,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(123,5 h - 957,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14341,7 +14341,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(34 h - 428,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'grayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14543,7 +14543,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(253 h - 1.265 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14790,7 +14790,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -14824,7 +14824,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(27 h - 244,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15171,7 +15171,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(31,5 h - 157,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15269,7 +15269,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(129,5 h - 993,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15412,7 +15412,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 86,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15510,7 +15510,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(244,5 h - 1.223 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15713,7 +15713,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15747,7 +15747,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(8 h - 40 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -15822,7 +15822,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(27,5  h - 244,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16170,7 +16170,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(39,5 h - 781 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16351,7 +16351,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(3 h - 18 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16406,7 +16406,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 86,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16504,7 +16504,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(252,5 h - 1.261,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16707,7 +16707,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -16741,7 +16741,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17378,7 +17378,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(210,5 h - 2.032,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17600,7 +17600,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17654,7 +17654,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 107 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17835,7 +17835,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(30,5 h - 153 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17911,7 +17911,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -17945,7 +17945,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20,5 h - 284,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18312,7 +18312,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(4 h - 20 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18367,7 +18367,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(108 h - 573 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18486,7 +18486,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 126,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18597,7 +18597,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(61,5 h - 305,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18715,7 +18715,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -18750,7 +18750,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20 h - 284,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19117,7 +19117,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19172,7 +19172,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(87,5 h - 450 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19269,7 +19269,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 126,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19378,7 +19378,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(61,5 h - 306 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19497,7 +19497,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19531,7 +19531,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20,5 h - 284,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19898,7 +19898,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19954,7 +19954,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(2 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -19988,7 +19988,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 127 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20097,7 +20097,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(62 h - 305,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20215,7 +20215,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20249,7 +20249,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20 h - 284,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20617,7 +20617,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20672,7 +20672,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20706,7 +20706,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 126,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20816,7 +20816,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(62 h - 306 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20934,7 +20934,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -20968,7 +20968,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(20 h - 285 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21335,7 +21335,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21390,7 +21390,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21424,7 +21424,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 126,5 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21533,7 +21533,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(92 h - 458 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21651,7 +21651,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21685,7 +21685,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(15,5 h - 248 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21928,7 +21928,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 171 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -21983,7 +21983,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 0 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',
@@ -22017,7 +22017,7 @@ export const contentBlocksData: ContentBlocksData = {
 			content: '(0 h - 127 EUR)',
 			weight: 'bold',
 			align: 'center',
-			color: 'gayMedium',
+			color: 'grayMidLight',
 		},
 		{
 			type: 'h4',

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { investicioniFondLinksData, contentBlocksData } from './investicioniFondData';
 import ImageModal from '../../../components/modals/ImageModal';

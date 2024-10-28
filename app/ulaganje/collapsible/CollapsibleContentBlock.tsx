@@ -3,7 +3,7 @@ import { useState } from 'react';
 import CollapsibleContentBlockContainer from './CollapsibleContentBlockConainer';
 import CollapsibleImageBlockItem from './CollapsibleImageBlockItem';
 import TextBlockItem from './TextBlockItem';
-import ColsapsibleContentBlockToggleButton from '@/app/components/buttons/ArrowToggleButton';
+import ColsapsibleContentBlockToggleButton from '@/app/components/buttons/ColsapsibleContentBlockToggleButton';
 
 interface ContentBlockItem {
 	type: 'text' | 'image';

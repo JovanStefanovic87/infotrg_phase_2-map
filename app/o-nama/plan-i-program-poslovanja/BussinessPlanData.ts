@@ -1,4 +1,4 @@
-import { BasicInformation, ListOfLinks } from '@/utils/helpers/types';
+import { BasicInformation } from '@/utils/helpers/types';
 
 export const contentData: BasicInformation[] = [
 	{

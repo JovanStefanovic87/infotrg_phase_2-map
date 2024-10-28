@@ -6,7 +6,6 @@ import { ContentBlockItem } from '@/utils/helpers/types';
 import Devider from '@/app/components/ui/Devider';
 import H2 from '@/app/components/text/H2';
 import TextBlockItem from '@/app/ulaganje/collapsible/TextBlockItem';
-import BlockButton from '@/app/components/buttons/BlockButton';
 
 interface Props {
 	title: string;
@@ -42,7 +41,9 @@ const ContentBlock: React.FC<Props> = ({
 						<H2 text={name} weight='bold' align='center' color='black' />
 					</div>
 					<div className='mt-4'>
-						<BlockButton text='Vidi više' />
+						<button className='text-blue-500 mt-2 border border-blueLight bg-blueLightest px-4 py-2 rounded-md self-start'>
+							Vidi još
+						</button>
 					</div>
 					<div className='block sm:hidden pt-8'>
 						<Devider />

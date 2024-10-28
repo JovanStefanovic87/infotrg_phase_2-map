@@ -141,6 +141,7 @@ const PageContent: React.FC = () => {
 							{[
 								{ label: 'Ime i prezime:', value: block.name },
 								{ label: 'Datum rođenja:', value: block.birth },
+								{ label: 'Obrazovanje:', value: block.education },
 								{ label: 'Zanimanje:', value: block.profession },
 								{ label: 'Afiniteti:', value: block.affinities },
 								{ label: 'Prethodni angažmani:', value: block.previousEngagements },

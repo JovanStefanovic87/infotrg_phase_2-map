@@ -4156,64 +4156,6 @@ export const contentBlocksData: ContentBlocksData = {
 		{ type: 'hr' },
 		{
 			type: 'h4',
-			content: '1.4.9.) POPUNJAVANJE I ŠTAMPANJE PRIZNANICA O ULOŽENIM SREDSTVIMA - koordinator',
-		},
-		{
-			type: 'p',
-			content: '170,5 EUR',
-			paddingLeft: marginLeftSmall,
-			weight: 'bold',
-		},
-		{
-			type: 'text',
-			content:
-				'Koordinator popunjava i štampa zasebne priznanice za uložena sredstva, u kojima se navode podaci o investitoru i vrednost uloženih sredstava.',
-		},
-		{
-			type: 'p',
-			content: 'a.) Vreme potrebno za popunjavanje jedne priznanice = 0,1 sati',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'b.) Predviđeni broj priznanica potrebnih za ispunjavanje = 200 priznanica',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'c.) Ukupno vreme utrošeno na ispunjavanje priznanica = (a x b) = 20 sati',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'd.) Cena angažmana koordinatora po satu = 7,5 evra',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'e.) Cena angažmana koordinatora za ispunjavanje priznanica = (c x d) = 150 evra',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'f.) Cena štampanja dve priznanice A6 = 4 dinara',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'g.) Ukupna cena štampanja priznanica = (b x f) = 2.400 dinara = 20,5 evra',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'p',
-			content: 'h.) Ukupna cena ispunjavanja priznanica = (e + g) = 170,5 evra',
-			paddingLeft: marginLeftMedium,
-		},
-		{
-			type: 'hr',
-		},
-		{
-			type: 'h4',
 			content: '1.4.11.) ZAVOĐENJE VLASNIČKOG UDELA U REGISTAR - koordinator',
 		},
 		{

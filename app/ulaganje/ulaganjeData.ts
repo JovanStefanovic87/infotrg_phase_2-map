@@ -447,7 +447,7 @@ export const contentBlocksData: ContentBlocksData = {
 		},
 		{
 			type: 'h4',
-			content: 'DPrimeri očekivanih prihoda u odnosu na uloge:',
+			content: 'Primeri očekivanih prihoda u odnosu na uloge:',
 			align: 'left',
 			paddingTop: padding16,
 		},
@@ -659,7 +659,7 @@ export const contentBlocksData: ContentBlocksData = {
 		{
 			type: 'pNormal',
 			content: 'Bonus procenti',
-			paddingLeft: padding16,
+			paddingLeft: padding32,
 			link: '/ulaganje/investicioni-plan-i-program/bonus-procenti',
 		},
 		{
