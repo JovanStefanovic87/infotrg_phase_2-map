@@ -25,7 +25,9 @@ const LabelInputDefault: React.FC<Props> = ({
 }) => {
 	return (
 		<div className='flex flex-col'>
-			<Label htmlFor={label}>{label}</Label>
+			<Label htmlFor={label} color='black'>
+				{label}
+			</Label>
 			<InputDefault
 				id={id}
 				name={label}

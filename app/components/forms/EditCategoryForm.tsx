@@ -10,6 +10,7 @@ import LabelInputDefault from '../input/LabelInputDefault';
 import Label from '../text/Label';
 import H3 from '../text/H3';
 import DeleteTextButton from '../buttons/DeleteTextButton';
+import TextNormal from '../text/TextNormal';
 
 interface Props {
 	currentIcon: {
@@ -87,7 +88,7 @@ const EditCategoryForm: React.FC<Props> = ({
 				) : undefined}
 				{newIcon && (
 					<div className='mt-4'>
-						<p>Ikonica za upload:</p>
+						<TextNormal text='Nova ikonica za upload:' />
 						<Image
 							src={URL.createObjectURL(newIcon)}
 							alt='New Icon Preview'
@@ -121,7 +122,7 @@ const EditCategoryForm: React.FC<Props> = ({
 
 						{/* Description Input */}
 						<div>
-							<Label htmlFor={`description-${language.id}`}>{`${language.name
+							<Label color='black' htmlFor={`description-${language.id}`}>{`${language.name
 								.charAt(0)
 								.toUpperCase()}${language.name.slice(1).toLocaleLowerCase()} opis`}</Label>
 							<textarea
