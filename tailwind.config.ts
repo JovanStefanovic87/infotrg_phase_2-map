@@ -12,6 +12,7 @@ const config: Config = {
 			colors: {
 				main: '#1f1c17',
 				mainWhite: '#F1F1F1',
+				iconBgWhite: '#e2f4fd',
 				blue: '#00aaff',
 				blueDark: '#0284c7',
 				blueDarker: '#0284c7',

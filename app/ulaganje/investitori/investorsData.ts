@@ -1,7 +1,7 @@
 interface BasicInformation {
   id: string;
   name: string;
-  amount: string;
+  amount?: string;
   share: string;
   email?: string;
   phone?: string;
@@ -9,7 +9,7 @@ interface BasicInformation {
 
 interface Invested {
   date: string;
-  amount: string;
+  amount?: string;
   share: string;
 }
 
@@ -74,54 +74,71 @@ export const contentData: BasicInformation[] = [
     name: 'Nebojša Lukić',
     email: 'nebojsa.3011992@gmail.com',
     amount: '1.709,40',
-    share: '3,42%',
+    share: '3,42',
   },
   {
     id: 'IN-008',
     name: 'Aniko Kovačić',
     email: 'anikokovacic@gmail.com',
     amount: '10,00',
-    share: '0,02%',
+    share: '0,02',
   },
   {
     id: 'IN-009',
     name: 'Nemanja Komazec',
     email: 'komazecnemanja22@gmail.com',
     amount: '50,00',
-    share: '0,10%',
+    share: '0,10',
   },
   {
     id: 'IN-010',
     name: 'Marija Ostrogonac',
     email: 'ostrogonacmarija@gmail.com',
     amount: '100,00',
-    share: '0,20%',
+    share: '0,20',
   },
   {
     id: 'IN-011',
     name: 'Atila Sekula',
     email: 'sekula1985@yahoo.com',
     amount: '25,00',
-    share: '0,05%',
+    share: '0,05',
   },
   {
     id: 'IN-012',
     name: 'Vladimir Madžarević',
     phone: '0643151066',
     amount: '50,00',
-    share: '0,10%',
+    share: '0,10',
   },
   {
     id: 'IN-013',
     name: 'Radoslava Stantić',
     amount: '10,00',
-    share: '0,02%',
+    share: '0,02',
   },
   {
     id: 'IN-016',
     name: 'Dražen Bedić',
     amount: '50,00',
-    share: '0,10%',
+    share: '0,10',
+  },
+  {
+    id: 'IN-017',
+    name: 'Monika Kasaš',
+    amount: '20,00',
+    share: '0,04',
+  },
+  {
+    id: 'IN-018',
+    name: 'Milan Paskaš',
+    amount: '17,09',
+    share: '0,03',
+  },
+  {
+    id: 'IN-019',
+    name: 'Roland Janda',
+    share: '1,00',
   },
 ];
 
@@ -175,6 +192,9 @@ export const invested: InvestedData = {
   'IN-012': [{ date: '15.10.2024.', amount: '50,00', share: '0,10%' }],
   'IN-013': [{ date: '21.10.2024.', amount: '10,00', share: '0,02%' }],
   'IN-016': [{ date: '22.10.2024.', amount: '50,00', share: '0,10%' }],
+  'IN-017': [{ date: '28.10.2024.', amount: '20,00', share: '0,04%' }],
+  'IN-018': [{ date: '28.10.2024.', amount: '17,09', share: '0,03%' }],
+  'IN-019': [{ date: '29.10.2024.', share: '1,00%' }],
 };
 
 export const withdrawn: WithdrawnData = {
@@ -231,6 +251,18 @@ export const withdrawn: WithdrawnData = {
     share: '0,00',
   },
   'IN-016': {
+    amount: '0,00',
+    share: '0,00',
+  },
+  'IN-017': {
+    amount: '0,00',
+    share: '0,00',
+  },
+  'IN-018': {
+    amount: '0,00',
+    share: '0,00',
+  },
+  'IN-019': {
     amount: '0,00',
     share: '0,00',
   },

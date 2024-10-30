@@ -453,3 +453,15 @@ export interface AdFormState {
 	imageFile?: File;
 	validTo: string;
 }
+
+export interface fetchedCategories {
+	id: number;
+	name: string;
+	iconId: number;
+	labelId: number;
+	parents: fetchedCategories[];
+	children: fetchedCategories[];
+	synonyms: string[];
+	icon: Icon | null;
+	relatedIds: number[];
+}
