@@ -10,7 +10,7 @@ const config: Config = {
 	theme: {
 		extend: {
 			colors: {
-				main: '#1f1c17',
+				bgMain: '#000',
 				mainWhite: '#F1F1F1',
 				iconBgWhite: '#e2f4fd',
 				blue: '#00aaff',
@@ -19,7 +19,6 @@ const config: Config = {
 				blueLight: '#40c9ff',
 				blueLighter: '#76d1ff',
 				blueLightest: '#9ddeff',
-				blueMain: '#111827',
 				grayDarkest: '#1a1a1a',
 				grayMedium: '#374151',
 				grayMidLight: '#747474',
@@ -35,6 +34,8 @@ const config: Config = {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
 				waveGradient: 'linear-gradient(45deg, #00aaff 25%, #29c2ff 50%, #c6ecff 75%)',
+				subcategoriesGradient:
+					'linear-gradient(145deg, #1a1a1d 0%, #3d3d4e 50%, #7f6b83 95%, #836d88 95%)',
 			},
 			width: {
 				'120': '30rem',

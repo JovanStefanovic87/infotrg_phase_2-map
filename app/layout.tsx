@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 	return (
 		<html lang='en'>
 			<head />
-			<body className='flex flex-col min-h-screen bg-blueMain'>
+			<body className='flex flex-col min-h-screen bg-bgMain'>
 				<SessionProvider>
 					<QueryProvider>
 						<SidebarProvider>

@@ -109,10 +109,10 @@ const HeaderLinkButton: React.FC<Props> = ({
 				<div
 					ref={dropdownRef}
 					className={`absolute ${isTopLevel ? 'top-full left-0' : 'left-full top-0'}
-                      w-max max-w-sm bg-main shadow-lg z-10 transition-all duration-200 ease-in-out ${
+                      w-max max-w-sm bg-bgMain shadow-lg z-10 transition-all duration-200 ease-in-out ${
 												isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-50 pointer-events-none'
 											}`}>
-					<div className='flex flex-col items-stretch border-4 border-blueMain rounded-lg'>
+					<div className='flex flex-col items-stretch border-4 border-bgMain rounded-lg'>
 						{subRoutes?.map(subRoute => (
 							<HeaderLinkButton
 								key={subRoute.href}

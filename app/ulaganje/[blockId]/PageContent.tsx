@@ -77,11 +77,11 @@ const PageContent: React.FC = () => {
 							) : block.type === 'h3' ? (
 								<H3 text={block.content} align='center' />
 							) : block.type === 'h3Block' ? (
-								<div className='flex items-center justify-center bg-blueMain rounded-lg p-4'>
+								<div className='flex items-center justify-center bg-bgMain rounded-lg p-4'>
 									<H3Title text={block.content} color='white' />
 								</div>
 							) : block.type === 'plus' ? (
-								<div className='flex items-center justify-center text-blueMain text-4xl'>+</div>
+								<div className='flex items-center justify-center text-bgMain text-4xl'>+</div>
 							) : block.type === 'h4' ? (
 								<H4
 									text={block.content}
