@@ -60,12 +60,14 @@ const TimContent: NextPage = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='INFOTRG TIM' />
-			<ContentDescriptionText
-				text='Upravni tim Infotrga čine sedam saradnika.'
-				align='center'
-				color='black'
-			/>
+			<H1 title='INFOTRG TIM' pb='0' />
+			<div className='pb-6 border-b-2'>
+				<ContentDescriptionText
+					text='Upravni tim Infotrga čine sedam saradnika.'
+					align='center'
+					color='black'
+				/>
+			</div>
 			<div className='bg-white sm:bg-transparent rounded-md overflow-hidden mb-4'>
 				{renderGrid()}
 			</div>

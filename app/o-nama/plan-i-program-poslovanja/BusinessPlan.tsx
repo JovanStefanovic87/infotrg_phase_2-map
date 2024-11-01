@@ -37,15 +37,15 @@ const BussinesPlan: React.FC = () => {
 	return (
 		<PageContainer>
 			<H1 title='PLAN I PROGRAM POSLOVANJA' pb='0' />
-			<div className='pt-8'>
+			<div className='pb-4 sm:pb-10 pt-2 border-b-2'>
 				<ContentDescriptionText
 					text='Plan i program poslovanja prikazuje raspored svih zadatih ciljeva i predviđenih poslova za određeni vremenski period.'
 					align='center'
 					color='black'
 				/>
 			</div>
-			<div className='px-2 pt-0 sm:pt-2'>
-				<H2Title text='SAŽET PRIKAZ PLANA I PROGRAMA POSLOVANJA' padding={10} />
+			<div className='px-2 pt-6'>
+				<H2Title text='SAŽET PRIKAZ PLANA I PROGRAMA POSLOVANJA' padding={10} color='black' />
 			</div>
 			{renderGridSystem({
 				contentData,

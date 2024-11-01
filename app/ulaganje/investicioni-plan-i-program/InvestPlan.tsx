@@ -21,11 +21,13 @@ const InvestPlan: React.FC = () => {
 	return (
 		<PageContainer>
 			<H1 title='INVESTICIONI PLAN I PROGRAM' />
-			<ContentDescriptionText
-				text='Investicioni plan i program opisuje postupak učlanjivanja investitora, protokol ulaganja finansijskih sredstava, sticanje vlasničkog udela, kao i sva druga prava i obaveze investitora.'
-				align='center'
-				color='black'
-			/>
+			<div className='border-b-2 pb-4'>
+				<ContentDescriptionText
+					text='Investicioni plan i program opisuje postupak učlanjivanja investitora, protokol ulaganja finansijskih sredstava, sticanje vlasničkog udela, kao i sva druga prava i obaveze investitora.'
+					align='center'
+					color='black'
+				/>
+			</div>
 			<div className='bg-white sm:bg-transparent rounded-md overflow-hidden mb-4'>
 				{renderGridSystem({
 					contentData,

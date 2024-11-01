@@ -7,7 +7,6 @@ import renderGridSystem from '@/utils/helpers/renderGridSystem';
 import { BasicInformation } from '@/utils/helpers/types';
 import useScrollToTop from '@/utils/helpers/useScrollToTop';
 import useResponsiveColumns from '@/utils/helpers/useResponsiveColumns';
-import H2 from '@/app/components/text/H2';
 import ContentDescriptionText from '@/app/components/text/ContentDescriptionText';
 
 const ServiceActivities: React.FC = () => {
@@ -21,12 +20,14 @@ const ServiceActivities: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='USLUŽNE DELATNOSTI INFOTRGA' />
-			<ContentDescriptionText
-				text='U cilju što boljeg povezivanja kupaca i prodavaca i ostvarivanja efikasnije trgovine, poslovno delovanje Infotrga se odvija kroz osam uslužnih delatnosti.'
-				align='center'
-				color='black'
-			/>
+			<H1 title='USLUŽNE DELATNOSTI INFOTRGA' pb='0' />
+			<div className='pb-4 sm:pb-10 border-b-2'>
+				<ContentDescriptionText
+					text='U cilju što boljeg povezivanja kupaca i prodavaca i ostvarivanja efikasnije trgovine, poslovno delovanje Infotrga se odvija kroz osam uslužnih delatnosti.'
+					align='center'
+					color='black'
+				/>
+			</div>
 			<div className='bg-white sm:bg-transparent rounded-md overflow-hidden mb-4'>
 				{renderGridSystem({
 					contentData,

@@ -1,5 +1,11 @@
 'use client';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import {
+	useMutation,
+	useQueryClient,
+	useQuery,
+	UseQueryOptions,
+	UseQueryResult,
+} from '@tanstack/react-query';
 import { postData, getWithParams, deleteData, putData } from './common/base';
 
 interface RetailStoreData {
@@ -196,5 +202,47 @@ export const useDeleteRetailStore = () => {
 		onError: error => {
 			console.error('Error deleting retail store:', error);
 		},
+	});
+};
+
+interface FetchFilteredRetailStoresParams {
+	categoryId?: number;
+	countryId?: number;
+	cityId?: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
+	languageId?: number;
+}
+
+export const fetchFilteredRetailStores = async (params: FetchFilteredRetailStoresParams) => {
+	const queryParams = new URLSearchParams();
+
+	if (params.categoryId) queryParams.append('categoryId', params.categoryId.toString());
+	if (params.countryId) queryParams.append('countryId', params.countryId.toString());
+	if (params.cityId) queryParams.append('cityId', params.cityId.toString());
+	if (params.cityPartId) queryParams.append('cityPartId', params.cityPartId.toString());
+	if (params.marketplaceId !== null && params.marketplaceId !== undefined) {
+		queryParams.append('marketplaceId', params.marketplaceId.toString());
+	}
+	queryParams.append('languageId', (params.languageId || 1).toString());
+
+	const response = await getWithParams(`/api/filteredRetailStores?${queryParams.toString()}`);
+	return response;
+};
+
+interface UseFetchFilteredRetailStoresParams {
+	categoryId?: number;
+	countryId?: number;
+	cityId?: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
+	languageId?: number;
+}
+
+export const useFetchFilteredRetailStores = (params: UseFetchFilteredRetailStoresParams) => {
+	return useQuery<RetailStore[]>({
+		queryKey: ['filteredRetailStores', params],
+		queryFn: () => fetchFilteredRetailStores(params),
+		staleTime: 1000 * 60 * 5,
 	});
 };

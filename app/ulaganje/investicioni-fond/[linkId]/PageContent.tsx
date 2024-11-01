@@ -42,15 +42,14 @@ const PageContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='INVESTICIONI FOND' />
-			<div className='relative pt-6 pb-4 bg-gradient-white shadow-md rounded-lg px-4'>
-				<div className={`mb-4 bg-yellowLighter p-2 rounded-lg flex flex-col items-center`}>
+			<H1 title='INVESTICIONI FOND' pb='0' />
+			<div className='relative'>
+				<div className={`mb-4 flex flex-col items-center pt-4 pb-8`}>
 					<H2 text={block.listOrder} weight='normal' align='center' color='black' />
-					<Devider2 marginY={6} width='75%' />
 					<H2 text={block.label.toUpperCase()} weight='bold' align='center' color='black' />
-					<Devider2 marginY={6} width='75%' />
 					<H2 text={block.amount} align='center' weight='normal' color='black' />
 				</div>
+
 				{contentBlocks.length > 0 &&
 					contentBlocks.map((block: any, index: number) => (
 						<div key={index} className='flex flex-col' style={{ maxWidth: maxWidth }}>

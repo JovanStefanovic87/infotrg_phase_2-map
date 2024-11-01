@@ -13,6 +13,7 @@
 		"@faker-js/faker": "^9.0.1",
 		"@googlemaps/markerwithlabel": "^2.0.28",
 		"@headlessui/react": "^2.1.9",
+		"@heroicons/react": "^2.1.5",
 		"@prisma/client": "^5.21.1",
 		"@react-google-maps/api": "^2.19.3",
 		"@reduxjs/toolkit": "^2.2.7",

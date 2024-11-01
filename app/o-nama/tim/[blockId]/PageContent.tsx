@@ -121,8 +121,10 @@ const PageContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='INFOTRG TIM' pb='0' />
-			<div className='relative pt-2 bg-gradient-white shadow-md rounded-lg p-4 mt-8'>
+			<div className='border-b-2 pb-4'>
+				<H1 title='INFOTRG TIM' pb='0' />
+			</div>
+			<div className='relative pt-4 p-4'>
 				<div className='flex flex-col'>
 					{block.title && <H2 text={block.title.toUpperCase()} align='center' color={'black'} />}
 					<div className='flex flex-col lg:flex-row justify-center items-center gap-8'>
@@ -155,7 +157,7 @@ const PageContent: React.FC = () => {
 					</div>
 				</div>
 			</div>
-			<div className='relative pt-2 bg-gradient-white shadow-md rounded-lg p-4 mt-8'>
+			<div className='relative pt-2 p-4 mt-8'>
 				{contentBlocks.length > 0 && (
 					<>
 						<ContentTitle keyName={blockId} type='maintain' />
@@ -226,7 +228,7 @@ const PageContent: React.FC = () => {
 				)}
 			</div>
 			{contentBlocks2.length > 0 && (
-				<div className='relative pt-2 bg-gradient-white shadow-md rounded-lg p-4 mt-8'>
+				<div className='relative pt-2 p-4 mt-8'>
 					<ContentTitle keyName={blockId} type='service' />
 					{contentBlocks2.map((block: any, index: number) => (
 						<div key={index} className='flex flex-col'>

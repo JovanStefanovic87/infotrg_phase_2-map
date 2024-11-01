@@ -41,26 +41,36 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const fetchCategories = () =>
 		apiClient<Category[]>({
 			method: 'GET',
-			url: `/api/categories?prefix=${prefix}`,
+			url: `/api/categoriesByLanguage?prefix=${prefix}&languageId=${languageId}`,
 		});
 
 	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
 	const fetchIcons = () =>
 		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=articles' });
 	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
-		const labels = await apiClient<{ id: number }[]>({
-			method: 'GET',
-			url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
-		});
-
-		const translationsPromises = labels.map(({ id }) =>
-			apiClient<Translation>({
+		try {
+			const labels = await apiClient<{ id: number }[]>({
 				method: 'GET',
-				url: `/api/translation?languageId=${languageId}&labelId=${id}`,
-			})
-		);
+				url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
+			});
+			const labelIds = labels.map(({ id }) => id);
 
-		return (await Promise.all(translationsPromises)).map(res => res);
+			if (labelIds.length === 0) {
+				return [];
+			}
+
+			const labelIdsParam = labelIds.join(',');
+
+			const translations = await apiClient<Translation[]>({
+				method: 'GET',
+				url: `/api/translation?languageId=${languageId}&labelIds=${labelIdsParam}`,
+			});
+
+			return translations;
+		} catch (error) {
+			console.error('Error fetching translations:', error);
+			return [];
+		}
 	};
 
 	const refetchData = useCallback(async () => {
@@ -71,6 +81,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				fetchTranslations(languageId),
 				fetchIcons(),
 			]);
+
 			setCategories(categoriesData);
 			setTranslations(translationsData);
 			setIcons(iconsData);
@@ -198,32 +209,38 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setIsIconPickerOpen={setIsIconPickerOpen}
 			/>
 			<div className='mt-8'>
-				<CategoryList
-					categories={categories}
-					translations={translations}
-					icons={icons}
-					currentIcon={currentIcon}
-					setCurrentIcon={setCurrentIcon}
-					languages={languages}
-					languageId={languageId}
-					relatedIds={relatedIds}
-					setRelatedIds={setRelatedIds}
-					refetchCategories={refetchData}
-					onDeleteCategory={(id: number) => handleDeleteCategory(id)}
-					isIconPickerOpen={isIconPickerOpen}
-					setIsIconPickerOpen={setIsIconPickerOpen}
-					expandedCategories={expandedCategories}
-					setExpandedCategories={setExpandedCategories}
-					manuallyExpandedCategories={manuallyExpandedCategories}
-					setManuallyExpandedCategories={setManuallyExpandedCategories}
-					filteredCategories={filteredCategories}
-					setFilteredCategories={setFilteredCategories}
-					initialExpandedCategories={initialExpandedCategories}
-					setInitialExpandedCategories={setInitialExpandedCategories}
-					setError={setError}
-					setSuccessMessage={setSuccessMessage}
-					setLoading={setLoading}
-				/>
+				{categories.length > 0 || loading ? (
+					<CategoryList
+						categories={categories}
+						translations={translations}
+						icons={icons}
+						currentIcon={currentIcon}
+						setCurrentIcon={setCurrentIcon}
+						languages={languages}
+						languageId={languageId}
+						relatedIds={relatedIds}
+						setRelatedIds={setRelatedIds}
+						refetchCategories={refetchData}
+						onDeleteCategory={(id: number) => handleDeleteCategory(id)}
+						isIconPickerOpen={isIconPickerOpen}
+						setIsIconPickerOpen={setIsIconPickerOpen}
+						expandedCategories={expandedCategories}
+						setExpandedCategories={setExpandedCategories}
+						manuallyExpandedCategories={manuallyExpandedCategories}
+						setManuallyExpandedCategories={setManuallyExpandedCategories}
+						filteredCategories={filteredCategories}
+						setFilteredCategories={setFilteredCategories}
+						initialExpandedCategories={initialExpandedCategories}
+						setInitialExpandedCategories={setInitialExpandedCategories}
+						setError={setError}
+						setSuccessMessage={setSuccessMessage}
+						setLoading={setLoading}
+					/>
+				) : (
+					<p className='text-center text-lg font-semibold text-gray-500 mt-4 p-4 bg-gray-100 rounded-md shadow-md'>
+						Nema kategorija
+					</p>
+				)}
 			</div>
 			<ImagePickerForm
 				icons={icons}

@@ -4,42 +4,64 @@ import { prisma } from '@/app/lib/prisma';
 
 export async function GET(request: Request) {
 	const url = new URL(request.url);
-	const labelId = parseInt(url.searchParams.get('labelId') || '', 10);
-	const languageId = parseInt(url.searchParams.get('languageId') || '', 10);
+	const labelIdsParam = url.searchParams.get('labelIds');
+	const languageIdParam = url.searchParams.get('languageId');
 
-	if (isNaN(labelId) || isNaN(languageId)) {
+	// Logujemo parametre da proverimo šta je primljeno
+	console.log('Received labelIds:', labelIdsParam);
+	console.log('Received languageId:', languageIdParam);
+
+	// Parsiramo `languageId` i proveravamo da li je broj
+	const languageId = parseInt(languageIdParam || '', 10);
+	if (!labelIdsParam || isNaN(languageId)) {
 		return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
 	}
 
-	const translation = await prisma.translation.findFirst({
-		where: {
-			labelId,
-			languageId,
-		},
-		include: {
-			synonyms: true,
-		},
-	});
-
-	if (!translation) {
-		return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
+	// Parsiramo `labelIdsParam` u niz brojeva i filtriramo nevažeće vrednosti
+	const labelIds = labelIdsParam
+		.split(',')
+		.map(id => parseInt(id, 10))
+		.filter(id => !isNaN(id));
+	if (labelIds.length === 0) {
+		return NextResponse.json({ error: 'No valid labelIds provided' }, { status: 400 });
 	}
 
-	const response = {
-		id: translation.id,
-		labelId: translation.labelId,
-		languageId: translation.languageId,
-		translation: translation.translation,
-		createdAt: translation.createdAt,
-		synonyms: translation.synonyms.map(synonym => ({
-			id: synonym.id,
-			translationId: synonym.translationId,
-			synonym: synonym.synonym,
-			createdAt: synonym.createdAt,
-		})),
-	};
+	try {
+		const translations = await prisma.translation.findMany({
+			where: {
+				labelId: { in: labelIds },
+				languageId,
+			},
+			include: {
+				synonyms: true,
+			},
+		});
 
-	return NextResponse.json(response);
+		// Proveravamo da li je `translations` prazan i vraćamo prazan niz ako jeste
+		if (translations.length === 0) {
+			return NextResponse.json([]); // Vraćamo prazan niz kada nema rezultata
+		}
+
+		// Mapiramo `translations` u željeni format
+		const response = translations.map(translation => ({
+			id: translation.id,
+			labelId: translation.labelId,
+			languageId: translation.languageId,
+			translation: translation.translation,
+			createdAt: translation.createdAt,
+			synonyms: translation.synonyms.map(synonym => ({
+				id: synonym.id,
+				translationId: synonym.translationId,
+				synonym: synonym.synonym,
+				createdAt: synonym.createdAt,
+			})),
+		}));
+
+		return NextResponse.json(response);
+	} catch (error) {
+		console.error('Error in GET /api/translation:', error);
+		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+	}
 }
 
 export async function POST(request: Request) {

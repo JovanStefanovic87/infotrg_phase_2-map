@@ -26,9 +26,9 @@ const ContentBlock: React.FC<Props> = ({
 }) => {
 	return (
 		<ContentBlockContainer contentBlocks={contentBlocks} openContentModal={openContentModal}>
-			<div className='cursor-pointer w-full sm:p-2 h-auto rounded-md overflow-hidden'>
-				<div className='flex flex-col h-full bg-gradient-white p-4 rounded-md overflow-hidden bg-yellowLighter'>
-					<BlockTitle text={title} />
+			<div className='cursor-pointer w-full sm:p-2 h-auto  overflow-hidden'>
+				<div className='flex flex-col h-full p-4 overflow-hidden '>
+					<BlockTitle text={title} bgColor='white' />
 					<div className='text-gray-800 text-base leading-relaxed max-w-full flex-grow pl-4 '>
 						<TextBlockItem content={description} align='center' />
 					</div>
@@ -41,7 +41,7 @@ const ContentBlock: React.FC<Props> = ({
 						<H2 text={name} weight='bold' align='center' color='black' />
 					</div>
 					<div className='mt-4'>
-						<button className='text-blue-500 mt-2 border border-blueLight bg-blueLightest px-4 py-2 rounded-md self-start'>
+						<button className='text-black mt-2 border border-blueLight bg-blueLightest px-4 py-2 rounded-md self-start'>
 							Vidi još
 						</button>
 					</div>

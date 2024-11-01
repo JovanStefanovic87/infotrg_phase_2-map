@@ -25,7 +25,7 @@ const PageContent: React.FC = () => {
 		<PageContainer>
 			<H1 title='INVESTICIONI PLAN I PROGRAM' pb='0' />
 			<div className='pb-4 sm:pb-10'>
-				<H2Title text={block.title.toUpperCase()} padding={10} />
+				<H2Title text={block.title.toUpperCase()} padding={10} color='black' />
 			</div>
 			{renderGridSystem2({
 				contentBlocks,

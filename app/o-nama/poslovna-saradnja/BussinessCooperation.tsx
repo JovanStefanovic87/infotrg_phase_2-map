@@ -33,15 +33,15 @@ const BussinessCooperation: React.FC = () => {
 	return (
 		<PageContainer>
 			<H1 title='POSLOVNA SARADNJA' pb='0' />
-			<div className='pt-8'>
+			<div className='border-b-2 pt-4 pb-4'>
 				<ContentDescriptionText
 					text='Strategija razvoja Infotrga odvija se kroz deset osnovnih koraka, tokom kojih su uspostavljena pravila međusobne komunikacije i raspodele radnih zaduženja među saradnicima.'
 					align='center'
 					color='black'
 				/>
 			</div>
-			<div className='px-2 pt-0 sm:pt-2'>
-				<H2Title text='SAŽET PRIKAZ POSLOVNE SARADNJE' padding={10} />
+			<div className='px-2 pt-4'>
+				<H2Title text='SAŽET PRIKAZ POSLOVNE SARADNJE' padding={10} color='black' />
 			</div>
 			{renderGridSystem({
 				contentData,
@@ -60,7 +60,7 @@ const BussinessCooperation: React.FC = () => {
 			})}
 			<H2Title text='OPŠIRNIJI PRIKAZ POSLOVNE SARADNJE' padding={24} />
 			<div className='sm:p-2'>
-				<div className='flex justify-center bg-gradient-white p-8 items-start md:items-center rounded-md'>
+				<div className='flex justify-center p-8 items-start md:items-center'>
 					<UnorderedList items={hyperlinks} />
 				</div>
 			</div>

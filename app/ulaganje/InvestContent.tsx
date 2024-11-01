@@ -15,15 +15,15 @@ const InvestContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='ULAGANJE U INFOTRG' pb='2rem' />
+			<H1 title='ULAGANJE U INFOTRG' pb='1rem' />
 
-			<div className='flex flex-col items-center bg-mainWhite rounded-lg p-6 shadow-lg mb-4 sm:mb-0 mx-0 sm:mx-2'>
+			<div className='flex flex-col items-center rounded-lg py-6 border-b-2'>
 				<ContentDescriptionText
 					text='Infotrgov investicioni program omogućava svakom fizičkom licu sticanje vlasničkog udela u poslovnom projektu, uz minimalnu mesečnu zaradu od 10% na uložena sredstva i garanciju povrata uloženog novca u slučaju raskida suvlasničkog odnosa.'
 					align='center'
 					color='black'
 				/>
-				<div className='mt-6'>
+				<div className='mt-6 mb-4'>
 					<CallToActionButton label='OPŠIRNIJE' href='/ulaganje/kljucne-informacije' />
 				</div>
 			</div>

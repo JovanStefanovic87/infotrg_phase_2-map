@@ -35,7 +35,7 @@ const config: Config = {
 				'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
 				waveGradient: 'linear-gradient(45deg, #00aaff 25%, #29c2ff 50%, #c6ecff 75%)',
 				subcategoriesGradient:
-					'linear-gradient(145deg, #1a1a1d 0%, #3d3d4e 50%, #7f6b83 95%, #836d88 95%)',
+					'linear-gradient(145deg, #7c9c9e 0%, #b4dee0 50%, #d0f5f7 95%, #a3e7f3 95%)',
 			},
 			width: {
 				'120': '30rem',

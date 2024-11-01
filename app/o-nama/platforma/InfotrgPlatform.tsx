@@ -17,8 +17,8 @@ const InfotrgPlatform: React.FC<Props> = ({ contentData, title, id }) => {
 
 	return (
 		<div className='mt-4' id={id}>
-			<div className='p-2'>
-				<H2Title text={title} padding={10} />
+			<div className='p-2 '>
+				<H2Title text={title} padding={10} color='black' />
 			</div>
 			<div className='bg-white sm:bg-transparent rounded-md overflow-hidden'>
 				{renderGridSystem({

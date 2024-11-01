@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-	width: 100dvw;
-}
-
 :root {
 	--foreground-rgb: 0, 0, 0;
 	--background-start-rgb: 214, 219, 220;
@@ -22,13 +18,8 @@ html {
 
 body {
 	color: rgb(var(--foreground-rgb));
-	background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
-		rgb(var(--background-start-rgb));
-	width: 100dvw;
-}
-
-header {
-	width: 100dvw;
+	background: white;
+	overflow-x: hidden;
 }
 
 @layer utilities {

@@ -44,18 +44,20 @@ const PageContent: React.FC = () => {
 	return (
 		<PageContainer>
 			<H1 title={block.title} />
-			<ContentDescriptionText
-				text='Investicioni fond obuhvata sva potrebna finansijska sredstva koja se ulažu u razvoj projekta sve do njegovog samostalnog funkcionisanja.'
-				align='center'
-				color='black'
-			/>
-			<ContentDescriptionText text='VREDNOST INVESTICIONOG FONDA:' align='center' color='black'>
-				<H2 text={'50.000 EUR'} color={'black'} />
-			</ContentDescriptionText>
-			<div className='mb-3'>
-				<H2 text='RASPODELA INVESTICIONOG FONDA' align='center' />
+			<div className='border-b-2 pb-4'>
+				<ContentDescriptionText
+					text='Investicioni fond obuhvata sva potrebna finansijska sredstva koja se ulažu u razvoj projekta sve do njegovog samostalnog funkcionisanja.'
+					align='center'
+					color='black'
+				/>
 			</div>
-			<div className='relative bg-gradient-white shadow-md rounded-lg p-4'>
+			<div className='pt-4'>
+				<ContentDescriptionText text='VREDNOST INVESTICIONOG FONDA:' align='center' color='black'>
+					<H2 text={'50.000 EUR'} color={'black'} weight='bold' />
+				</ContentDescriptionText>
+			</div>
+			<H2 text='RASPODELA INVESTICIONOG FONDA' align='center' />
+			<div className='relative shadow-md rounded-lg px-4'>
 				{contentBlocks.length > 0 &&
 					contentBlocks.map((block: any, index: number) => (
 						<div key={index}>
@@ -96,7 +98,7 @@ const PageContent: React.FC = () => {
 								<H3 text={block.content} align='center' />
 							) : block.type === 'h3Block' ? (
 								<div className='flex items-center justify-center bg-bgMain rounded-lg p-4'>
-									<H3Title text={block.content} color='white' />
+									<H3Title text={block.content} color='black' />
 								</div>
 							) : block.type === 'plus' ? (
 								<div className='flex items-center justify-center text-bgMain text-4xl'>+</div>

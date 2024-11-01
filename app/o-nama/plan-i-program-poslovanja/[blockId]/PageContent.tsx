@@ -85,10 +85,12 @@ const PageContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='PLAN I PROGRAM POSLOVANJA' pb='0' />
-			<H2 text={block.label.toUpperCase()} weight='bold' align='center' />
-			<H2 text={block.amount} weight='bold' align='center' />
-			<div className='relative pt-2 bg-gradient-white shadow-md rounded-lg p-4 mt-8'>
+			<div className='pb-4 border-b-2'>
+				<H1 title='PLAN I PROGRAM POSLOVANJA' pb='0' />
+				<H2 text={block.label.toUpperCase()} weight='bold' align='center' color='black' />
+				<H2 text={block.amount} weight='bold' align='center' color='black' />
+			</div>
+			<div className='relative pt-4 p-4'>
 				{contentBlocks.length > 0 &&
 					contentBlocks.map((block: any, index: number) => (
 						<div key={index} className='flex flex-col'>

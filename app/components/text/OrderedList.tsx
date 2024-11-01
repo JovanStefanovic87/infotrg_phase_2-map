@@ -16,7 +16,7 @@ const OrderedList: React.FC<Props> = ({ items }) => {
 		parentIndex: string,
 		listStyle: 'number' | 'alphabet' = 'number'
 	) => (
-		<div className='pl-4'>
+		<div className='pl-4 text-black'>
 			{subitems.map((subItem, subIndex) => {
 				const prefix =
 					listStyle === 'number'
