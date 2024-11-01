@@ -36,3 +36,28 @@ div[data-lastpass] {
 .lastpass-injected {
 	display: none;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background-color: #a0aec0; /* Prilagodite boju scrollbar-a */
+	border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background-color: #718096; /* Boja prilikom hover efekta */
+}
+
+.select-none {
+	-webkit-user-select: none; /* Safari */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE10+ */
+	user-select: none; /* Standard syntax */
+}

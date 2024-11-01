@@ -11,8 +11,10 @@ const AboutContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='KLJUČNE INFORMACIJE O ULAGANJU U INFOTRG' pb={36} />
-			<div className='relative bg-gradient-white shadow-md rounded-lg p-4'>
+			<div className='border-b-2 pb-4'>
+				<H1 title='KLJUČNE INFORMACIJE O ULAGANJU U INFOTRG' pb={0} />
+			</div>
+			<div className='relative px-4'>
 				{contentData.length > 0 &&
 					contentData.map((block: any, index: number) => (
 						<div key={index}>

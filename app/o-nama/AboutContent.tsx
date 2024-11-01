@@ -19,8 +19,10 @@ const AboutContent: React.FC = () => {
 
 	return (
 		<PageContainer>
-			<H1 title='O NAMA' />
-			<div className='bg-white sm:bg-transparent rounded-md overflow-hidden mb-4'>
+			<div className='border-b-2'>
+				<H1 title='O NAMA' />
+			</div>
+			<div className='overflow-hidden mb-4'>
 				{renderGridSystem({
 					contentData,
 					columns: columns,

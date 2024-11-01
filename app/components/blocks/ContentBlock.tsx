@@ -49,7 +49,6 @@ const ContentBlock: React.FC<Props> = ({
 				isLink={isLink}>
 				<ContentBlockInnerContainer>
 					{title && <BlockTitleWrap text={title} />}
-
 					{coverImage && (
 						<CoverImage
 							src={coverImage}

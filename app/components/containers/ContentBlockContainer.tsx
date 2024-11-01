@@ -18,7 +18,7 @@ const ContentBlockContainer: React.FC<ContainerProps> = ({
 }) => {
 	return (
 		<div
-			className={`flex items-stretch justify-center border-b-2 rounded-md relative h-full transition-transform transform cursor-${
+			className={`flex items-stretch justify-center sm:border-b-2 relative h-full transition-transform transform cursor-${
 				useModal ? 'pointer' : 'default:'
 			} ${isLink && 'sm:hover:scale-95 lg:hover:scale-x-95 cursor-pointer'}`}
 			onClick={() => openContentModal(contentBlocks)}>
