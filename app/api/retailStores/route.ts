@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
 			articleCategoryIds,
 			activityCategoryIds,
 			objectTypeCategoryIds,
+			address,
 		} = body;
 
 		// Validate categories
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
 				objectTypeCategories: {
 					connect: objectTypeCategories.map(category => ({ id: category.id })),
 				},
+				address,
 			},
 		});
 
@@ -160,10 +162,10 @@ export async function GET(req: NextRequest) {
 					},
 				},
 				coordinates: {
-					// Uključi koordinate da dobiješ latitude i longitude
 					select: {
 						latitude: true,
 						longitude: true,
+						locationDescription: true,
 					},
 				},
 				articleCategories: {

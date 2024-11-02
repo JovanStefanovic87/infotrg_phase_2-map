@@ -6,7 +6,7 @@ import {
 	UseQueryOptions,
 	UseQueryResult,
 } from '@tanstack/react-query';
-import { postData, getWithParams, deleteData, putData } from './common/base';
+import { postData, getWithParams, getWithParamsWithNull, deleteData, putData } from './common/base';
 
 interface RetailStoreData {
 	name: string;
@@ -56,6 +56,7 @@ export const useCreateRetailStore = () => {
 };
 
 interface RetailStore {
+	address?: string;
 	id: number;
 	name: string;
 	phoneNumber: string;
@@ -104,21 +105,26 @@ interface RetailStore {
 	coordinates?: {
 		latitude: number;
 		longitude: number;
+		locationDescription?: string;
 	} | null;
 
 	// Categories
 	articleCategories: {
+		childCategories: any;
 		label: {
+			name: string;
 			translations: { translation: string }[];
 		};
 	}[];
 	activityCategories: {
 		label: {
+			name: string;
 			translations: { translation: string }[];
 		};
 	}[];
 	objectTypeCategories: {
 		label: {
+			name: string;
 			translations: { translation: string }[];
 		};
 	}[];
@@ -164,6 +170,7 @@ interface RetailStoreUpdateData {
 	articleCategoryIds: number[];
 	activityCategoryIds: number[];
 	objectTypeCategoryIds: number[];
+	address?: string;
 }
 
 const updateRetailStore = async (id: string, data: RetailStoreUpdateData) => {
@@ -216,7 +223,6 @@ interface FetchFilteredRetailStoresParams {
 
 export const fetchFilteredRetailStores = async (params: FetchFilteredRetailStoresParams) => {
 	const queryParams = new URLSearchParams();
-
 	if (params.categoryId) queryParams.append('categoryId', params.categoryId.toString());
 	if (params.countryId) queryParams.append('countryId', params.countryId.toString());
 	if (params.cityId) queryParams.append('cityId', params.cityId.toString());
@@ -226,7 +232,9 @@ export const fetchFilteredRetailStores = async (params: FetchFilteredRetailStore
 	}
 	queryParams.append('languageId', (params.languageId || 1).toString());
 
-	const response = await getWithParams(`/api/filteredRetailStores?${queryParams.toString()}`);
+	const response = await getWithParamsWithNull(
+		`/api/filteredRetailStores?${queryParams.toString()}`
+	);
 	return response;
 };
 

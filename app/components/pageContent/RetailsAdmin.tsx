@@ -108,6 +108,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			address: retail.address ?? 'N/A',
 			latitude: retail.coordinates?.latitude ?? null,
 			longitude: retail.coordinates?.longitude ?? null,
+			locationDescription: retail.coordinates?.locationDescription ?? '',
 			viewCount: retail.viewCount,
 			isSubscribedForAds: retail.isSubscribedForAds ?? false,
 			adType: retail.adType ?? null,

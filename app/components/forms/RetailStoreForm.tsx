@@ -43,7 +43,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				placeholder='Unesite naziv'
 				required
 			/>
-
 			{/* Phone Number */}
 			<LabelInputForm
 				id='phoneNumber'
@@ -53,7 +52,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				onChange={handleChange}
 				placeholder='Unesite broj telefona'
 			/>
-
 			{/* Email */}
 			<LabelInputForm
 				id='email'
@@ -64,7 +62,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				placeholder='Unesite email'
 				type='email'
 			/>
-
 			{/* Website */}
 			<LabelInputForm
 				id='website'
@@ -74,7 +71,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				onChange={handleChange}
 				placeholder='Unesite website'
 			/>
-
 			{/* Latitude */}
 			<LabelInputForm
 				id='latitude'
@@ -85,7 +81,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				placeholder='Unesite geografsku širinu'
 				type='number'
 			/>
-
 			{/* Longitude */}
 			<LabelInputForm
 				id='longitude'
@@ -96,7 +91,6 @@ const RetailStoreForm: React.FC<Props> = ({
 				placeholder='Unesite geografsku dužinu'
 				type='number'
 			/>
-
 			{/* Country Selection */}
 			<SelectInputForm
 				id='countryId'
@@ -112,7 +106,6 @@ const RetailStoreForm: React.FC<Props> = ({
 					</option>
 				))}
 			</SelectInputForm>
-
 			{/* City Selection - Prikazujemo samo ako postoji izabrana država */}
 			<SelectInputForm
 				id='cityId' // Ovaj ID treba biti "cityId"
@@ -128,7 +121,6 @@ const RetailStoreForm: React.FC<Props> = ({
 					</option>
 				))}
 			</SelectInputForm>
-
 			{/* City Part Selection - Prikazujemo samo ako postoji izabrani grad */}
 			<SelectInputForm
 				id='cityPartId' // Ovaj ID treba biti "cityPartId"
@@ -142,7 +134,6 @@ const RetailStoreForm: React.FC<Props> = ({
 					</option>
 				))}
 			</SelectInputForm>
-
 			{/* Marketplace Selection - Prikazujemo samo ako postoji izabrani deo grada */}
 			<SelectInputForm
 				id='marketplaceId' // Ovaj ID treba biti "marketplaceId"
@@ -156,12 +147,28 @@ const RetailStoreForm: React.FC<Props> = ({
 					</option>
 				))}
 			</SelectInputForm>
-
+			{/* Phone Number */}
+			<LabelInputForm
+				id='address'
+				name='address'
+				label='Adresa'
+				value={formData.address || ''}
+				onChange={handleChange}
+				placeholder='Unesite adresu'
+			/>
+			{/* locationDescription */}
+			<LabelInputForm
+				id='locationDescription'
+				name='locationDescription'
+				label='Dodatne informacije o lokaciji'
+				value={formData.locationDescription || ''}
+				onChange={handleChange}
+				placeholder='Unesite detalje'
+			/>
 			{/* Submit Button */}
 			<div className='flex justify-end pt-4'>
 				<SubmitButton>{loading ? 'U toku...' : 'Sačuvaj'}</SubmitButton>
 			</div>
-
 			{/* Error and Success Messages */}
 			{mutation?.isError && <p className='text-red-500'>{mutation.error?.message}</p>}
 			{mutation?.isSuccess && <p className='text-green-500'>{successMessage}</p>}

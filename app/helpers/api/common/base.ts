@@ -80,6 +80,40 @@ export async function getWithParams(url: string, params?: any) {
 	}
 }
 
+export async function getWithParamsWithNull(url: string, params?: any) {
+	try {
+		const queryString = new URLSearchParams(
+			Object.entries(params || {}).reduce((acc, [key, value]) => {
+				// Čuvamo `null` kao `"null"`, a `undefined` se ne dodaje u query string.
+				if (value === null) {
+					acc[key] = 'null';
+				} else if (value !== undefined) {
+					acc[key] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+				}
+				return acc;
+			}, {} as Record<string, string>)
+		).toString();
+
+		const urlConstructed = `${url}${queryString ? '?' + queryString : ''}`;
+
+		const response = await fetch(urlConstructed, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('Error:', error);
+		throw error;
+	}
+}
+
 export async function deleteData(url: string) {
 	try {
 		const response = await fetch(url, {

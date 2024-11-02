@@ -59,7 +59,6 @@ const RetailStoreList: React.FC<Props> = ({
 	const [objectTypeSearchQuery, setObjectTypeSearchQuery] = useState('');
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 	const [retailToDelete, setRetailToDelete] = useState<RetailAdmin | null>(null);
-
 	const filteredRetails = retails
 		.filter(
 			retail =>
@@ -81,6 +80,7 @@ const RetailStoreList: React.FC<Props> = ({
 			website: formData.website,
 			latitude: formData.latitude,
 			longitude: formData.longitude,
+			locationDescription: formData.locationDescription,
 			countryId: formData.countryId,
 			cityId: formData.cityId,
 			cityPartId: formData.cityPartId || null, // Osiguraj da je cityPartId opcionalan
@@ -108,6 +108,7 @@ const RetailStoreList: React.FC<Props> = ({
 	};
 
 	const handleEditClick = (retail: RetailAdmin) => {
+		console.log('retail.locationDescription', retail.locationDescription);
 		setFormData({
 			name: retail.name || '',
 			phoneNumber: retail.phoneNumber || '',
@@ -115,6 +116,7 @@ const RetailStoreList: React.FC<Props> = ({
 			website: retail.website || '',
 			latitude: retail.latitude || 0,
 			longitude: retail.longitude || 0,
+			locationDescription: retail.locationDescription || '',
 			countryId: retail.country?.id || 0,
 			cityId: retail.city?.id || 0,
 			cityPartId: retail.cityPart?.id || 0,
@@ -122,6 +124,7 @@ const RetailStoreList: React.FC<Props> = ({
 			articleCategoryIds: retail.articleCategories?.map(category => category.id) || [],
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
+			address: retail.address || '',
 		});
 
 		setSelectedArticleCategoryIds(retail.articleCategories?.map(category => category.id) || []);
@@ -138,6 +141,7 @@ const RetailStoreList: React.FC<Props> = ({
 			website: retail.website || '',
 			latitude: retail.latitude || 0,
 			longitude: retail.longitude || 0,
+			locationDescription: retail.locationDescription || '',
 			countryId: retail.country?.id || 0,
 			cityId: retail.city?.id || 0,
 			cityPartId: retail.cityPart?.id || 0,
@@ -145,6 +149,7 @@ const RetailStoreList: React.FC<Props> = ({
 			articleCategoryIds: retail.articleCategories?.map(category => category.id) || [],
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
+			address: retail.address || '',
 		});
 
 		setIsModalOpen(true);

@@ -26,9 +26,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			marketplaceId,
 			latitude, // Use latitude from the body directly
 			longitude, // Use longitude from the body directly
+			locationDescription,
 			articleCategoryIds,
 			activityCategoryIds,
 			objectTypeCategoryIds,
+			address,
 		} = body;
 
 		// Check if the retail store exists
@@ -57,6 +59,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			articleCategories: { set: articleCategoryIds.map((id: number) => ({ id })) },
 			activityCategories: { set: activityCategoryIds.map((id: number) => ({ id })) },
 			objectTypeCategories: { set: objectTypeCategoryIds.map((id: number) => ({ id })) },
+			address,
 		};
 
 		// Handle latitude and longitude updates
@@ -68,6 +71,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 					data: {
 						latitude,
 						longitude,
+						locationDescription,
 					},
 				});
 			} else {
@@ -76,6 +80,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 					data: {
 						latitude,
 						longitude,
+						locationDescription,
 					},
 				});
 				// Update the retail store with the new coordinates ID

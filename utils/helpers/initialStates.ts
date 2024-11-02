@@ -19,6 +19,7 @@ export const retailInit: RetailFormState = {
 	marketplaceId: 0,
 	latitude: 0,
 	longitude: 0,
+	locationDescription: '',
 	articleCategoryIds: [] as number[],
 	activityCategoryIds: [] as number[],
 	objectTypeCategoryIds: [] as number[],
@@ -42,6 +43,7 @@ export const adInit: AdFormState = {
 		marketplaceId: 0,
 		locationId: null,
 		coordinatesId: null,
+		address: '',
 	},
 	objectTypeCategories: [], // Default to empty arrays or an appropriate initial state
 	articleCategories: [],

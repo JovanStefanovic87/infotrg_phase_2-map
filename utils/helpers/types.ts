@@ -187,6 +187,7 @@ export interface Language {
 }
 
 export interface Category {
+	icon: any;
 	label?: any;
 	id: number;
 	iconId: number | null;
@@ -315,6 +316,7 @@ export interface Marketplace extends LocationBase {
 export type Location = Country | City | CityPart | Marketplace;
 
 export interface RetailAdmin {
+	locationDescription: string;
 	id: number;
 	name: string;
 	phoneNumber?: string;
@@ -339,6 +341,12 @@ export interface LocationDetail {
 	label?: any;
 	id: number;
 	translation: string;
+}
+
+export interface Coordinates {
+	latitude: number;
+	longitude: number;
+	locationDescription: string;
 }
 
 export interface RetailAdmin {
@@ -384,11 +392,13 @@ export interface RetailFormState {
 	retailStoreId?: number;
 	latitude: number;
 	longitude: number;
+	locationDescription: string;
 	articleCategoryIds: number[];
 	activityCategoryIds: number[];
 	objectTypeCategoryIds: number[];
 	imageFile?: File | null;
 	imageId?: number;
+	address?: string;
 }
 
 export enum AdType {
@@ -452,6 +462,7 @@ export interface AdFormState {
 	objectTypeCategoryIds: number[];
 	imageFile?: File;
 	validTo: string;
+	address?: string;
 }
 
 export interface fetchedCategories {
@@ -464,4 +475,35 @@ export interface fetchedCategories {
 	synonyms: string[];
 	icon: Icon | null;
 	relatedIds: number[];
+}
+
+export interface EnhancedCategory {
+	id: number;
+	name: string;
+	iconId?: number;
+	labelId: number;
+	createdAt: Date;
+	parentCategories: { parentId: number }[];
+	childCategories: { childId: number }[];
+	children: EnhancedCategory[];
+	icon?: {
+		id: number;
+		name: string;
+		url: string;
+		createdAt: Date;
+	};
+	label?: {
+		id: number;
+		name: string;
+		translations: {
+			translation: string;
+			id: number;
+			createdAt: Date;
+			languageId: number;
+			labelId: number;
+			description?: string | null;
+		}[];
+	};
+	relatedCategories?: { relatedId: number }[];
+	relatedTo?: { categoryId: number }[];
 }

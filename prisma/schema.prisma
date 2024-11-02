@@ -197,6 +197,7 @@ model RetailStore {
   isEmailConfirmed Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  address          String?  @default("Somborski put 79")
 
   countryId Int
   country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
