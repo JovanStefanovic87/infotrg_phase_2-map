@@ -349,6 +349,82 @@ export interface Coordinates {
 	locationDescription: string;
 }
 
+export interface GetRetailStoreApi {
+	address?: string;
+	id: number;
+	name: string;
+	phoneNumber: string;
+	email: string;
+	website?: string;
+	viewCount: number;
+	isPhoneConfirmed: boolean;
+	isEmailConfirmed: boolean;
+	createdAt: string;
+	updatedAt: string;
+
+	// Direct top-level IDs
+	countryId: number;
+	cityId: number;
+	cityPartId?: number | null;
+	marketplaceId?: number | null;
+	coordinatesId?: number | null;
+
+	// Related entities as objects
+	country: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	};
+	city: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	};
+	cityPart?: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	} | null;
+	marketplace?: {
+		id: number;
+		label: {
+			translations: { translation: string }[];
+		};
+	} | null;
+
+	// Coordinates object
+	coordinates?: {
+		latitude: number;
+		longitude: number;
+		locationDescription?: string;
+	} | null;
+
+	// Categories
+	articleCategories: {
+		childCategories: any;
+		label: {
+			name: string;
+			translations: { translation: string }[];
+		};
+	}[];
+	activityCategories: {
+		label: {
+			name: string;
+			translations: { translation: string }[];
+		};
+	}[];
+	objectTypeCategories: {
+		name: string;
+		label: {
+			name: string;
+			translations: { translation: string }[];
+		};
+	}[];
+}
+
 export interface RetailAdmin {
 	id: number;
 	name: string;

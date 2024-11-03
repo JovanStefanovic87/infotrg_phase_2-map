@@ -1,26 +1,53 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import BlockButton from '../components/buttons/BlockButton';
-import { markers, markers2 } from './markersData';
+import MapMarker from './MapMarker';
+import { GetRetailStoreApi } from '@/utils/helpers/types';
 
 interface MapMarkersProps {
 	setCenter: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>;
 	setZoom: React.Dispatch<React.SetStateAction<number>>;
 	center: { lat: number; lng: number };
 	zoom: number;
+	retailStores?: GetRetailStoreApi[];
 }
 
-const MapMarkers: React.FC<MapMarkersProps> = ({ setCenter, setZoom, center, zoom }) => {
+const MapMarkers: React.FC<MapMarkersProps> = ({
+	setCenter,
+	setZoom,
+	center,
+	zoom,
+	retailStores,
+}) => {
 	const map = useMap();
 	const [activeMarker, setActiveMarker] = useState<{
 		position: google.maps.LatLngLiteral;
 		title: string;
 	} | null>(null);
 
-	const [activeMarkers, setActiveMarkers] = useState(markers);
+	const activeMarkers = retailStores
+		? retailStores
+				.filter(store => store.coordinates)
+				.map((store, index) => ({
+					id: store.id,
+					index,
+					position: {
+						lat: store.coordinates!.latitude,
+						lng: store.coordinates!.longitude,
+					},
+					title: store.name,
+					description: store.coordinates!.locationDescription,
+				}))
+		: [];
+
+	const centerRef = useRef(center);
+	const zoomRef = useRef(zoom);
+	const hasInitialized = useRef(false);
 
 	useEffect(() => {
-		if (activeMarkers.length > 0 && map) {
+		if (activeMarkers.length > 0 && map && !hasInitialized.current) {
+			hasInitialized.current = true;
+
 			const bounds = activeMarkers.reduce(
 				(acc, marker) => ({
 					minLat: Math.min(acc.minLat, marker.position.lat),
@@ -48,15 +75,16 @@ const MapMarkers: React.FC<MapMarkersProps> = ({ setCenter, setZoom, center, zoo
 
 			const newZoom = Math.max(Math.min(latZoom, lngZoom) - 1, 1);
 
+			centerRef.current = newCenter;
+			zoomRef.current = newZoom;
+
 			setCenter(newCenter);
 			setZoom(newZoom);
-			const timeoutId = setTimeout(() => {
-				if (map) {
-					map.panTo(newCenter);
-					map.setZoom(newZoom);
-				}
-			}, 300);
-			return () => clearTimeout(timeoutId);
+
+			if (map) {
+				map.panTo(newCenter);
+				map.setZoom(newZoom);
+			}
 		}
 	}, [activeMarkers, map, setCenter, setZoom]);
 
@@ -103,19 +131,22 @@ const MapMarkers: React.FC<MapMarkersProps> = ({ setCenter, setZoom, center, zoo
 						position={marker.position}
 						title={marker.title}
 						onClick={() => handleMarkerClick(marker)}
-						className='w-full'
-					/>
+						className='w-full transition-transform transform hover:scale-110'>
+						<div className='relative'>
+							<MapMarker index={marker.index} />
+						</div>
+					</AdvancedMarker>
 					{activeMarker &&
 						activeMarker.position.lat === marker.position.lat &&
 						activeMarker.position.lng === marker.position.lng && (
 							<InfoWindow
 								position={marker.position}
 								onCloseClick={() => setActiveMarker(null)}
-								className='w-full text-black'>
-								<div className='flex flex-col gap-3 w-full'>
+								className='w-full bg-white rounded-lg shadow-lg p-4'>
+								<div className='flex flex-col gap-3 w-full text-black'>
 									<BlockButton
 										onClick={() => handleNavigateToMarker(marker.position)}
-										className='w-full'
+										className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-md'
 										text='Odvedi me na lokaciju'
 									/>
 									<div className='font-bold text-lg'>{marker.title}</div>
@@ -125,11 +156,6 @@ const MapMarkers: React.FC<MapMarkersProps> = ({ setCenter, setZoom, center, zoo
 						)}
 				</div>
 			))}
-			{/* <BlockButton
-        onClick={() => setActiveMarkers(markers2)}
-        className='absolute top-0'
-        text='Promeni'
-      /> */}
 		</>
 	);
 };

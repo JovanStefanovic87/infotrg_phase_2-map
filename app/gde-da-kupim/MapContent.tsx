@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MdApps, MdOutlineAlternateEmail, MdOutlinePhoneAndroid } from 'react-icons/md';
 import { FaStore } from 'react-icons/fa';
+import { BiSolidNavigation } from 'react-icons/bi';
 import { TfiWorld } from 'react-icons/tfi';
-import { GiPositionMarker } from 'react-icons/gi';
+import { SlLocationPin } from 'react-icons/sl';
+import { FaMagnifyingGlassLocation } from 'react-icons/fa6';
+import { FaSearchLocation } from 'react-icons/fa';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
@@ -11,8 +14,12 @@ import { useSearchParams } from 'next/navigation';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { Category, EnhancedCategory } from '@/utils/helpers/types';
 import DefaultButton from '../components/buttons/DefaultButton';
+import ResultTextIconBlock from './ResultTextIconBlock';
+import MapMarker from './MapMarker';
+import IconButton from '../components/buttons/IconButton';
 
 const MapContent: React.FC = () => {
+	const mapRef = useRef<HTMLDivElement | null>(null);
 	const params = useSearchParams();
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
 	const countryId = params.get('countryId') ? Number(params.get('countryId')) : undefined;
@@ -51,6 +58,11 @@ const MapContent: React.FC = () => {
 			children: category.childCategories ? formatCategories(category.childCategories) : [], // Rekurzivno formatiramo decu
 			relatedIds: category.relatedIds || [],
 		}));
+	};
+
+	const handleNavigationClick = (lat: number, lng: number) => {
+		const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+		window.open(url, '_blank');
 	};
 
 	useEffect(() => {
@@ -124,7 +136,7 @@ const MapContent: React.FC = () => {
 	console.log('retailStores', retailStores);
 	return (
 		<>
-			<div className={`${styles.mapWrapper} relative`}>
+			<div ref={mapRef} className={`${styles.mapWrapper} relative`}>
 				<Map
 					center={center}
 					zoom={zoom}
@@ -132,7 +144,7 @@ const MapContent: React.FC = () => {
 					mapId={'3b269361fc781f1f'}
 					mapTypeId='satellite'
 					gestureHandling='greedy'
-					zoomControl={false}
+					zoomControl={true}
 					mapTypeControlOptions={{
 						position: ControlPosition.TOP_CENTER,
 					}}
@@ -145,11 +157,17 @@ const MapContent: React.FC = () => {
 					streetViewControlOptions={{
 						position: ControlPosition.RIGHT_TOP,
 					}}>
-					<MapMarkers setCenter={setCenter} setZoom={setZoom} center={center} zoom={zoom} />
+					<MapMarkers
+						setCenter={setCenter}
+						setZoom={setZoom}
+						center={center}
+						zoom={zoom}
+						retailStores={retailStores}
+					/>
 				</Map>
 			</div>
 
-			<div className='results-container p-2 bg-white shadow-xl rounded-lg mt-8 mx-4 lg:mx-16'>
+			<div className='results-container p-2 bg-white mt-8  lg:mx-16'>
 				{isLoading && <p className='text-center text-gray-500'>Učitavanje...</p>}
 				{error && (
 					<p className='text-center text-red-500'>
@@ -157,117 +175,126 @@ const MapContent: React.FC = () => {
 					</p>
 				)}
 				{retailStores && retailStores.length > 0 ? (
-					<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+					<div className='grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
 						{retailStores.map((store, index) => (
-							<div key={store.id} className='p-2 rounded-lg bg-white relative'>
-								{/* Indeks u gornjem levom uglu */}
-								<div className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-6 h-6 flex items-center justify-center'>
-									{index + 1}
+							<div
+								key={store.id}
+								className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'
+								onClick={e => {
+									e.stopPropagation();
+									if (store.coordinates) {
+										setCenter({
+											lat: store.coordinates.latitude,
+											lng: store.coordinates.longitude,
+										});
+										setZoom(20);
+										mapRef.current?.scrollIntoView({ behavior: 'smooth' });
+									}
+								}}>
+								<div className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center'>
+									<MapMarker index={index} />
 								</div>
 
-								<div className='flex items-center mb-4'>
+								<div className='flex items-center mb-4 space-x-3'>
 									<div className='bg-yellow-100 p-3 rounded-full'>
-										<span className='text-black text-3xl'>
-											<FaStore />
-										</span>
+										<FaStore className='text-black text-3xl' />
 									</div>
 									<div>
-										<h3 className='ml-3 text-2xl font-bold text-gray-800'>{store.name}</h3>
+										<h3 className='text-xl font-bold text-gray-800'>{store.name}</h3>
 										{store.objectTypeCategories && store.objectTypeCategories.length > 0 && (
-											<div className='flex items-center ml-3'>
-												<span className='text-gray-800'>
-													{store.objectTypeCategories
-														.map(c => {
-															const translation = c.label?.translations?.[0]?.translation;
-															return translation ? translation : c.name || 'Nedefinisano';
-														})
-														.join(', ')}
-												</span>
+											<div className='text-gray-800 text-sm'>
+												{store.objectTypeCategories
+													.map(c => {
+														const translation = c.label?.translations?.[0]?.translation;
+														return translation || c.name || 'Nedefinisano';
+													})
+													.join(', ')}
 											</div>
 										)}
 									</div>
 								</div>
 
-								<div className='my-3 flex items-center border-b-2'>
-									{/* Ikonica kategorije */}
-									<span className='text-grayMedium text-lg mr-2'>
-										<MdApps />
-									</span>
-
-									<div>
-										<div
-											className='flex flex-wrap mb-2 overflow-x-auto max-w-full'
-											onClick={() => setModalOpen(true)}>
-											{categoryHierarchy
-												.filter(category => category.id === categoryId)
-												.flatMap(category => category.children.slice(0, 5))
-												.map((childCategory, index, arr) => (
-													<span
-														key={index}
-														className='text-black px-[1px] py-[1px] text-xs font-normal cursor-pointer hover:underline'
-														onClick={() => setModalOpen(true)}>
-														{`${childCategory.name}${index < arr.length - 1 ? ', ' : ''}`}
-													</span>
-												))}
-										</div>
+								<div className='flex items-center border-b-2 pb-2 mb-2'>
+									<MdApps className='text-gray-500 text-lg mr-2' />
+									<div className='flex flex-wrap overflow-x-auto max-w-full space-x-1 text-black'>
+										{categoryHierarchy
+											.filter(category => category.id === categoryId)
+											.flatMap(category => category.children.slice(0, 5))
+											.map((childCategory, idx, arr) => (
+												<span
+													key={idx}
+													className='text-xs font-normal cursor-pointer hover:underline'
+													onClick={() => setModalOpen(true)}>
+													{`${childCategory.name}${idx < arr.length - 1 ? ', ' : ''}`}
+												</span>
+											))}
 									</div>
 								</div>
 
 								{(store.phoneNumber || store.email || store.website) && (
-									<div className='my-3 flex items-start gap-2 border-b-2'>
+									<div className='flex items-start gap-2 border-b-2 pb-2'>
 										<div className='space-y-2'>
 											{store.phoneNumber && (
-												<div className='flex items-center gap-2'>
-													<span className='text-grayMedium text-lg'>
-														<MdOutlinePhoneAndroid />
-													</span>
-													<span className='text-blueDarker'>{store.phoneNumber}</span>
-												</div>
+												<ResultTextIconBlock text={store.phoneNumber} color='text-blueDarker'>
+													<MdOutlinePhoneAndroid />
+												</ResultTextIconBlock>
 											)}
 											{store.email && (
-												<div className='flex items-center gap-2'>
-													<span className='text-grayMedium text-lg'>
-														<MdOutlineAlternateEmail />
-													</span>
-													<span className='text-blueDarker'>{store.email}</span>
-												</div>
+												<ResultTextIconBlock text={store.email} color='text-blueDarker'>
+													<MdOutlineAlternateEmail />
+												</ResultTextIconBlock>
 											)}
 											{store.website && (
-												<div className='pb-2 flex items-center gap-2'>
-													<span className='text-grayMedium text-lg'>
-														<TfiWorld />
-													</span>
-													<span className='text-blueDarker'>{store.website}</span>
-												</div>
+												<ResultTextIconBlock text={store.website} color='text-blueDarker'>
+													<TfiWorld />
+												</ResultTextIconBlock>
 											)}
 										</div>
 									</div>
 								)}
 
 								<div className='flex items-center gap-2'>
-									<span className='text-grayMedium text-lg'>
-										<GiPositionMarker />
-									</span>
-									<span className='text-gray-800'>
-										{store.city?.label?.translations?.[0]?.translation || 'Grad nije definisan'},{' '}
-										{store.address}, {store.coordinates?.locationDescription}
-									</span>
-								</div>
-								<div className='flex items-center justify-center gap-2 mt-4'>
-									<DefaultButton>Putanja</DefaultButton>
+									<ResultTextIconBlock
+										text={`${
+											store.city?.label?.translations?.[0]?.translation || 'Grad nije definisan'
+										}, ${store.address}, ${store.coordinates?.locationDescription}`}
+										color='text-black'>
+										<SlLocationPin />
+									</ResultTextIconBlock>
 								</div>
 
+								<div className='flex items-center justify-center gap-2 mt-4 w-full'>
+									<div className='flex-1'>
+										<IconButton
+											icon={<FaSearchLocation className='animate-bounceSmall drop-shadow-md' />}
+											text='Lociraj'
+										/>
+									</div>
+									<div className='flex-1'>
+										<IconButton
+											icon={<BiSolidNavigation className='animate-bounceSmall drop-shadow-md' />}
+											text='Putanja'
+											onClick={() =>
+												store.coordinates &&
+												handleNavigationClick(
+													store.coordinates.latitude,
+													store.coordinates.longitude
+												)
+											}
+										/>
+									</div>
+								</div>
 								{isModalOpen && (
-									<div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 text-black'>
-										<div className='bg-white p-6 rounded-lg shadow-lg w-full h-full sm:max-w-lg sm:max-h-[75vh] sm:w-auto sm:h-auto flex flex-col overflow-hidden'>
+									<div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
+										<div className='bg-white p-6 rounded-lg shadow-lg w-full max-w-lg h-auto flex flex-col overflow-hidden'>
 											<h4 className='text-lg font-semibold mb-4 text-center'>
 												Sve kategorije i potkategorije
 											</h4>
-											<div className='border rounded-lg p-4 h-full overflow-y-auto flex-grow'>
+											<div className='border rounded-lg p-4 overflow-y-auto h-60'>
 												<CategoryHierarchy categories={categoryHierarchy} />
 											</div>
 											<button
-												className='mt-4 w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200'
+												className='mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 w-full'
 												onClick={() => setModalOpen(false)}>
 												Zatvori
 											</button>

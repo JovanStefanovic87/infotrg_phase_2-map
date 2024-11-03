@@ -6,6 +6,7 @@ import {
 	UseQueryOptions,
 	UseQueryResult,
 } from '@tanstack/react-query';
+import { GetRetailStoreApi } from '@/utils/helpers/types';
 import { postData, getWithParams, getWithParamsWithNull, deleteData, putData } from './common/base';
 
 interface RetailStoreData {
@@ -55,81 +56,6 @@ export const useCreateRetailStore = () => {
 	});
 };
 
-interface RetailStore {
-	address?: string;
-	id: number;
-	name: string;
-	phoneNumber: string;
-	email: string;
-	website?: string;
-	viewCount: number;
-	isPhoneConfirmed: boolean;
-	isEmailConfirmed: boolean;
-	createdAt: string;
-	updatedAt: string;
-
-	// Direct top-level IDs
-	countryId: number;
-	cityId: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
-	coordinatesId?: number | null;
-
-	// Related entities as objects
-	country: {
-		id: number;
-		label: {
-			translations: { translation: string }[];
-		};
-	};
-	city: {
-		id: number;
-		label: {
-			translations: { translation: string }[];
-		};
-	};
-	cityPart?: {
-		id: number;
-		label: {
-			translations: { translation: string }[];
-		};
-	} | null;
-	marketplace?: {
-		id: number;
-		label: {
-			translations: { translation: string }[];
-		};
-	} | null;
-
-	// Coordinates object
-	coordinates?: {
-		latitude: number;
-		longitude: number;
-		locationDescription?: string;
-	} | null;
-
-	// Categories
-	articleCategories: {
-		childCategories: any;
-		label: {
-			name: string;
-			translations: { translation: string }[];
-		};
-	}[];
-	activityCategories: {
-		label: {
-			name: string;
-			translations: { translation: string }[];
-		};
-	}[];
-	objectTypeCategories: {
-		label: {
-			name: string;
-			translations: { translation: string }[];
-		};
-	}[];
-}
-
 const fetchRetailStores = async (languageId: number) => {
 	const params = { languageId };
 	const data = await getWithParams('/api/retailStores', params);
@@ -137,7 +63,7 @@ const fetchRetailStores = async (languageId: number) => {
 };
 
 export const useFetchRetailStores = (languageId: number) => {
-	return useQuery<RetailStore[]>({
+	return useQuery<GetRetailStoreApi[]>({
 		queryKey: ['retailStores', languageId],
 		queryFn: () => fetchRetailStores(languageId),
 		staleTime: 1000 * 60 * 5,
@@ -248,7 +174,7 @@ interface UseFetchFilteredRetailStoresParams {
 }
 
 export const useFetchFilteredRetailStores = (params: UseFetchFilteredRetailStoresParams) => {
-	return useQuery<RetailStore[]>({
+	return useQuery<GetRetailStoreApi[]>({
 		queryKey: ['filteredRetailStores', params],
 		queryFn: () => fetchFilteredRetailStores(params),
 		staleTime: 1000 * 60 * 5,

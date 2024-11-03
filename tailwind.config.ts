@@ -91,6 +91,10 @@ const config: Config = {
 					'0%': { width: '0ch' },
 					'100%': { width: '7ch' },
 				},
+				bounceSmall: {
+					'0%, 100%': { transform: 'translateY(-2px)' },
+					'50%': { transform: 'translateY(0)' },
+				},
 			},
 			animation: {
 				colorChange: 'colorChange 10s infinite',
@@ -100,6 +104,7 @@ const config: Config = {
 				rotateHorizontal: 'rotateHorizontal 7s linear infinite',
 				delaySvg: 'ease-in-out 1s forwards',
 				typewriter: 'typewriter 8s steps(7) 1s forwards',
+				bounceSmall: 'bounceSmall 1s ease-in-out infinite',
 			},
 			fontFamily: {
 				corsiva: ['Monotype Corsiva', 'cursive'],
