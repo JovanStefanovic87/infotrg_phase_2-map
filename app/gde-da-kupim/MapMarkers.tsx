@@ -36,7 +36,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 						lng: store.coordinates!.longitude,
 					},
 					title: store.name,
-					description: store.coordinates!.locationDescription,
+					description: store.coordinates!.locationDescription || '',
+					store,
 				}))
 		: [];
 
@@ -113,7 +114,12 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 		};
 	}, [map, handleMapChange]);
 
-	const handleMarkerClick = (marker: { position: google.maps.LatLngLiteral; title: string }) => {
+	const handleMarkerClick = (marker: {
+		position: google.maps.LatLngLiteral;
+		title: string;
+		description: string;
+		store: GetRetailStoreApi;
+	}) => {
 		setActiveMarker(marker);
 		setCenter(marker.position);
 	};
@@ -144,13 +150,34 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 								onCloseClick={() => setActiveMarker(null)}
 								className='w-full bg-white rounded-lg shadow-lg p-4'>
 								<div className='flex flex-col gap-3 w-full text-black'>
+									<div className='font-bold text-lg'>{marker.title}</div>
+									<div className='text-sm text-gray-600'>
+										{marker.store.objectTypeCategories?.map(type => type.name).join(', ') ||
+											'Tip nije definisan'}
+									</div>
+									<div>
+										{marker.store.website && (
+											<a
+												href={marker.store.website}
+												target='_blank'
+												rel='noopener noreferrer'
+												className='text-blue-500 underline'>
+												{marker.store.website}
+											</a>
+										)}
+									</div>
+									<div>{marker.store.phoneNumber || 'Broj telefona nije dostupan'}</div>
+									<div className='mt-2'>
+										{marker.store.city?.label?.translations?.[0]?.translation ||
+											'Grad nije definisan'}
+										,{marker.store.address}
+									</div>
+									<div>{marker.description}</div>
 									<BlockButton
 										onClick={() => handleNavigateToMarker(marker.position)}
-										className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-md'
-										text='Odvedi me na lokaciju'
+										className='w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-md mt-3'
+										text='Putanja'
 									/>
-									<div className='font-bold text-lg'>{marker.title}</div>
-									<div>{marker.description}</div>
 								</div>
 							</InfoWindow>
 						)}

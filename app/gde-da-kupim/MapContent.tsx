@@ -1,30 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-	MdApps,
-	MdOutlineAlternateEmail,
-	MdOutlinePhoneAndroid,
-	MdMoreHoriz,
-} from 'react-icons/md';
-import { FaStore } from 'react-icons/fa';
-import { BiSolidNavigation } from 'react-icons/bi';
-import { TfiWorld } from 'react-icons/tfi';
-import { SlLocationPin } from 'react-icons/sl';
-import { FaMagnifyingGlassLocation } from 'react-icons/fa6';
-import { FaSearchLocation } from 'react-icons/fa';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
-import { Category, EnhancedCategory, GetRetailStoreApi } from '@/utils/helpers/types';
-import DefaultButton from '../components/buttons/DefaultButton';
-import ResultTextIconBlock from './ResultTextIconBlock';
-import MapMarker from './MapMarker';
-import IconButton from '../components/buttons/IconButton';
-import BlockButton from '../components/buttons/BlockButton';
-import CloseButton from '../components/buttons/CloseButton';
-import FormDefaultButton from '../components/buttons/FormDefaultButton';
+import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
 import RetailStoreCard from './RetailStoreCard';
 import AssortmentModal from './AssortmentModal';
 
