@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MdApps, MdOutlineAlternateEmail, MdOutlinePhoneAndroid } from 'react-icons/md';
+import {
+	MdApps,
+	MdOutlineAlternateEmail,
+	MdOutlinePhoneAndroid,
+	MdMoreHoriz,
+} from 'react-icons/md';
 import { FaStore } from 'react-icons/fa';
 import { BiSolidNavigation } from 'react-icons/bi';
 import { TfiWorld } from 'react-icons/tfi';
@@ -12,11 +17,14 @@ import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
-import { Category, EnhancedCategory } from '@/utils/helpers/types';
+import { Category, EnhancedCategory, GetRetailStoreApi } from '@/utils/helpers/types';
 import DefaultButton from '../components/buttons/DefaultButton';
 import ResultTextIconBlock from './ResultTextIconBlock';
 import MapMarker from './MapMarker';
 import IconButton from '../components/buttons/IconButton';
+import BlockButton from '../components/buttons/BlockButton';
+import CloseButton from '../components/buttons/CloseButton';
+import FormDefaultButton from '../components/buttons/FormDefaultButton';
 
 const MapContent: React.FC = () => {
 	const mapRef = useRef<HTMLDivElement | null>(null);
@@ -32,6 +40,7 @@ const MapContent: React.FC = () => {
 	const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
 	const [zoom, setZoom] = useState(10);
 	const [isModalOpen, setModalOpen] = useState(false);
+	const [activeStore, setActiveStore] = useState<GetRetailStoreApi | null>(null);
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
 
 	const {
@@ -60,6 +69,20 @@ const MapContent: React.FC = () => {
 		}));
 	};
 
+	const openModalForStore = (store: GetRetailStoreApi) => {
+		setActiveStore(store);
+		const formattedCategories = formatCategories(store.articleCategories || []);
+		const hierarchy = buildCategoryHierarchy(formattedCategories);
+		setCategoryHierarchy(hierarchy);
+		setModalOpen(true);
+	};
+
+	const closeModalForStore = () => {
+		setActiveStore(null);
+		setCategoryHierarchy([]); // Resetuje categoryHierarchy kada se zatvori modal
+		setModalOpen(false);
+	};
+
 	const handleNavigationClick = (lat: number, lng: number) => {
 		const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 		window.open(url, '_blank');
@@ -73,6 +96,33 @@ const MapContent: React.FC = () => {
 			setCategoryHierarchy(hierarchy);
 		}
 	}, [retailStores]);
+
+	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
+		// Pretpostavljamo da svaki objekat u `store.articleCategories` treba da bude konvertovan u `Category`
+		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
+			id: category.id,
+			name: category.label?.name || category.name || 'Nedefinisano ime',
+			iconId: category.iconId,
+			labelId: category.labelId,
+			parents: category.parents || [],
+			children: category.childCategories || [],
+			relatedIds: category.relatedIds || [],
+			icon: category.icon || null,
+		}));
+
+		const mainCategories = formattedCategories.filter((category: Category) =>
+			category.parents.some((parent: Category) => parent.id === categoryId)
+		);
+
+		const additionalCategories = formattedCategories.filter(
+			(category: Category) => !mainCategories.includes(category)
+		);
+
+		return [...mainCategories, ...additionalCategories.slice(0, 5 - mainCategories.length)].slice(
+			0,
+			5
+		);
+	};
 
 	// Build the hierarchy and ensure children are nested under their parents
 	const buildCategoryHierarchy = (categories: Category[]): Category[] => {
@@ -119,7 +169,7 @@ const MapContent: React.FC = () => {
 								alt={category.name}
 								className='w-4 h-4 sm:w-5 sm:h-5 rounded-full'
 							/>
-							<span className='text-xs sm:text-sm font-medium'>{category.name}</span>
+							<span className='text-sm sm:text-base font-medium'>{category.name}</span>
 						</div>
 						{category.children && category.children.length > 0 && (
 							<div className='ml-3 sm:ml-5 border-l border-gray-200 pl-2 sm:pl-3 mt-1'>
@@ -130,6 +180,23 @@ const MapContent: React.FC = () => {
 				))}
 			</ul>
 		);
+	};
+
+	const centerMapOnStore = (
+		storeCoordinates: { latitude: number; longitude: number } | null,
+		mapRef: React.RefObject<HTMLDivElement>,
+		setCenter: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>,
+		setZoom: React.Dispatch<React.SetStateAction<number>>,
+		zoomLevel: number = 20
+	) => {
+		if (storeCoordinates) {
+			setCenter({
+				lat: storeCoordinates.latitude,
+				lng: storeCoordinates.longitude,
+			});
+			setZoom(zoomLevel);
+			mapRef.current?.scrollIntoView({ behavior: 'smooth' });
+		}
 	};
 
 	console.log('categoryHierarchy', categoryHierarchy);
@@ -179,19 +246,14 @@ const MapContent: React.FC = () => {
 						{retailStores.map((store, index) => (
 							<div
 								key={store.id}
-								className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'
-								onClick={e => {
-									e.stopPropagation();
-									if (store.coordinates) {
-										setCenter({
-											lat: store.coordinates.latitude,
-											lng: store.coordinates.longitude,
-										});
-										setZoom(20);
-										mapRef.current?.scrollIntoView({ behavior: 'smooth' });
-									}
-								}}>
-								<div className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center'>
+								className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
+								<div
+									className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center'
+									onClick={e => {
+										e.stopPropagation();
+										store.coordinates &&
+											centerMapOnStore(store.coordinates, mapRef, setCenter, setZoom);
+									}}>
 									<MapMarker index={index} />
 								</div>
 
@@ -214,25 +276,29 @@ const MapContent: React.FC = () => {
 									</div>
 								</div>
 
-								<div className='flex items-center border-b-2 pb-2 mb-2'>
-									<MdApps className='text-gray-500 text-lg mr-2' />
-									<div className='flex flex-wrap overflow-x-auto max-w-full space-x-1 text-black'>
-										{categoryHierarchy
-											.filter(category => category.id === categoryId)
-											.flatMap(category => category.children.slice(0, 5))
-											.map((childCategory, idx, arr) => (
-												<span
-													key={idx}
-													className='text-xs font-normal cursor-pointer hover:underline'
-													onClick={() => setModalOpen(true)}>
+								<div className='flex items-center border-b-2 mb-2'>
+									<MdApps className='text-gray-500 text-2xl mr-2 flex-shrink-0' />
+									<div
+										className='flex flex-wrap items-center overflow-x-auto max-w-full space-x-1 text-black cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors duration-200'
+										onClick={e => {
+											e.stopPropagation();
+											openModalForStore(store);
+										}}>
+										{getDisplayedCategories(store, categoryId || 0).map(
+											(childCategory, idx, arr) => (
+												<span key={idx} className='text-xs font-normal'>
 													{`${childCategory.name}${idx < arr.length - 1 ? ', ' : ''}`}
 												</span>
-											))}
+											)
+										)}
+										<span className='flex items-center ml-4 py-1 text-sm font-semibold'>
+											{`Vidi više >`}
+										</span>
 									</div>
 								</div>
 
 								{(store.phoneNumber || store.email || store.website) && (
-									<div className='flex items-start gap-2 border-b-2 pb-2'>
+									<div className='flex items-start gap-2 border-b-2 pb-2 mb-2'>
 										<div className='space-y-2'>
 											{store.phoneNumber && (
 												<ResultTextIconBlock text={store.phoneNumber} color='text-blueDarker'>
@@ -268,6 +334,10 @@ const MapContent: React.FC = () => {
 										<IconButton
 											icon={<FaSearchLocation className='animate-bounceSmall drop-shadow-md' />}
 											text='Lociraj'
+											onClick={() => {
+												store.coordinates &&
+													centerMapOnStore(store.coordinates, mapRef, setCenter, setZoom);
+											}}
 										/>
 									</div>
 									<div className='flex-1'>
@@ -284,20 +354,26 @@ const MapContent: React.FC = () => {
 										/>
 									</div>
 								</div>
-								{isModalOpen && (
-									<div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-										<div className='bg-white p-6 rounded-lg shadow-lg w-full max-w-lg h-auto flex flex-col overflow-hidden'>
-											<h4 className='text-lg font-semibold mb-4 text-center'>
-												Sve kategorije i potkategorije
+								{isModalOpen && activeStore && (
+									<div
+										className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
+										onClick={() => closeModalForStore()}>
+										<div
+											className='bg-white p-4 rounded-lg shadow-lg w-full max-w-lg h-[80vh] flex flex-col overflow-hidden'
+											onClick={e => e.stopPropagation()}>
+											<h4 className='text-2xl font-extrabold text-center text-indigo-700 mb-2'>
+												Asortiman proizvoda
 											</h4>
-											<div className='border rounded-lg p-4 overflow-y-auto h-60'>
+											<p className='text-lg font-semibold text-center text-gray-800 mb-4'>
+												{activeStore.name}
+											</p>
+											<div className='border-t border-gray-300 mb-4'></div>
+											<div className='flex-1 border rounded-lg p-4 overflow-y-auto'>
 												<CategoryHierarchy categories={categoryHierarchy} />
 											</div>
-											<button
-												className='mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200 w-full'
-												onClick={() => setModalOpen(false)}>
-												Zatvori
-											</button>
+											<div className='flex justify-center items-center p-4'>
+												<FormDefaultButton onClick={() => closeModalForStore()} label='Zatvori' />
+											</div>
 										</div>
 									</div>
 								)}
