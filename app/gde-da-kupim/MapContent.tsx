@@ -25,6 +25,8 @@ import IconButton from '../components/buttons/IconButton';
 import BlockButton from '../components/buttons/BlockButton';
 import CloseButton from '../components/buttons/CloseButton';
 import FormDefaultButton from '../components/buttons/FormDefaultButton';
+import RetailStoreCard from './RetailStoreCard';
+import AssortmentModal from './AssortmentModal';
 
 const MapContent: React.FC = () => {
 	const mapRef = useRef<HTMLDivElement | null>(null);
@@ -156,32 +158,6 @@ const MapContent: React.FC = () => {
 		return Object.values(categoryMap).filter(category => category.parents.length === 0);
 	};
 
-	const CategoryHierarchy: React.FC<{ categories: Category[] }> = ({ categories }) => {
-		return (
-			<ul className='space-y-1 sm:space-y-2 sm:ml-4 border-gray-200 overflow-x-auto'>
-				{categories.map(category => (
-					<div
-						key={category.id}
-						className='text-gray-700 hover:text-indigo-600 transition-colors duration-200'>
-						<div className='flex items-center gap-2 sm:gap-3 py-1 sm:py-2'>
-							<img
-								src={category.icon?.url || '/icons/default-icon.png'}
-								alt={category.name}
-								className='w-4 h-4 sm:w-5 sm:h-5 rounded-full'
-							/>
-							<span className='text-sm sm:text-base font-medium'>{category.name}</span>
-						</div>
-						{category.children && category.children.length > 0 && (
-							<div className='ml-3 sm:ml-5 border-l border-gray-200 pl-2 sm:pl-3 mt-1'>
-								<CategoryHierarchy categories={category.children} />
-							</div>
-						)}
-					</div>
-				))}
-			</ul>
-		);
-	};
-
 	const centerMapOnStore = (
 		storeCoordinates: { latitude: number; longitude: number } | null,
 		mapRef: React.RefObject<HTMLDivElement>,
@@ -244,144 +220,30 @@ const MapContent: React.FC = () => {
 				{retailStores && retailStores.length > 0 ? (
 					<div className='grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
 						{retailStores.map((store, index) => (
-							<div
+							<RetailStoreCard
 								key={store.id}
-								className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
-								<div
-									className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center'
-									onClick={e => {
-										e.stopPropagation();
-										store.coordinates &&
-											centerMapOnStore(store.coordinates, mapRef, setCenter, setZoom);
-									}}>
-									<MapMarker index={index} />
-								</div>
-
-								<div className='flex items-center mb-4 space-x-3'>
-									<div className='bg-yellow-100 p-3 rounded-full'>
-										<FaStore className='text-black text-3xl' />
-									</div>
-									<div>
-										<h3 className='text-xl font-bold text-gray-800'>{store.name}</h3>
-										{store.objectTypeCategories && store.objectTypeCategories.length > 0 && (
-											<div className='text-gray-800 text-sm'>
-												{store.objectTypeCategories
-													.map(c => {
-														const translation = c.label?.translations?.[0]?.translation;
-														return translation || c.name || 'Nedefinisano';
-													})
-													.join(', ')}
-											</div>
-										)}
-									</div>
-								</div>
-
-								<div className='flex items-center border-b-2 mb-2'>
-									<MdApps className='text-gray-500 text-2xl mr-2 flex-shrink-0' />
-									<div
-										className='flex flex-wrap items-center overflow-x-auto max-w-full space-x-1 text-black cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors duration-200'
-										onClick={e => {
-											e.stopPropagation();
-											openModalForStore(store);
-										}}>
-										{getDisplayedCategories(store, categoryId || 0).map(
-											(childCategory, idx, arr) => (
-												<span key={idx} className='text-xs font-normal'>
-													{`${childCategory.name}${idx < arr.length - 1 ? ', ' : ''}`}
-												</span>
-											)
-										)}
-										<span className='flex items-center ml-4 py-1 text-sm font-semibold'>
-											{`Vidi više >`}
-										</span>
-									</div>
-								</div>
-
-								{(store.phoneNumber || store.email || store.website) && (
-									<div className='flex items-start gap-2 border-b-2 pb-2 mb-2'>
-										<div className='space-y-2'>
-											{store.phoneNumber && (
-												<ResultTextIconBlock text={store.phoneNumber} color='text-blueDarker'>
-													<MdOutlinePhoneAndroid />
-												</ResultTextIconBlock>
-											)}
-											{store.email && (
-												<ResultTextIconBlock text={store.email} color='text-blueDarker'>
-													<MdOutlineAlternateEmail />
-												</ResultTextIconBlock>
-											)}
-											{store.website && (
-												<ResultTextIconBlock text={store.website} color='text-blueDarker'>
-													<TfiWorld />
-												</ResultTextIconBlock>
-											)}
-										</div>
-									</div>
-								)}
-
-								<div className='flex items-center gap-2'>
-									<ResultTextIconBlock
-										text={`${
-											store.city?.label?.translations?.[0]?.translation || 'Grad nije definisan'
-										}, ${store.address}, ${store.coordinates?.locationDescription}`}
-										color='text-black'>
-										<SlLocationPin />
-									</ResultTextIconBlock>
-								</div>
-
-								<div className='flex items-center justify-center gap-2 mt-4 w-full'>
-									<div className='flex-1'>
-										<IconButton
-											icon={<FaSearchLocation className='animate-bounceSmall drop-shadow-md' />}
-											text='Lociraj'
-											onClick={() => {
-												store.coordinates &&
-													centerMapOnStore(store.coordinates, mapRef, setCenter, setZoom);
-											}}
-										/>
-									</div>
-									<div className='flex-1'>
-										<IconButton
-											icon={<BiSolidNavigation className='animate-bounceSmall drop-shadow-md' />}
-											text='Putanja'
-											onClick={() =>
-												store.coordinates &&
-												handleNavigationClick(
-													store.coordinates.latitude,
-													store.coordinates.longitude
-												)
-											}
-										/>
-									</div>
-								</div>
-								{isModalOpen && activeStore && (
-									<div
-										className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'
-										onClick={() => closeModalForStore()}>
-										<div
-											className='bg-white p-4 rounded-lg shadow-lg w-full max-w-lg h-[80vh] flex flex-col overflow-hidden'
-											onClick={e => e.stopPropagation()}>
-											<h4 className='text-2xl font-extrabold text-center text-indigo-700 mb-2'>
-												Asortiman proizvoda
-											</h4>
-											<p className='text-lg font-semibold text-center text-gray-800 mb-4'>
-												{activeStore.name}
-											</p>
-											<div className='border-t border-gray-300 mb-4'></div>
-											<div className='flex-1 border rounded-lg p-4 overflow-y-auto'>
-												<CategoryHierarchy categories={categoryHierarchy} />
-											</div>
-											<div className='flex justify-center items-center p-4'>
-												<FormDefaultButton onClick={() => closeModalForStore()} label='Zatvori' />
-											</div>
-										</div>
-									</div>
-								)}
-							</div>
+								store={store}
+								index={index}
+								categoryId={categoryId || 0}
+								centerMapOnStore={coordinates =>
+									centerMapOnStore(coordinates, mapRef, setCenter, setZoom)
+								}
+								handleNavigationClick={handleNavigationClick}
+								openModalForStore={openModalForStore} // Prosleđujemo funkciju za otvaranje modala
+								getDisplayedCategories={getDisplayedCategories}
+							/>
 						))}
 					</div>
 				) : (
 					<p className='text-center text-gray-500 mt-6'>Nema dostupnih prodavnica za prikaz.</p>
+				)}
+				{isModalOpen && activeStore && (
+					<AssortmentModal
+						isOpen={isModalOpen}
+						store={activeStore}
+						categories={categoryHierarchy}
+						onClose={closeModalForStore}
+					/>
 				)}
 			</div>
 		</>
