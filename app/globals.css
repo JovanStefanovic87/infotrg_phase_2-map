@@ -61,3 +61,7 @@ div[data-lastpass] {
 	-ms-user-select: none; /* IE10+ */
 	user-select: none; /* Standard syntax */
 }
+
+.maxWidthCustom {
+	max-width: calc(100dvw - 80px);
+}

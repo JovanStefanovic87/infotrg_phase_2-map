@@ -8,7 +8,6 @@ import { FaSearchLocation } from 'react-icons/fa';
 import MapMarker from './MapMarker';
 import ResultTextIconBlock from './ResultTextIconBlock';
 import IconButton from '../components/buttons/IconButton';
-import FormDefaultButton from '../components/buttons/FormDefaultButton';
 import { GetRetailStoreApi, Category } from '@/utils/helpers/types';
 
 interface RetailStoreCardProps {
@@ -17,7 +16,7 @@ interface RetailStoreCardProps {
 	categoryId: number;
 	centerMapOnStore: (coordinates: { latitude: number; longitude: number } | null) => void;
 	handleNavigationClick: (lat: number, lng: number) => void;
-	openModalForStore: (store: GetRetailStoreApi) => void; // Umesto prikaza modala direktno, pozivamo ovu funkciju
+	openModalForStore: (store: GetRetailStoreApi) => void;
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
 }
 
@@ -46,9 +45,9 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 					<FaStore className='text-black text-3xl' />
 				</div>
 				<div>
-					<h3 className='text-xl font-bold text-gray-800'>{store.name}</h3>
+					<h3 className='text-xl md:text-2xl lg:text-3xl font-bold text-gray-800'>{store.name}</h3>
 					{store.objectTypeCategories && store.objectTypeCategories.length > 0 && (
-						<div className='text-gray-800 text-sm'>
+						<div className='text-gray-800 text-sm md:text-base lg:text-lg'>
 							{store.objectTypeCategories
 								.map(c => c.label?.translations?.[0]?.translation || c.name || 'Nedefinisano')
 								.join(', ')}
@@ -57,20 +56,34 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 				</div>
 			</div>
 
-			<div className='flex items-center border-b-2 mb-2'>
-				<MdApps className='text-gray-500 text-2xl mr-2 flex-shrink-0' />
-				<div
-					className='flex flex-wrap items-center overflow-x-auto max-w-full space-x-1 text-black cursor-pointer hover:bg-gray-100 p-2 rounded-md transition-colors duration-200'
-					onClick={e => {
-						e.stopPropagation();
-						openModalForStore(store);
-					}}>
-					{getDisplayedCategories(store, categoryId).map((childCategory, idx, arr) => (
-						<span key={idx} className='text-xs font-normal'>
-							{`${childCategory.name}${idx < arr.length - 1 ? ', ' : ''}`}
-						</span>
-					))}
-					<span className='flex items-center ml-4 py-1 text-sm font-semibold'>Vidi više {'>'}</span>
+			<div className='flex items-center justify-between border-b-2 mb-4 hover:shadow-md transition-shadow duration-300'>
+				<div className='flex flex-col text-black w-full'>
+					<div
+						className='flex flex-wrap items-center max-w-full gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200'
+						onClick={e => {
+							e.stopPropagation();
+							openModalForStore(store);
+						}}>
+						{getDisplayedCategories(store, categoryId)
+							.slice(0, 4)
+							.map((childCategory, idx) => (
+								<span
+									key={idx}
+									className='text-sm md:text-sm lg:text-base font-normal bg-gray-200 px-2 py-1 rounded-full whitespace-nowrap'>
+									{childCategory.name}
+								</span>
+							))}
+						{getDisplayedCategories(store, categoryId).length > 4 && (
+							<span
+								className='text-sm md:text-sm lg:text-base font-normal text-sky-700 px-3 py-1 rounded-full border border-blueDarker cursor-pointer flex items-center gap-1'
+								onClick={e => {
+									e.stopPropagation();
+									openModalForStore(store);
+								}}>
+								+ 78 dodatnih
+							</span>
+						)}
+					</div>
 				</div>
 			</div>
 

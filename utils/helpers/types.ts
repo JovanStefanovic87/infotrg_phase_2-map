@@ -417,6 +417,7 @@ export interface GetRetailStoreApi {
 		};
 	}[];
 	objectTypeCategories: {
+		id?: number | string;
 		name: string;
 		label: {
 			name: string;
