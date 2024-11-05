@@ -16,8 +16,6 @@ interface MapMarkersProps {
 	zoom: number;
 	setDefaultCenter: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>;
 	setDefaultZoom: React.Dispatch<React.SetStateAction<number>>;
-	defaultCenter: { lat: number; lng: number };
-	defaultZoom: number;
 	retailStores?: GetRetailStoreApi[];
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
 	categoryId: number;
@@ -33,8 +31,6 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 	categoryId,
 	setDefaultCenter,
 	setDefaultZoom,
-	defaultCenter,
-	defaultZoom,
 }) => {
 	const map = useMap();
 	const [activeMarker, setActiveMarker] = useState<{
@@ -83,25 +79,25 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 
 			const latSpan = bounds.maxLat - bounds.minLat;
 			const lngSpan = bounds.maxLng - bounds.minLng;
-			const latZoom = Math.log2(360 / latSpan);
-			const lngZoom = Math.log2(360 / lngSpan);
 
+			// Prosečni centar svih markera
 			const newCenter = {
 				lat: (bounds.minLat + bounds.maxLat) / 2,
 				lng: (bounds.minLng + bounds.maxLng) / 2,
 			};
 
-			const newZoom = Math.max(Math.min(latZoom, lngZoom) - 1, 1);
+			// Prilagođavanje zoom-a u zavisnosti od udaljenosti između markera
+			const optimalZoom = Math.min(Math.log2(360 / Math.max(latSpan, lngSpan)) + 1, 18);
 
 			centerRef.current = newCenter;
-			zoomRef.current = newZoom;
+			zoomRef.current = optimalZoom;
 
 			setDefaultCenter(newCenter);
-			setDefaultZoom(newZoom);
+			setDefaultZoom(optimalZoom);
 
 			if (map) {
 				map.panTo(newCenter);
-				map.setZoom(newZoom);
+				map.setZoom(optimalZoom);
 			}
 		}
 	}, [activeMarkers, map, setCenter, setZoom]);

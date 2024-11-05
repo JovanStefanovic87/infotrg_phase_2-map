@@ -8,11 +8,10 @@ import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
 import RetailStoreCard from './RetailStoreCard';
 import AssortmentModal from './AssortmentModal';
+import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
 
 const MapContent: React.FC = () => {
-	// Povezujemo se sa mapom koristeći useMap sa ID-om
 	const mapInstance = useMap('my-map-id');
-
 	const params = useSearchParams();
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
 	const countryId = params.get('countryId') ? Number(params.get('countryId')) : undefined;
@@ -27,14 +26,12 @@ const MapContent: React.FC = () => {
 		lng: 0,
 	});
 	const [defaultZoom, setDefaultZoom] = useState(10);
-	const [center, setCenter] = useState<{ lat: number; lng: number }>({
-		lat: 0,
-		lng: 0,
-	});
+	const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
 	const [zoom, setZoom] = useState(0);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [activeStore, setActiveStore] = useState<GetRetailStoreApi | null>(null);
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
+	const [isMarkersLoading, setIsMarkersLoading] = useState(true);
 
 	const {
 		data: retailStores,
@@ -48,6 +45,13 @@ const MapContent: React.FC = () => {
 		marketplaceId: marketplaceId ?? null,
 		languageId: 1,
 	});
+
+	// Kada se retailStores učitaju, postavi `isMarkersLoading` na `false`
+	useEffect(() => {
+		if (retailStores) {
+			setIsMarkersLoading(false);
+		}
+	}, [retailStores]);
 
 	const formatCategories = (categories: any[]): Category[] => {
 		return categories.map(category => ({
@@ -143,20 +147,21 @@ const MapContent: React.FC = () => {
 		storeCoordinates: { latitude: number; longitude: number } | null,
 		zoomLevel: number = 22
 	) => {
-		console.log('Map reference:', mapInstance);
-		console.log('Store coordinates:', storeCoordinates);
-
 		if (storeCoordinates && mapInstance) {
-			// Pomeramo mapu na određene koordinate
-			mapInstance.panTo({
-				lat: storeCoordinates.latitude,
-				lng: storeCoordinates.longitude,
-			});
+			// Set the zoom level first, then center the map
 			mapInstance.setZoom(zoomLevel);
 
-			// Pomeramo mapu u vidno polje
-			const mapContainer = document.getElementById('map');
-			mapContainer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			// Use a small timeout to allow zoom to apply before centering
+			setTimeout(() => {
+				mapInstance.panTo({
+					lat: storeCoordinates.latitude,
+					lng: storeCoordinates.longitude,
+				});
+
+				// Smooth scroll to the map container
+				const mapContainer = document.getElementById('map');
+				mapContainer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}, 100); // Adjust timeout as needed for smoother behavior
 		} else {
 			console.warn('Map or coordinates are not available');
 		}
@@ -166,14 +171,14 @@ const MapContent: React.FC = () => {
 		<>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map
-					id='my-map-id' // Dodajemo ID za povezivanje sa useMap
+					id='my-map-id'
 					defaultCenter={defaultCenter}
 					defaultZoom={defaultZoom}
 					className={`${styles.mapContainer} rounded-xl shadow-lg overflow-hidden`}
 					mapId={'3b269361fc781f1f'}
 					mapTypeId='satellite'
 					gestureHandling='greedy'
-					zoomControl={true}
+					zoomControl={false}
 					mapTypeControlOptions={{
 						position: ControlPosition.TOP_CENTER,
 					}}
@@ -186,14 +191,17 @@ const MapContent: React.FC = () => {
 					streetViewControlOptions={{
 						position: ControlPosition.RIGHT_TOP,
 					}}>
+					{isMarkersLoading && (
+						<div className='absolute inset-0 flex justify-center items-center bg-white bg-opacity-80 z-10'>
+							<LoadingSpinner />
+						</div>
+					)}
 					<MapMarkers
 						setCenter={setCenter}
 						setZoom={setZoom}
 						center={center}
 						zoom={zoom}
-						defaultCenter={defaultCenter}
 						setDefaultCenter={value => setDefaultCenter(value)}
-						defaultZoom={defaultZoom}
 						setDefaultZoom={value => setDefaultZoom(value)}
 						retailStores={retailStores}
 						getDisplayedCategories={getDisplayedCategories}
@@ -202,7 +210,7 @@ const MapContent: React.FC = () => {
 				</Map>
 			</div>
 
-			<div className='results-container p-2 bg-white mt-8  lg:mx-16'>
+			<div className='results-container p-2 bg-white mt-8 lg:mx-16'>
 				{isLoading && <p className='text-center text-gray-500'>Učitavanje...</p>}
 				{error && (
 					<p className='text-center text-red-500'>
