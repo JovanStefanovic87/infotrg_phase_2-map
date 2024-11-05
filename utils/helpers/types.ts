@@ -195,6 +195,7 @@ export interface Category {
 	name: string;
 	parents: Category[];
 	relatedIds?: number[];
+	relatedCategories?: Category[];
 	children: Category[];
 }
 
@@ -405,6 +406,7 @@ export interface GetRetailStoreApi {
 
 	// Categories
 	articleCategories: {
+		id: number;
 		childCategories: any;
 		label: {
 			name: string;

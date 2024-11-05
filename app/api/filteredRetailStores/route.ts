@@ -78,12 +78,40 @@ const buildCategoryTree = async (
 			},
 			relatedCategories: {
 				include: {
-					related: true,
+					related: {
+						include: {
+							icon: true,
+							label: {
+								include: {
+									translations: {
+										where: { languageId },
+										include: {
+											synonyms: true,
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 			relatedTo: {
 				include: {
-					category: true,
+					category: {
+						include: {
+							icon: true,
+							label: {
+								include: {
+									translations: {
+										where: { languageId },
+										include: {
+											synonyms: true,
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -92,17 +120,51 @@ const buildCategoryTree = async (
 	// Collect promises for category transformations
 	const categoryPromises = categories.map(async category => {
 		if (processedIds.has(category.id)) {
-			return undefined; // Skip already processed category
+			return undefined;
 		}
-		processedIds.add(category.id); // Mark this category as processed
+		processedIds.add(category.id);
 
-		const relatedIds = [
-			...(category.relatedCategories?.map(rc => rc.related.id) || []),
-			...(category.relatedTo?.map(rt => rt.category.id) || []),
+		const relatedCategories = [
+			...(category.relatedCategories?.map(rc => ({
+				id: rc.related.id,
+				name:
+					rc.related.label.translations.length > 0
+						? rc.related.label.translations[0].translation
+						: '',
+				iconId: rc.related.iconId,
+				labelId: rc.related.labelId,
+				synonyms: rc.related.label.translations[0]?.synonyms || [],
+				icon: rc.related.icon
+					? {
+							id: rc.related.icon.id,
+							name: rc.related.icon.name,
+							url: rc.related.icon.url,
+							createdAt: rc.related.icon.createdAt,
+					  }
+					: null,
+			})) || []),
+			...(category.relatedTo?.map(rt => ({
+				id: rt.category.id,
+				name:
+					rt.category.label.translations.length > 0
+						? rt.category.label.translations[0].translation
+						: '',
+				iconId: rt.category.iconId,
+				labelId: rt.category.labelId,
+				synonyms: rt.category.label.translations[0]?.synonyms || [],
+				icon: rt.category.icon
+					? {
+							id: rt.category.icon.id,
+							name: rt.category.icon.name,
+							url: rt.category.icon.url,
+							createdAt: rt.category.icon.createdAt,
+					  }
+					: null,
+			})) || []),
 		];
 
 		const childIds = category.childCategories.map(childCategory => childCategory.child.id);
-		const children = await buildCategoryTree(childIds, prefix, languageId, processedIds); // Pass processedIds
+		const children = await buildCategoryTree(childIds, prefix, languageId, processedIds);
 
 		return {
 			id: category.id,
@@ -121,7 +183,7 @@ const buildCategoryTree = async (
 						createdAt: category.icon.createdAt,
 				  }
 				: null,
-			relatedIds,
+			relatedCategories, // Sada vraća sve informacije o povezanima kategorijama
 		};
 	});
 

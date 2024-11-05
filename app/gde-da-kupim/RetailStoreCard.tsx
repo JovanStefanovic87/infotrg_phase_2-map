@@ -29,13 +29,14 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 	openModalForStore,
 	getDisplayedCategories,
 }) => {
-	console.log('store', store);
 	const countAllCategories = (categories: Category[]): number => {
 		return categories.reduce(
 			(count, category) => count + 1 + countAllCategories(category.children || []),
 			0
 		);
 	};
+
+	console.log('store', store);
 
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>

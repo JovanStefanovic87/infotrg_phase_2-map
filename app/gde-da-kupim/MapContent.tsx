@@ -45,6 +45,7 @@ const MapContent: React.FC = () => {
 		marketplaceId: marketplaceId ?? null,
 		languageId: 1,
 	});
+	console.log('retailStores', retailStores);
 
 	// Kada se retailStores učitaju, postavi `isMarkersLoading` na `false`
 	useEffect(() => {
@@ -62,7 +63,7 @@ const MapContent: React.FC = () => {
 			labelId: category.labelId || 0,
 			parents: category.parents ? formatCategories(category.parents) : [],
 			children: category.childCategories ? formatCategories(category.childCategories) : [],
-			relatedIds: category.relatedIds || [],
+			relatedIds: category.relatedCategories?.map((relCategory: any) => relCategory.id) || [],
 		}));
 	};
 
@@ -170,6 +171,23 @@ const MapContent: React.FC = () => {
 		}
 	};
 
+	const getRelatedCategories = (categories: Category[], categoryId: number): Category[] => {
+		// Pronađi kategoriju sa prosleđenim `categoryId`
+		const mainCategory = categories.find(category => category.id === categoryId);
+
+		if (!mainCategory) return []; // Ako kategorija nije pronađena, vrati prazan niz
+
+		// Filtriraj i pronađi sve kategorije čiji `id` se nalazi u `relatedIds` glavne kategorije
+		const relatedCategories = categories.filter(
+			category => mainCategory.relatedIds?.includes(category.id) || false
+		);
+
+		// Vrati samo do 6 povezanih kategorija
+		return relatedCategories.slice(0, 6);
+	};
+
+	const relatedCategories = getRelatedCategories(categoryHierarchy, categoryId || 0);
+
 	return (
 		<>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
@@ -261,6 +279,29 @@ const MapContent: React.FC = () => {
 						categories={categoryHierarchy}
 						onClose={closeModalForStore}
 					/>
+				)}
+				{relatedCategories.length > 0 && (
+					<div className='related-categories mt-6 text-black'>
+						<h2 className='text-base font-semibold mb-3 text-center'>Povezane kategorije</h2>
+						<div className='flex flex-wrap justify-center gap-3'>
+							{relatedCategories.map(category => (
+								<div
+									key={category.id}
+									className='flex flex-col items-center p-2 w-20 rounded-md shadow-sm shadow-grayLighter hover:shadow-md transition-shadow duration-200'>
+									{category.icon && (
+										<img
+											src={category.icon.url}
+											alt={category.name}
+											className='w-10 h-10 mb-1 object-contain'
+										/>
+									)}
+									<p className='text-xs text-center font-light truncate max-w-full'>
+										{category.name}
+									</p>
+								</div>
+							))}
+						</div>
+					</div>
 				)}
 			</div>
 		</>
