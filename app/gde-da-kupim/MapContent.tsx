@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
-import { Map, ControlPosition } from '@vis.gl/react-google-maps';
+import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
@@ -10,7 +10,9 @@ import RetailStoreCard from './RetailStoreCard';
 import AssortmentModal from './AssortmentModal';
 
 const MapContent: React.FC = () => {
-	const mapRef = useRef<HTMLDivElement | null>(null);
+	// Povezujemo se sa mapom koristeći useMap sa ID-om
+	const mapInstance = useMap('my-map-id');
+
 	const params = useSearchParams();
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
 	const countryId = params.get('countryId') ? Number(params.get('countryId')) : undefined;
@@ -20,8 +22,16 @@ const MapContent: React.FC = () => {
 
 	useScrollToTop();
 
-	const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
-	const [zoom, setZoom] = useState(10);
+	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
+		lat: 0,
+		lng: 0,
+	});
+	const [defaultZoom, setDefaultZoom] = useState(10);
+	const [center, setCenter] = useState<{ lat: number; lng: number }>({
+		lat: 0,
+		lng: 0,
+	});
+	const [zoom, setZoom] = useState(0);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [activeStore, setActiveStore] = useState<GetRetailStoreApi | null>(null);
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
@@ -38,16 +48,16 @@ const MapContent: React.FC = () => {
 		marketplaceId: marketplaceId ?? null,
 		languageId: 1,
 	});
-	// Funkcija za formatiranje podataka iz API-ja u Category format
+
 	const formatCategories = (categories: any[]): Category[] => {
 		return categories.map(category => ({
 			id: category.id,
-			name: category.name || 'Nedefinisano ime', // Ako nema prevoda, koristi originalno ime
+			name: category.name || 'Nedefinisano ime',
 			icon: category.icon || null,
 			iconId: category.icon?.id || null,
 			labelId: category.labelId || 0,
-			parents: category.parents ? formatCategories(category.parents) : [], // Rekurzivno formatiramo roditelje
-			children: category.childCategories ? formatCategories(category.childCategories) : [], // Rekurzivno formatiramo decu
+			parents: category.parents ? formatCategories(category.parents) : [],
+			children: category.childCategories ? formatCategories(category.childCategories) : [],
 			relatedIds: category.relatedIds || [],
 		}));
 	};
@@ -62,7 +72,7 @@ const MapContent: React.FC = () => {
 
 	const closeModalForStore = () => {
 		setActiveStore(null);
-		setCategoryHierarchy([]); // Resetuje categoryHierarchy kada se zatvori modal
+		setCategoryHierarchy([]);
 		setModalOpen(false);
 	};
 
@@ -74,14 +84,13 @@ const MapContent: React.FC = () => {
 	useEffect(() => {
 		if (retailStores) {
 			const categories = retailStores.flatMap(store => store.articleCategories);
-			const formattedCategories = formatCategories(categories); // Formatiramo u odgovarajući tip
+			const formattedCategories = formatCategories(categories);
 			const hierarchy = buildCategoryHierarchy(formattedCategories);
 			setCategoryHierarchy(hierarchy);
 		}
 	}, [retailStores]);
 
 	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
-		// Pretpostavljamo da svaki objekat u `store.articleCategories` treba da bude konvertovan u `Category`
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
 			id: category.id,
 			name: category.label?.name || category.name || 'Nedefinisano ime',
@@ -107,12 +116,8 @@ const MapContent: React.FC = () => {
 		);
 	};
 
-	// Build the hierarchy and ensure children are nested under their parents
 	const buildCategoryHierarchy = (categories: Category[]): Category[] => {
-		// Kreiramo mapu kategorija gde je ID ključ, a vrednost je referenca na kategoriju
 		const categoryMap: { [key: number]: Category } = {};
-
-		// Inicijalizujemo sve kategorije u categoryMap i postavljamo prazne children i parents nizove
 		categories.forEach(category => {
 			categoryMap[category.id] = {
 				...category,
@@ -121,49 +126,49 @@ const MapContent: React.FC = () => {
 			};
 		});
 
-		// Prolazimo kroz sve kategorije i postavljamo relationships za roditelje i decu
 		categories.forEach(category => {
 			category.parents?.forEach(parent => {
 				const parentCategory = categoryMap[parent.id];
 				if (parentCategory) {
-					// Dodajemo trenutnu kategoriju u children niz roditelja
 					parentCategory.children.push(categoryMap[category.id]);
-
-					// Dodajemo referencu na roditelja u parents niz trenutne kategorije
 					categoryMap[category.id].parents.push(parentCategory);
 				}
 			});
 		});
 
-		// Vraćamo samo top-level kategorije (kategorije bez roditelja)
 		return Object.values(categoryMap).filter(category => category.parents.length === 0);
 	};
 
 	const centerMapOnStore = (
 		storeCoordinates: { latitude: number; longitude: number } | null,
-		mapRef: React.RefObject<HTMLDivElement>,
-		setCenter: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>,
-		setZoom: React.Dispatch<React.SetStateAction<number>>,
-		zoomLevel: number = 20
+		zoomLevel: number = 22
 	) => {
-		if (storeCoordinates) {
-			setCenter({
+		console.log('Map reference:', mapInstance);
+		console.log('Store coordinates:', storeCoordinates);
+
+		if (storeCoordinates && mapInstance) {
+			// Pomeramo mapu na određene koordinate
+			mapInstance.panTo({
 				lat: storeCoordinates.latitude,
 				lng: storeCoordinates.longitude,
 			});
-			setZoom(zoomLevel);
-			mapRef.current?.scrollIntoView({ behavior: 'smooth' });
+			mapInstance.setZoom(zoomLevel);
+
+			// Pomeramo mapu u vidno polje
+			const mapContainer = document.getElementById('map');
+			mapContainer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		} else {
+			console.warn('Map or coordinates are not available');
 		}
 	};
 
-	console.log('categoryHierarchy', categoryHierarchy);
-	console.log('retailStores', retailStores);
 	return (
 		<>
-			<div ref={mapRef} className={`${styles.mapWrapper} relative`}>
+			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map
-					center={center}
-					zoom={zoom}
+					id='my-map-id' // Dodajemo ID za povezivanje sa useMap
+					defaultCenter={defaultCenter}
+					defaultZoom={defaultZoom}
 					className={`${styles.mapContainer} rounded-xl shadow-lg overflow-hidden`}
 					mapId={'3b269361fc781f1f'}
 					mapTypeId='satellite'
@@ -186,6 +191,10 @@ const MapContent: React.FC = () => {
 						setZoom={setZoom}
 						center={center}
 						zoom={zoom}
+						defaultCenter={defaultCenter}
+						setDefaultCenter={value => setDefaultCenter(value)}
+						defaultZoom={defaultZoom}
+						setDefaultZoom={value => setDefaultZoom(value)}
 						retailStores={retailStores}
 						getDisplayedCategories={getDisplayedCategories}
 						categoryId={categoryId || 0}
@@ -208,11 +217,9 @@ const MapContent: React.FC = () => {
 								store={store}
 								index={index}
 								categoryId={categoryId || 0}
-								centerMapOnStore={coordinates =>
-									centerMapOnStore(coordinates, mapRef, setCenter, setZoom)
-								}
+								centerMapOnStore={coordinates => centerMapOnStore(coordinates)}
 								handleNavigationClick={handleNavigationClick}
-								openModalForStore={openModalForStore} // Prosleđujemo funkciju za otvaranje modala
+								openModalForStore={openModalForStore}
 								getDisplayedCategories={getDisplayedCategories}
 							/>
 						))}

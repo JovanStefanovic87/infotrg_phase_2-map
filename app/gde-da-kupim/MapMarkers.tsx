@@ -14,6 +14,10 @@ interface MapMarkersProps {
 	setZoom: React.Dispatch<React.SetStateAction<number>>;
 	center: { lat: number; lng: number };
 	zoom: number;
+	setDefaultCenter: React.Dispatch<React.SetStateAction<{ lat: number; lng: number }>>;
+	setDefaultZoom: React.Dispatch<React.SetStateAction<number>>;
+	defaultCenter: { lat: number; lng: number };
+	defaultZoom: number;
 	retailStores?: GetRetailStoreApi[];
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
 	categoryId: number;
@@ -27,6 +31,10 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 	retailStores,
 	getDisplayedCategories,
 	categoryId,
+	setDefaultCenter,
+	setDefaultZoom,
+	defaultCenter,
+	defaultZoom,
 }) => {
 	const map = useMap();
 	const [activeMarker, setActiveMarker] = useState<{
@@ -88,8 +96,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 			centerRef.current = newCenter;
 			zoomRef.current = newZoom;
 
-			setCenter(newCenter);
-			setZoom(newZoom);
+			setDefaultCenter(newCenter);
+			setDefaultZoom(newZoom);
 
 			if (map) {
 				map.panTo(newCenter);
@@ -105,6 +113,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 
 			if (center && zoom !== undefined) {
 				setCenter(center.toJSON());
+				``;
 				setZoom(zoom);
 			}
 		}
@@ -131,6 +140,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 	}) => {
 		setActiveMarker(marker);
 		setCenter(marker.position);
+		setZoom(18);
 	};
 
 	const handleNavigateToMarker = (position: google.maps.LatLngLiteral) => {
