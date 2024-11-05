@@ -106,18 +106,21 @@ const MapContent: React.FC = () => {
 			icon: category.icon || null,
 		}));
 
-		const mainCategories = formattedCategories.filter((category: Category) =>
+		// Pronađi direktne podkategorije categoryId
+		const directSubcategories = formattedCategories.filter((category: Category) =>
 			category.parents.some((parent: Category) => parent.id === categoryId)
 		);
 
-		const additionalCategories = formattedCategories.filter(
-			(category: Category) => !mainCategories.includes(category)
-		);
+		// Ako postoje direktne podkategorije, prikaži njih (ograničeno na 5)
+		if (directSubcategories.length > 0) {
+			return directSubcategories.slice(0, 5);
+		}
 
-		return [...mainCategories, ...additionalCategories.slice(0, 5 - mainCategories.length)].slice(
-			0,
-			5
+		// Ako nema direktnih podkategorija, pronađi i vrati samo kategoriju sa categoryId
+		const mainCategory = formattedCategories.find(
+			(category: Category) => category.id === categoryId
 		);
+		return mainCategory ? [mainCategory] : [];
 	};
 
 	const buildCategoryHierarchy = (categories: Category[]): Category[] => {

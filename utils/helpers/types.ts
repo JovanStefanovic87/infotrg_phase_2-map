@@ -368,6 +368,7 @@ export interface GetRetailStoreApi {
 	cityPartId?: number | null;
 	marketplaceId?: number | null;
 	coordinatesId?: number | null;
+	totalArticleCategoryCount: number;
 
 	// Related entities as objects
 	country: {

@@ -214,6 +214,13 @@ export async function GET(req: NextRequest) {
 			},
 		});
 
+		const countCategories = (categories: Category[]): number => {
+			return categories.reduce(
+				(count, category) => count + 1 + countCategories(category.children || []),
+				0
+			);
+		};
+
 		const enhancedRetailStores = await Promise.all(
 			retailStores.map(async store => {
 				const articleCategoryIds = store.articleCategories.map(category => category.id);
@@ -236,11 +243,25 @@ export async function GET(req: NextRequest) {
 					languageId
 				);
 
+				// Funkcija za brojanje kategorija i potkategorija unutar articleCategories
+				const countCategories = (categories: Category[]): number => {
+					let count = categories.length;
+					categories.forEach(category => {
+						if (category.children) {
+							count += countCategories(category.children); // Rekurzivno brojanje svih potkategorija
+						}
+					});
+					return count;
+				};
+
+				const totalArticleCategoryCount = countCategories(articleCategories); // Ukupan broj articleCategories i njihovih potkategorija
+
 				return {
 					...store,
 					articleCategories,
 					activityCategories,
 					objectTypeCategories,
+					totalArticleCategoryCount, // Dodajemo ukupan broj article kategorija
 				};
 			})
 		);

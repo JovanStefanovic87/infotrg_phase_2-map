@@ -29,6 +29,14 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 	openModalForStore,
 	getDisplayedCategories,
 }) => {
+	console.log('store', store);
+	const countAllCategories = (categories: Category[]): number => {
+		return categories.reduce(
+			(count, category) => count + 1 + countAllCategories(category.children || []),
+			0
+		);
+	};
+
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
 			<div
@@ -56,31 +64,33 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 				</div>
 			</div>
 
-			<div className='flex items-center justify-between border-b-2 mb-4 hover:shadow-md transition-shadow duration-300'>
+			<div className='flex items-center justify-between border-b-2 mb-4 hover:shadow-md transition-shadow duration-300 pb-3'>
 				<div className='flex flex-col text-black w-full'>
 					<div
-						className='flex flex-wrap items-center max-w-full gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200'
+						className='flex flex-wrap items-center cursor-pointer hover:bg-gray-100 gap-0 rounded-lg transition-colors duration-200'
 						onClick={e => {
 							e.stopPropagation();
 							openModalForStore(store);
 						}}>
 						{getDisplayedCategories(store, categoryId)
 							.slice(0, 4)
-							.map((childCategory, idx) => (
+							.map((childCategory, idx, arr) => (
 								<span
 									key={idx}
-									className='text-sm md:text-sm lg:text-base font-normal bg-gray-200 px-2 py-1 rounded-full whitespace-nowrap'>
+									className='text-sm md:text-sm lg:text-base font-normal py-1 rounded-full whitespace-nowrap'>
 									{childCategory.name}
+									{idx < arr.length - 1 && <span className='px-1'>•</span>}
 								</span>
 							))}
-						{getDisplayedCategories(store, categoryId).length > 4 && (
+
+						{store.totalArticleCategoryCount > 4 && (
 							<span
-								className='text-sm md:text-sm lg:text-base font-normal text-sky-700 px-3 py-1 rounded-full border border-blueDarker cursor-pointer flex items-center gap-1'
+								className='text-sm md:text-sm lg:text-base font-normal text-black px-3 py-1 sm:ml-3 rounded-full border border-blueDarker cursor-pointer flex items-center gap-1'
 								onClick={e => {
 									e.stopPropagation();
 									openModalForStore(store);
 								}}>
-								+ 78 dodatnih
+								+ {store.totalArticleCategoryCount - 4} dodatnih
 							</span>
 						)}
 					</div>
@@ -91,12 +101,12 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 				<div className='flex items-start gap-2 border-b-2 pb-2 mb-2'>
 					<div className='space-y-2'>
 						{store.phoneNumber && (
-							<ResultTextIconBlock text={store.phoneNumber} color='text-blueDarker'>
+							<ResultTextIconBlock text={store.phoneNumber} color='text-black'>
 								<MdOutlinePhoneAndroid />
 							</ResultTextIconBlock>
 						)}
 						{store.email && (
-							<ResultTextIconBlock text={store.email} color='text-blueDarker'>
+							<ResultTextIconBlock text={store.email} color='text-black'>
 								<MdOutlineAlternateEmail />
 							</ResultTextIconBlock>
 						)}
