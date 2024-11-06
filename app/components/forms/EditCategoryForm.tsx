@@ -71,6 +71,23 @@ const EditCategoryForm: React.FC<Props> = ({
 		);
 	};
 
+	const flattenCategories = (nestedCategories: Category[]) => {
+		return nestedCategories.reduce((acc, category) => {
+			// Dodajemo trenutnu kategoriju u akumulator
+			acc.push(category);
+			// Ako kategorija ima children, rekurzivno dodajemo sve podkategorije
+			if (category.children && category.children.length > 0) {
+				acc = acc.concat(flattenCategories(category.children));
+			}
+			return acc;
+		}, [] as Category[]);
+	};
+
+	const flatCategories = flattenCategories(categories);
+	const uniqueParentIds = Array.from(new Set(parentIds));
+
+	console.log('categories', categories);
+	console.log('parentId', parentIds);
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -155,12 +172,11 @@ const EditCategoryForm: React.FC<Props> = ({
 				<H3 text='Povezane kategorije' />
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{relatedIds.map(relatedId => {
-						const relatedCategory = categories.find(cat => cat.id === relatedId);
+						const relatedCategory = flatCategories.find(cat => cat.id === relatedId);
 						return (
 							<li key={`related-${relatedId}`} className='flex items-center justify-between'>
 								<span className='text-sm text-gray-800'>
-									{translations.find(t => t.labelId === relatedCategory?.labelId)?.translation ||
-										'Unknown'}
+									{relatedCategory ? relatedCategory.name : 'Nepoznato'}
 								</span>
 								<DeleteTextButton
 									relatedId={relatedId}
@@ -217,17 +233,15 @@ const EditCategoryForm: React.FC<Props> = ({
 			<div className='mb-6 w-full'>
 				<H3 text='Izabrane natkategorije:' />
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
-					{[...new Set(parentIds)].length > 0 ? (
-						[...new Set(parentIds)].map(parentId => {
-							const parentCategory = categories.find(cat => cat.id === parentId);
-							const translation = translations.find(
-								t => t.labelId === parentCategory?.labelId && t.languageId === 1
-							);
-
+					{uniqueParentIds.length > 0 ? (
+						uniqueParentIds.map(parentId => {
+							// Pronalazimo odgovarajuću kategoriju iz `flatCategories` za dati `parentId`
+							const parentCategory = flatCategories.find(cat => cat.id === parentId);
 							return (
 								<li key={`parent-${parentId}`} className='flex items-center justify-between'>
 									<span className='text-sm text-gray-800'>
-										{translation ? translation.translation : 'Translation not available'}
+										{/* Prikazujemo ime kategorije ili default tekst ako kategorija nije pronađena */}
+										{parentCategory ? parentCategory.name : 'Prevod nije dostupan'}
 									</span>
 									<DeleteTextButton
 										relatedId={parentId}
