@@ -1,13 +1,13 @@
 import React from 'react';
 import { FaStore } from 'react-icons/fa';
-import { MdApps, MdOutlinePhoneAndroid, MdOutlineAlternateEmail } from 'react-icons/md';
+import { MdOutlinePhoneAndroid, MdOutlineAlternateEmail } from 'react-icons/md';
 import { TfiWorld } from 'react-icons/tfi';
 import { SlLocationPin } from 'react-icons/sl';
 import { BiSolidNavigation } from 'react-icons/bi';
 import { FaSearchLocation } from 'react-icons/fa';
-import MapMarker from './MapMarker';
+import ListMapMarker from './ListMapMarker';
 import ResultTextIconBlock from './ResultTextIconBlock';
-import IconButton from '../components/buttons/IconButton';
+import IconButton from '../../components/buttons/IconButton';
 import { GetRetailStoreApi, Category } from '@/utils/helpers/types';
 
 interface RetailStoreCardProps {
@@ -41,12 +41,12 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
 			<div
-				className='absolute top-2 right-2 bg-red-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center'
+				className='absolute top-2 right-4 bg-black text-white text-sm font-semibold rounded-full w-7 h-7 flex items-center justify-center'
 				onClick={e => {
 					e.stopPropagation();
 					store.coordinates && centerMapOnStore(store.coordinates);
 				}}>
-				<MapMarker index={index} />
+				<ListMapMarker index={index} />
 			</div>
 
 			<div className='flex items-center mb-4 space-x-3'>

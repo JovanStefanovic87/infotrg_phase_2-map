@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
@@ -6,9 +7,10 @@ import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
-import RetailStoreCard from './RetailStoreCard';
-import AssortmentModal from './AssortmentModal';
-import LoadingSpinner from '@/app/components/ui/LoadingSpinner';
+import RetailStoreCard from './retailStoreList/RetailStoreCard';
+import AssortmentModal from './retailStoreList/AssortmentModal';
+import SpinnerForContainers from '../components/ui/SpinnerForContainers';
+import ErrorDisplay from '../components/modals/systemModals/ErrorDisplay';
 
 const MapContent: React.FC = () => {
 	const mapInstance = useMap('my-map-id');
@@ -107,17 +109,14 @@ const MapContent: React.FC = () => {
 			icon: category.icon || null,
 		}));
 
-		// Pronađi direktne podkategorije categoryId
 		const directSubcategories = formattedCategories.filter((category: Category) =>
 			category.parents.some((parent: Category) => parent.id === categoryId)
 		);
 
-		// Ako postoje direktne podkategorije, prikaži njih (ograničeno na 5)
 		if (directSubcategories.length > 0) {
 			return directSubcategories.slice(0, 5);
 		}
 
-		// Ako nema direktnih podkategorija, pronađi i vrati samo kategoriju sa categoryId
 		const mainCategory = formattedCategories.find(
 			(category: Category) => category.id === categoryId
 		);
@@ -152,10 +151,7 @@ const MapContent: React.FC = () => {
 		zoomLevel: number = 22
 	) => {
 		if (storeCoordinates && mapInstance) {
-			// Set the zoom level first, then center the map
 			mapInstance.setZoom(zoomLevel);
-
-			// Use a small timeout to allow zoom to apply before centering
 			setTimeout(() => {
 				mapInstance.panTo({
 					lat: storeCoordinates.latitude,
@@ -214,23 +210,7 @@ const MapContent: React.FC = () => {
 					}}>
 					{isMarkersLoading && (
 						<div className='absolute inset-0 flex justify-center items-center bg-white bg-opacity-80 z-10'>
-							<div className='relative flex justify-center items-center w-32 h-32'>
-								<div className='absolute inset-0 border-4 border-solid border-black border-t-blueLightest rounded-full animate-spin bg-yellowLighter'></div>
-								<span className='absolute inset-0 flex justify-center items-center right-7 top-3'>
-									<svg
-										xmlns='http://www.w3.org/2000/svg'
-										width='60'
-										height='150'
-										viewBox='0 0 1167 2622'
-										preserveAspectRatio='xMidYMid meet'
-										style={{ shapeRendering: 'geometricPrecision' }}>
-										<g transform='translate(0 2622) scale(0.1 -0.1)' fill='#000' stroke='none'>
-											<path d='M10635 22104c-293-53-553-233-740-514-147-220-209-439-208-730 0-145 3-177 26-264 81-304 290-521 575-598 118-31 314-29 446 6 199 52 376 163 546 343 225 238 342 494 370 813 35 399-127 717-445 876-158 78-370 104-570 68z' />
-											<path d='M9335 17163c-295-35-516-93-820-216-795-320-1507-832-2345-1684-248-252-430-446-430-459 1-8 481-384 502-392 4-2 124 108 265 244 461 442 774 723 970 871 181 135 410 236 570 249 196 16 276-74 259-290-17-208-21-224-249-971-1035-3387-1577-5637-1577-6545 0-141 18-286 46-380 97-326 327-533 655-591 92-16 269-16 373 0 330 52 802 259 1221 535 446 295 1089 832 1916 1600l206 191-21 24c-12 12-114 113-228 223l-208 200-127-119c-906-843-1514-1301-1756-1320-58-5-71-3-111 21-60 35-121 122-148 209-108 357 278 1994 1219 5162 384 1296 605 2093 699 2530 79 370 50 550-116 715-102 102-225 158-408 185-87 13-279 18-357 8z' />
-										</g>
-									</svg>
-								</span>
-							</div>
+							<SpinnerForContainers />
 						</div>
 					)}
 					<MapMarkers
@@ -243,6 +223,7 @@ const MapContent: React.FC = () => {
 						retailStores={retailStores}
 						getDisplayedCategories={getDisplayedCategories}
 						categoryId={categoryId || 0}
+						map={mapInstance}
 					/>
 				</Map>
 			</div>
@@ -250,9 +231,10 @@ const MapContent: React.FC = () => {
 			<div className='results-container p-2 bg-white mt-8 lg:mx-16'>
 				{isLoading && <p className='text-center text-gray-500'>Učitavanje...</p>}
 				{error && (
-					<p className='text-center text-red-500'>
-						Došlo je do greške prilikom učitavanja podataka.
-					</p>
+					<ErrorDisplay
+						error={'Došlo je do greške prilikom učitavanja podataka.'}
+						clearError={() => {}}
+					/>
 				)}
 				{retailStores && retailStores.length > 0 ? (
 					<div className='grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2 2xl:grid-cols-3'>
@@ -281,18 +263,20 @@ const MapContent: React.FC = () => {
 					/>
 				)}
 				{relatedCategories.length > 0 && (
-					<div className='related-categories mt-6 text-black'>
+					<div className='related-categories mt-6 text-black select-none'>
 						<h2 className='text-base font-semibold mb-3 text-center'>Povezane kategorije</h2>
 						<div className='flex flex-wrap justify-center gap-3'>
 							{relatedCategories.map(category => (
 								<div
 									key={category.id}
-									className='flex flex-col items-center p-2 w-20 rounded-md shadow-sm shadow-grayLighter hover:shadow-md transition-shadow duration-200'>
+									className='flex flex-col items-center p-2 w-20 rounded-md shadow-sm shadow-grayLighter hover:shadow-md transition-shadow duration-200 cursor-pointer'>
 									{category.icon && (
-										<img
+										<Image
 											src={category.icon.url}
 											alt={category.name}
-											className='w-10 h-10 mb-1 object-contain'
+											width={40}
+											height={40}
+											style={{ objectFit: 'contain' }}
 										/>
 									)}
 									<p className='text-xs text-center font-light truncate max-w-full'>

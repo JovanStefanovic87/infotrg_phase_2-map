@@ -1,6 +1,6 @@
 import React from 'react';
 import CategoryHierarchy from './CategoryHierarchy';
-import FormDefaultButton from '../components/buttons/FormDefaultButton';
+import FormDefaultButton from '../../components/buttons/FormDefaultButton';
 import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
 
 interface Props {

@@ -19,6 +19,7 @@ interface MapMarkersProps {
 	retailStores?: GetRetailStoreApi[];
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
 	categoryId: number;
+	map: google.maps.Map | null;
 }
 
 const MapMarkers: React.FC<MapMarkersProps> = ({
@@ -31,8 +32,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 	categoryId,
 	setDefaultCenter,
 	setDefaultZoom,
+	map,
 }) => {
-	const map = useMap();
 	const [activeMarker, setActiveMarker] = useState<{
 		position: google.maps.LatLngLiteral;
 		title: string;
@@ -80,13 +81,11 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 			const latSpan = bounds.maxLat - bounds.minLat;
 			const lngSpan = bounds.maxLng - bounds.minLng;
 
-			// Prosečni centar svih markera
 			const newCenter = {
 				lat: (bounds.minLat + bounds.maxLat) / 2,
 				lng: (bounds.minLng + bounds.maxLng) / 2,
 			};
 
-			// Prilagođavanje zoom-a u zavisnosti od udaljenosti između markera
 			const optimalZoom = Math.min(Math.log2(360 / Math.max(latSpan, lngSpan)) + 1, 18);
 
 			centerRef.current = newCenter;
@@ -153,9 +152,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 						title={marker.title}
 						onClick={() => handleMarkerClick(marker)}
 						className='w-full transition-transform transform hover:scale-110'>
-						<div className='relative'>
-							<MapMarker index={marker.index} />
-						</div>
+						<div className='relative'>{map && <MapMarker index={marker.index} map={map} />}</div>
 					</AdvancedMarker>
 					{activeMarker &&
 						activeMarker.position.lat === marker.position.lat &&
