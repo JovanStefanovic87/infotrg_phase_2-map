@@ -14,6 +14,7 @@ import SpinnerForContainers from '../components/ui/SpinnerForContainers';
 import ErrorDisplay from '../components/modals/systemModals/ErrorDisplay';
 import RelatedCategories from './retailStoreList/RelatedCategroies';
 import CurrentSelectionPanel from './retailStoreList/CurrentSelectionPanel';
+import EditSelectionModal from '../components/modals/EditSelectionModal';
 
 const MapContent: React.FC = () => {
 	const mapInstance = useMap('my-map-id');
@@ -34,6 +35,9 @@ const MapContent: React.FC = () => {
 	const [activeStore, setActiveStore] = useState<GetRetailStoreApi | null>(null);
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
 	const [isMarkersLoading, setIsMarkersLoading] = useState(true);
+	const [isEditModalOpen, setEditModalOpen] = useState(false);
+	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+	const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
 	useScrollToTop();
 
 	const {
@@ -70,6 +74,14 @@ const MapContent: React.FC = () => {
 
 	const locationParts = mainMarketplace?.name;
 	const locationText = locationParts;
+
+	const openEditModal = () => setEditModalOpen(true);
+	const closeEditModal = () => setEditModalOpen(false);
+
+	const handleSaveSelection = (category: string, location: string) => {
+		setSelectedCategory(category);
+		setSelectedLocation(location);
+	};
 
 	useEffect(() => {
 		if (retailStores) {
@@ -193,9 +205,24 @@ const MapContent: React.FC = () => {
 	return (
 		<div className='flex flex-col gap-6'>
 			{mainCategoryData?.icon && (
-				<CurrentSelectionPanel mainCategoryData={mainCategoryData} locationText={locationText} />
+				<CurrentSelectionPanel
+					mainCategoryData={mainCategoryData}
+					locationText={locationText}
+					openEditModal={openEditModal}
+				/>
 			)}
-
+			<EditSelectionModal
+				isOpen={isEditModalOpen}
+				onClose={closeEditModal}
+				onSave={handleSaveSelection}
+				location={mainMarketplace}
+				initialCategory={{ id: mainCategoryData?.id || 0, name: mainCategoryData?.name || '' }}
+				initialLocation={{
+					id: mainMarketplace.id || 0,
+					name: mainMarketplace.name || '',
+					type: mainMarketplace.type,
+				}}
+			/>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map
 					id='my-map-id'

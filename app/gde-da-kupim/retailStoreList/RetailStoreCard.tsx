@@ -36,8 +36,6 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 		);
 	};
 
-	console.log('store', store);
-
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
 			<div

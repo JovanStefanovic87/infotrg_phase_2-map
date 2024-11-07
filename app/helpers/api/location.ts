@@ -68,3 +68,15 @@ export const useFetchLocationByIdAndLanguage = (id: number, type: string, langua
 		enabled: Boolean(id && type && languageId),
 	});
 };
+
+export const useFetchAllLocationsWithTranslations = (params: {
+	prefix?: string;
+	languageId?: number;
+}) => {
+	return useQuery({
+		queryKey: ['allLocations', params],
+		queryFn: () => getWithParams('/api/locationsByLanguage', params),
+		staleTime: 1000 * 60 * 5,
+		refetchOnWindowFocus: false,
+	});
+};
