@@ -12,6 +12,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 					label: {
 						include: {
 							translations: {
+								where: { languageId: 1 },
 								include: {
 									synonyms: true,
 								},
@@ -26,12 +27,12 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 	return Promise.all(
 		parentCategories.map(async ({ parent }) => ({
 			id: parent.id,
-			name: parent.label.translations.length > 0 ? parent.label.translations[0].translation : '',
+			name: parent.label.translations[0]?.translation || '',
 			iconId: parent.iconId,
 			labelId: parent.labelId,
 			parents: await fetchParents(parent.id),
 			children: [],
-			synonyms: parent.label.translations[0]?.synonyms || [],
+			synonyms: parent.label.translations[0]?.synonyms.map(syn => syn.synonym) || [],
 			icon: parent.icon
 				? {
 						id: parent.icon.id,
@@ -48,7 +49,7 @@ const buildCategoryTree = async (
 	categoryIds: number[],
 	prefix: string,
 	languageId: number,
-	processedIds: Set<number> = new Set() // Track processed IDs to avoid infinite loop
+	processedIds: Set<number> = new Set()
 ): Promise<Category[]> => {
 	const categories = await prisma.category.findMany({
 		where: {
@@ -71,96 +72,33 @@ const buildCategoryTree = async (
 					translations: {
 						where: { languageId },
 						include: {
-							synonyms: true,
+							synonyms: true, // Uključujemo sinonime
 						},
 					},
 				},
 			},
 			relatedCategories: {
 				include: {
-					related: {
-						include: {
-							icon: true,
-							label: {
-								include: {
-									translations: {
-										where: { languageId },
-										include: {
-											synonyms: true,
-										},
-									},
-								},
-							},
-						},
-					},
+					related: true,
 				},
 			},
 			relatedTo: {
 				include: {
-					category: {
-						include: {
-							icon: true,
-							label: {
-								include: {
-									translations: {
-										where: { languageId },
-										include: {
-											synonyms: true,
-										},
-									},
-								},
-							},
-						},
-					},
+					category: true,
 				},
 			},
 		},
 	});
 
-	// Collect promises for category transformations
 	const categoryPromises = categories.map(async category => {
 		if (processedIds.has(category.id)) {
 			return undefined;
 		}
 		processedIds.add(category.id);
 
-		const relatedCategories = [
-			...(category.relatedCategories?.map(rc => ({
-				id: rc.related.id,
-				name:
-					rc.related.label.translations.length > 0
-						? rc.related.label.translations[0].translation
-						: '',
-				iconId: rc.related.iconId,
-				labelId: rc.related.labelId,
-				synonyms: rc.related.label.translations[0]?.synonyms || [],
-				icon: rc.related.icon
-					? {
-							id: rc.related.icon.id,
-							name: rc.related.icon.name,
-							url: rc.related.icon.url,
-							createdAt: rc.related.icon.createdAt,
-					  }
-					: null,
-			})) || []),
-			...(category.relatedTo?.map(rt => ({
-				id: rt.category.id,
-				name:
-					rt.category.label.translations.length > 0
-						? rt.category.label.translations[0].translation
-						: '',
-				iconId: rt.category.iconId,
-				labelId: rt.category.labelId,
-				synonyms: rt.category.label.translations[0]?.synonyms || [],
-				icon: rt.category.icon
-					? {
-							id: rt.category.icon.id,
-							name: rt.category.icon.name,
-							url: rt.category.icon.url,
-							createdAt: rt.category.icon.createdAt,
-					  }
-					: null,
-			})) || []),
+		const relatedIds = [
+			...(category.relatedCategories?.map(rc => rc.related.id) || []),
+			...(category.relatedTo?.map(rt => rt.category.id) || []),
 		];
 
 		const childIds = category.childCategories.map(childCategory => childCategory.child.id);
@@ -168,13 +106,12 @@ const buildCategoryTree = async (
 
 		return {
 			id: category.id,
-			name:
-				category.label.translations.length > 0 ? category.label.translations[0].translation : '',
+			name: category.label.translations[0]?.translation || '', // Koristimo prvi prevod
 			iconId: category.iconId,
 			labelId: category.labelId,
 			parents: await fetchParents(category.id),
 			children,
-			synonyms: category.label.translations[0]?.synonyms || [],
+			synonyms: category.label.translations[0]?.synonyms.map(syn => syn.synonym) || [], // Mapiramo sinonime kao niz stringova
 			icon: category.icon
 				? {
 						id: category.icon.id,
@@ -183,15 +120,11 @@ const buildCategoryTree = async (
 						createdAt: category.icon.createdAt,
 				  }
 				: null,
-			relatedCategories, // Sada vraća sve informacije o povezanima kategorijama
+			relatedIds,
 		};
 	});
 
-	// Await all category promises and filter out undefined values
-	// Correcting quotes and ensuring valid syntax
 	const categoryResults = await Promise.all(categoryPromises);
-
-	// Correctly filter out undefined values with type assertion
 	return categoryResults.filter((category): category is any => category !== undefined);
 };
 
@@ -276,13 +209,6 @@ export async function GET(req: NextRequest) {
 			},
 		});
 
-		const countCategories = (categories: Category[]): number => {
-			return categories.reduce(
-				(count, category) => count + 1 + countCategories(category.children || []),
-				0
-			);
-		};
-
 		const enhancedRetailStores = await Promise.all(
 			retailStores.map(async store => {
 				const articleCategoryIds = store.articleCategories.map(category => category.id);
@@ -305,25 +231,11 @@ export async function GET(req: NextRequest) {
 					languageId
 				);
 
-				// Funkcija za brojanje kategorija i potkategorija unutar articleCategories
-				const countCategories = (categories: Category[]): number => {
-					let count = categories.length;
-					categories.forEach(category => {
-						if (category.children) {
-							count += countCategories(category.children); // Rekurzivno brojanje svih potkategorija
-						}
-					});
-					return count;
-				};
-
-				const totalArticleCategoryCount = countCategories(articleCategories); // Ukupan broj articleCategories i njihovih potkategorija
-
 				return {
 					...store,
 					articleCategories,
 					activityCategories,
 					objectTypeCategories,
-					totalArticleCategoryCount, // Dodajemo ukupan broj article kategorija
 				};
 			})
 		);

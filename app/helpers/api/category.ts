@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteData, getWithParams, postData, putData } from '@/app/helpers/api/common/base';
+import {
+	deleteData,
+	getWithParams,
+	postData,
+	putData,
+	getWithParamsWithNull,
+} from '@/app/helpers/api/common/base';
 import { Category } from '@/utils/helpers/types';
 
 export const fetchCategoriesByPrefixAndLanguage = async (prefix: string, languageId: number) => {
@@ -112,5 +118,40 @@ export const useDeleteCategory = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['categories'] });
 		},
+	});
+};
+
+export const useFetchCategoryById = (id: number) => {
+	return useQuery({
+		queryKey: ['category', id],
+		queryFn: () => getWithParamsWithNull(`/api/categories/${id}`),
+		staleTime: 1000 * 60 * 5,
+		refetchOnWindowFocus: false,
+	});
+};
+
+interface FetchCategoryByIdAndLanguageParams {
+	id: number;
+	languageId: number;
+}
+
+// Funkcija za učitavanje kategorije na osnovu categoryId i languageId
+const fetchCategoryByIdAndLanguage = async ({
+	id,
+	languageId,
+}: FetchCategoryByIdAndLanguageParams): Promise<Category> => {
+	const response = await getWithParams(`/api/categoryByIdAndLanguageId/${id}`, { languageId });
+	if (!response) {
+		throw new Error('Failed to fetch category');
+	}
+	return response;
+};
+
+export const useFetchCategoryByIdAndLanguage = (id: number, languageId: number) => {
+	return useQuery({
+		queryKey: ['category', id, languageId],
+		queryFn: () => fetchCategoryByIdAndLanguage({ id, languageId }),
+		staleTime: 1000 * 60 * 5,
+		refetchOnWindowFocus: false,
 	});
 };

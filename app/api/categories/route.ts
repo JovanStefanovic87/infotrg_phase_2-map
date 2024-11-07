@@ -46,11 +46,11 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 	const categories = await prisma.category.findMany({
 		where: {
 			...(parentId === null
-				? { childCategories: { none: {} } } // Top-level categories with no parents
-				: { childCategories: { some: { parentId } } }), // Subcategories of the current parentId
+				? { childCategories: { none: {} } }
+				: { childCategories: { some: { parentId } } }),
 			label: {
 				name: {
-					startsWith: prefix, // Filter based on the prefix
+					startsWith: prefix,
 				},
 			},
 		},

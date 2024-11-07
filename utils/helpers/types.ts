@@ -375,7 +375,10 @@ export interface GetRetailStoreApi {
 	country: {
 		id: number;
 		label: {
-			translations: { translation: string }[];
+			translations: {
+				languageId: number;
+				translation: string;
+			}[];
 		};
 	};
 	city: {

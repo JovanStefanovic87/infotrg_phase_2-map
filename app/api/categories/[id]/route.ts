@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { Category } from '@/utils/helpers/types';
-import { Prisma } from '@prisma/client';
 
 const getCategoryTranslation = async (labelId: number, languageId: number = 1) => {
 	const translation = await prisma.translation.findFirst({
@@ -57,7 +56,7 @@ const buildCategoryTree = async (
 					}))
 				),
 				children,
-			} as Category;
+			} as unknown as Category;
 		})
 	);
 };
@@ -70,8 +69,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 		const category = await prisma.category.findUnique({
 			where: { id: Number(id) },
 			include: {
-				parentCategories: { include: { parent: true } }, // Fetch parent details
-				childCategories: { include: { child: true } }, // Fetch child details
+				parentCategories: { include: { parent: { include: { icon: true } } } }, // Fetch parent details including icon
+				childCategories: { include: { child: { include: { icon: true } } } }, // Fetch child details including icon
 				relatedCategories: { include: { related: true } }, // Fetch related categories
 				relatedTo: { include: { category: true } }, // Fetch categories that this category is related to
 			},
@@ -100,8 +99,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
 					iconId: pc.parent.iconId,
 					labelId: pc.parent.labelId,
 					name: await getCategoryTranslation(pc.parent.labelId, languageId), // Fetch parent's name
-					parents: [], // Avoid recursion
-					children: [], // Avoid recursion
+					parents: [],
+					children: [],
+					icon: pc.parent.icon
+						? {
+								id: pc.parent.icon.id,
+								name: pc.parent.icon.name,
+								url: pc.parent.icon.url,
+								createdAt: pc.parent.icon.createdAt,
+						  }
+						: null,
 				}))
 			),
 			children: await Promise.all(
@@ -110,11 +117,20 @@ export async function GET(request: Request, { params }: { params: { id: string }
 					iconId: cc.child.iconId,
 					labelId: cc.child.labelId,
 					name: await getCategoryTranslation(cc.child.labelId, languageId), // Fetch child's name
-					parents: [], // Avoid recursion
-					children: [], // Avoid recursion
+					parents: [],
+					children: [],
+					icon: cc.child.icon
+						? {
+								id: cc.child.icon.id,
+								name: cc.child.icon.name,
+								url: cc.child.icon.url,
+								createdAt: cc.child.icon.createdAt,
+						  }
+						: null,
 				}))
 			),
-			relatedIds, // Add the combined relatedIds to the category response
+			relatedIds,
+			icon: undefined,
 		};
 
 		return NextResponse.json(transformedCategory);

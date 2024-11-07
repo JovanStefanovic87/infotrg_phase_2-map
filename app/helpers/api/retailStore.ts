@@ -1,11 +1,5 @@
 'use client';
-import {
-	useMutation,
-	useQueryClient,
-	useQuery,
-	UseQueryOptions,
-	UseQueryResult,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { GetRetailStoreApi } from '@/utils/helpers/types';
 import { postData, getWithParams, getWithParamsWithNull, deleteData, putData } from './common/base';
 

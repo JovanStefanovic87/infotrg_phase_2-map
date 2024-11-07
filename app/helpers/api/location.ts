@@ -58,3 +58,13 @@ export function useDeleteLocation() {
 		},
 	});
 }
+
+export const useFetchLocationByIdAndLanguage = (id: number, type: string, languageId: number) => {
+	return useQuery({
+		queryKey: ['location', id, type, languageId],
+		queryFn: () => getWithParams(`/api/locations/${id}`, { type, languageId }),
+		staleTime: 1000 * 60 * 5,
+		refetchOnWindowFocus: false,
+		enabled: Boolean(id && type && languageId),
+	});
+};
