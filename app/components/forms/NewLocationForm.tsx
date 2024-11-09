@@ -1,6 +1,6 @@
 'use client';
 import { ChangeEvent } from 'react';
-import { Country, Location } from '@/utils/helpers/types';
+import { State, Location } from '@/utils/helpers/types';
 import SubmitButton from '../buttons/SubmitButton';
 import ImageUploadButton from '../buttons/ImageUploadButton';
 import ChooseImageButton from '../buttons/ChooseImageButton';
@@ -15,14 +15,14 @@ interface NewLocationFormProps {
 	setName: React.Dispatch<React.SetStateAction<string>>;
 	address: string;
 	setAddress: React.Dispatch<React.SetStateAction<string>>;
-	countryId: number | null;
-	setCountryId: React.Dispatch<React.SetStateAction<number | null>>;
-	type: 'country' | 'city' | 'cityPart' | 'marketplace';
-	setType: React.Dispatch<React.SetStateAction<'country' | 'city' | 'cityPart' | 'marketplace'>>;
+	stateId: number | null;
+	setStateId: React.Dispatch<React.SetStateAction<number | null>>;
+	type: 'state' | 'county' | 'city' | 'suburb';
+	setType: React.Dispatch<React.SetStateAction<'state' | 'county' | 'city' | 'suburb'>>;
+	countyId: number | null;
+	setCountyId: React.Dispatch<React.SetStateAction<number | null>>;
 	cityId: number | null;
 	setCityId: React.Dispatch<React.SetStateAction<number | null>>;
-	cityPartId: number | null;
-	setCityPartId: React.Dispatch<React.SetStateAction<number | null>>;
 	setIcon: React.Dispatch<React.SetStateAction<File | null>>;
 	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 	postCode: string;
@@ -37,14 +37,14 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 	setName,
 	address,
 	setAddress,
-	countryId,
-	setCountryId,
+	stateId,
+	setStateId,
 	type,
 	setType,
+	countyId,
+	setCountyId,
 	cityId,
 	setCityId,
-	cityPartId,
-	setCityPartId,
 	setIcon,
 	setIsIconPickerOpen,
 	postCode,
@@ -55,38 +55,49 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 	const handleAddressChange = (e: ChangeEvent<HTMLInputElement>) => setAddress(e.target.value);
 	const handlePostCodeChange = (e: ChangeEvent<HTMLInputElement>) => setPostCode(e.target.value);
 
-	const handleCountryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-		setCountryId(Number(e.target.value));
+	const handleStateChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		//DO NOT REMOVE THIS FUNCTION - IT WILL BE USED IN SOME OTHER CASES
+		setStateId(Number(e.target.value));
+		setCountyId(null);
 		setCityId(null);
-		setCityPartId(null);
+	};
+
+	const handleCountyChange = (e: ChangeEvent<HTMLSelectElement>) => {
+		setCountyId(Number(e.target.value));
+		setCityId(null);
 	};
 
 	const handleCityChange = (e: ChangeEvent<HTMLSelectElement>) => {
 		setCityId(Number(e.target.value));
-		setCityPartId(null);
-	};
-
-	const handleCityPartChange = (e: ChangeEvent<HTMLSelectElement>) => {
-		setCityPartId(Number(e.target.value));
 	};
 
 	const handleIconChange = (file: File | null) => setIcon(file);
 
-	const filteredCities = countryId
-		? (locations.find(location => location.id === countryId) as Country)?.cities || []
+	const filteredCounties = stateId
+		? (locations.find(location => location.id === stateId) as State)?.counties || []
 		: [];
 
-	const filteredCityParts = cityId
-		? filteredCities.find(city => city.id === cityId)?.cityParts || []
+	const filteredCities = countyId
+		? filteredCounties.find(county => county.id === countyId)?.cities || []
 		: [];
 
-	const filteredCountryOptions = locations.map(country => ({
-		...country,
+	const filteredStateOptions = locations.map(state => ({
+		...state,
 		label: {
-			...country.label,
+			...state.label,
 			name:
-				country.label.translations.find(t => t.languageId === languageId)?.translation ||
-				country.label.name,
+				state.label.translations.find(t => t.languageId === languageId)?.translation ||
+				state.label.name,
+		},
+	}));
+
+	const filteredCountyOptions = filteredCounties.map(county => ({
+		...county,
+		label: {
+			...county.label,
+			name:
+				county.label.translations.find(t => t.languageId === languageId)?.translation ||
+				county.label.name,
 		},
 	}));
 
@@ -100,16 +111,6 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 		},
 	}));
 
-	const filteredCityPartOptions = filteredCityParts.map(part => ({
-		...part,
-		label: {
-			...part.label,
-			name:
-				part.label.translations.find(t => t.languageId === languageId)?.translation ||
-				part.label.name,
-		},
-	}));
-
 	return (
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
 			{/* Location Type */}
@@ -118,12 +119,12 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				<SelectInput
 					id='type'
 					value={type}
-					onChange={e => setType(e.target.value as 'country' | 'city' | 'cityPart' | 'marketplace')}
+					onChange={e => setType(e.target.value as 'state' | 'county' | 'city' | 'suburb')}
 					options={[
-						{ value: 'country', label: 'Država' },
-						{ value: 'city', label: 'Mesto' },
-						{ value: 'cityPart', label: 'Deo mesta' },
-						{ value: 'marketplace', label: 'Pijaca' },
+						{ value: 'state', label: 'Savez' },
+						{ value: 'county', label: 'Država' },
+						{ value: 'city', label: 'Grad' },
+						{ value: 'suburb', label: 'Deo grada' },
 					]}
 				/>
 			</div>
@@ -138,11 +139,11 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				/>
 			</div>
 
-			{/* Marketplace Address */}
-			{type === 'marketplace' && (
+			{/* Suburb Address */}
+			{type === 'suburb' && (
 				<div className='flex flex-col'>
 					<LabelInputDefault
-						label='Adresa pijace'
+						label='Adresa'
 						value={address}
 						onChange={handleAddressChange}
 						placeholder=''
@@ -150,21 +151,80 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 					/>
 				</div>
 			)}
-
-			{/* Country Selection */}
-			{(type === 'city' || type === 'cityPart' || type === 'marketplace') && (
+			{(type === 'county' || type === 'city' || type === 'suburb') && (
 				<div className='flex flex-col'>
-					<Label htmlFor='countryId'>Izaberite državu</Label>
+					<Label htmlFor='stateId'>Izaberite savez</Label>
 					<select
-						id='countryId'
-						value={countryId ?? ''}
-						onChange={handleCountryChange}
+						id='stateId'
+						value={stateId ?? ''}
+						onChange={handleStateChange}
 						className='mt-1 p-2 border border-gray-300 rounded text-black'
 						required>
 						<option value=''>Izaberite državu</option>
-						{filteredCountryOptions.map(country => (
-							<option key={country.id} value={country.id}>
-								{country.label.name}
+						{filteredStateOptions.map(state => (
+							<option key={state.id} value={state.id}>
+								{state.label.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
+			{/* State Selection */}
+			{/* {(type === 'county' || type === 'city' || type === 'suburb') && (  DO NOT REMOVE THIS FUNCTION - IT WILL BE USED IN SOME OTHER CASES
+				<div className='flex flex-col'>
+					<Label htmlFor='stateId'>Izaberite državu</Label>
+					<select
+						id='stateId'
+						value={stateId ?? ''}
+						onChange={handleStateChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite državu</option>
+						{filteredStateOptions.map(state => (
+							<option key={state.id} value={state.id}>
+								{state.label.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)} */}
+
+			{/* County Selection */}
+			{/* {(type === 'city' || type === 'suburb') && (  DO NOT REMOVE THIS FUNCTION - IT WILL BE USED IN SOME OTHER CASES
+				<div className='flex flex-col'>
+					<Label htmlFor='countyId'>Izaberite mesto</Label>
+					<select
+						id='countyId'
+						value={countyId ?? ''}
+						onChange={handleCountyChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite mesto</option>
+						{filteredCountyOptions.map(county => (
+							<option key={county.id} value={county.id}>
+								{county.label.name}
+							</option>
+						))}
+					</select>
+				</div>
+			)} */}
+
+			{/* County Selection */}
+			{(type === 'city' || type === 'suburb') && (
+				<div className='flex flex-col'>
+					<Label htmlFor='countyId' color='black'>
+						Izaberite mesto
+					</Label>
+					<select
+						id='countyId'
+						value={countyId ?? ''}
+						onChange={handleCountyChange}
+						className='mt-1 p-2 border border-gray-300 rounded text-black'
+						required>
+						<option value=''>Izaberite mesto</option>
+						{filteredCountyOptions.map(county => (
+							<option key={county.id} value={county.id}>
+								{county.label.name}
 							</option>
 						))}
 					</select>
@@ -172,16 +232,18 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			)}
 
 			{/* City Selection */}
-			{(type === 'cityPart' || type === 'marketplace') && (
+			{type === 'suburb' && (
 				<div className='flex flex-col'>
-					<Label htmlFor='countryId'>Izaberite mesto</Label>
+					<Label htmlFor='cityId' color='black'>
+						Izaberite lokaciju
+					</Label>
 					<select
 						id='cityId'
 						value={cityId ?? ''}
 						onChange={handleCityChange}
 						className='mt-1 p-2 border border-gray-300 rounded text-black'
 						required>
-						<option value=''>Izaberite mesto</option>
+						<option value=''>Izaberite deo mesta</option>
 						{filteredCityOptions.map(city => (
 							<option key={city.id} value={city.id}>
 								{city.label.name}
@@ -191,28 +253,8 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 				</div>
 			)}
 
-			{/* City Part Selection */}
-			{type === 'marketplace' && (
-				<div className='flex flex-col'>
-					<Label htmlFor='countryId'>Izaberite deo mesta</Label>
-					<select
-						id='cityPartId'
-						value={cityPartId ?? ''}
-						onChange={handleCityPartChange}
-						className='mt-1 p-2 border border-gray-300 rounded text-black'
-						required>
-						<option value=''>Izaberite deo mesta</option>
-						{filteredCityPartOptions.map(part => (
-							<option key={part.id} value={part.id}>
-								{part.label.name}
-							</option>
-						))}
-					</select>
-				</div>
-			)}
-
 			{/* Post Code */}
-			{(type === 'cityPart' || type === 'city') && (
+			{(type === 'city' || type === 'suburb') && (
 				<div className='flex flex-col'>
 					<LabelInputDefault
 						label='Poštanski kod'

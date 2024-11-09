@@ -63,40 +63,48 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 		if (activeMarkers.length > 0 && map && !hasInitialized.current) {
 			hasInitialized.current = true;
 
-			const bounds = activeMarkers.reduce(
-				(acc, marker) => ({
-					minLat: Math.min(acc.minLat, marker.position.lat),
-					maxLat: Math.max(acc.maxLat, marker.position.lat),
-					minLng: Math.min(acc.minLng, marker.position.lng),
-					maxLng: Math.max(acc.maxLng, marker.position.lng),
-				}),
-				{
-					minLat: Infinity,
-					maxLat: -Infinity,
-					minLng: Infinity,
-					maxLng: -Infinity,
+			if (activeMarkers.length === 1) {
+				const singleMarker = activeMarkers[0].position;
+				setDefaultCenter(singleMarker);
+				setDefaultZoom(19); // Postavite željeni nivo zoom-a za jedan marker
+				map.panTo(singleMarker);
+				map.setZoom(19); // Zoom na 19 kada je samo jedan marker
+			} else {
+				const bounds = activeMarkers.reduce(
+					(acc, marker) => ({
+						minLat: Math.min(acc.minLat, marker.position.lat),
+						maxLat: Math.max(acc.maxLat, marker.position.lat),
+						minLng: Math.min(acc.minLng, marker.position.lng),
+						maxLng: Math.max(acc.maxLng, marker.position.lng),
+					}),
+					{
+						minLat: Infinity,
+						maxLat: -Infinity,
+						minLng: Infinity,
+						maxLng: -Infinity,
+					}
+				);
+
+				const latSpan = bounds.maxLat - bounds.minLat;
+				const lngSpan = bounds.maxLng - bounds.minLng;
+
+				const newCenter = {
+					lat: (bounds.minLat + bounds.maxLat) / 2,
+					lng: (bounds.minLng + bounds.maxLng) / 2,
+				};
+
+				const optimalZoom = Math.min(Math.log2(360 / Math.max(latSpan, lngSpan)) + 1, 18);
+
+				centerRef.current = newCenter;
+				zoomRef.current = optimalZoom;
+
+				setDefaultCenter(newCenter);
+				setDefaultZoom(optimalZoom);
+
+				if (map) {
+					map.panTo(newCenter);
+					map.setZoom(optimalZoom);
 				}
-			);
-
-			const latSpan = bounds.maxLat - bounds.minLat;
-			const lngSpan = bounds.maxLng - bounds.minLng;
-
-			const newCenter = {
-				lat: (bounds.minLat + bounds.maxLat) / 2,
-				lng: (bounds.minLng + bounds.maxLng) / 2,
-			};
-
-			const optimalZoom = Math.min(Math.log2(360 / Math.max(latSpan, lngSpan)) + 1, 18);
-
-			centerRef.current = newCenter;
-			zoomRef.current = optimalZoom;
-
-			setDefaultCenter(newCenter);
-			setDefaultZoom(optimalZoom);
-
-			if (map) {
-				map.panTo(newCenter);
-				map.setZoom(optimalZoom);
 			}
 		}
 	}, [activeMarkers, map, setCenter, setZoom]);

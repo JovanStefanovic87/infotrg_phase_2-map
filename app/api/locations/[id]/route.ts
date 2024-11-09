@@ -1,3 +1,4 @@
+//app\api\locations\[id]\route.ts
 import { prisma } from '@/app/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -7,36 +8,52 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 	const type = searchParams.get('type');
 
 	if (!id || !type) {
-		return Response.json({ error: 'Missing id or type parameter' }, { status: 400 });
+		return NextResponse.json({ error: 'Missing id or type parameter' }, { status: 400 });
 	}
 
 	try {
 		let deletedLocation;
 
-		if (type === 'country') {
-			deletedLocation = await prisma.country.delete({
+		if (type === 'state') {
+			const existingState = await prisma.state.findUnique({ where: { id: Number(id) } });
+			if (!existingState) {
+				return NextResponse.json({ error: `State with id ${id} not found` }, { status: 404 });
+			}
+			deletedLocation = await prisma.state.delete({
+				where: { id: Number(id) },
+			});
+		} else if (type === 'county') {
+			const existingCounty = await prisma.county.findUnique({ where: { id: Number(id) } });
+			if (!existingCounty) {
+				return NextResponse.json({ error: `County with id ${id} not found` }, { status: 404 });
+			}
+			deletedLocation = await prisma.county.delete({
 				where: { id: Number(id) },
 			});
 		} else if (type === 'city') {
+			const existingCity = await prisma.city.findUnique({ where: { id: Number(id) } });
+			if (!existingCity) {
+				return NextResponse.json({ error: `City with id ${id} not found` }, { status: 404 });
+			}
 			deletedLocation = await prisma.city.delete({
 				where: { id: Number(id) },
 			});
-		} else if (type === 'cityPart') {
-			deletedLocation = await prisma.cityPart.delete({
-				where: { id: Number(id) },
-			});
-		} else if (type === 'marketplace') {
-			deletedLocation = await prisma.marketplace.delete({
+		} else if (type === 'suburb') {
+			const existingSuburb = await prisma.suburb.findUnique({ where: { id: Number(id) } });
+			if (!existingSuburb) {
+				return NextResponse.json({ error: `Suburb with id ${id} not found` }, { status: 404 });
+			}
+			deletedLocation = await prisma.suburb.delete({
 				where: { id: Number(id) },
 			});
 		} else {
-			return Response.json({ error: 'Invalid type parameter' }, { status: 400 });
+			return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
 		}
 
-		return Response.json({ message: 'Location deleted successfully', deletedLocation });
+		return NextResponse.json({ message: 'Location deleted successfully', deletedLocation });
 	} catch (error) {
 		console.error('Error deleting location:', error);
-		return Response.json({ error: 'Failed to delete location' }, { status: 500 });
+		return NextResponse.json({ error: 'Failed to delete location' }, { status: 500 });
 	}
 }
 
@@ -46,7 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 	const type = searchParams.get('type');
 
 	if (!id || !type) {
-		return Response.json({ error: 'Missing id or type parameter' }, { status: 400 });
+		return NextResponse.json({ error: 'Missing id or type parameter' }, { status: 400 });
 	}
 
 	try {
@@ -55,44 +72,76 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 		let updatedLocation;
 
-		if (type === 'country') {
-			updatedLocation = await prisma.country.update({
+		if (type === 'state') {
+			const existingState = await prisma.state.findUnique({
+				where: { id: Number(id) },
+			});
+
+			if (!existingState) {
+				return NextResponse.json({ error: `State with id ${id} not found` }, { status: 404 });
+			}
+
+			updatedLocation = await prisma.state.update({
 				where: { id: Number(id) },
 				data: {
 					iconId: iconId,
 				},
 			});
+		} else if (type === 'county') {
+			const existingCounty = await prisma.county.findUnique({
+				where: { id: Number(id) },
+			});
+
+			if (!existingCounty) {
+				return NextResponse.json({ error: `County with id ${id} not found` }, { status: 404 });
+			}
+
+			updatedLocation = await prisma.county.update({
+				where: { id: Number(id) },
+				data: {
+					iconId: iconId,
+					postCode: postCode || undefined,
+				},
+			});
 		} else if (type === 'city') {
+			const existingCity = await prisma.city.findUnique({
+				where: { id: Number(id) },
+			});
+
+			if (!existingCity) {
+				return NextResponse.json({ error: `City with id ${id} not found` }, { status: 404 });
+			}
+
 			updatedLocation = await prisma.city.update({
 				where: { id: Number(id) },
 				data: {
 					iconId: iconId,
-					postCode: postCode || undefined, // Add postCode only if provided
+					postCode: postCode || undefined,
 				},
 			});
-		} else if (type === 'cityPart') {
-			updatedLocation = await prisma.cityPart.update({
+		} else if (type === 'suburb') {
+			const existingSuburb = await prisma.suburb.findUnique({
 				where: { id: Number(id) },
-				data: {
-					iconId: iconId,
-					postCode: postCode || undefined, // Add postCode only if provided
-				},
 			});
-		} else if (type === 'marketplace') {
-			updatedLocation = await prisma.marketplace.update({
+
+			if (!existingSuburb) {
+				return NextResponse.json({ error: `Suburb with id ${id} not found` }, { status: 404 });
+			}
+
+			updatedLocation = await prisma.suburb.update({
 				where: { id: Number(id) },
 				data: {
 					iconId: iconId,
 				},
 			});
 		} else {
-			return Response.json({ error: 'Invalid type parameter' }, { status: 400 });
+			return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
 		}
 
-		return Response.json({ message: 'Location updated successfully', updatedLocation });
+		return NextResponse.json({ message: 'Location updated successfully', updatedLocation });
 	} catch (error) {
 		console.error('Error updating location:', error);
-		return Response.json({ error: 'Failed to update location' }, { status: 500 });
+		return NextResponse.json({ error: 'Failed to update location' }, { status: 500 });
 	}
 }
 
@@ -110,12 +159,28 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 		let location;
 
 		// Dinamički tražimo entitet na osnovu `type` parametra
-		if (type === 'country') {
-			location = await prisma.country.findUnique({
+		if (type === 'state') {
+			location = await prisma.state.findUnique({
 				where: { id: Number(id) },
 				select: {
 					id: true,
-					icon: true, // Dodato za vraćanje svih podataka o ikoni
+					icon: true,
+					label: {
+						select: {
+							translations: {
+								where: { languageId },
+								select: { translation: true },
+							},
+						},
+					},
+				},
+			});
+		} else if (type === 'county') {
+			location = await prisma.county.findUnique({
+				where: { id: Number(id) },
+				select: {
+					id: true,
+					icon: true,
 					label: {
 						select: {
 							translations: {
@@ -131,7 +196,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 				where: { id: Number(id) },
 				select: {
 					id: true,
-					icon: true, // Dodato za vraćanje svih podataka o ikoni
+					icon: true,
 					label: {
 						select: {
 							translations: {
@@ -142,28 +207,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 					},
 				},
 			});
-		} else if (type === 'cityPart') {
-			location = await prisma.cityPart.findUnique({
+		} else if (type === 'suburb') {
+			location = await prisma.suburb.findUnique({
 				where: { id: Number(id) },
 				select: {
 					id: true,
-					icon: true, // Dodato za vraćanje svih podataka o ikoni
-					label: {
-						select: {
-							translations: {
-								where: { languageId },
-								select: { translation: true },
-							},
-						},
-					},
-				},
-			});
-		} else if (type === 'marketplace') {
-			location = await prisma.marketplace.findUnique({
-				where: { id: Number(id) },
-				select: {
-					id: true,
-					icon: true, // Dodato za vraćanje svih podataka o ikoni
+					icon: true,
 					label: {
 						select: {
 							translations: {
@@ -182,11 +231,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Translation not found' }, { status: 404 });
 		}
 
-		// Ekstrakcija id-a, imena (prevoda), i podataka o ikoni
 		const response = {
 			id: location.id,
 			name: location.label.translations[0].translation || 'Nedefinisano ime',
-			icon: location.icon || null, // Vraća sve podatke o ikoni, ili `null` ako ikona ne postoji
+			icon: location.icon || null,
 		};
 
 		// Vraćamo `id`, `name`, i `icon`

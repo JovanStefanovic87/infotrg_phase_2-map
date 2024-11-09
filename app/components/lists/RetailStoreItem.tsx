@@ -20,17 +20,15 @@ const RetailStoreItem: React.FC<RetailStoreItemProps> = ({
 	onEditClick,
 	onDeleteClick,
 }) => {
-	const country = retail.country?.translation || 'N/A';
+	const state = retail.state?.translation || 'N/A';
+	const county = retail.county?.translation || 'N/A';
 	const city = retail.city?.translation || 'N/A';
-	const cityPart = retail.cityPart?.translation;
-	const marketplace = retail.marketplace?.translation;
+	const suburb = retail.suburb?.translation;
 
-	const shortLocation = `${city ? city : ''}${marketplace ? `, ${marketplace}` : ''}`;
+	const shortLocation = `${city ? city : ''}${suburb ? `, ${suburb}` : ''}`;
 
-	const fullLocation = `${country ? `${country}` : ''}${city ? ` - ${city}` : ''}${
-		cityPart || marketplace
-			? ` (${cityPart ? cityPart : ''}${marketplace ? `, ${marketplace}` : ''})`
-			: ''
+	const fullLocation = `${state ? `${state}` : ''}${county ? ` - ${county}` : ''}${
+		city || suburb ? ` (${city ? city : ''}${suburb ? `, ${suburb}` : ''})` : ''
 	}`;
 
 	// Prikaz kategorija
@@ -47,7 +45,7 @@ const RetailStoreItem: React.FC<RetailStoreItemProps> = ({
 	const isComplete = () => {
 		return (
 			!!retail.name.trim() &&
-			city !== 'N/A' &&
+			county !== 'N/A' &&
 			retail.latitude !== undefined &&
 			retail.longitude !== undefined &&
 			articleCategories.length > 0 &&

@@ -5,17 +5,17 @@ import { Translation } from '@/utils/helpers/types';
 
 export const GET = async () => {
 	try {
-		const countries = await prisma.country.findMany({
+		const states = await prisma.state.findMany({
 			include: {
 				label: {
 					include: {
 						translations: true,
 					},
 				},
-				cities: true,
+				counties: true,
 			},
 		});
-		return NextResponse.json(countries);
+		return NextResponse.json(states);
 	} catch (error) {
 		return NextResponse.json({ error: 'Failed to fetch countries' }, { status: 500 });
 	}
@@ -26,7 +26,7 @@ export const POST = async (req: NextRequest) => {
 		const { labelName, translationData } = await req.json();
 		const { name } = labelName;
 
-		const newCountry = await prisma.$transaction(async prisma => {
+		const newState = await prisma.$transaction(async prisma => {
 			const newLabel = await prisma.label.create({
 				data: {
 					name: name,
@@ -44,7 +44,7 @@ export const POST = async (req: NextRequest) => {
 				},
 			});
 
-			return await prisma.country.create({
+			return await prisma.state.create({
 				data: {
 					labelId: newLabel.id,
 				},
@@ -58,12 +58,12 @@ export const POST = async (req: NextRequest) => {
 			});
 		});
 
-		return NextResponse.json(newCountry);
+		return NextResponse.json(newState);
 	} catch (error) {
-		console.error('Error creating country:', error);
+		console.error('Error creating state:', error);
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		return NextResponse.json(
-			{ error: 'Failed to create country', details: errorMessage },
+			{ error: 'Failed to create state', details: errorMessage },
 			{ status: 500 }
 		);
 	}

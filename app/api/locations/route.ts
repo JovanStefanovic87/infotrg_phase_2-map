@@ -2,12 +2,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import moment from 'moment-timezone';
-import { Translation, City } from '@/utils/helpers/types';
+import { Translation, County } from '@/utils/helpers/types';
 
 // POST: Create a new location
 export async function POST(req: Request) {
 	try {
-		const { countryId, cityId, labelId, type, iconId, postCode, cityPartId, address } =
+		const { stateId, countyId, labelId, type, iconId, postCode, cityId, address } =
 			await req.json();
 
 		// Validation
@@ -17,9 +17,9 @@ export async function POST(req: Request) {
 
 		let locationData;
 
-		// Handle the creation of a country
-		if (type === 'country') {
-			locationData = await prisma.country.create({
+		// Handle the creation of a state
+		if (type === 'state') {
+			locationData = await prisma.state.create({
 				data: {
 					labelId,
 					iconId,
@@ -27,71 +27,88 @@ export async function POST(req: Request) {
 				},
 			});
 		}
-		// Handle the creation of a city (requires countryId)
-		else if (type === 'city') {
-			if (!countryId) {
+		// Handle the creation of a county (requires stateId)
+		else if (type === 'county') {
+			if (!stateId) {
 				return NextResponse.json(
-					{ error: 'Parent country ID is required for creating a city.' },
+					{ error: 'Parent state ID is required for creating a county.' },
 					{ status: 400 }
 				);
 			}
 
-			const country = await prisma.country.findUnique({ where: { id: countryId } });
-			if (!country) throw new Error(`Parent country with id ${countryId} not found`);
+			const state = await prisma.state.findUnique({ where: { id: stateId } });
+			if (!state) {
+				return NextResponse.json(
+					{ error: `Parent state with id ${stateId} not found.` },
+					{ status: 404 }
+				);
+			}
 
-			locationData = await prisma.city.create({
+			locationData = await prisma.county.create({
 				data: {
 					labelId,
-					countryId, // Use countryId for the city
-					postCode, // Add postal code for city creation
+					stateId,
+					postCode,
 					iconId,
 					createdAt: new Date(),
 				},
 			});
 		}
-		// Handle the creation of a city part (requires cityId)
-		else if (type === 'cityPart') {
+		// Handle the creation of a city (requires countyId)
+		else if (type === 'city') {
+			if (!countyId) {
+				return NextResponse.json(
+					{ error: 'Parent county ID is required for creating a city.' },
+					{ status: 400 }
+				);
+			}
+
+			const county = await prisma.county.findUnique({ where: { id: countyId } });
+			if (!county) {
+				return NextResponse.json(
+					{ error: `Parent county with id ${countyId} not found.` },
+					{ status: 404 }
+				);
+			}
+
+			locationData = await prisma.city.create({
+				data: {
+					labelId,
+					countyId,
+					postCode,
+					iconId,
+					createdAt: new Date(),
+				},
+			});
+		}
+		// Handle the creation of a suburb (requires cityId)
+		else if (type === 'suburb') {
 			if (!cityId) {
 				return NextResponse.json(
-					{ error: 'Parent city ID is required for creating a city part.' },
+					{ error: 'Parent city ID is required for creating a suburb.' },
 					{ status: 400 }
 				);
 			}
 
 			const city = await prisma.city.findUnique({ where: { id: cityId } });
-			if (!city) throw new Error(`Parent city with id ${cityId} not found`);
-
-			locationData = await prisma.cityPart.create({
-				data: {
-					labelId,
-					cityId, // Use cityId for the city part
-					postCode, // Add postal code for city part creation
-					iconId,
-					createdAt: new Date(),
-				},
-			});
-		}
-		// Handle the creation of a marketplace
-		else if (type === 'marketplace') {
-			if (!cityPartId || !labelId) {
+			if (!city) {
 				return NextResponse.json(
-					{ error: 'CityPart ID, and label ID are required for creating a marketplace.' },
-					{ status: 400 }
+					{ error: `Parent city with id ${cityId} not found.` },
+					{ status: 404 }
 				);
 			}
 
-			const cityPart = await prisma.cityPart.findUnique({ where: { id: cityPartId } });
-			if (!cityPart) throw new Error(`Parent city part with id ${cityPartId} not found`);
-
-			locationData = await prisma.marketplace.create({
+			locationData = await prisma.suburb.create({
 				data: {
 					labelId,
-					cityPartId,
+					cityId,
 					name: address,
 					iconId,
 					createdAt: new Date(),
 				},
 			});
+		} else {
+			return NextResponse.json({ error: 'Invalid type parameter.' }, { status: 400 });
 		}
 
 		return NextResponse.json(locationData);
@@ -104,17 +121,17 @@ export async function POST(req: Request) {
 	}
 }
 
-// GET: Retrieve all locations (countries, cities, city parts, and marketplaces) with their translations
+// GET: Retrieve all locations
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const prefix = searchParams.get('prefix');
-	const languageId = parseInt(searchParams.get('languageId') || '1'); // Dodajemo languageId iz query parametara
+	const languageId = parseInt(searchParams.get('languageId') || '1');
 
 	try {
 		let locations: any[] = [];
 
-		// Fetch all countries
-		locations = await prisma.country.findMany({
+		// Fetch all states
+		locations = await prisma.state.findMany({
 			where: {
 				label: {
 					name: {
@@ -129,7 +146,7 @@ export async function GET(req: Request) {
 					},
 				},
 				icon: true,
-				cities: {
+				counties: {
 					include: {
 						label: {
 							include: {
@@ -137,7 +154,7 @@ export async function GET(req: Request) {
 							},
 						},
 						icon: true,
-						cityParts: {
+						cities: {
 							include: {
 								label: {
 									include: {
@@ -145,7 +162,7 @@ export async function GET(req: Request) {
 									},
 								},
 								icon: true,
-								marketplaces: {
+								suburbs: {
 									include: {
 										label: {
 											include: {
@@ -176,34 +193,34 @@ export async function GET(req: Request) {
 					filterTranslationsByLanguage(location.label.translations, languageId)?.translation ||
 					location.label.name,
 			},
-			type: 'country',
-			cities: location.cities.map((city: City) => ({
-				...city,
+			type: 'state',
+			counties: location.counties.map((county: County) => ({
+				...county,
 				label: {
-					...city.label,
+					...county.label,
 					name:
-						filterTranslationsByLanguage(city.label.translations, languageId)?.translation ||
-						city.label.name,
+						filterTranslationsByLanguage(county.label.translations, languageId)?.translation ||
+						county.label.name,
 				},
-				type: 'city',
-				cityParts: city.cityParts.map(part => ({
-					...part,
+				type: 'county',
+				cities: county.cities.map(city => ({
+					...city,
 					label: {
-						...part.label,
+						...city.label,
 						name:
-							filterTranslationsByLanguage(part.label.translations, languageId)?.translation ||
-							part.label.name,
+							filterTranslationsByLanguage(city.label.translations, languageId)?.translation ||
+							city.label.name,
 					},
-					type: 'cityPart',
-					marketplaces: part.marketplaces.map(marketplace => ({
-						...marketplace,
+					type: 'city',
+					suburbs: city.suburbs.map(suburb => ({
+						...suburb,
 						label: {
-							...marketplace.label,
+							...suburb.label,
 							name:
-								filterTranslationsByLanguage(marketplace.label.translations, languageId)
-									?.translation || marketplace.label.name,
+								filterTranslationsByLanguage(suburb.label.translations, languageId)?.translation ||
+								suburb.label.name,
 						},
-						type: 'marketplace',
+						type: 'suburb',
 					})),
 				})),
 			})),

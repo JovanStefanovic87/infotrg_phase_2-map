@@ -31,10 +31,10 @@ model Label {
   translations Translation[] @relation("LabelTranslations")
   categories   Category[]    @relation("CategoryToLabel")
   createdAt    DateTime      @default(now())
-  countries    Country[]     @relation("CountryToLabel")
+  states       State[]       @relation("StateToLabel")
+  counties     County[]      @relation("CountyToLabel")
   cities       City[]        @relation("CityToLabel")
-  cityParts    CityPart[]    @relation("CityPartToLabel")
-  Marketplace  Marketplace[]
+  suburbs      Suburb[]
 
   @@index([name])
 }
@@ -53,11 +53,11 @@ model Translation {
   @@unique([labelId, languageId]) // Composite unique constraint
 }
 
-model Country {
+model State {
   id        Int      @id @default(autoincrement())
   labelId   Int
-  label     Label    @relation("CountryToLabel", fields: [labelId], references: [id], onDelete: Cascade)
-  cities    City[]
+  label     Label    @relation("StateToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  counties  County[]
   createdAt DateTime @default(now())
 
   retailStores RetailStore[]
@@ -67,49 +67,48 @@ model Country {
   Advertising  Advertising[]
 }
 
-model City {
-  id        Int        @id @default(autoincrement())
+model County {
+  id        Int      @id @default(autoincrement())
   labelId   Int
-  label     Label      @relation("CityToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  label     Label    @relation("CountyToLabel", fields: [labelId], references: [id], onDelete: Cascade)
   postCode  String?
-  countryId Int
-  country   Country    @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  cityParts CityPart[] // This should be the correct field name
-  createdAt DateTime   @default(now())
+  stateId   Int
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  cities    City[]
+  createdAt DateTime @default(now())
 
-  // Veza sa RetailStore
   retailStores RetailStore[]
 
-  iconId      Int? // Foreign key for Icon
+  iconId      Int?
   icon        Icon?         @relation(fields: [iconId], references: [id])
   Location    Location[]
   Advertising Advertising[]
 }
 
-model CityPart {
+model City {
   id        Int      @id @default(autoincrement())
   labelId   Int
-  label     Label    @relation("CityPartToLabel", fields: [labelId], references: [id], onDelete: Cascade)
+  label     Label    @relation("CityToLabel", fields: [labelId], references: [id], onDelete: Cascade)
   postCode  String?
-  cityId    Int
-  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  countyId  Int
+  county    County   @relation(fields: [countyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   retailStores RetailStore[]
 
-  iconId       Int?
-  icon         Icon?         @relation(fields: [iconId], references: [id])
-  marketplaces Marketplace[]
-  Location     Location[]
-  Advertising  Advertising[]
+  iconId      Int?
+  icon        Icon?         @relation(fields: [iconId], references: [id])
+  suburbs     Suburb[]
+  Location    Location[]
+  Advertising Advertising[]
 }
 
-model Marketplace {
-  id         Int      @id @default(autoincrement())
-  name       String
-  cityPartId Int
-  cityPart   CityPart @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+model Suburb {
+  id        Int      @id @default(autoincrement())
+  name      String
+  cityId    Int
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
   retailStores RetailStore[]
 
@@ -141,15 +140,15 @@ model RelatedCategory {
 }
 
 model Icon {
-  id          Int           @id @default(autoincrement())
-  name        String
-  url         String
-  createdAt   DateTime      @default(now())
-  Category    Category[]
-  Country     Country[]
-  City        City[]
-  CityPart    CityPart[]
-  Marketplace Marketplace[]
+  id        Int        @id @default(autoincrement())
+  name      String
+  url       String
+  createdAt DateTime   @default(now())
+  Category  Category[]
+  State     State[]
+  County    County[]
+  City      City[]
+  Suburb    Suburb[]
 
   @@index([name])
 }
@@ -199,17 +198,17 @@ model RetailStore {
   updatedAt        DateTime @updatedAt
   address          String?  @default("Somborski put 79")
 
-  countryId Int
-  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  stateId Int
+  state   State @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
-  cityId Int
-  city   City @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  countyId Int?
+  county   County? @relation(fields: [countyId], references: [id], onDelete: Cascade)
 
-  cityPartId Int?
-  cityPart   CityPart? @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
+  cityId Int?
+  city   City? @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
-  marketplaceId Int?
-  marketplace   Marketplace? @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  suburbId Int?
+  suburb   Suburb? @relation(fields: [suburbId], references: [id], onDelete: Cascade)
 
   coordinatesId Int?
   coordinates   Coordinates? @relation(fields: [coordinatesId], references: [id], onDelete: Cascade)
@@ -225,19 +224,19 @@ model RetailStore {
 }
 
 model Location {
-  id            Int           @id @default(autoincrement())
-  countryId     Int
-  country       Country       @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  cityId        Int
-  city          City          @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  cityPartId    Int?
-  cityPart      CityPart?     @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
-  marketplaceId Int?
-  marketplace   Marketplace?  @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
-  address       String?
-  RetailStore   RetailStore[]
+  id          Int           @id @default(autoincrement())
+  stateId     Int
+  state       State         @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  countyId    Int?
+  county      County?       @relation(fields: [countyId], references: [id], onDelete: Cascade)
+  cityId      Int?
+  city        City?         @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  suburbId    Int?
+  suburb      Suburb?       @relation(fields: [suburbId], references: [id], onDelete: Cascade)
+  address     String?
+  RetailStore RetailStore[]
 
-  @@index([countryId, cityId, cityPartId, marketplaceId])
+  @@index([stateId, countyId, cityId, suburbId])
 }
 
 model Coordinates {
@@ -265,17 +264,17 @@ model Advertising {
   activityCategories   Category[] @relation("AdvertisingActivityCategories")
   objectTypeCategories Category[] @relation("AdvertisingObjectTypeCategories")
 
-  countryId Int
-  country   Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  stateId Int
+  state   State? @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
-  cityId Int
+  countyId Int?
+  county   County? @relation(fields: [countyId], references: [id], onDelete: Cascade)
+
+  cityId Int?
   city   City? @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
-  cityPartId Int?
-  cityPart   CityPart? @relation(fields: [cityPartId], references: [id], onDelete: Cascade)
-
-  marketplaceId Int?
-  marketplace   Marketplace? @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  suburbId Int?
+  suburb   Suburb? @relation(fields: [suburbId], references: [id], onDelete: Cascade)
 
   retailStoreId Int?
   RetailStore   RetailStore? @relation(fields: [retailStoreId], references: [id])

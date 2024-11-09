@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
 	Location,
+	County,
 	City,
-	CityPart,
 	Language,
 	Icon,
 	CurrentIcon,
@@ -109,13 +109,13 @@ const LocationList: React.FC<Props> = ({
 				iconId,
 			};
 
-			if (type === 'city' || type === 'cityPart') {
+			if (type === 'county' || type === 'city') {
 				if (postCode && postCode.trim() !== '') {
 					updateData.postCode = postCode;
 				}
 			}
 
-			if (type === 'marketplace') {
+			if (type === 'suburb') {
 				if (address && address.trim() !== '') {
 					updateData.address = address;
 				}
@@ -170,14 +170,14 @@ const LocationList: React.FC<Props> = ({
 			});
 
 			return sortedLocations.map(location => {
+				// Sort counties
+				if ('counties' in location && Array.isArray(location.counties)) {
+					location.counties = recursiveSort(location.counties as County[]) as County[];
+				}
+
 				// Sort cities
 				if ('cities' in location && Array.isArray(location.cities)) {
 					location.cities = recursiveSort(location.cities as City[]) as City[];
-				}
-
-				// Sort cityParts
-				if ('cityParts' in location && Array.isArray(location.cityParts)) {
-					location.cityParts = recursiveSort(location.cityParts as CityPart[]) as CityPart[];
 				}
 
 				return location;
@@ -197,35 +197,35 @@ const LocationList: React.FC<Props> = ({
 					const locationName = location.label.name.toLowerCase();
 
 					const matches = locationName.includes(lowercasedQuery);
+					let matchingCounties: Location[] = [];
 					let matchingCities: Location[] = [];
-					let matchingCityParts: Location[] = [];
-					let matchingMarketplaces: Location[] = [];
+					let matchingSuburbs: Location[] = [];
+
+					if ('counties' in location) {
+						matchingCounties = recursiveSearch(location.counties);
+					}
 
 					if ('cities' in location) {
 						matchingCities = recursiveSearch(location.cities);
 					}
 
-					if ('cityParts' in location) {
-						matchingCityParts = recursiveSearch(location.cityParts);
-					}
-
-					if ('marketplaces' in location) {
-						matchingMarketplaces = recursiveSearch(location.marketplaces as Location[]);
+					if ('suburbs' in location) {
+						matchingSuburbs = recursiveSearch(location.suburbs);
 					}
 
 					if (
 						matches ||
+						matchingCounties.length > 0 ||
 						matchingCities.length > 0 ||
-						matchingCityParts.length > 0 ||
-						matchingMarketplaces.length > 0
+						matchingSuburbs.length > 0
 					) {
 						expandedIds.add(location.id);
 
 						return {
 							...location,
+							counties: matchingCounties.length > 0 ? matchingCounties : [],
 							cities: matchingCities.length > 0 ? matchingCities : [],
-							cityParts: matchingCityParts.length > 0 ? matchingCityParts : [],
-							marketplaces: matchingMarketplaces.length > 0 ? matchingMarketplaces : [],
+							suburbs: matchingSuburbs.length > 0 ? matchingSuburbs : [],
 						};
 					}
 
@@ -241,12 +241,16 @@ const LocationList: React.FC<Props> = ({
 	useEffect(() => {
 		const expandedIds = new Set<number>();
 		locations.forEach(location => {
-			if ('cities' in location && Array.isArray(location.cities) && location.cities.length > 0) {
+			if (
+				'counties' in location &&
+				Array.isArray(location.counties) &&
+				location.counties.length > 0
+			) {
 				expandedIds.add(location.id);
 			} else if (
-				'cityParts' in location &&
-				Array.isArray(location.cityParts) &&
-				location.cityParts.length > 0
+				'cities' in location &&
+				Array.isArray(location.cities) &&
+				location.cities.length > 0
 			) {
 				expandedIds.add(location.id);
 			}
@@ -343,7 +347,7 @@ const LocationList: React.FC<Props> = ({
 				<CustomModal isOpen={isTranslationModalOpen} onRequestClose={handleCloseModal}>
 					<EditLocationForm
 						currentLocation={currentEditLocation}
-						currentTranslations={currentEditLocation.label.translations} // Pass the translations
+						currentTranslations={currentEditLocation.label.translations}
 						languages={languages}
 						handleSubmitEdit={handleSubmitEdit}
 						currentIcon={currentIcon?.iconUrl || null}

@@ -7,10 +7,10 @@ interface RetailStoreData {
 	name: string;
 	locationId?: number;
 	newLocation?: {
-		countryId: number;
-		cityId: number;
-		cityPartId?: number;
-		marketplaceId?: number;
+		stateId: number;
+		countyId: number;
+		cityId?: number;
+		suburbId?: number;
 		address: string;
 	};
 	phoneNumber: string;
@@ -68,10 +68,10 @@ interface RetailStoreUpdateData {
 	name: string;
 	locationId?: number;
 	updatedLocation?: {
-		countryId: number;
-		cityId: number;
-		cityPartId?: number;
-		marketplaceId?: number;
+		stateId: number;
+		countyId: number;
+		cityId?: number;
+		suburbId?: number;
 		address: string;
 	};
 	phoneNumber: string;
@@ -134,21 +134,30 @@ export const useDeleteRetailStore = () => {
 
 interface FetchFilteredRetailStoresParams {
 	categoryId?: number;
-	countryId?: number;
-	cityId?: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
+	stateId?: number;
+	countyId?: number | null;
+	cityId?: number | null;
+	suburbId?: number | null;
 	languageId?: number;
 }
 
 export const fetchFilteredRetailStores = async (params: FetchFilteredRetailStoresParams) => {
 	const queryParams = new URLSearchParams();
-	if (params.categoryId) queryParams.append('categoryId', params.categoryId.toString());
-	if (params.countryId) queryParams.append('countryId', params.countryId.toString());
-	if (params.cityId) queryParams.append('cityId', params.cityId.toString());
-	if (params.cityPartId) queryParams.append('cityPartId', params.cityPartId.toString());
-	if (params.marketplaceId !== null && params.marketplaceId !== undefined) {
-		queryParams.append('marketplaceId', params.marketplaceId.toString());
+
+	if (params.categoryId !== undefined && params.categoryId !== null) {
+		queryParams.append('categoryId', params.categoryId.toString());
+	}
+	if (params.stateId !== undefined && params.stateId !== null) {
+		queryParams.append('stateId', params.stateId.toString());
+	}
+	if (params.countyId !== undefined && params.countyId !== null) {
+		queryParams.append('countyId', params.countyId.toString());
+	}
+	if (params.cityId !== undefined && params.cityId !== null) {
+		queryParams.append('cityId', params.cityId.toString());
+	}
+	if (params.suburbId !== undefined && params.suburbId !== null) {
+		queryParams.append('suburbId', params.suburbId.toString());
 	}
 	queryParams.append('languageId', (params.languageId || 1).toString());
 
@@ -160,10 +169,10 @@ export const fetchFilteredRetailStores = async (params: FetchFilteredRetailStore
 
 interface UseFetchFilteredRetailStoresParams {
 	categoryId?: number;
-	countryId?: number;
-	cityId?: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
+	stateId?: number;
+	countyId?: number | null;
+	cityId?: number | null;
+	suburbId?: number | null;
 	languageId?: number;
 }
 

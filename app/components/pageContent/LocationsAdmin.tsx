@@ -7,8 +7,6 @@ import NewLocationForm from '../forms/NewLocationForm';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import DynamicPageContainer from '../containers/DynamicPageContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
-
-// Import the API hooks from TanStack
 import { useFetchLocations, useCreateLocation } from '@/app/helpers/api/location';
 import { useFetchLanguages } from '@/app/helpers/api/language';
 import { useFetchIcons, useUploadIcon } from '@/app/helpers/api/icon';
@@ -33,10 +31,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
-	const [type, setType] = useState<'country' | 'city' | 'cityPart' | 'marketplace'>('country');
-	const [countryId, setCountryId] = useState<number | null>(null);
+	const [type, setType] = useState<'state' | 'county' | 'city' | 'suburb'>('state');
+	const [stateId, setStateId] = useState<number | null>(null);
+	const [countyId, setCountyId] = useState<number | null>(null);
 	const [cityId, setCityId] = useState<number | null>(null);
-	const [cityPartId, setCityPartId] = useState<number | null>(null);
 	const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set());
 	const [manuallyExpandedLocations, setManuallyExpandedLocations] = useState<Set<number>>(
 		new Set()
@@ -45,7 +43,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [initialExpandedLocations, setInitialExpandedLocations] = useState<Set<number>>(new Set());
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 
-	// Use TanStack Query for fetching data
 	const {
 		data: locationsData,
 		isLoading: isLoadingLocations,
@@ -97,14 +94,14 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				type,
 			};
 
-			if (type === 'city' && countryId) {
-				locationData.countryId = countryId;
+			if (type === 'county' && stateId) {
+				locationData.stateId = stateId;
 				locationData.postCode = postCode;
-			} else if (type === 'cityPart' && cityId) {
+			} else if (type === 'city' && countyId) {
+				locationData.countyId = countyId;
+				locationData.postCode = postCode;
+			} else if (type === 'suburb' && cityId) {
 				locationData.cityId = cityId;
-				locationData.postCode = postCode;
-			} else if (type === 'marketplace' && cityPartId) {
-				locationData.cityPartId = cityPartId;
 				locationData.address = address;
 			}
 
@@ -133,10 +130,10 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setName('');
 		setAddress('');
 		setPostCode('');
-		setCountryId(null);
+		setStateId(null);
+		setCountyId(null);
 		setCityId(null);
-		setCityPartId(null);
-		setType('country');
+		setType('state');
 		setIcon(null);
 		setCurrentIcon({ iconId: null, iconUrl: null });
 		setError('');
@@ -164,14 +161,14 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				onSubmit={handleSubmit}
 				name={name}
 				setName={setName}
-				countryId={countryId}
-				setCountryId={setCountryId}
+				stateId={stateId}
+				setStateId={setStateId}
 				type={type}
 				setType={setType}
+				countyId={countyId}
+				setCountyId={setCountyId}
 				cityId={cityId}
 				setCityId={setCityId}
-				cityPartId={cityPartId}
-				setCityPartId={setCityPartId}
 				setIcon={setIcon}
 				setIsIconPickerOpen={setIsIconPickerOpen}
 				postCode={postCode}

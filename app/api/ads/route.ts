@@ -30,14 +30,10 @@ export async function POST(req: NextRequest) {
 		const description = form.get('description')?.toString() || '';
 		const adType = form.get('adType')?.toString() || 'SMALL';
 		const url = form.get('url')?.toString() || '';
-		const countryId = form.get('countryId') ? parseInt(form.get('countryId') as string, 10) : null;
+		const stateId = form.get('stateId') ? parseInt(form.get('stateId') as string, 10) : null;
+		const countyId = form.get('countyId') ? parseInt(form.get('countyId') as string, 10) : null;
 		const cityId = form.get('cityId') ? parseInt(form.get('cityId') as string, 10) : null;
-		const cityPartId = form.get('cityPartId')
-			? parseInt(form.get('cityPartId') as string, 10)
-			: null;
-		const marketplaceId = form.get('marketplaceId')
-			? parseInt(form.get('marketplaceId') as string, 10)
-			: null;
+		const suburbId = form.get('suburbId') ? parseInt(form.get('suburbId') as string, 10) : null;
 		const retailStoreId = form.get('retailStoreId')
 			? parseInt(form.get('retailStoreId') as string, 10)
 			: null;
@@ -117,10 +113,10 @@ export async function POST(req: NextRequest) {
 
 		if (retailStoreId) data.RetailStore = { connect: { id: retailStoreId } };
 
-		if (countryId) data.country = { connect: { id: countryId } };
-		if (cityId) data.city = { connect: { id: cityId } };
-		if (cityPartId) data.cityPart = { connect: { id: cityPartId } };
-		if (marketplaceId) data.marketplace = { connect: { id: marketplaceId } };
+		if (stateId) data.stateId = { connect: { id: stateId } };
+		if (countyId) data.countyId = { connect: { id: countyId } };
+		if (cityId) data.cityId = { connect: { id: cityId } };
+		if (suburbId) data.suburb = { connect: { id: suburbId } };
 
 		const advertising = await prisma.advertising.create({ data });
 
@@ -157,7 +153,17 @@ export async function GET() {
 						name: true,
 					},
 				},
-				country: {
+				state: {
+					select: {
+						id: true,
+						label: {
+							select: {
+								translations: true,
+							},
+						},
+					},
+				},
+				county: {
 					select: {
 						id: true,
 						label: {
@@ -177,17 +183,7 @@ export async function GET() {
 						},
 					},
 				},
-				cityPart: {
-					select: {
-						id: true,
-						label: {
-							select: {
-								translations: true,
-							},
-						},
-					},
-				},
-				marketplace: {
+				suburb: {
 					select: {
 						id: true,
 						label: {

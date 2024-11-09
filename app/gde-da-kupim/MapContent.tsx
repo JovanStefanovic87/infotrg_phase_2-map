@@ -20,10 +20,10 @@ const MapContent: React.FC = () => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
-	const countryId = params.get('countryId') ? Number(params.get('countryId')) : undefined;
-	const cityId = params.get('cityId') ? Number(params.get('cityId')) : undefined;
-	const cityPartId = params.get('cityPartId') ? Number(params.get('cityPartId')) : null;
-	const marketplaceId = params.get('marketplaceId') ? Number(params.get('marketplaceId')) : null;
+	const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined;
+	const countyId = params.get('countyId') ? Number(params.get('countyId')) : undefined;
+	const cityId = params.get('cityId') ? Number(params.get('cityId')) : null;
+	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : null;
 	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
 		lat: 0,
 		lng: 0,
@@ -46,34 +46,22 @@ const MapContent: React.FC = () => {
 		error,
 	} = useFetchFilteredRetailStores({
 		categoryId: categoryId || 0,
-		countryId: countryId || 1,
-		cityId: cityId || 1,
-		cityPartId: cityPartId ?? null,
-		marketplaceId: marketplaceId ?? null,
+		stateId: stateId || 1,
+		countyId: countyId || 1,
+		cityId: cityId ?? null,
+		suburbId: suburbId ?? null,
 		languageId: 1,
 	});
 
 	const languageId = 1;
 	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId);
-	const { data: mainCountry } = useFetchLocationByIdAndLanguage(
-		countryId || 0,
-		'country',
-		languageId
-	);
+	const { data: mainState } = useFetchLocationByIdAndLanguage(stateId || 0, 'state', languageId);
+	const { data: mainCounty } = useFetchLocationByIdAndLanguage(cityId || 0, 'county', languageId);
 	const { data: mainCity } = useFetchLocationByIdAndLanguage(cityId || 0, 'city', languageId);
-	const { data: mainCityPart } = useFetchLocationByIdAndLanguage(
-		cityPartId || 0,
-		'cityPart',
-		languageId
-	);
-	const { data: mainMarketplace } = useFetchLocationByIdAndLanguage(
-		marketplaceId || 0,
-		'marketplace',
-		languageId
-	);
+	const { data: mainSuburb } = useFetchLocationByIdAndLanguage(suburbId || 0, 'suburb', languageId);
 
-	const locationParts = mainMarketplace?.name;
-	const locationText = locationParts;
+	const locationSuburbs = mainSuburb?.name;
+	const locationText = locationSuburbs;
 
 	const openEditModal = () => setEditModalOpen(true);
 	const closeEditModal = () => setEditModalOpen(false);
@@ -215,13 +203,13 @@ const MapContent: React.FC = () => {
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
 				onSave={handleSaveSelection}
-				location={mainMarketplace}
+				location={mainSuburb}
 				initialCategory={{ id: mainCategoryData?.id || 0, name: mainCategoryData?.name || '' }}
-				initialLocation={{
-					id: mainMarketplace.id || 0,
-					name: mainMarketplace.name || '',
-					type: mainMarketplace.type,
-				}}
+				initialLocation={
+					mainSuburb
+						? { id: mainSuburb.id, name: mainSuburb.name, type: mainSuburb.type }
+						: { id: 0, name: '', type: '' }
+				}
 			/>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map

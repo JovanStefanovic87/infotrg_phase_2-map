@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
 		const body = await req.json();
 		const {
 			name,
-			countryId,
+			stateId,
+			countyId,
 			cityId,
-			cityPartId,
-			marketplaceId,
+			suburbId,
 			phoneNumber,
 			email,
 			website,
@@ -67,18 +67,15 @@ export async function POST(req: NextRequest) {
 			  })
 			: undefined;
 
-		// Kreiraj retail store sa direktnim vezama ka country, city, itd.
 		const retailStore = await prisma.retailStore.create({
 			data: {
 				name,
-				country: {
-					connect: { id: countryId },
+				state: {
+					connect: { id: stateId },
 				},
-				city: {
-					connect: { id: cityId },
-				},
-				cityPart: cityPartId ? { connect: { id: cityPartId } } : undefined,
-				marketplace: marketplaceId ? { connect: { id: marketplaceId } } : undefined,
+				county: countyId ? { connect: { id: countyId } } : undefined,
+				city: cityId ? { connect: { id: cityId } } : undefined,
+				suburb: suburbId ? { connect: { id: suburbId } } : undefined,
 				phoneNumber,
 				email,
 				website,
@@ -109,7 +106,20 @@ export async function GET(req: NextRequest) {
 	try {
 		const retailStores = await prisma.retailStore.findMany({
 			include: {
-				country: {
+				state: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				county: {
 					include: {
 						label: {
 							include: {
@@ -135,20 +145,7 @@ export async function GET(req: NextRequest) {
 						},
 					},
 				},
-				cityPart: {
-					include: {
-						label: {
-							include: {
-								translations: {
-									where: {
-										languageId: languageId,
-									},
-								},
-							},
-						},
-					},
-				},
-				marketplace: {
+				suburb: {
 					include: {
 						label: {
 							include: {

@@ -25,16 +25,14 @@ interface Props {
 
 const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpen }) => {
 	const extendAdMutation = useExtendAd();
-	const country = ad.country?.label.translations[0].translation;
+	const state = ad.state?.label.translations[0].translation;
+	const county = ad.city?.label.translations[0].translation;
 	const city = ad.city?.label.translations[0].translation;
-	const cityPart = ad.cityPart?.label.translations[0].translation;
-	const marketplace = ad.marketplace?.label.translations[0].translation;
+	const suburb = ad.suburb?.label.translations[0].translation;
 
-	const shortLocation = `${city}${marketplace ? `, ${marketplace}` : ''}`;
-	const fullLocation = `${country} - ${city}${
-		cityPart || marketplace
-			? ` (${cityPart ? cityPart : ''}${marketplace ? `, ${marketplace}` : ''})`
-			: ''
+	const shortLocation = `${county}${suburb ? `, ${suburb}` : ''}`;
+	const fullLocation = `${state} - ${county}${
+		city || suburb ? ` (${city ? city : ''}${suburb ? `, ${suburb}` : ''})` : ''
 	}`;
 
 	const currentDate = new Date();

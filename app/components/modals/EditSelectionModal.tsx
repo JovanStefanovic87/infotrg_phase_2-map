@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogBackdrop, DialogTitle } from '@headlessui/react';
+import { Dialog, DialogBackdrop } from '@headlessui/react';
 import { useCategories } from '@/app/helpers/api/category';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
 import { useFetchAllLocationsWithTranslations } from '@/app/helpers/api/location';
 import { prefixAticleCategory, location } from '@/app/api/prefix';
 import CategorySelection from './CategorySelection';
-import { PencilIcon, FolderIcon, MapPinIcon, TagIcon } from '@heroicons/react/24/outline';
+import { TagIcon } from '@heroicons/react/24/outline';
 import CloseButton from '../buttons/CloseButton';
 import SelectableButton from '../buttons/SelectableButton';
 
@@ -13,7 +13,7 @@ type Location = {
 	id: number;
 	name: string;
 	icon?: string | null;
-	type: 'country' | 'city' | 'cityPart' | 'marketplace';
+	type: 'state' | 'county' | 'city' | 'suburb';
 	children?: Location[];
 };
 
@@ -40,8 +40,8 @@ const EditSelectionModal: React.FC<Props> = ({
 	initialCategory,
 	initialLocation,
 }) => {
-	const { data: categories } = useCategories(prefixAticleCategory);
-	const { data: locations } = useFetchAllLocationsWithTranslations({
+	const { data: categories = [] } = useCategories(prefixAticleCategory);
+	const { data: locations = [] } = useFetchAllLocationsWithTranslations({
 		prefix: location,
 		languageId: 1,
 	});
@@ -111,11 +111,13 @@ const EditSelectionModal: React.FC<Props> = ({
 					isOpen={categoryModalOpen}
 					onClose={() => setCategoryModalOpen(false)}
 					onSelect={category => setSelectedCategory(category)}
+					categories={categories}
 				/>
 				<CategorySelection
 					isOpen={locationModalOpen}
 					onClose={() => setLocationModalOpen(false)}
 					onSelect={location => setSelectedLocation(location)}
+					categories={locations}
 				/>
 			</div>
 		</Dialog>

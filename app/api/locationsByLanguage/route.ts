@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
-import { City, CityPart, Country, Marketplace } from '@/utils/helpers/types';
+import { State, County, City, Suburb } from '@/utils/helpers/types';
 
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
 	const languageId = parseInt(searchParams.get('languageId') || '1');
 
 	try {
-		let locations = await prisma.country.findMany({
+		let locations = await prisma.state.findMany({
 			where: {
 				label: {
 					name: {
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 					},
 				},
 				icon: true,
-				cities: {
+				counties: {
 					include: {
 						label: {
 							include: {
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
 							},
 						},
 						icon: true,
-						cityParts: {
+						cities: {
 							include: {
 								label: {
 									include: {
@@ -39,7 +39,7 @@ export async function GET(req: Request) {
 									},
 								},
 								icon: true,
-								marketplaces: {
+								suburbs: {
 									include: {
 										label: {
 											include: {
@@ -65,21 +65,20 @@ export async function GET(req: Request) {
 		};
 
 		const transformLocation = (location: any, type: string) => ({
+			id: location.id,
 			name: filterTranslationsByLanguage(location.label.translations, languageId),
 			icon: location.icon,
 			type,
 			children: location.cities?.length
-				? location.cities.map((city: City) => transformLocation(city, 'city'))
-				: location.cityParts?.length
-				? location.cityParts.map((part: CityPart) => transformLocation(part, 'cityPart'))
-				: location.marketplaces?.length
-				? location.marketplaces.map((marketplace: Marketplace) =>
-						transformLocation(marketplace, 'marketplace')
-				  )
+				? location.counties.map((county: County) => transformLocation(county, 'county'))
+				: location.city?.length
+				? location.city.map((city: City) => transformLocation(city, 'city'))
+				: location.suburb?.length
+				? location.suburb.map((suburb: Suburb) => transformLocation(suburb, 'suburb'))
 				: [],
 		});
 
-		const filteredLocations = locations.map(country => transformLocation(country, 'country'));
+		const filteredLocations = locations.map(state => transformLocation(state, 'state'));
 
 		return NextResponse.json(filteredLocations);
 	} catch (error) {

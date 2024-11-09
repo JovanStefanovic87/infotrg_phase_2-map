@@ -36,7 +36,8 @@ export const contentData: BasicInformation[] = [
   {
     id: 'poslovna-saradnja-06',
     title: '',
-    description: 'Autor priprema projektnu dokumentaciju u kojoj predstavlja svoju ideju.',
+    description:
+      'Administrator sakuplja sve potrebne informacije o proizvodima i unosi ih na platformu.',
     coverImage: '/images/poslovna-saradnja/ps06.jpg',
   },
   {

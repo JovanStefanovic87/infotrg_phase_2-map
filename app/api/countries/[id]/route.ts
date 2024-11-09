@@ -2,20 +2,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 
-// PUT request for updating a country
+// PUT request for updating a state
 export const PUT = async (req: NextRequest, { params }: { params: { id: string } }) => {
-	const countryId = parseInt(params.id, 10);
+	const stateId = parseInt(params.id, 10);
 
 	try {
 		const { labelName, translations } = await req.json();
 		const { name, translationData } = labelName;
 
-		// Update country, label, and translations in a transaction
-		const updatedCountry = await prisma.$transaction(async prisma => {
+		// Update state, label, and translations in a transaction
+		const updatedstate = await prisma.$transaction(async prisma => {
 			// Update label name
 			const updatedLabel = await prisma.label.update({
 				where: {
-					id: (await prisma.country.findUnique({ where: { id: countryId } }))?.labelId || 0,
+					id: (await prisma.state.findUnique({ where: { id: stateId } }))?.labelId || 0,
 				},
 				data: {
 					name: name,
@@ -31,9 +31,9 @@ export const PUT = async (req: NextRequest, { params }: { params: { id: string }
 				},
 			});
 
-			// Update the country
-			return await prisma.country.update({
-				where: { id: countryId },
+			// Update the state
+			return await prisma.state.update({
+				where: { id: stateId },
 				data: {
 					labelId: updatedLabel.id,
 				},
@@ -47,44 +47,44 @@ export const PUT = async (req: NextRequest, { params }: { params: { id: string }
 			});
 		});
 
-		return NextResponse.json(updatedCountry);
+		return NextResponse.json(updatedstate);
 	} catch (error) {
-		return NextResponse.json({ error: 'Failed to update country' }, { status: 500 });
+		return NextResponse.json({ error: 'Failed to update state' }, { status: 500 });
 	}
 };
 
-// DELETE request for deleting a country
+// DELETE request for deleting a state
 export const DELETE = async (req: NextRequest, { params }: { params: { id: string } }) => {
-	const countryId = parseInt(params.id, 10);
+	const stateId = parseInt(params.id, 10);
 
 	try {
-		// Find the country with its associated label ID
-		const country = await prisma.country.findUnique({
-			where: { id: countryId },
+		// Find the state with its associated label ID
+		const state = await prisma.state.findUnique({
+			where: { id: stateId },
 			include: {
 				label: true,
 			},
 		});
 
-		if (!country) {
-			return NextResponse.json({ error: 'Country not found' }, { status: 404 });
+		if (!state) {
+			return NextResponse.json({ error: 'State not found' }, { status: 404 });
 		}
 
-		// Delete country and its label in a transaction
+		// Delete state and its label in a transaction
 		await prisma.$transaction(async prisma => {
 			// Delete the label and related translations
 			await prisma.label.delete({
-				where: { id: country.labelId },
+				where: { id: state.labelId },
 			});
 
-			// Delete the country
-			await prisma.country.delete({
-				where: { id: countryId },
+			// Delete the state
+			await prisma.state.delete({
+				where: { id: stateId },
 			});
 		});
 
-		return NextResponse.json({ message: 'Country deleted successfully' });
+		return NextResponse.json({ message: 'State deleted successfully' });
 	} catch (error) {
-		return NextResponse.json({ error: 'Failed to delete country' }, { status: 500 });
+		return NextResponse.json({ error: 'Failed to delete state' }, { status: 500 });
 	}
 };

@@ -30,7 +30,7 @@ export function useUpdateLocation() {
 
 	return useMutation<void, Error, any>({
 		mutationFn: async (data: any) => {
-			const url = `/api/locations/${data.id}?type=${data.type}`; // Prilagođeno za update sa ID-jem i tipom
+			const url = `/api/locations/${data.id}?type=${data.type}`;
 			await postData(url, data);
 		},
 		onSuccess: (_, data) => {

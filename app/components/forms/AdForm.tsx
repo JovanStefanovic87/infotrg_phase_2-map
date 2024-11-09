@@ -14,9 +14,9 @@ interface Props {
 	setFormData: React.Dispatch<React.SetStateAction<AdFormState>>;
 	editMode?: boolean;
 	locations: any[];
+	filteredCounties: any[];
 	filteredCities: any[];
-	filteredCityParts: any[];
-	filteredMarketplaces: any[];
+	filteredSuburbs: any[];
 	filteredStores: any[];
 	handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 	handleSelectChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
@@ -33,9 +33,9 @@ const AdForm: React.FC<Props> = ({
 	setFormData,
 	editMode = false,
 	locations,
+	filteredCounties,
 	filteredCities,
-	filteredCityParts,
-	filteredMarketplaces,
+	filteredSuburbs,
 	filteredStores,
 	handleChange,
 	handleSelectChange,
@@ -80,9 +80,9 @@ const AdForm: React.FC<Props> = ({
 	const isFormValid = () => {
 		if (
 			!formData.name ||
-			!formData.countryId ||
+			!formData.stateId ||
+			!formData.countyId ||
 			!formData.cityId ||
-			!formData.retailStoreId ||
 			formData.adType === 'NONE' ||
 			(!formData.imageId && !formData.newImageFile) ||
 			!(
@@ -184,11 +184,11 @@ const AdForm: React.FC<Props> = ({
 				</div>
 			)}
 
-			{/* Country Selection */}
+			{/* State Selection */}
 			<SelectInputForm
-				id='countryId'
+				id='stateId'
 				label='Izaberite državu'
-				value={formData.countryId || 0}
+				value={formData.stateId || 0}
 				onChange={handleSelectChange}>
 				<option value={0} disabled>
 					Izaberite državu
@@ -200,16 +200,32 @@ const AdForm: React.FC<Props> = ({
 				))}
 			</SelectInputForm>
 
-			{/* City Selection */}
-			{formData.countryId > 0 && (
+			{/* County Selection */}
+			{formData.stateId > 0 && (
 				<SelectInputForm
-					id='cityId'
-					label='Izaberite grad'
-					value={formData.cityId || 0}
+					id='countyId'
+					label='Izaberite državu'
+					value={formData.countyId || 0}
 					onChange={handleSelectChange}>
 					<option value={0} disabled>
 						Izaberite grad
 					</option>
+					{filteredCounties.map(county => (
+						<option key={county.id} value={county.id} className='text-black'>
+							{county.label.translations[0]?.translation}
+						</option>
+					))}
+				</SelectInputForm>
+			)}
+
+			{/* City Selection */}
+			{(formData.countyId ?? 0) > 0 && (
+				<SelectInputForm
+					id='cityId'
+					label='Izaberite deo grada'
+					value={formData.city || 0}
+					onChange={handleSelectChange}>
+					<option value={0}>Izaberite grad</option>
 					{filteredCities.map(city => (
 						<option key={city.id} value={city.id} className='text-black'>
 							{city.label.translations[0]?.translation}
@@ -218,33 +234,17 @@ const AdForm: React.FC<Props> = ({
 				</SelectInputForm>
 			)}
 
-			{/* City Part Selection */}
-			{formData.cityId > 0 && (
+			{/* Suburb Selection */}
+			{formData.cityId && formData.cityId > 0 && (
 				<SelectInputForm
-					id='cityPartId'
-					label='Izaberite deo grada'
-					value={formData.cityPartId || 0}
+					id='suburbId'
+					label='Izaberite tržni centar'
+					value={formData.suburbId || 0}
 					onChange={handleSelectChange}>
 					<option value={0}>Izaberite deo grada</option>
-					{filteredCityParts.map(cityPart => (
-						<option key={cityPart.id} value={cityPart.id} className='text-black'>
-							{cityPart.label.translations[0]?.translation}
-						</option>
-					))}
-				</SelectInputForm>
-			)}
-
-			{/* Marketplace Selection */}
-			{formData.cityPartId && formData.cityPartId > 0 && (
-				<SelectInputForm
-					id='marketplaceId'
-					label='Izaberite tržni centar'
-					value={formData.marketplaceId || 0}
-					onChange={handleSelectChange}>
-					<option value={0}>Izaberite tržni centar</option>
-					{filteredMarketplaces.map(marketplace => (
-						<option key={marketplace.id} value={marketplace.id} className='text-black'>
-							{marketplace.label.translations[0]?.translation}
+					{filteredSuburbs.map(suburb => (
+						<option key={suburb.id} value={suburb.id} className='text-black'>
+							{suburb.label.translations[0]?.translation}
 						</option>
 					))}
 				</SelectInputForm>

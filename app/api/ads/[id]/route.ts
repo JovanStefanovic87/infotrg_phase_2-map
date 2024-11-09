@@ -4,7 +4,7 @@ import path from 'path';
 import { uploadImage } from '@/utils/helpers/file-utils';
 
 export async function DELETE(req: any, { params }: any) {
-	const adId = parseInt(params.id); // Uzimanje ID iz parametara
+	const adId = parseInt(params.id);
 
 	if (isNaN(adId)) {
 		return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
@@ -14,7 +14,7 @@ export async function DELETE(req: any, { params }: any) {
 		await prisma.advertising.delete({
 			where: { id: adId },
 		});
-		// Umesto 204, vraćamo 200 sa porukom
+
 		return NextResponse.json({ message: 'Ad deleted successfully' }, { status: 200 });
 	} catch (error) {
 		console.error('Error deleting ad:', error);

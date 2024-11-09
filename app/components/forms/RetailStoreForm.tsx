@@ -2,14 +2,14 @@ import React from 'react';
 import LabelInputForm from '../input/LabelInputForm';
 import SelectInputForm from '../input/SelectInputForm';
 import SubmitButton from '../buttons/SubmitButton';
-import { RetailFormState } from '@/utils/helpers/types';
+import { RetailFormState, State, County, City, Suburb } from '@/utils/helpers/types';
 
 interface Props {
 	formData: RetailFormState;
-	locations: any[];
-	filteredCities: any[];
-	filteredCityParts: any[];
-	filteredMarketplaces: any[];
+	states: State[];
+	filteredCounties: County[];
+	filteredCities: City[];
+	filteredSuburbs: Suburb[];
 	handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 	handleSelectChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 	handleSubmit: (e: React.FormEvent) => void;
@@ -20,10 +20,10 @@ interface Props {
 
 const RetailStoreForm: React.FC<Props> = ({
 	formData,
-	locations,
+	/* states, DO NOT DELETE THIS FUNCTION - IT WILL BE USED IN SOME OTHER CASES */
+	filteredCounties,
 	filteredCities,
-	filteredCityParts,
-	filteredMarketplaces,
+	filteredSuburbs,
 	handleChange,
 	handleSelectChange,
 	handleSubmit,
@@ -31,6 +31,7 @@ const RetailStoreForm: React.FC<Props> = ({
 	mutation,
 	successMessage,
 }) => {
+	console.log('formData', formData);
 	return (
 		<form onSubmit={handleSubmit} className='space-y-2 px-8 py-4 shadow-md'>
 			{/* Store Name */}
@@ -91,59 +92,59 @@ const RetailStoreForm: React.FC<Props> = ({
 				placeholder='Unesite geografsku dužinu'
 				type='number'
 			/>
-			{/* Country Selection */}
-			<SelectInputForm
-				id='countryId'
+			{/* State Selection */}
+			{/* <SelectInputForm DO NOT DETETE THIS FUNCTION - IT WILL BE USED IN SOME OTHER CASES
+				id='stateId'
 				label='Izaberite državu'
-				value={formData.countryId || 0}
+				value={formData.stateId || 0}
 				onChange={handleSelectChange}>
 				<option value={0} disabled>
 					Izaberite državu
 				</option>
-				{locations?.map((location: any) => (
-					<option key={location.id} value={location.id} className='text-black'>
-						{location.label.translations[0]?.translation}
+				{states?.map((state: any) => (
+					<option key={state.id} value={state.id} className='text-black'>
+						{state.label.translations[0]?.translation}
 					</option>
 				))}
-			</SelectInputForm>
-			{/* City Selection - Prikazujemo samo ako postoji izabrana država */}
+			</SelectInputForm> */}
+			{/* County Selection */}
 			<SelectInputForm
-				id='cityId' // Ovaj ID treba biti "cityId"
-				label='Izaberite grad'
-				value={formData.cityId || 0} // Postavi trenutni grad ako postoji
+				id='countyId'
+				label='Izaberite državu'
+				value={formData.countyId || 0}
 				onChange={handleSelectChange}>
 				<option value={0} disabled>
 					Izaberite grad
 				</option>
+				{filteredCounties.map((county: any) => (
+					<option key={county.id} value={county.id} className='text-black'>
+						{county.label.translations[0]?.translation}
+					</option>
+				))}
+			</SelectInputForm>
+			{/* City Selection*/}
+			<SelectInputForm
+				id='cityId'
+				label='Izaberite grad'
+				value={formData.cityId || 0}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite deo grada</option>
 				{filteredCities.map((city: any) => (
 					<option key={city.id} value={city.id} className='text-black'>
 						{city.label.translations[0]?.translation}
 					</option>
 				))}
 			</SelectInputForm>
-			{/* City Part Selection - Prikazujemo samo ako postoji izabrani grad */}
+			{/* Suburb Selection */}
 			<SelectInputForm
-				id='cityPartId' // Ovaj ID treba biti "cityPartId"
-				label='Izaberite deo grada'
-				value={formData.cityPartId || 0} // Postavi trenutni deo grada ako postoji
-				onChange={handleSelectChange}>
-				<option value={0}>Izaberite deo grada</option>
-				{filteredCityParts.map((cityPart: any) => (
-					<option key={cityPart.id} value={cityPart.id} className='text-black'>
-						{cityPart.label.translations[0]?.translation}
-					</option>
-				))}
-			</SelectInputForm>
-			{/* Marketplace Selection - Prikazujemo samo ako postoji izabrani deo grada */}
-			<SelectInputForm
-				id='marketplaceId' // Ovaj ID treba biti "marketplaceId"
-				label='Izaberite tržni centar'
-				value={formData.marketplaceId || 0} // Postavi trenutni tržni centar ako postoji
+				id='suburbId'
+				label='Izaberite lokaciju'
+				value={formData.suburbId || 0}
 				onChange={handleSelectChange}>
 				<option value={0}>Izaberite tržni centar</option>
-				{filteredMarketplaces.map((marketplace: any) => (
-					<option key={marketplace.id} value={marketplace.id} className='text-black'>
-						{marketplace.label.translations[0]?.translation}
+				{filteredSuburbs.map((suburb: any) => (
+					<option key={suburb.id} value={suburb.id} className='text-black'>
+						{suburb.label.translations[0]?.translation}
 					</option>
 				))}
 			</SelectInputForm>

@@ -59,17 +59,17 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 
 	const { data: ads } = useFetchAds();
 
-	const filteredCities = formData.countryId
-		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
+	const filteredCounties = formData.stateId
+		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.counties || []
 		: [];
 
-	const filteredCityParts = formData.cityId
-		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.cityParts || []
+	const filteredCities = formData.countyId
+		? filteredCounties.find((county: { id: number }) => county.id === formData.countyId)?.cities ||
+		  []
 		: [];
 
-	const filteredMarketplaces = formData.cityPartId
-		? filteredCityParts.find((cityPart: { id: number }) => cityPart.id === formData.cityPartId)
-				?.marketplaces || []
+	const filteredSuburbs = formData.cityId
+		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.suburbs || []
 		: [];
 
 	const handleAdTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -123,12 +123,13 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 			formDataToSend.append('adType', formData.adType);
 			formDataToSend.append('description', formData.description || '');
 			formDataToSend.append('url', formData.url);
-			formDataToSend.append('countryId', formData.countryId.toString());
-			formDataToSend.append('cityId', formData.cityId.toString());
+			formDataToSend.append('stateId', formData.stateId.toString());
+			if (formData.countyId !== undefined) {
+				formDataToSend.append('countyId', formData.countyId.toString());
+			}
 
-			if (formData.cityPartId) formDataToSend.append('cityPartId', formData.cityPartId.toString());
-			if (formData.marketplaceId)
-				formDataToSend.append('marketplaceId', formData.marketplaceId.toString());
+			if (formData.cityId) formDataToSend.append('cityId', formData.cityId.toString());
+			if (formData.suburbId) formDataToSend.append('suburbId', formData.suburbId.toString());
 			if (formData.retailStoreId)
 				formDataToSend.append('retailStoreId', formData.retailStoreId.toString());
 
@@ -178,20 +179,20 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 	}, [loading]);
 
 	const filteredStores = retails?.filter(store => {
-		if (formData.marketplaceId) {
-			return store.marketplaceId === formData.marketplaceId;
-		}
-
-		if (formData.cityPartId) {
-			return store.cityPartId === formData.cityPartId;
+		if (formData.suburbId) {
+			return store.suburbId === formData.suburbId;
 		}
 
 		if (formData.cityId) {
 			return store.cityId === formData.cityId;
 		}
 
-		if (formData.countryId) {
-			return store.countryId === formData.countryId;
+		if (formData.countyId) {
+			return store.countyId === formData.countyId;
+		}
+
+		if (formData.stateId) {
+			return store.stateId === formData.stateId;
 		}
 
 		return true;
@@ -211,21 +212,22 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 			isEmailConfirmed: false,
 			createdAt: new Date(),
 			updatedAt: new Date(),
-			countryId: 0,
+			stateId: 0,
+			countyId: 0,
 			cityId: 0,
-			cityPartId: 0,
-			marketplaceId: 0,
+			suburbId: 0,
 			locationId: null,
 			coordinatesId: null,
+			address: '',
 		},
 		Image:
 			ad.imageId && ad.image ? { id: ad.image.id, name: ad.image.name, url: ad.image.url } : null,
 		description: ad.description,
 		viewCount: ad.viewCount || 0,
-		country: ad.country ? ad.country : { id: ad.countryId, translation: '' },
-		city: ad.city ? ad.city : { id: ad.cityId, translation: '' },
-		cityPart: ad.cityPartId ? { id: ad.cityPartId, translation: '' } : null,
-		marketplace: ad.marketplaceId ? { id: ad.marketplaceId, translation: '' } : null,
+		state: ad.state ? ad.state : { id: ad.stateId, translation: '' },
+		county: ad.county ? ad.county : { id: ad.countyId, translation: '' },
+		city: ad.cityId ? { id: ad.cityId, translation: '' } : null,
+		suburb: ad.suburbId ? { id: ad.suburbId, translation: '' } : null,
 		articleCategories: ad.articleCategories.map((category: any) => category),
 		activityCategories: ad.activityCategories.map((category: any) => category),
 		objectTypeCategories: ad.objectTypeCategories.map((category: any) => category),
@@ -260,9 +262,9 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 						}
 						handleAdTypeChange={handleAdTypeChange}
 						loading={loading}
+						filteredCounties={filteredCounties}
 						filteredCities={filteredCities}
-						filteredCityParts={filteredCityParts}
-						filteredMarketplaces={filteredMarketplaces}
+						filteredSuburbs={filteredSuburbs}
 						filteredStores={filteredStores || []}
 						successMessage={successMessage}
 						handleSubmit={handleSubmit}
@@ -282,9 +284,9 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 				objectTypeCategories={objectTypeCategories || []}
 				retails={retails || []}
 				imagesData={imagesData || []}
+				filteredCounties={filteredCounties}
 				filteredCities={filteredCities}
-				filteredCityParts={filteredCityParts}
-				filteredMarketplaces={filteredMarketplaces}
+				filteredSuburbs={filteredSuburbs}
 				filteredStores={filteredStores || []}
 			/>
 		</DynamicPageContainer>

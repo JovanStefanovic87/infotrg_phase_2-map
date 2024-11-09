@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
 import {
-	Country,
+	State,
+	County,
 	City,
-	CityPart,
 	Language,
 	Translation,
-	Marketplace,
+	Suburb,
 	Location,
 } from '../../../utils/helpers/types';
 import TextNormal from '../text/TextNormal';
@@ -20,13 +20,13 @@ interface LocationItemProps {
 	languageId: number;
 	handleDelete: (id: number, type: string) => Promise<void>;
 	setCurrentEditLocation: React.Dispatch<
-		React.SetStateAction<Country | City | CityPart | Marketplace | null>
+		React.SetStateAction<State | County | City | Suburb | null>
 	>;
 	setParentId: React.Dispatch<React.SetStateAction<number | null>>;
 	toggleLocation: (id: number) => void;
 	expandedLocations: Set<number>;
-	locations: (Country | City | CityPart | Marketplace)[];
-	handleOpenTranslationModal: (location: Country | City | CityPart | Marketplace) => void;
+	locations: (State | County | City | Suburb)[];
+	handleOpenTranslationModal: (location: State | County | City | Suburb) => void;
 	languages: Language[];
 }
 
@@ -56,7 +56,9 @@ const LocationItem: React.FC<LocationItemProps> = ({
 		[expandedLocations]
 	);
 
-	const getLocationName = (location: Country | City | CityPart | Marketplace): string => {
+	console.log('location', location);
+
+	const getLocationName = (location: State | County | City | Suburb): string => {
 		const translations = Array.isArray(location.label.translations)
 			? (location.label.translations as unknown as Translation[])
 			: [];
@@ -105,9 +107,9 @@ const LocationItem: React.FC<LocationItemProps> = ({
 				/>
 			</div>
 
-			{('cities' in location && location.cities.length > 0) ||
-			('cityParts' in location && location.cityParts.length > 0) ||
-			('marketplaces' in location && location.marketplaces.length > 0) ? (
+			{('counties' in location && location.counties.length > 0) ||
+			('cities' in location && location.cities.length > 0) ||
+			('suburbs' in location && location.suburbs.length > 0) ? (
 				<ToggleButtonContainer
 					data={{ id: location.id.toString() }}
 					toggleFunction={(id: string) => toggleLocation(parseInt(id))}>
@@ -117,11 +119,11 @@ const LocationItem: React.FC<LocationItemProps> = ({
 
 			{isLocationExpanded(location.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
-					{'cities' in location &&
-						location.cities.map(city => (
+					{'counties' in location &&
+						location.counties.map(county => (
 							<LocationItem
-								key={city.id}
-								location={city}
+								key={county.id}
+								location={county}
 								setCurrentEditLocation={setCurrentEditLocation}
 								setParentId={setParentId}
 								handleDelete={handleDelete}
@@ -134,11 +136,11 @@ const LocationItem: React.FC<LocationItemProps> = ({
 							/>
 						))}
 
-					{'cityParts' in location &&
-						location.cityParts.map(cityPart => (
-							<div key={cityPart.id}>
+					{'cities' in location &&
+						location.cities.map(city => (
+							<div key={city.id}>
 								<LocationItem
-									location={cityPart}
+									location={city}
 									setCurrentEditLocation={setCurrentEditLocation}
 									setParentId={setParentId}
 									handleDelete={handleDelete}
@@ -150,12 +152,12 @@ const LocationItem: React.FC<LocationItemProps> = ({
 									languages={languages}
 								/>
 
-								{isLocationExpanded(cityPart.id) && (
+								{isLocationExpanded(city.id) && (
 									<div className='mt-2 pl-4 border-l-2 border-gray-300'>
-										{cityPart.marketplaces.map(marketplace => (
+										{city.suburbs.map(suburb => (
 											<LocationItem
-												key={marketplace.id}
-												location={marketplace}
+												key={suburb.id}
+												location={suburb}
 												setCurrentEditLocation={setCurrentEditLocation}
 												setParentId={setParentId}
 												handleDelete={handleDelete}

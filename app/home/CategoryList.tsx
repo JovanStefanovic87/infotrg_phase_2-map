@@ -14,9 +14,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 	const [scrollLeft, setScrollLeft] = useState(0);
 
 	const handleNavigation = (categoryId: number) => {
-		router.push(
-			`/gde-da-kupim?categoryId=${categoryId}&countryId=1&cityId=1&cityPartId=1&marketplaceId=1`
-		);
+		router.push(`/gde-da-kupim?categoryId=${categoryId}&stateId=1&countyId=1&cityId=1&suburbId=1`);
 	};
 
 	const startDragging = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {

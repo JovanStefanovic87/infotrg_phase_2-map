@@ -71,7 +71,6 @@ const RetailStoreList: React.FC<Props> = ({
 	const handleSubmitEdit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		// Priprema podataka za ažuriranje
 		const updatedRetailStoreData: RetailFormState = {
 			id: currentRetail?.id || 0,
 			name: formData.name,
@@ -81,10 +80,10 @@ const RetailStoreList: React.FC<Props> = ({
 			latitude: formData.latitude,
 			longitude: formData.longitude,
 			locationDescription: formData.locationDescription,
-			countryId: formData.countryId,
-			cityId: formData.cityId,
-			cityPartId: formData.cityPartId || null, // Osiguraj da je cityPartId opcionalan
-			marketplaceId: formData.marketplaceId || null, // Osiguraj da je marketplaceId opcionalan
+			stateId: formData.stateId,
+			countyId: formData.countyId,
+			cityId: formData.cityId || null,
+			suburbId: formData.suburbId || null,
 			articleCategoryIds: selectedArticleCategoryIds,
 			activityCategoryIds: selectedActivityCategoryIds,
 			objectTypeCategoryIds: selectedObjectTypeCategoryIds,
@@ -92,13 +91,13 @@ const RetailStoreList: React.FC<Props> = ({
 
 		mutation.mutate(
 			{
-				id: currentRetail?.id?.toString() || '', // Proveri da li id postoji i konvertuj ga u string
-				data: updatedRetailStoreData, // Pošalji ažurirane podatke
+				id: currentRetail?.id?.toString() || '',
+				data: updatedRetailStoreData,
 			},
 			{
 				onSuccess: () => {
 					setSuccessMessage('Prodajni objekat uspešno ažuriran!');
-					handleModalClose(); // Zatvaranje modala nakon uspešnog ažuriranja
+					handleModalClose();
 				},
 				onError: error => {
 					setError(error.message || 'Greška prilikom ažuriranja prodajnog objekta');
@@ -117,10 +116,10 @@ const RetailStoreList: React.FC<Props> = ({
 			latitude: retail.latitude || 0,
 			longitude: retail.longitude || 0,
 			locationDescription: retail.locationDescription || '',
-			countryId: retail.country?.id || 0,
+			stateId: retail.state?.id || 0,
+			countyId: retail.county?.id || 0,
 			cityId: retail.city?.id || 0,
-			cityPartId: retail.cityPart?.id || 0,
-			marketplaceId: retail.marketplace?.id || 0,
+			suburbId: retail.suburb?.id || 0,
 			articleCategoryIds: retail.articleCategories?.map(category => category.id) || [],
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
@@ -142,10 +141,10 @@ const RetailStoreList: React.FC<Props> = ({
 			latitude: retail.latitude || 0,
 			longitude: retail.longitude || 0,
 			locationDescription: retail.locationDescription || '',
-			countryId: retail.country?.id || 0,
+			stateId: retail.state?.id || 0,
+			countyId: retail.county?.id || 0,
 			cityId: retail.city?.id || 0,
-			cityPartId: retail.cityPart?.id || 0,
-			marketplaceId: retail.marketplace?.id || 0,
+			suburbId: retail.suburb?.id || 0,
 			articleCategoryIds: retail.articleCategories?.map(category => category.id) || [],
 			activityCategoryIds: retail.activityCategories?.map(category => category.id) || [],
 			objectTypeCategoryIds: retail.objectTypeCategories?.map(category => category.id) || [],
@@ -180,18 +179,20 @@ const RetailStoreList: React.FC<Props> = ({
 		setCurrentRetail(null);
 	};
 
-	const filteredCities = formData.countryId
-		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
+	const filteredCounties = formData.stateId
+		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.counties || []
 		: [];
 
-	const filteredCityParts = formData.cityId
-		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.cityParts || []
+	const filteredCities = formData.countyId
+		? filteredCounties.find((county: { id: number }) => county.id === formData.countyId)?.cities ||
+		  []
 		: [];
 
-	const filteredMarketplaces = formData.cityPartId
-		? filteredCityParts.find((cityPart: { id: number }) => cityPart.id === formData.cityPartId)
-				?.marketplaces || []
+	const filteredSuburbs = formData.cityId
+		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.suburbs || []
 		: [];
+
+	console.log('filteredCities:', filteredCities);
 
 	const findAllParents = (category: Category, allCategories: Category[]): Category[] => {
 		let parents: Category[] = [];
@@ -287,16 +288,16 @@ const RetailStoreList: React.FC<Props> = ({
 						</div>
 						<RetailStoreForm
 							formData={formData}
-							locations={locations}
+							states={locations}
 							handleChange={handleChange}
 							handleSelectChange={handleSelectChange}
 							handleSubmit={handleSubmitEdit}
 							loading={false}
 							mutation={{}}
 							successMessage={null}
+							filteredCounties={filteredCounties}
 							filteredCities={filteredCities}
-							filteredCityParts={filteredCityParts}
-							filteredMarketplaces={filteredMarketplaces}
+							filteredSuburbs={filteredSuburbs}
 						/>
 						<CategoryModal
 							isOpen={isArticleModalOpen}

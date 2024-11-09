@@ -283,29 +283,29 @@ export interface LocationBase {
 	icon?: Icon; // Optional field for an icon
 }
 
-export interface Country extends LocationBase {
+export interface State extends LocationBase {
+	counties: County[];
+	type: string;
+}
+
+export interface County extends LocationBase {
+	postCode: string | null;
+	stateId: number;
 	cities: City[];
 	type: string;
 }
 
 export interface City extends LocationBase {
 	postCode: string | null;
-	countryId: number;
-	cityParts: CityPart[];
+	countyId: number;
+	suburbs: Suburb[];
 	type: string;
 }
 
-export interface CityPart extends LocationBase {
-	postCode: string | null;
-	cityId: number;
-	marketplaces: Marketplace[];
-	type: string;
-}
-
-export interface Marketplace extends LocationBase {
+export interface Suburb extends LocationBase {
 	name: string;
 	address: string;
-	cityPartId: number;
+	cityId: number;
 	createdAt: string;
 	iconId?: number;
 	icon?: Icon;
@@ -314,7 +314,7 @@ export interface Marketplace extends LocationBase {
 	type: string;
 }
 
-export type Location = Country | City | CityPart | Marketplace;
+export type Location = State | County | City | Suburb;
 
 export interface RetailAdmin {
 	locationDescription: string;
@@ -329,10 +329,10 @@ export interface RetailAdmin {
 	viewCount: number;
 	isSubscribedForAds: boolean;
 	adType?: AdType;
-	country: LocationDetail;
-	city: LocationDetail;
-	cityPart?: LocationDetail | null;
-	marketplace?: LocationDetail | null;
+	state: LocationDetail;
+	county?: LocationDetail | null;
+	city?: LocationDetail | null;
+	suburb?: LocationDetail | null;
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
@@ -364,15 +364,15 @@ export interface GetRetailStoreApi {
 	updatedAt: string;
 
 	// Direct top-level IDs
-	countryId: number;
-	cityId: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
+	stateId: number;
+	countyId?: number;
+	cityId?: number | null;
+	suburbId?: number | null;
 	coordinatesId?: number | null;
 	totalArticleCategoryCount: number;
 
 	// Related entities as objects
-	country: {
+	state: {
 		id: number;
 		label: {
 			translations: {
@@ -381,19 +381,19 @@ export interface GetRetailStoreApi {
 			}[];
 		};
 	};
-	city: {
+	county?: {
 		id: number;
 		label: {
 			translations: { translation: string }[];
 		};
 	};
-	cityPart?: {
+	city?: {
 		id: number;
 		label: {
 			translations: { translation: string }[];
 		};
 	} | null;
-	marketplace?: {
+	suburb?: {
 		id: number;
 		label: {
 			translations: { translation: string }[];
@@ -444,20 +444,20 @@ export interface RetailAdmin {
 	viewCount: number;
 	isSubscribedForAds: boolean;
 	adType?: AdType;
-	country: LocationDetail;
-	city: LocationDetail;
-	cityPart?: LocationDetail | null;
-	marketplace?: LocationDetail | null;
+	state: LocationDetail;
+	county?: LocationDetail | null;
+	city?: LocationDetail | null;
+	suburb?: LocationDetail | null;
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
 }
 
 export interface RetailLocationData {
-	countryId: number;
-	cityId: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
+	stateId: number;
+	countyId?: number;
+	cityId?: number | null;
+	suburbId?: number | null;
 	latitude?: number;
 	longitude?: number;
 }
@@ -468,10 +468,10 @@ export interface RetailFormState {
 	phoneNumber: string;
 	email: string;
 	website: string;
-	countryId: number;
-	cityId: number;
-	cityPartId?: number | null;
-	marketplaceId?: number | null;
+	stateId: number;
+	countyId?: number;
+	cityId?: number | null;
+	suburbId?: number | null;
 	retailStoreId?: number;
 	latitude: number;
 	longitude: number;
@@ -508,10 +508,10 @@ export interface AdAdmin {
 	image: Image | null;
 	adType: AdType;
 	viewCount: number;
-	country: LocationDetail;
-	city: LocationDetail | null;
-	cityPart?: LocationDetail | null;
-	marketplace?: LocationDetail | null;
+	state: LocationDetail;
+	county?: LocationDetail | null;
+	city?: LocationDetail | null;
+	suburb?: LocationDetail | null;
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
@@ -525,9 +525,10 @@ export interface AdFormState {
 	activityCategories: any;
 	image: Image | null;
 	viewCount: number;
-	marketplace: any;
-	city: any;
-	country: any;
+	suburb?: any;
+	county?: any;
+	city?: any;
+	state: any;
 	id?: number | string;
 	name: string;
 	description: string;
@@ -535,10 +536,10 @@ export interface AdFormState {
 	imageId?: number;
 	newImageFile?: File | null;
 	adType: string;
-	countryId: number;
-	cityId: number;
-	cityPartId?: number;
-	marketplaceId?: number;
+	stateId: number;
+	countyId?: number;
+	cityId?: number;
+	suburbId?: number;
 	retailStoreId?: number;
 	articleCategoryIds: number[];
 	activityCategoryIds: number[];

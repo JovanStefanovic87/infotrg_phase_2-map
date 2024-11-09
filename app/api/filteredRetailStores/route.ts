@@ -130,13 +130,13 @@ const buildCategoryTree = async (
 
 // Function to create a category tree
 export async function GET(req: NextRequest) {
-	const searchParams = new URL(req.url).searchParams; // Use searchParams directly
-	const categoryId = searchParams.get('categoryId'); // Changed quotes
-	const countryId = searchParams.get('countryId'); // Changed quotes
-	const cityId = searchParams.get('cityId'); // Changed quotes
-	const cityPartId = searchParams.get('cityPartId'); // Changed quotes
-	const marketplaceId = searchParams.get('marketplaceId'); // Changed quotes
-	const languageId = parseInt(searchParams.get('languageId') ?? '1'); // Changed quotes
+	const searchParams = new URL(req.url).searchParams;
+	const categoryId = searchParams.get('categoryId');
+	const stateId = searchParams.get('stateId');
+	const countyId = searchParams.get('countyId');
+	const cityId = searchParams.get('cityId');
+	const suburbId = searchParams.get('suburbId');
+	const languageId = parseInt(searchParams.get('languageId') ?? '1');
 
 	const where: any = {};
 
@@ -147,12 +147,29 @@ export async function GET(req: NextRequest) {
 			{ objectTypeCategories: { some: { id: parseInt(categoryId) } } },
 		];
 	}
-	if (countryId) where.countryId = parseInt(countryId);
-	if (cityId) where.cityId = parseInt(cityId);
-	if (cityPartId && cityPartId !== '0') where.cityPartId = parseInt(cityPartId);
-	else where.cityPartId = null;
-	if (marketplaceId && marketplaceId !== '0') where.marketplaceId = parseInt(marketplaceId);
-	else where.marketplaceId = null;
+	if (stateId && stateId !== '0') {
+		where.stateId = parseInt(stateId);
+
+		if (countyId && countyId !== '0') {
+			where.countyId = parseInt(countyId);
+
+			if (cityId && cityId !== '0') {
+				where.cityId = parseInt(cityId);
+
+				if (suburbId && suburbId !== '0') {
+					where.suburbId = parseInt(suburbId);
+				} else {
+					where.suburbId = null;
+				}
+			} else {
+				where.cityId = null;
+			}
+		} else {
+			where.countyId = null;
+		}
+	} else {
+		where.stateId = null;
+	}
 
 	try {
 		const retailStores = await prisma.retailStore.findMany({
@@ -161,7 +178,18 @@ export async function GET(req: NextRequest) {
 				articleCategories: true,
 				activityCategories: true,
 				objectTypeCategories: true,
-				country: {
+				state: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: { languageId },
+								},
+							},
+						},
+					},
+				},
+				county: {
 					include: {
 						label: {
 							include: {
@@ -183,18 +211,7 @@ export async function GET(req: NextRequest) {
 						},
 					},
 				},
-				cityPart: {
-					include: {
-						label: {
-							include: {
-								translations: {
-									where: { languageId },
-								},
-							},
-						},
-					},
-				},
-				marketplace: {
+				suburb: {
 					include: {
 						label: {
 							include: {

@@ -58,7 +58,7 @@ const EditLocationForm: React.FC<Props> = ({
 	setError,
 }) => {
 	const [updatedTranslations, setUpdatedTranslations] = useState<Translation[]>([]);
-
+	console.log('type', type);
 	useEffect(() => {
 		const translationsWithLanguages = languages.map(language => {
 			const existingTranslation = currentTranslations.find(
@@ -71,7 +71,7 @@ const EditLocationForm: React.FC<Props> = ({
 					translation: '',
 					labelId: currentTranslations.length ? currentTranslations[0].labelId : 0,
 					translationId: 0,
-					id: 0, // Same here
+					id: 0,
 					createdAt: new Date(),
 					synonyms: [],
 				}
@@ -82,12 +82,12 @@ const EditLocationForm: React.FC<Props> = ({
 	}, [currentTranslations, languages]);
 
 	useEffect(() => {
-		if (currentLocation && (type === 'city' || type === 'cityPart')) {
+		if (currentLocation && (type === 'county' || type === 'city')) {
 			if ('postCode' in currentLocation) {
 				setPostCode?.(currentLocation.postCode || '');
 			}
 		}
-		if (currentLocation && type === 'marketplace') {
+		if (currentLocation && type === 'suburb') {
 			if ('address' in currentLocation) {
 				setAddress?.(currentLocation.address || '');
 			}
@@ -157,7 +157,7 @@ const EditLocationForm: React.FC<Props> = ({
 			</div>
 
 			{/* Post Code Section (conditionally displayed for city type) */}
-			{(type === 'city' || type === 'cityPart') && (
+			{(type === 'city' || type === 'suburb') && (
 				<div className='mb-4'>
 					<LabelInputDefault
 						label='Poštanski broj'
@@ -168,7 +168,7 @@ const EditLocationForm: React.FC<Props> = ({
 				</div>
 			)}
 
-			{type === 'marketplace' && (
+			{type === 'suburb' && (
 				<div className='mb-4'>
 					<LabelInputDefault
 						label='Adresa'

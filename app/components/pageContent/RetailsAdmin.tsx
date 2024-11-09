@@ -51,17 +51,17 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const { data: retails } = useFetchRetailStores(languageId);
 
 	// Logika za filtriranje gradova, delova grada i tržnih centara na osnovu odabira
-	const filteredCities = formData.countryId
-		? locations?.find((country: { id: number }) => country.id === formData.countryId)?.cities || []
+	const filteredCounties = formData.stateId
+		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.county || []
 		: [];
 
-	const filteredCityParts = formData.cityId
-		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.cityParts || []
+	const filteredCities = formData.countyId
+		? filteredCounties.find((county: { id: number }) => county.id === formData.countyId)?.cities ||
+		  []
 		: [];
 
-	const filteredMarketplaces = formData.cityPartId
-		? filteredCityParts.find((cityPart: { id: number }) => cityPart.id === formData.cityPartId)
-				?.marketplaces || []
+	const filteredSuburbs = formData.cityId
+		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.suburbs || []
 		: [];
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -72,10 +72,10 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			phoneNumber: formData.phoneNumber,
 			email: formData.email,
 			website: formData.website,
-			countryId: formData.countryId,
-			cityId: formData.cityId,
-			cityPartId: formData.cityPartId || null,
-			marketplaceId: formData.marketplaceId || null,
+			stateId: formData.stateId,
+			countyId: formData.countyId,
+			cityId: formData.cityId || null,
+			suburbId: formData.suburbId || null,
 			coordinates: {
 				latitude: parseFloat(formData.latitude.toString()),
 				longitude: parseFloat(formData.longitude.toString()),
@@ -112,24 +112,26 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			viewCount: retail.viewCount,
 			isSubscribedForAds: retail.isSubscribedForAds ?? false,
 			adType: retail.adType ?? null,
-			country: {
-				id: retail.country.id,
-				translation: retail.country.label.translations[0]?.translation || 'N/A',
+			state: {
+				id: retail.state.id,
+				translation: retail.state.label.translations[0]?.translation || 'N/A',
 			},
-			city: {
-				id: retail.city.id,
-				translation: retail.city.label.translations[0]?.translation || 'N/A',
-			},
-			cityPart: retail.cityPart
+			county: retail.county
 				? {
-						id: retail.cityPart.id,
-						translation: retail.cityPart.label.translations[0]?.translation || 'N/A',
+						id: retail.county.id,
+						translation: retail.county.label.translations[0]?.translation || 'N/A',
 				  }
 				: null,
-			marketplace: retail.marketplace
+			city: retail.city
 				? {
-						id: retail.marketplace.id,
-						translation: retail.marketplace.label.translations[0]?.translation || 'N/A',
+						id: retail.city.id,
+						translation: retail.city.label.translations[0]?.translation || 'N/A',
+				  }
+				: null,
+			suburb: retail.suburb
+				? {
+						id: retail.suburb.id,
+						translation: retail.suburb.label.translations[0]?.translation || 'N/A',
 				  }
 				: null,
 			articleCategories:
@@ -172,15 +174,15 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 				submitTrigger={submitTrigger}>
 				<RetailStoreForm
 					formData={formData}
-					locations={locations}
+					states={locations}
 					handleChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
 					handleSelectChange={e =>
 						setFormData({ ...formData, [e.target.name]: parseInt(e.target.value) })
 					}
 					loading={loading}
+					filteredCounties={filteredCounties}
 					filteredCities={filteredCities}
-					filteredCityParts={filteredCityParts}
-					filteredMarketplaces={filteredMarketplaces}
+					filteredSuburbs={filteredSuburbs}
 					successMessage={successMessage}
 					handleSubmit={handleSubmit}
 					mutation={undefined}

@@ -9,7 +9,7 @@ import FormDefaultButton from '../buttons/FormDefaultButton';
 import AdForm from '../forms/AdForm';
 import CategoryModal from '../modals/CategoryModal';
 import { adInit } from '@/utils/helpers/initialStates';
-import { useFetchImages, useUploadImages } from '@/app/helpers/api/images';
+import { useUploadImages } from '@/app/helpers/api/images';
 
 interface Props {
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
@@ -22,9 +22,9 @@ interface Props {
 	objectTypeCategories: any[];
 	retails: any[];
 	imagesData: any[];
+	filteredCounties: any[];
 	filteredCities: any[];
-	filteredCityParts: any[];
-	filteredMarketplaces: any[];
+	filteredSuburbs: any[];
 	filteredStores?: any[];
 }
 
@@ -39,9 +39,9 @@ const AdsList: React.FC<Props> = ({
 	objectTypeCategories,
 	retails,
 	imagesData,
+	filteredCounties,
 	filteredCities,
-	filteredCityParts,
-	filteredMarketplaces,
+	filteredSuburbs,
 	filteredStores,
 }) => {
 	const { mutate: deleteAd } = useDeleteAd();
@@ -118,17 +118,17 @@ const AdsList: React.FC<Props> = ({
 			activityCategoryIds: ad.activityCategories.map(category => category.id) || [],
 			objectTypeCategoryIds: ad.objectTypeCategories.map(category => category.id) || [],
 			imageId: ad.imageId || undefined,
-			newImageFile: null, // Resetujte novo učitanu sliku
-			countryId: ad.country?.id || 1,
-			cityId: ad.city?.id || 1,
-			cityPartId: ad.cityPart?.id || 0,
-			marketplaceId: ad.marketplace?.id || 0,
+			newImageFile: null,
+			stateId: ad.state?.id || 1,
+			countyId: ad.county?.id || 1,
+			cityId: ad.city?.id || 0,
+			suburbId: ad.suburb?.id || 0,
 			retailStoreId: ad.retailStore?.id || 0,
 			image: ad.image || null,
 			viewCount: ad.viewCount || 0,
-			marketplace: ad.marketplace || null,
-			city: ad.city || null,
-			country: ad.country || null,
+			suburb: ad.suburb || null,
+			county: ad.county || null,
+			state: ad.state || null,
 			objectTypeCategories: ad.objectTypeCategories || [],
 			articleCategories: ad.articleCategories || [],
 			activityCategories: ad.activityCategories || [],
@@ -271,9 +271,9 @@ const AdsList: React.FC<Props> = ({
 							}
 							handleAdTypeChange={handleAdTypeChange}
 							loading={loading}
+							filteredCounties={filteredCounties}
 							filteredCities={filteredCities}
-							filteredCityParts={filteredCityParts}
-							filteredMarketplaces={filteredMarketplaces}
+							filteredSuburbs={filteredSuburbs}
 							filteredStores={filteredStores || []}
 							successMessage={successMessage}
 							handleSubmit={handleSubmitEdit}

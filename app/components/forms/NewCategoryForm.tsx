@@ -35,6 +35,11 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 		setParentIds(newParentIds);
 	};
 
+	// Funkcija za uklanjanje nadkategorije
+	const handleRemoveParent = (labelId: number) => {
+		setParentIds(prev => prev.filter(id => id !== labelId));
+	};
+
 	return (
 		<form onSubmit={onSubmit} className='space-y-4'>
 			<div>
@@ -46,7 +51,9 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 				/>
 			</div>
 			<div>
-				<Label htmlFor='parentId'>Naziv natkategorije (opciono):</Label>
+				<Label htmlFor='parentId' color='black'>
+					Izbor natkategorije (opciono):
+				</Label>
 				<Combobox
 					options={translations}
 					selectedOptions={selectedParents}
@@ -54,7 +61,33 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 					placeholder='Izaberite natkategoriju'
 				/>
 			</div>
-			<div className='flex w-full space-x-4'>
+
+			{/* Prikaz izabranih nadkategorija sa opcijom za uklanjanje */}
+			{selectedParents.length > 0 && (
+				<div className='mt-2'>
+					<Label htmlFor='selectedParents' color='black'>
+						Izabrane natkategorije:
+					</Label>
+					<div className='flex flex-wrap gap-2 mt-1'>
+						{selectedParents.map(parent => (
+							<div
+								key={parent.labelId}
+								className='flex items-center bg-gray-200 text-blueDarker font-semibold rounded-full px-3 py-1 text-base shadow-sm hover:bg-red-950 transition-all duration-200 ease-in-out cursor-pointer'
+								onClick={() => handleRemoveParent(parent.labelId)}>
+								<span className='mr-2'>{parent.translation}</span>
+								<button
+									type='button'
+									className='text-red-600 focus:outline-none'
+									aria-label={`Ukloni ${parent.translation}`}>
+									&times;
+								</button>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			<div className='flex w-full space-x-4 mt-4'>
 				<ImageUploadButton
 					id='iconUpload'
 					label='Nova ikonica (PNG)'

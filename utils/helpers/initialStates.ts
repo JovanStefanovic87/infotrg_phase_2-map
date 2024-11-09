@@ -1,9 +1,9 @@
 import { RetailLocationData, RetailFormState, AdType, AdFormState } from './types';
 
 export const retailLocationInit: RetailLocationData = {
-	countryId: 0,
-	cityId: 0,
-	cityPartId: null,
+	stateId: 3, // Change to 1 in production
+	countyId: 0,
+	cityId: null,
 	latitude: 0.0,
 	longitude: 0.0,
 };
@@ -13,10 +13,10 @@ export const retailInit: RetailFormState = {
 	phoneNumber: '',
 	email: '',
 	website: '',
-	countryId: 0,
+	stateId: 3, // Change to 1 in production
+	countyId: 0,
 	cityId: 0,
-	cityPartId: 0,
-	marketplaceId: 0,
+	suburbId: 0,
 	latitude: 0,
 	longitude: 0,
 	locationDescription: '',
@@ -37,36 +37,36 @@ export const adInit: AdFormState = {
 		isEmailConfirmed: false,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		countryId: 0,
+		stateId: 3, // Change to 1 in production
+		countyId: 0,
 		cityId: 0,
-		cityPartId: 0,
-		marketplaceId: 0,
+		suburbId: 0,
 		locationId: null,
 		coordinatesId: null,
 		address: '',
 	},
-	objectTypeCategories: [], // Default to empty arrays or an appropriate initial state
+	objectTypeCategories: [],
 	articleCategories: [],
 	activityCategories: [],
-	image: null, // or an appropriate initial image object
+	image: null,
 	viewCount: 0,
-	marketplace: null, // or an appropriate initial state
-	city: null, // or an appropriate initial state
-	country: null, // or an appropriate initial state
-	id: 0, // or any default value for id
+	suburb: null,
+	city: null,
+	state: null,
+	id: 0,
 	name: '',
 	description: '',
 	url: '',
 	imageId: undefined,
 	newImageFile: null,
 	adType: 'NONE',
-	countryId: 1,
-	cityId: 1,
-	cityPartId: 0,
-	marketplaceId: 0,
+	stateId: 1,
+	countyId: 1,
+	cityId: 0,
+	suburbId: 0,
 	articleCategoryIds: [] as number[],
 	activityCategoryIds: [] as number[],
 	objectTypeCategoryIds: [] as number[],
 	imageFile: undefined,
-	validTo: new Date().toISOString(), // Initialize validTo with a default value
+	validTo: new Date().toISOString(),
 };

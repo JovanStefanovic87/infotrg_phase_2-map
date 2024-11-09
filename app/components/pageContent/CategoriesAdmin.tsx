@@ -125,6 +125,12 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
+
+		if (!name.trim()) {
+			setError('Naziv kategorije je obavezan.');
+			return;
+		}
+
 		try {
 			let iconId = currentIcon.iconId;
 			if (icon) {
