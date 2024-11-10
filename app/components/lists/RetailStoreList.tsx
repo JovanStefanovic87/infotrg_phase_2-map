@@ -107,7 +107,6 @@ const RetailStoreList: React.FC<Props> = ({
 	};
 
 	const handleEditClick = (retail: RetailAdmin) => {
-		console.log('retail.locationDescription', retail.locationDescription);
 		setFormData({
 			name: retail.name || '',
 			phoneNumber: retail.phoneNumber || '',
@@ -191,8 +190,6 @@ const RetailStoreList: React.FC<Props> = ({
 	const filteredSuburbs = formData.cityId
 		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.suburbs || []
 		: [];
-
-	console.log('filteredCities:', filteredCities);
 
 	const findAllParents = (category: Category, allCategories: Category[]): Category[] => {
 		let parents: Category[] = [];

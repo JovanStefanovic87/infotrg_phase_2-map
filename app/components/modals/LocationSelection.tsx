@@ -2,62 +2,89 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '../buttons/DefaultButton';
 import Image from 'next/image';
-import { CategoryDataForMap } from '@/utils/helpers/types';
+import { LocationDataForMap } from '@/utils/helpers/types';
 
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
-	onSelect: (item: { id: number; name: string; type?: string }) => void;
-	categories: Array<{ id: number; name: string; type?: string; children?: any[] }>;
-	selectedItem: CategoryDataForMap | null;
+	onSelect: (item: { id: number; name: string; type: 'county' | 'city' | 'suburb' }) => void;
+	locations: Array<{
+		id: number;
+		name: string;
+		type: 'county' | 'city' | 'suburb';
+		children?: any[];
+	}>;
+	selectedLocation: LocationDataForMap | null;
 }
 
-const CategorySelection: React.FC<Props> = ({
+const LocationSelection: React.FC<Props> = ({
 	isOpen,
 	onClose,
 	onSelect,
-	categories,
-	selectedItem,
+	locations,
+	selectedLocation,
 }) => {
-	const [expandedItems, setExpandedItems] = useState<number[]>([]);
+	const [expandedItems, setExpandedItems] = useState<{ id: number; type: string }[]>([]);
 
-	// Expand path to selected item if provided
-	useEffect(() => {
-		if (selectedItem) {
-			const parentIds = getParentIds(categories, selectedItem.id);
-			setExpandedItems([...parentIds, selectedItem.id]);
-		}
-	}, [selectedItem, categories]);
-
-	const getParentIds = (items: any[], itemId: number, path: number[] = []): number[] => {
+	// Function to find all parent IDs for the selected item
+	const getParentIds = (
+		items: any[],
+		itemId: number,
+		itemType: string,
+		path: any[] = []
+	): any[] => {
 		for (const item of items) {
-			if (item.id === itemId) return path;
+			if (item.id === itemId && item.type === itemType) return path;
 			if (item.children) {
-				const result = getParentIds(item.children, itemId, [...path, item.id]);
+				const result = getParentIds(item.children, itemId, itemType, [
+					...path,
+					{ id: item.id, type: item.type },
+				]);
 				if (result.length) return result;
 			}
 		}
 		return [];
 	};
 
-	const toggleItem = (itemId: number) => {
-		setExpandedItems(prev =>
-			prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
-		);
+	// Update expanded items to show the path to the selected item
+	useEffect(() => {
+		if (selectedLocation) {
+			const parentIds = getParentIds(locations, selectedLocation.id, selectedLocation.type);
+			setExpandedItems([...parentIds, { id: selectedLocation.id, type: selectedLocation.type }]);
+		}
+	}, [selectedLocation, locations]);
+
+	const toggleItem = (itemId: number, itemType: string) => {
+		setExpandedItems(prev => {
+			const isExpanded = prev.some(item => item.id === itemId && item.type === itemType);
+			if (isExpanded) {
+				// Remove the specific ID and type from expandedItems
+				return prev.filter(item => !(item.id === itemId && item.type === itemType));
+			} else {
+				// Add the specific ID and type to expandedItems
+				return [...prev, { id: itemId, type: itemType }];
+			}
+		});
 	};
 
-	const handleSelectItem = (item: { id: number; name: string; type?: string }) => {
+	const handleSelectLocation = (item: {
+		id: number;
+		name: string;
+		type: 'county' | 'city' | 'suburb';
+	}) => {
 		onSelect(item);
 		onClose();
 	};
 
-	const renderItemOptions = (items: any[], isChild = false) => {
+	const renderLocationOptions = (items: any[], isChild = false) => {
 		return items.map(item => {
-			// Check if this exact item is selected
-			const isSelected = selectedItem?.id === item.id;
+			const isSelected = selectedLocation?.id === item.id && selectedLocation?.type === item.type;
+			const isExpanded = expandedItems.some(
+				expandedItem => expandedItem.id === item.id && expandedItem.type === item.type
+			);
 
 			return (
-				<div key={`${item.id}-${item.name}`} className={`${isChild ? 'ml-4' : ''} mb-2 pl-2`}>
+				<div key={`${item.id}-${item.type}`} className={`${isChild ? 'ml-4' : ''} mb-2 pl-2`}>
 					<div
 						className={`flex items-center px-2 py-1 rounded-lg ${
 							isSelected ? 'bg-yellow-300 border-yellow-500 text-black font-semibold shadow-md' : ''
@@ -72,7 +99,7 @@ const CategorySelection: React.FC<Props> = ({
 							/>
 						)}
 						<button
-							onClick={() => handleSelectItem(item)}
+							onClick={() => handleSelectLocation(item)}
 							className={`text-left text-lg transition-colors hover:text-blueDarker ${
 								isChild ? 'text-gray-600' : 'text-gray-800'
 							} focus:outline-none focus:ring-2 focus:ring-blueDarker ${
@@ -82,9 +109,9 @@ const CategorySelection: React.FC<Props> = ({
 						</button>
 						{item.children && item.children.length > 0 && (
 							<button
-								onClick={() => toggleItem(item.id)}
+								onClick={() => toggleItem(item.id, item.type)}
 								className={`ml-auto transform transition-transform duration-300 ${
-									expandedItems.includes(item.id) ? 'rotate-90' : '-rotate-90'
+									isExpanded ? 'rotate-90' : '-rotate-90'
 								}`}>
 								<svg
 									xmlns='http://www.w3.org/2000/svg'
@@ -102,9 +129,9 @@ const CategorySelection: React.FC<Props> = ({
 							</button>
 						)}
 					</div>
-					{expandedItems.includes(item.id) && item.children && (
+					{isExpanded && item.children && (
 						<div className='pl-6 border-l border-gray-200'>
-							{renderItemOptions(item.children, true)}
+							{renderLocationOptions(item.children, true)}
 						</div>
 					)}
 				</div>
@@ -119,7 +146,7 @@ const CategorySelection: React.FC<Props> = ({
 				<div className='relative bg-white rounded-lg shadow-lg w-full max-h-[90vh] md:max-w-2xl md:h-auto md:rounded-md mx-2 md:mx-auto overflow-hidden'>
 					<div className='p-4 text-black'>
 						<div className='overflow-y-auto max-h-[65vh] md:max-h-96'>
-							{renderItemOptions(categories)}
+							{renderLocationOptions(locations)}
 						</div>
 					</div>
 					<div className='flex justify-end p-4 border-t border-gray-200'>
@@ -135,4 +162,4 @@ const CategorySelection: React.FC<Props> = ({
 	);
 };
 
-export default CategorySelection;
+export default LocationSelection;

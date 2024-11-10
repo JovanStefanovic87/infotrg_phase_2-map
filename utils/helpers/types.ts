@@ -591,3 +591,18 @@ export interface EnhancedCategory {
 	relatedCategories?: { relatedId: number }[];
 	relatedTo?: { categoryId: number }[];
 }
+
+export interface LocationDataForMap {
+	id: number;
+	name: string;
+	icon?: string | null;
+	type: 'state' | 'county' | 'city' | 'suburb';
+	children?: Location[];
+}
+
+export interface CategoryDataForMap {
+	id: number;
+	name: string;
+	icon?: string | null;
+	children?: Category[];
+}

@@ -7,7 +7,12 @@ import { useSearchParams } from 'next/navigation';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { useFetchCategoryByIdAndLanguage } from '@/app/helpers/api/category';
 import { useFetchLocationByIdAndLanguage } from '@/app/helpers/api/location';
-import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
+import {
+	Category,
+	GetRetailStoreApi,
+	LocationDataForMap,
+	CategoryDataForMap,
+} from '@/utils/helpers/types';
 import RetailStoreCard from './retailStoreList/RetailStoreCard';
 import AssortmentModal from './retailStoreList/AssortmentModal';
 import SpinnerForContainers from '../components/ui/SpinnerForContainers';
@@ -20,7 +25,7 @@ const MapContent: React.FC = () => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
-	const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined;
+	/* const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined; */
 	const countyId = params.get('countyId') ? Number(params.get('countyId')) : undefined;
 	const cityId = params.get('cityId') ? Number(params.get('cityId')) : null;
 	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : null;
@@ -36,8 +41,9 @@ const MapContent: React.FC = () => {
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
 	const [isMarkersLoading, setIsMarkersLoading] = useState(true);
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
-	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-	const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+	const [selectedCategory, setSelectedCategory] = useState<CategoryDataForMap | null>(null);
+	const [selectedLocation, setSelectedLocation] = useState<LocationDataForMap | null>(null);
+
 	useScrollToTop();
 
 	const {
@@ -46,7 +52,6 @@ const MapContent: React.FC = () => {
 		error,
 	} = useFetchFilteredRetailStores({
 		categoryId: categoryId || 0,
-		stateId: stateId || 1,
 		countyId: countyId || 1,
 		cityId: cityId ?? null,
 		suburbId: suburbId ?? null,
@@ -55,21 +60,33 @@ const MapContent: React.FC = () => {
 
 	const languageId = 1;
 	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId);
-	const { data: mainState } = useFetchLocationByIdAndLanguage(stateId || 0, 'state', languageId);
-	const { data: mainCounty } = useFetchLocationByIdAndLanguage(cityId || 0, 'county', languageId);
+	const { data: mainCounty } = useFetchLocationByIdAndLanguage(countyId || 0, 'county', languageId);
 	const { data: mainCity } = useFetchLocationByIdAndLanguage(cityId || 0, 'city', languageId);
 	const { data: mainSuburb } = useFetchLocationByIdAndLanguage(suburbId || 0, 'suburb', languageId);
-
-	const locationSuburbs = mainSuburb?.name;
-	const locationText = locationSuburbs;
+	console.log('mainSuburb?.name', mainSuburb?.name);
+	const locationText =
+		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';
 
 	const openEditModal = () => setEditModalOpen(true);
 	const closeEditModal = () => setEditModalOpen(false);
 
-	const handleSaveSelection = (category: string, location: string) => {
+	/* const handleSaveSelection = (category: string, location: string) => {
 		setSelectedCategory(category);
 		setSelectedLocation(location);
-	};
+	}; */
+
+	useEffect(() => {
+		if (mainCategoryData) {
+			setSelectedCategory({ id: mainCategoryData.id, name: mainCategoryData.name || '' });
+		}
+		if (mainSuburb) {
+			setSelectedLocation({ id: mainSuburb.id, name: mainSuburb.name, type: 'suburb' });
+		} else if (mainCity) {
+			setSelectedLocation({ id: mainCity.id, name: mainCity.name, type: 'city' });
+		} else if (mainCounty) {
+			setSelectedLocation({ id: mainCounty.id, name: mainCounty.name, type: 'county' });
+		}
+	}, [mainCategoryData, mainSuburb, mainCity, mainCounty]);
 
 	useEffect(() => {
 		if (retailStores) {
@@ -202,14 +219,11 @@ const MapContent: React.FC = () => {
 			<EditSelectionModal
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
-				onSave={handleSaveSelection}
 				location={mainSuburb}
-				initialCategory={{ id: mainCategoryData?.id || 0, name: mainCategoryData?.name || '' }}
-				initialLocation={
-					mainSuburb
-						? { id: mainSuburb.id, name: mainSuburb.name, type: mainSuburb.type }
-						: { id: 0, name: '', type: '' }
-				}
+				selectedCategory={selectedCategory}
+				selectedLocation={selectedLocation}
+				setSelectedCategory={setSelectedCategory}
+				setSelectedLocation={setSelectedLocation}
 			/>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map

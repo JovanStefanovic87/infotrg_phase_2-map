@@ -80,3 +80,15 @@ export const useFetchAllLocationsWithTranslations = (params: {
 		refetchOnWindowFocus: false,
 	});
 };
+
+export const useFetchLocationsWithoutStates = (params: {
+	prefix?: string;
+	languageId?: number;
+}) => {
+	return useQuery({
+		queryKey: ['locationsWithoutStates', params],
+		queryFn: () => getWithParams('/api/locationsByLanguageWithoutStates', params),
+		staleTime: 1000 * 60 * 5, // Data is fresh for 5 minutes
+		refetchOnWindowFocus: false,
+	});
+};

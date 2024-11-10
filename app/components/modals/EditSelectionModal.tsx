@@ -1,65 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
 import { useCategories } from '@/app/helpers/api/category';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
-import { useFetchAllLocationsWithTranslations } from '@/app/helpers/api/location';
+import { useFetchLocationsWithoutStates } from '@/app/helpers/api/location';
 import { prefixAticleCategory, location } from '@/app/api/prefix';
 import CategorySelection from './CategorySelection';
+import LocationSelection from './LocationSelection';
 import { TagIcon } from '@heroicons/react/24/outline';
 import CloseButton from '../buttons/CloseButton';
 import SelectableButton from '../buttons/SelectableButton';
-
-type Location = {
-	id: number;
-	name: string;
-	icon?: string | null;
-	type: 'state' | 'county' | 'city' | 'suburb';
-	children?: Location[];
-};
-
-type Category = {
-	id: number;
-	name: string;
-	icon?: string | null;
-	children?: Category[];
-};
+import { LocationDataForMap, CategoryDataForMap } from '@/utils/helpers/types';
 
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (selectedCategory: string, selectedLocation: string) => void;
 	location: Location;
-	initialCategory?: Category | null;
-	initialLocation?: Location | null;
+	selectedCategory: CategoryDataForMap | null;
+	selectedLocation: LocationDataForMap | null;
+	setSelectedCategory: Dispatch<SetStateAction<CategoryDataForMap | null>>;
+	setSelectedLocation: Dispatch<SetStateAction<LocationDataForMap | null>>;
 }
 
 const EditSelectionModal: React.FC<Props> = ({
 	isOpen,
 	onClose,
-	onSave,
-	initialCategory,
-	initialLocation,
+	/* onSave, */
+	selectedCategory,
+	selectedLocation,
+	setSelectedCategory,
+	setSelectedLocation,
 }) => {
 	const { data: categories = [] } = useCategories(prefixAticleCategory);
-	const { data: locations = [] } = useFetchAllLocationsWithTranslations({
+	const { data: locations = [] } = useFetchLocationsWithoutStates({
 		prefix: location,
 		languageId: 1,
 	});
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
-	const [selectedCategory, setSelectedCategory] = useState<{ id: number; name: string } | null>(
-		initialCategory || null
-	);
-	const [selectedLocation, setSelectedLocation] = useState<{ id: number; name: string } | null>(
-		initialLocation || null
-	);
-
-	useEffect(() => {
-		if (initialCategory)
-			setSelectedCategory({ id: initialCategory.id, name: initialCategory.name });
-		if (initialLocation)
-			setSelectedLocation({ id: initialLocation.id, name: initialLocation.name });
-	}, [initialCategory, initialLocation]);
 
 	return (
 		<Dialog
@@ -68,10 +45,6 @@ const EditSelectionModal: React.FC<Props> = ({
 			className='fixed z-50 inset-0 flex items-center justify-center'>
 			<DialogBackdrop className='fixed inset-0 bg-gray-900 opacity-85' />
 			<div className='relative bg-white rounded-2xl max-w-lg w-full p-8 shadow-xl transform transition-all'>
-				{/* <DialogTitle className='text-3xl font-bold italic text-center text-black mb-8 tracking-wide'>
-					
-				</DialogTitle> */}
-
 				<div className='space-y-6 mb-8'>
 					<div className='flex flex-col'>
 						<SelectableButton
@@ -84,7 +57,7 @@ const EditSelectionModal: React.FC<Props> = ({
 					</div>
 					<div className='flex flex-col'>
 						<SelectableButton
-							label='Izaberite kategoriju proizvoda'
+							label='Izaberite lokaciju pretrage'
 							selectedItem={selectedLocation || undefined}
 							icon={<TagIcon className='w-6 h-6 text-black' />}
 							placeholder='Izaberite lokaciju'
@@ -98,7 +71,7 @@ const EditSelectionModal: React.FC<Props> = ({
 					<DefaultButton
 						onClick={() => {
 							if (selectedCategory && selectedLocation) {
-								onSave(selectedCategory.name, selectedLocation.name);
+								/* onSave(selectedCategory.name, selectedLocation.name); */
 								onClose();
 							}
 						}}
@@ -112,12 +85,19 @@ const EditSelectionModal: React.FC<Props> = ({
 					onClose={() => setCategoryModalOpen(false)}
 					onSelect={category => setSelectedCategory(category)}
 					categories={categories}
+					selectedItem={selectedCategory}
 				/>
-				<CategorySelection
+				<LocationSelection
 					isOpen={locationModalOpen}
 					onClose={() => setLocationModalOpen(false)}
-					onSelect={location => setSelectedLocation(location)}
-					categories={locations}
+					onSelect={location =>
+						setSelectedLocation({
+							...location,
+							type: location.type as 'county' | 'city' | 'suburb',
+						})
+					}
+					locations={locations} // Pass the array of locations as expected by LocationSelection
+					selectedLocation={selectedLocation} // Use selectedLocation here instead of selectedItem
 				/>
 			</div>
 		</Dialog>

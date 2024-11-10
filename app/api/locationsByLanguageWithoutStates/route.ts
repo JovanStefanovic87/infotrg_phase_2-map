@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../lib/prisma';
-import { State, County, City, Suburb } from '@/utils/helpers/types';
+import { City, Suburb } from '@/utils/helpers/types';
 
 export async function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
@@ -8,7 +8,8 @@ export async function GET(req: Request) {
 	const languageId = parseInt(searchParams.get('languageId') || '1');
 
 	try {
-		let locations = await prisma.state.findMany({
+		// Fetch counties directly, along with nested cities and suburbs
+		let counties = await prisma.county.findMany({
 			where: {
 				label: {
 					name: {
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
 					},
 				},
 				icon: true,
-				counties: {
+				cities: {
 					include: {
 						label: {
 							include: {
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
 							},
 						},
 						icon: true,
-						cities: {
+						suburbs: {
 							include: {
 								label: {
 									include: {
@@ -39,16 +40,6 @@ export async function GET(req: Request) {
 									},
 								},
 								icon: true,
-								suburbs: {
-									include: {
-										label: {
-											include: {
-												translations: true,
-											},
-										},
-										icon: true,
-									},
-								},
 							},
 						},
 					},
@@ -56,6 +47,7 @@ export async function GET(req: Request) {
 			},
 		});
 
+		// Helper to filter translations by language
 		const filterTranslationsByLanguage = (translations: any[], languageId: number) => {
 			return (
 				translations.find(t => t.languageId === languageId)?.translation ||
@@ -64,21 +56,22 @@ export async function GET(req: Request) {
 			);
 		};
 
+		// Transform function for county, city, and suburb
 		const transformLocation = (location: any, type: string) => ({
 			id: location.id,
 			name: filterTranslationsByLanguage(location.label.translations, languageId),
 			icon: location.icon,
 			type,
-			children: location.counties
-				? location.counties.map((county: County) => transformLocation(county, 'county'))
-				: location.cities
-				? location.cities.map((city: City) => transformLocation(city, 'city'))
-				: location.suburbs
-				? location.suburbs.map((suburb: Suburb) => transformLocation(suburb, 'suburb'))
-				: [],
+			children:
+				type === 'county'
+					? location.cities.map((city: City) => transformLocation(city, 'city'))
+					: type === 'city'
+					? location.suburbs.map((suburb: Suburb) => transformLocation(suburb, 'suburb'))
+					: [],
 		});
 
-		const filteredLocations = locations.map(state => transformLocation(state, 'state'));
+		// Map through the counties to structure the response
+		const filteredLocations = counties.map(county => transformLocation(county, 'county'));
 
 		return NextResponse.json(filteredLocations);
 	} catch (error) {
