@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
 		if (existingLabel) {
 			return NextResponse.json(
-				{ error: 'Label with the same name already exists.' },
+				{ error: 'Kategorija sa ovim imenom već postoji.' },
 				{ status: 409 }
 			);
 		}
