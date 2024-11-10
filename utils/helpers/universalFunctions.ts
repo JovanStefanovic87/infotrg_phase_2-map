@@ -22,6 +22,7 @@ export const useIsMobile = () => {
 };
 
 import { MutableRefObject } from 'react';
+import axios from 'axios';
 
 interface HandleMouseLeaveProps {
 	event: React.MouseEvent;
@@ -69,7 +70,16 @@ export const handleError = (
 	setError: (message: string) => void,
 	setSuccessMessage: (message: string | null) => void
 ) => {
-	const errorMessage = err instanceof Error ? err.message : 'Obratite se administratoru.';
+	let errorMessage = 'Obratite se administratoru.';
+
+	if (axios.isAxiosError(err) && err.response?.data?.error) {
+		// Ako je greška AxiosError i server je poslao specifičnu poruku
+		errorMessage = err.response.data.error;
+	} else if (err instanceof Error) {
+		// Ako je greška običan Error objekat
+		errorMessage = err.message;
+	}
+
 	setError(errorMessage);
 	setSuccessMessage(null);
 	console.error('Error:', err);
