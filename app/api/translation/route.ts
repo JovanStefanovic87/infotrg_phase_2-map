@@ -7,17 +7,11 @@ export async function GET(request: Request) {
 	const labelIdsParam = url.searchParams.get('labelIds');
 	const languageIdParam = url.searchParams.get('languageId');
 
-	// Logujemo parametre da proverimo šta je primljeno
-	console.log('Received labelIds:', labelIdsParam);
-	console.log('Received languageId:', languageIdParam);
-
-	// Parsiramo `languageId` i proveravamo da li je broj
 	const languageId = parseInt(languageIdParam || '', 10);
 	if (!labelIdsParam || isNaN(languageId)) {
 		return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
 	}
 
-	// Parsiramo `labelIdsParam` u niz brojeva i filtriramo nevažeće vrednosti
 	const labelIds = labelIdsParam
 		.split(',')
 		.map(id => parseInt(id, 10))
@@ -37,9 +31,8 @@ export async function GET(request: Request) {
 			},
 		});
 
-		// Proveravamo da li je `translations` prazan i vraćamo prazan niz ako jeste
 		if (translations.length === 0) {
-			return NextResponse.json([]); // Vraćamo prazan niz kada nema rezultata
+			return NextResponse.json([]);
 		}
 
 		// Mapiramo `translations` u željeni format
@@ -81,10 +74,9 @@ export async function POST(request: Request) {
 			const { labelId, languageId, translation: translationText } = translation;
 
 			if (typeof labelId !== 'number' || typeof languageId !== 'number') {
-				continue; // Ensure labelId and languageId are numbers
+				continue;
 			}
 
-			// Upsert to create or update translation
 			const upsertedTranslation = await prisma.translation.upsert({
 				where: {
 					labelId_languageId: {
@@ -96,7 +88,7 @@ export async function POST(request: Request) {
 					translation: translationText,
 				},
 				create: {
-					labelId, // Prosledite samo labelId
+					labelId,
 					languageId,
 					translation: translationText,
 				},

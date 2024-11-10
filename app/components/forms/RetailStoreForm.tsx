@@ -31,7 +31,6 @@ const RetailStoreForm: React.FC<Props> = ({
 	mutation,
 	successMessage,
 }) => {
-	console.log('formData', formData);
 	return (
 		<form onSubmit={handleSubmit} className='space-y-2 px-8 py-4 shadow-md'>
 			{/* Store Name */}

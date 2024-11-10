@@ -73,9 +73,7 @@ const EditCategoryForm: React.FC<Props> = ({
 
 	const flattenCategories = (nestedCategories: Category[]) => {
 		return nestedCategories.reduce((acc, category) => {
-			// Dodajemo trenutnu kategoriju u akumulator
 			acc.push(category);
-			// Ako kategorija ima children, rekurzivno dodajemo sve podkategorije
 			if (category.children && category.children.length > 0) {
 				acc = acc.concat(flattenCategories(category.children));
 			}
@@ -86,8 +84,6 @@ const EditCategoryForm: React.FC<Props> = ({
 	const flatCategories = flattenCategories(categories);
 	const uniqueParentIds = Array.from(new Set(parentIds));
 
-	console.log('categories', categories);
-	console.log('parentId', parentIds);
 	return (
 		<form
 			onSubmit={handleSubmitEdit}
@@ -235,12 +231,10 @@ const EditCategoryForm: React.FC<Props> = ({
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
 					{uniqueParentIds.length > 0 ? (
 						uniqueParentIds.map(parentId => {
-							// Pronalazimo odgovarajuću kategoriju iz `flatCategories` za dati `parentId`
 							const parentCategory = flatCategories.find(cat => cat.id === parentId);
 							return (
 								<li key={`parent-${parentId}`} className='flex items-center justify-between'>
 									<span className='text-sm text-gray-800'>
-										{/* Prikazujemo ime kategorije ili default tekst ako kategorija nije pronađena */}
 										{parentCategory ? parentCategory.name : 'Prevod nije dostupan'}
 									</span>
 									<DeleteTextButton

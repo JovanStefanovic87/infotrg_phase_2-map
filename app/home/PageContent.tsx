@@ -51,8 +51,6 @@ const PageContent: React.FC = () => {
 		return categories ? transformCategoriesToOptions(categories) : [];
 	}, [categories]);
 
-	console.log('categories', categories);
-
 	return (
 		<PageContainer bgColor='white'>
 			<div className='flex flex-col items-center p-6 mx-auto w-full'>

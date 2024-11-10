@@ -26,7 +26,6 @@ const LocationSelection: React.FC<Props> = ({
 }) => {
 	const [expandedItems, setExpandedItems] = useState<{ id: number; type: string }[]>([]);
 
-	// Function to find all parent IDs for the selected item
 	const getParentIds = (
 		items: any[],
 		itemId: number,
@@ -46,7 +45,6 @@ const LocationSelection: React.FC<Props> = ({
 		return [];
 	};
 
-	// Update expanded items to show the path to the selected item
 	useEffect(() => {
 		if (selectedLocation) {
 			const parentIds = getParentIds(locations, selectedLocation.id, selectedLocation.type);
@@ -58,10 +56,8 @@ const LocationSelection: React.FC<Props> = ({
 		setExpandedItems(prev => {
 			const isExpanded = prev.some(item => item.id === itemId && item.type === itemType);
 			if (isExpanded) {
-				// Remove the specific ID and type from expandedItems
 				return prev.filter(item => !(item.id === itemId && item.type === itemType));
 			} else {
-				// Add the specific ID and type to expandedItems
 				return [...prev, { id: itemId, type: itemType }];
 			}
 		});
@@ -129,11 +125,17 @@ const LocationSelection: React.FC<Props> = ({
 							</button>
 						)}
 					</div>
-					{isExpanded && item.children && (
-						<div className='pl-6 border-l border-gray-200'>
-							{renderLocationOptions(item.children, true)}
-						</div>
-					)}
+					{/* Container with animated height for expanding/collapsing */}
+					<div
+						className={`overflow-hidden transition-all duration-300 ease-in-out ${
+							isExpanded ? 'max-h-screen' : 'max-h-0'
+						}`}>
+						{isExpanded && item.children && (
+							<div className='pl-6 border-l border-gray-200'>
+								{renderLocationOptions(item.children, true)}
+							</div>
+						)}
+					</div>
 				</div>
 			);
 		});

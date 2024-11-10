@@ -58,7 +58,6 @@ const EditLocationForm: React.FC<Props> = ({
 	setError,
 }) => {
 	const [updatedTranslations, setUpdatedTranslations] = useState<Translation[]>([]);
-	console.log('type', type);
 	useEffect(() => {
 		const translationsWithLanguages = languages.map(language => {
 			const existingTranslation = currentTranslations.find(

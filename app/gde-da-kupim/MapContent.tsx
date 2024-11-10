@@ -63,11 +63,11 @@ const MapContent: React.FC = () => {
 	const { data: mainCounty } = useFetchLocationByIdAndLanguage(countyId || 0, 'county', languageId);
 	const { data: mainCity } = useFetchLocationByIdAndLanguage(cityId || 0, 'city', languageId);
 	const { data: mainSuburb } = useFetchLocationByIdAndLanguage(suburbId || 0, 'suburb', languageId);
-	console.log('mainSuburb?.name', mainSuburb?.name);
 	const locationText =
 		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';
 
 	const openEditModal = () => setEditModalOpen(true);
+	1;
 	const closeEditModal = () => setEditModalOpen(false);
 
 	/* const handleSaveSelection = (category: string, location: string) => {
