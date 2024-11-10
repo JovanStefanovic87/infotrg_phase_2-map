@@ -53,22 +53,15 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				method: 'GET',
 				url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
 			});
-			const labelIds = labels.map(({ id }) => id);
+			const labelIds = labels.map(({ id }) => id).join(',');
 
-			if (labelIds.length === 0) {
-				return [];
-			}
-
-			const labelIdsParam = labelIds.join(',');
-
-			const translations = await apiClient<Translation[]>({
+			if (!labelIds) return [];
+			return await apiClient<Translation[]>({
 				method: 'GET',
-				url: `/api/translation?languageId=${languageId}&labelIds=${labelIdsParam}`,
+				url: `/api/translation?languageId=${languageId}&labelIds=${labelIds}`,
 			});
-
-			return translations;
 		} catch (error) {
-			console.error('Error fetching translations:', error);
+			handleError(error, setError, setSuccessMessage);
 			return [];
 		}
 	};

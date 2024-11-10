@@ -1,4 +1,4 @@
-//app\api\translation\route.ts
+// app\api\translation\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 
@@ -9,15 +9,17 @@ export async function GET(request: Request) {
 
 	const languageId = parseInt(languageIdParam || '', 10);
 	if (!labelIdsParam || isNaN(languageId)) {
-		return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 });
+		return NextResponse.json({ error: 'Neispravni parametri' }, { status: 400 });
 	}
 
+	// Parse and validate label IDs
 	const labelIds = labelIdsParam
 		.split(',')
 		.map(id => parseInt(id, 10))
 		.filter(id => !isNaN(id));
+
 	if (labelIds.length === 0) {
-		return NextResponse.json({ error: 'No valid labelIds provided' }, { status: 400 });
+		return NextResponse.json({ error: 'Nema važećih labelIds parametara' }, { status: 400 });
 	}
 
 	try {
@@ -31,11 +33,6 @@ export async function GET(request: Request) {
 			},
 		});
 
-		if (translations.length === 0) {
-			return NextResponse.json([]);
-		}
-
-		// Mapiramo `translations` u željeni format
 		const response = translations.map(translation => ({
 			id: translation.id,
 			labelId: translation.labelId,
@@ -52,8 +49,8 @@ export async function GET(request: Request) {
 
 		return NextResponse.json(response);
 	} catch (error) {
-		console.error('Error in GET /api/translation:', error);
-		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+		console.error('Greška u GET /api/translation:', error);
+		return NextResponse.json({ error: 'Interna greška servera' }, { status: 500 });
 	}
 }
 
@@ -61,15 +58,17 @@ export async function POST(request: Request) {
 	try {
 		const { translations } = await request.json();
 
+		// Validate input array
 		if (!Array.isArray(translations)) {
 			return NextResponse.json(
-				{ error: 'Invalid request body. Must be an array.' },
+				{ error: 'Neispravni format tela zahteva. Očekuje se niz.' },
 				{ status: 400 }
 			);
 		}
 
 		const createdOrUpdatedTranslations = [];
 
+		// Process each translation entry
 		for (const translation of translations) {
 			const { labelId, languageId, translation: translationText } = translation;
 
@@ -79,10 +78,7 @@ export async function POST(request: Request) {
 
 			const upsertedTranslation = await prisma.translation.upsert({
 				where: {
-					labelId_languageId: {
-						labelId,
-						languageId,
-					},
+					labelId_languageId: { labelId, languageId },
 				},
 				update: {
 					translation: translationText,
@@ -99,7 +95,7 @@ export async function POST(request: Request) {
 
 		return NextResponse.json(createdOrUpdatedTranslations);
 	} catch (error) {
-		console.error('Error in POST /api/translation:', error);
-		return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+		console.error('Greška u POST /api/translation:', error);
+		return NextResponse.json({ error: 'Interna greška servera' }, { status: 500 });
 	}
 }

@@ -42,9 +42,22 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: 'Name and prefix are required' }, { status: 400 });
 		}
 
-		// Combine prefix and name to create the full label name
-		const fullName = `${prefix}${name}`;
+		// Kombinuj prefix i name i konvertuj u mala slova
+		const fullName = `${prefix}${name}`.toLowerCase();
 
+		// Proveri da li već postoji Label sa istim fullName koristeći findFirst
+		const existingLabel = await prisma.label.findFirst({
+			where: { name: fullName },
+		});
+
+		if (existingLabel) {
+			return NextResponse.json(
+				{ error: 'Label with the same name already exists.' },
+				{ status: 409 }
+			);
+		}
+
+		// Kreiraj novi Label ako nema duplikata
 		const newLabel = await prisma.label.create({
 			data: {
 				name: fullName,
