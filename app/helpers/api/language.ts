@@ -1,35 +1,87 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getWithParams, postData } from '@/app/helpers/api/common/base';
+import { getWithParams, postData, putData, deleteData } from '@/app/helpers/api/common/base';
 
-// Hook for fetching languages
+// Hook za dohvatanje jezika sa API-ja
 export const useFetchLanguages = () => {
 	return useQuery({
 		queryKey: ['languages'],
-		queryFn: () => getWithParams('/api/languages', {}), // Pass empty object for no query params
-		staleTime: 1000 * 60 * 5, // Cache the data for 5 minutes
-		refetchOnWindowFocus: false, // Prevent refetching when window is focused
+		queryFn: () => getWithParams('/api/languages', {}),
+		staleTime: 5 * 60 * 1000, // Keširaj podatke na 5 minuta
+		refetchOnWindowFocus: false,
 	});
 };
 
-// Hook for creating a new language
+// Interfejs za podatke potrebne za kreiranje jezika
 interface CreateLanguageData {
 	code: string;
 	name: string;
 }
 
+// Hook za kreiranje novog jezika
 export const useCreateLanguage = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (data: CreateLanguageData) => {
-			return postData('/api/languages', data); // Use POST to create a new language
+		mutationFn: (data: CreateLanguageData) => postData('/api/languages', data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['languages'] }); // Refetch jezika nakon uspešnog kreiranja
+		},
+		onError: (error: any) => {
+			if (error?.response?.status === 409) {
+				alert('Greška: Jezik sa istim kodom ili nazivom već postoji.');
+			} else {
+				const message =
+					error?.response?.data?.error || 'Došlo je do greške prilikom kreiranja jezika.';
+				alert(`Greška prilikom kreiranja jezika: ${message}`);
+			}
+		},
+	});
+};
+
+// Interfejs za podatke potrebne za ažuriranje jezika
+interface UpdateLanguageData {
+	id: number;
+	code: string;
+	name: string;
+}
+
+// Hook za ažuriranje jezika
+export const useUpdateLanguage = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (data: UpdateLanguageData) => {
+			const { id, ...rest } = data;
+			return putData(`/api/languages/${id}`, rest);
 		},
 		onSuccess: () => {
-			// After a successful mutation, refetch the languages
-			queryClient.invalidateQueries({ queryKey: ['languages'] });
+			queryClient.invalidateQueries({ queryKey: ['languages'] }); // Refetch jezika nakon uspešnog ažuriranja
 		},
-		onError: error => {
-			console.error('Error creating language:', error);
+		onError: (error: any) => {
+			if (error?.response?.status === 409) {
+				alert('Greška: Jezik sa istim kodom ili nazivom već postoji.');
+			} else {
+				const message =
+					error?.response?.data?.error || 'Došlo je do greške prilikom ažuriranja jezika.';
+				alert(`Greška prilikom ažuriranja jezika: ${message}`);
+			}
+		},
+	});
+};
+
+// Hook za brisanje jezika
+export const useDeleteLanguage = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (id: number) => deleteData(`/api/languages/${id}`),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['languages'] }); // Refetch jezika nakon uspešnog brisanja
+		},
+		onError: (error: any) => {
+			const message =
+				error?.response?.data?.error || 'Došlo je do greške prilikom brisanja jezika.';
+			alert(`Greška prilikom brisanja jezika: ${message}`);
 		},
 	});
 };
