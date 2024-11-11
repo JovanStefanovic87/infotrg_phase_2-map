@@ -119,7 +119,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 	const resetTranslationValues = () => {
 		const resetValues = languages.reduce((acc, language) => {
-			acc[language.id] = '';
+			acc[language.id] = ''; // Reset every language translation to an empty string
 			return acc;
 		}, {} as { [key: number]: string });
 		setTranslationValues(resetValues);
@@ -158,10 +158,8 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			console.log('Slanjem prevode:', translations);
 
-			// Čuvanje prevoda
 			await axios.post('/api/translation', { translations });
 
-			// Čuvanje kategorije
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
 				relatedIds,
@@ -174,7 +172,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			if (!categoryData) throw new Error('Failed to create category');
 
-			// Reset forme i ponovo učitajte podatke
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
@@ -185,8 +182,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	};
 
 	const handleFileChange = (file: File | null) => setIcon(file);
-	const handleResetFileName = () =>
-		fileUploadButtonRef.current.resetFileName && fileUploadButtonRef.current.resetFileName();
+
 	const resetForm = () => {
 		setName('');
 		setParentIds([]);
