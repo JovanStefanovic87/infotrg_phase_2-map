@@ -126,10 +126,11 @@ export interface MemberData {
 	name: string;
 	birth?: string;
 	profession?: string;
+	education?: string;
 	affinities?: string;
 	previousEngagements?: string;
 	infotrgEngagements: string;
-	phone: string;
+	phone?: string;
 	email?: string;
 	image: string;
 }

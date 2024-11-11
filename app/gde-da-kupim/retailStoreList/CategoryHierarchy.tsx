@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Category } from '@/utils/helpers/types';
 
 interface CategoryHierarchyProps {
@@ -13,10 +14,12 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({ categories }) => 
 					key={category.id}
 					className='text-gray-700 hover:text-indigo-600 transition-colors duration-200'>
 					<div className='flex items-center gap-2 sm:gap-3 py-1 sm:py-2'>
-						<img
+						<Image
 							src={category.icon?.url || '/icons/default-icon.png'}
 							alt={category.name}
-							className='w-4 h-4 sm:w-5 sm:h-5 rounded-full'
+							width={20}
+							height={20}
+							className='rounded-full'
 						/>
 						<span className='text-sm sm:text-base font-medium'>{category.name}</span>
 					</div>

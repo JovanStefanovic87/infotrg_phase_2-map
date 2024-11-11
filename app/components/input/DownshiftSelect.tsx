@@ -1,8 +1,8 @@
 import { useCombobox } from 'downshift';
-import { Option } from '@/utils/helpers/types';
+import { CategoryOption } from '@/utils/helpers/types';
 
 interface DownshiftSelectProps {
-	options: Option[];
+	options: CategoryOption[];
 	value: string | null;
 	onChange: (value: string | null) => void;
 }

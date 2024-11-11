@@ -3,12 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { uploadImage } from '@/utils/helpers/file-utils';
 
-export const config = {
-	api: {
-		bodyParser: false,
-	},
-};
-
 const convertKeysToLowerCase = (obj: any): any => {
 	if (Array.isArray(obj)) {
 		return obj.map(convertKeysToLowerCase);

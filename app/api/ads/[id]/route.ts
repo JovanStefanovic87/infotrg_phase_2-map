@@ -61,12 +61,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 	}
 }
 
-export const config = {
-	api: {
-		bodyParser: false, // Disable default body parsing to handle multipart/form-data
-	},
-};
-
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
 	const adId = parseInt(params.id);
 

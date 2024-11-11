@@ -85,7 +85,7 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({ options, onSelect, placeho
 			)}
 			{isOpen && filteredOptions.length === 0 && (
 				<div className='absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-2 shadow-lg p-4 text-center text-gray-500'>
-					Ne postoji rezultat za pretragu "{searchTerm}"
+					Ne postoji rezultat za pretragu &quot;{searchTerm}&quot;
 				</div>
 			)}
 			<style jsx>{`
