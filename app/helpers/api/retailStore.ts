@@ -45,7 +45,9 @@ export const useCreateRetailStore = () => {
 			queryClient.invalidateQueries({ queryKey: ['retailStores'] });
 		},
 		onError: error => {
-			console.error('Error creating retail store:', error);
+			const errorMessage = error?.message || 'Došlo je do greške prilikom čuvanja.';
+			console.error('Greška:', errorMessage);
+			alert(errorMessage); // ili koristite setError u komponenti
 		},
 	});
 };

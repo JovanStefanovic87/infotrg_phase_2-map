@@ -25,38 +25,31 @@ export async function POST(req: NextRequest) {
 			address,
 		} = body;
 
-		// Validate categories
-		const articleCategories = await prisma.category.findMany({
-			where: { id: { in: articleCategoryIds } },
-		});
-		if (articleCategories.length !== articleCategoryIds.length) {
-			return NextResponse.json(
-				{ error: 'One or more article categories not found' },
-				{ status: 400 }
-			);
+		const validateCategories = async (categoryIds: number[], categoryType: string) => {
+			const categories = await prisma.category.findMany({
+				where: { id: { in: categoryIds } },
+			});
+			if (categories.length !== categoryIds.length) {
+				throw new Error(`Jedna ili više kategorija za ${categoryType} nisu pronađene`);
+			}
+			return categories;
+		};
+
+		const articleCategories = await validateCategories(articleCategoryIds, 'artikle');
+		const activityCategories = await validateCategories(activityCategoryIds, 'aktivnosti');
+		const objectTypeCategories = await validateCategories(objectTypeCategoryIds, 'tipove objekata');
+
+		// Validacija za koordinate
+		if (coordinates) {
+			if (!coordinates.latitude || !coordinates.longitude) {
+				return NextResponse.json(
+					{ error: 'Latitude i longitude moraju biti unešeni.' },
+					{ status: 400 }
+				);
+			}
 		}
 
-		const activityCategories = await prisma.category.findMany({
-			where: { id: { in: activityCategoryIds } },
-		});
-		if (activityCategories.length !== activityCategoryIds.length) {
-			return NextResponse.json(
-				{ error: 'One or more activity categories not found' },
-				{ status: 400 }
-			);
-		}
-
-		const objectTypeCategories = await prisma.category.findMany({
-			where: { id: { in: objectTypeCategoryIds } },
-		});
-		if (objectTypeCategories.length !== objectTypeCategoryIds.length) {
-			return NextResponse.json(
-				{ error: 'One or more object type categories not found' },
-				{ status: 400 }
-			);
-		}
-
-		// Kreiraj koordinate ako postoje
+		// Kreiranje zapisa za koordinate ako postoje
 		const coordinatesRecord = coordinates
 			? await prisma.coordinates.create({
 					data: {
@@ -67,12 +60,11 @@ export async function POST(req: NextRequest) {
 			  })
 			: undefined;
 
+		// Kreiranje novog prodajnog objekta
 		const retailStore = await prisma.retailStore.create({
 			data: {
 				name,
-				state: {
-					connect: { id: stateId },
-				},
+				state: { connect: { id: stateId } },
 				county: countyId ? { connect: { id: countyId } } : undefined,
 				city: cityId ? { connect: { id: cityId } } : undefined,
 				suburb: suburbId ? { connect: { id: suburbId } } : undefined,
@@ -83,19 +75,18 @@ export async function POST(req: NextRequest) {
 				isPhoneConfirmed,
 				isEmailConfirmed,
 				coordinates: coordinatesRecord ? { connect: { id: coordinatesRecord.id } } : undefined,
-				articleCategories: { connect: articleCategories.map(category => ({ id: category.id })) },
-				activityCategories: { connect: activityCategories.map(category => ({ id: category.id })) },
-				objectTypeCategories: {
-					connect: objectTypeCategories.map(category => ({ id: category.id })),
-				},
+				articleCategories: { connect: articleCategories.map(({ id }) => ({ id })) },
+				activityCategories: { connect: activityCategories.map(({ id }) => ({ id })) },
+				objectTypeCategories: { connect: objectTypeCategories.map(({ id }) => ({ id })) },
 				address,
 			},
 		});
 
 		return NextResponse.json(retailStore, { status: 201 });
 	} catch (error) {
-		console.error('Server error:', error);
-		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+		const errorMessage = error instanceof Error ? error.message : 'Došlo je do greške na serveru';
+		console.error('Greška na serveru:', error);
+		return NextResponse.json({ error: errorMessage }, { status: 500 });
 	}
 }
 

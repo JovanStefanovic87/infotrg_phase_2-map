@@ -102,29 +102,40 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const formData = await request.formData();
-		const file = formData.get('icon') as File;
+		const file = formData.get('icon') as File | null;
 		const directory = formData.get('directory') as string;
+		const iconId = formData.get('iconId') as string | null;
 
-		if (!file) {
-			return NextResponse.json({ error: 'Fajl nije učitan' }, { status: 400 });
+		// Check if iconId is required but not provided, and file is not provided
+		if (!iconId && !file) {
+			return NextResponse.json({ error: 'Ikonica je obavezna.' }, { status: 400 });
 		}
 
 		if (!directory) {
 			return NextResponse.json({ error: 'Direktorijum nije specificiran' }, { status: 400 });
 		}
 
-		const uploadDirectory = path.join(process.cwd(), `public/icons/${directory}`);
-		await fs.promises.mkdir(uploadDirectory, { recursive: true });
+		// If a file is provided, proceed with the upload process
+		if (file) {
+			const uploadDirectory = path.join(process.cwd(), `public/icons/${directory}`);
+			await fs.promises.mkdir(uploadDirectory, { recursive: true });
 
-		let iconId;
-		try {
-			iconId = await uploadFile(file, uploadDirectory);
-		} catch (error: any) {
-			const errorMessage = error instanceof Error ? error.message : 'Neuspešno učitavanje fajla';
-			return NextResponse.json({ error: errorMessage }, { status: 500 });
+			let iconId;
+			try {
+				iconId = await uploadFile(file, uploadDirectory);
+			} catch (error: any) {
+				const errorMessage = error instanceof Error ? error.message : 'Neuspešno učitavanje fajla';
+				return NextResponse.json({ error: errorMessage }, { status: 500 });
+			}
+
+			return NextResponse.json({ message: 'Fajl uspešno učitan', iconId });
 		}
 
-		return NextResponse.json({ message: 'Fajl uspešno učitan', iconId });
+		// If iconId is provided but no file, return a success response with the provided iconId
+		return NextResponse.json({
+			message: 'Postojeći iconId je prosleđen',
+			iconId: parseInt(iconId ?? '0'),
+		});
 	} catch (error) {
 		console.error('Greška pri učitavanju fajla:', error);
 		const errorMessage = error instanceof Error ? error.message : 'Neuspešno učitavanje fajla';

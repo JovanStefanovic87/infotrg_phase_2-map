@@ -28,27 +28,43 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const [submitTrigger, setSubmitTrigger] = useState<boolean>(false);
 	const mutation = useCreateRetailStore();
 
-	const { data: locations } = useFetchLocations({
+	const { data: locations, isLoading: locationsLoading } = useFetchLocations({
 		prefix: '',
 		languageId: languageId,
 	});
+	const { data: articleCategories, isLoading: articleCategoriesLoading } =
+		useCategoriesByPrefixAndLanguage({
+			prefix: prefixAticleCategory,
+			languageId: 1,
+		});
+	const { data: activityCategories, isLoading: activityCategoriesLoading } =
+		useCategoriesByPrefixAndLanguage({
+			prefix: prefixActivityCategory,
+			languageId: 1,
+		});
+	const { data: objectTypeCategories, isLoading: objectTypeCategoriesLoading } =
+		useCategoriesByPrefixAndLanguage({
+			prefix: prefixObjectTypeCategory,
+			languageId: 1,
+		});
+	const { data: retails, isLoading: retailsLoading } = useFetchRetailStores(languageId);
 
-	const { data: articleCategories } = useCategoriesByPrefixAndLanguage({
-		prefix: prefixAticleCategory,
-		languageId: 1,
-	});
-
-	const { data: activityCategories } = useCategoriesByPrefixAndLanguage({
-		prefix: prefixActivityCategory,
-		languageId: 1,
-	});
-
-	const { data: objectTypeCategories } = useCategoriesByPrefixAndLanguage({
-		prefix: prefixObjectTypeCategory,
-		languageId: 1,
-	});
-
-	const { data: retails } = useFetchRetailStores(languageId);
+	React.useEffect(() => {
+		const allDataLoaded = !(
+			locationsLoading ||
+			articleCategoriesLoading ||
+			activityCategoriesLoading ||
+			objectTypeCategoriesLoading ||
+			retailsLoading
+		);
+		setLoading(!allDataLoaded);
+	}, [
+		locationsLoading,
+		articleCategoriesLoading,
+		activityCategoriesLoading,
+		objectTypeCategoriesLoading,
+		retailsLoading,
+	]);
 
 	const filteredCounties = formData.stateId
 		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.county || []
@@ -129,6 +145,11 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 					handleSubmit={handleSubmit}
 					mutation={undefined}
 				/>
+				{error && (
+					<div className='mt-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded'>
+						{error}
+					</div>
+				)}
 			</CollapsibleFormContainer>
 			<div className='mt-8'>
 				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4'>

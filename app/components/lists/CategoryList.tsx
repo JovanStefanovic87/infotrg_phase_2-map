@@ -173,6 +173,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const handleSubmitEdit = useCallback(
 		async (event: React.FormEvent) => {
 			event.preventDefault();
+
+			if (!currentIcon.iconId && !newIcon) {
+				setError('Morate izabrati postojeću ikonu ili dodati novu ikonu za upload.');
+				return;
+			}
+
 			if (!currentEditCategory) return;
 
 			try {

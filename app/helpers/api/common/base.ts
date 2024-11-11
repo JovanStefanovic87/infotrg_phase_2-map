@@ -1,4 +1,4 @@
-export async function postData(url: string, data: any) {
+export const postData = async (url: string, data: any) => {
 	try {
 		const response = await fetch(url, {
 			method: 'POST',
@@ -9,15 +9,18 @@ export async function postData(url: string, data: any) {
 		});
 
 		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
+			// Proveravamo status i vraćamo opisnu grešku
+			const errorData = await response.json();
+			throw new Error(errorData.error || 'Došlo je do greške prilikom obrade zahteva');
 		}
 
 		return await response.json();
 	} catch (error) {
-		console.error('Error:', error);
+		// Vraćamo opisnu grešku
+		console.error('Greška prilikom POST zahteva:', error);
 		throw error;
 	}
-}
+};
 
 export async function postDataMultipart(url: string, data: FormData) {
 	try {

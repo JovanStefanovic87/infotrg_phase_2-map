@@ -133,6 +133,11 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			return;
 		}
 
+		if (!currentIcon.iconId && !icon) {
+			setError('Morate izabrati postojeću ikonu ili dodati novu ikonu za upload.');
+			return;
+		}
+
 		try {
 			let iconId = currentIcon.iconId;
 			if (icon) {
