@@ -30,6 +30,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
+	const [translationValues, setTranslationValues] = useState<{ [key: number]: string }>({});
 	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
 		new Set()
@@ -116,6 +117,14 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	}, [languageId]);
 
+	const resetTranslationValues = () => {
+		const resetValues = languages.reduce((acc, language) => {
+			acc[language.id] = '';
+			return acc;
+		}, {} as { [key: number]: string });
+		setTranslationValues(resetValues);
+	};
+
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 
@@ -141,6 +150,18 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			if (!newLabelId) throw new Error('Failed to create label');
 
+			const translations = languages.map(language => ({
+				labelId: newLabelId,
+				languageId: language.id,
+				translation: language.id === 1 ? name : translationValues[language.id] || '',
+			}));
+
+			console.log('Slanjem prevode:', translations);
+
+			// Čuvanje prevoda
+			await axios.post('/api/translation', { translations });
+
+			// Čuvanje kategorije
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
 				relatedIds,
@@ -149,16 +170,11 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				name,
 			});
 
+			console.log('Kategorija sačuvana sa podacima:', categoryData);
+
 			if (!categoryData) throw new Error('Failed to create category');
 
-			const translations = languages.map(language => ({
-				labelId: newLabelId,
-				languageId: language.id,
-				translation: language.id === 1 ? name : '',
-			}));
-
-			await axios.post('/api/translation', { translations });
-
+			// Reset forme i ponovo učitajte podatke
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
@@ -176,6 +192,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setParentIds([]);
 		setRelatedIds([]);
 		setLanguageId(1);
+		resetTranslationValues();
 		setIcon(null);
 		setError('');
 	};
@@ -203,6 +220,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				parentIds={parentIds}
 				setParentIds={setParentIds}
 				translations={translations}
+				languages={languages}
+				translationValues={translationValues}
+				setTranslationValues={setTranslationValues}
 				onFileChange={handleFileChange}
 				onSubmit={handleSubmit}
 				setIsIconPickerOpen={setIsIconPickerOpen}

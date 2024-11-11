@@ -2,7 +2,7 @@ import React from 'react';
 import ImageUploadButton from '../../components/buttons/ImageUploadButton';
 import ChooseImageButton from '../../components/buttons/ChooseImageButton';
 import Combobox from '@/app/components/input/CustomCombobox';
-import { Translation, Icon } from '@/utils/helpers/types';
+import { Translation, Icon, Language } from '@/utils/helpers/types';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
 import Label from '../../components/text/Label';
 import LabelInputDefault from '../input/LabelInputDefault';
@@ -13,6 +13,13 @@ interface CategoryFormProps {
 	parentIds: number[];
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
 	translations: Translation[];
+	languages: Language[];
+	translationValues: { [key: number]: string };
+	setTranslationValues: (
+		values:
+			| { [key: number]: string }
+			| ((prev: { [key: number]: string }) => { [key: number]: string })
+	) => void;
 	onFileChange: (file: File | null) => void;
 	onSubmit: (event: React.FormEvent) => Promise<void>;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
@@ -24,6 +31,9 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	parentIds,
 	setParentIds,
 	translations,
+	languages,
+	translationValues,
+	setTranslationValues,
 	onFileChange,
 	onSubmit,
 	setIsIconPickerOpen,
@@ -35,21 +45,43 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 		setParentIds(newParentIds);
 	};
 
-	// Funkcija za uklanjanje nadkategorije
 	const handleRemoveParent = (labelId: number) => {
 		setParentIds(prev => prev.filter(id => id !== labelId));
+	};
+
+	// Handler for updating translations based on language ID
+	const handleTranslationChange = (languageId: number, value: string) => {
+		setTranslationValues((prev: { [key: number]: string }) => ({
+			...prev,
+			[languageId]: value,
+		}));
 	};
 
 	return (
 		<form onSubmit={onSubmit} className='space-y-4'>
 			<div>
 				<LabelInputDefault
-					label='Naziv kategorije'
+					label='Naziv kategorije (srpski)'
 					value={name}
 					onChange={e => setName(e.target.value)}
 					placeholder='Unesite naziv'
 				/>
 			</div>
+
+			{/* Input fields for translations (languageId !== 1) */}
+			{languages
+				.filter(language => language.id !== 1)
+				.map(language => (
+					<div key={language.id} className='mt-4'>
+						<LabelInputDefault
+							value={translationValues[language.id] || ''}
+							onChange={e => handleTranslationChange(language.id, e.target.value)}
+							placeholder={`Unesite naziv na ${language.name}`}
+							label={`Naziv kategrorije (${language.name})`}
+						/>
+					</div>
+				))}
+
 			<div>
 				<Label htmlFor='parentId' color='black'>
 					Izbor natkategorije (opciono):
@@ -62,7 +94,6 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 				/>
 			</div>
 
-			{/* Prikaz izabranih nadkategorija sa opcijom za uklanjanje */}
 			{selectedParents.length > 0 && (
 				<div className='mt-2'>
 					<Label htmlFor='selectedParents' color='black'>
@@ -93,7 +124,6 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 					label='Nova ikonica (PNG)'
 					onChange={e => onFileChange(e.target.files ? e.target.files[0] : null)}
 				/>
-
 				<ChooseImageButton onClick={() => setIsIconPickerOpen(true)} label='Izbor ikonice' />
 			</div>
 			<div>

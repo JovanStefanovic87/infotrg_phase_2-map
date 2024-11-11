@@ -8,16 +8,16 @@ export async function GET(request: NextRequest) {
 	try {
 		const url = new URL(request.url);
 		const languageId = parseInt(url.searchParams.get('languageId') || '', 10);
-		const prefix = url.searchParams.get('prefix') || ''; // Get the prefix from the query
+		const prefix = url.searchParams.get('prefix') || '';
 
 		if (isNaN(languageId)) {
 			return NextResponse.json({ error: 'Invalid languageId' }, { status: 400 });
 		}
-
+		// Fetch labels filtered by prefix and language
 		const labels = await prisma.label.findMany({
 			where: {
 				name: {
-					startsWith: prefix, // Filter labels by prefix
+					startsWith: prefix,
 				},
 				translations: {
 					some: {
@@ -37,15 +37,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const { name, prefix } = await request.json();
-
+		// Validate required fields
 		if (!name || !prefix) {
 			return NextResponse.json({ error: 'Name and prefix are required' }, { status: 400 });
 		}
-
-		// Kombinuj prefix i name i konvertuj u mala slova
+		// Combine prefix and name in lowercase
 		const fullName = `${prefix}${name}`.toLowerCase();
-
-		// Proveri da li već postoji Label sa istim fullName koristeći findFirst
+		// Check for existing label with the same name
 		const existingLabel = await prisma.label.findFirst({
 			where: { name: fullName },
 		});
@@ -56,8 +54,7 @@ export async function POST(request: NextRequest) {
 				{ status: 409 }
 			);
 		}
-
-		// Kreiraj novi Label ako nema duplikata
+		// Create new label if no duplicates
 		const newLabel = await prisma.label.create({
 			data: {
 				name: fullName,

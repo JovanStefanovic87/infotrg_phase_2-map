@@ -40,30 +40,28 @@ const uploadFile = async (file: File, uploadDirectory: string): Promise<number> 
 		});
 
 		if (existingIcon) {
-			// Return specific error message if file already exists
 			throw new Error(`Ikona sa nazivom "${fileName}" već postoji u ovom direktorijumu.`);
 		}
 
-		// Rest of the code remains the same
 		const nodeStream = readableStreamToNodeStream(file.stream());
 		const chunks: Buffer[] = [];
 		for await (const chunk of nodeStream) {
 			chunks.push(chunk);
 		}
 		const fileBuffer = Buffer.concat(chunks);
-
-		const shouldResize = fileBuffer.length > 2 * 1024 * 1024;
+		// Resize if file is larger than 200KB
+		const shouldResize = fileBuffer.length > 200 * 1024; // Smanjuje slike iznad 200KB
 		if (shouldResize) {
-			await sharp(fileBuffer).resize({ width: 800 }).toFile(finalFilePath);
+			await sharp(fileBuffer).resize({ width: 128 }).toFile(finalFilePath); // Rezolucija 128px
 		} else {
 			await fs.promises.writeFile(finalFilePath, fileBuffer);
 		}
-
+		// Generate URL path for stored file
 		const relativeFilePath = path.relative(process.cwd(), finalFilePath);
 		const urlPath = `/icons/${path.basename(path.dirname(relativeFilePath))}/${path.basename(
 			relativeFilePath
 		)}`;
-
+		// Save file info in the database
 		const icon = await prisma.icon.create({
 			data: {
 				name: fileName,

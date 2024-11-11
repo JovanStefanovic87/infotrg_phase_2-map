@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getWithParams, postData } from '@/app/helpers/api/common/base';
+import { getWithParams } from '@/app/helpers/api/common/base';
 import axios from 'axios';
 
 interface FetchIconsParams {
 	directory: string;
 }
-
+// Fetch icons based on directory parameter
 export const useFetchIcons = (params: FetchIconsParams) => {
 	return useQuery({
 		queryKey: ['icons', params],
@@ -19,7 +19,7 @@ interface UploadIconData {
 	icon: File;
 	directory: string;
 }
-
+// Upload a new icon and invalidate icon queries on success
 export const useUploadIcon = () => {
 	const queryClient = useQueryClient();
 
@@ -29,7 +29,7 @@ export const useUploadIcon = () => {
 			formData.append('icon', data.icon);
 			formData.append('directory', data.directory);
 
-			return axios.post('/api/icons', formData); // Use axios directly
+			return axios.post('/api/icons', formData);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['icons'] });

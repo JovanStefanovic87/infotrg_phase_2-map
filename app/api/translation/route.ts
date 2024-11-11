@@ -58,17 +58,15 @@ export async function POST(request: Request) {
 	try {
 		const { translations } = await request.json();
 
-		// Validate input array
 		if (!Array.isArray(translations)) {
 			return NextResponse.json(
-				{ error: 'Neispravni format tela zahteva. Očekuje se niz.' },
+				{ error: 'Neispravan format zahteva. Očekuje se niz.' },
 				{ status: 400 }
 			);
 		}
 
 		const createdOrUpdatedTranslations = [];
 
-		// Process each translation entry
 		for (const translation of translations) {
 			const { labelId, languageId, translation: translationText } = translation;
 
