@@ -317,6 +317,20 @@ const LocationList: React.FC<Props> = ({
 		}
 	};
 
+	const handleSetPostCode: React.Dispatch<React.SetStateAction<string>> = useCallback(
+		value => {
+			setPostCode(value);
+		},
+		[setPostCode]
+	);
+
+	const handleSetAddress: React.Dispatch<React.SetStateAction<string>> = useCallback(
+		value => {
+			setAddress(value);
+		},
+		[setAddress]
+	);
+
 	return (
 		<div>
 			<div className='mb-4'>
@@ -359,9 +373,9 @@ const LocationList: React.FC<Props> = ({
 						locationId={currentEditLocation?.id || null}
 						type={currentEditLocation?.type || ''}
 						postCode={postCode}
-						setPostCode={setPostCode}
+						setPostCode={handleSetPostCode}
 						address={address}
-						setAddress={setAddress}
+						setAddress={handleSetAddress}
 						setError={setError}
 						setSuccessMessage={setSuccessMessage}
 					/>

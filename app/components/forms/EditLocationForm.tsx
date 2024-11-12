@@ -91,7 +91,7 @@ const EditLocationForm: React.FC<Props> = ({
 				setAddress?.(currentLocation.address || '');
 			}
 		}
-	}, [currentLocation, type]);
+	}, [currentLocation, type, setAddress, setPostCode]);
 
 	const handleTranslationChange = (languageId: number, translation: string) => {
 		setUpdatedTranslations(prevState =>

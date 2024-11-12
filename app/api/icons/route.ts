@@ -4,34 +4,18 @@ import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
-import { Readable } from 'stream';
+
+export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
-// Convert a ReadableStream to Node.js Readable stream
-const readableStreamToNodeStream = (readableStream: ReadableStream<Uint8Array>): Readable => {
-	const reader = readableStream.getReader();
-	const nodeStream = new Readable({
-		read() {
-			reader
-				.read()
-				.then(({ value, done }) => {
-					if (done) {
-						this.push(null);
-					} else {
-						this.push(Buffer.from(value));
-					}
-				})
-				.catch(err => this.destroy(err));
-		},
-	});
-	return nodeStream;
-};
-
 // Handle file upload, resizing if necessary, and saving to the database
-const uploadFile = async (file: File, uploadDirectory: string): Promise<number> => {
+const uploadFile = async (
+	file: Blob,
+	uploadDirectory: string,
+	fileName: string
+): Promise<number> => {
 	try {
-		const fileName = file.name;
 		const finalFilePath = path.join(uploadDirectory, fileName);
 
 		// Check if file with the same name already exists in the directory
@@ -43,24 +27,24 @@ const uploadFile = async (file: File, uploadDirectory: string): Promise<number> 
 			throw new Error(`Ikona sa nazivom "${fileName}" već postoji u ovom direktorijumu.`);
 		}
 
-		const nodeStream = readableStreamToNodeStream(file.stream());
-		const chunks: Buffer[] = [];
-		for await (const chunk of nodeStream) {
-			chunks.push(chunk);
-		}
-		const fileBuffer = Buffer.concat(chunks);
+		// Convert Blob to Buffer
+		const arrayBuffer = await file.arrayBuffer();
+		const fileBuffer = Buffer.from(arrayBuffer);
+
 		// Resize if file is larger than 200KB
-		const shouldResize = fileBuffer.length > 200 * 1024; // Smanjuje slike iznad 200KB
+		const shouldResize = fileBuffer.length > 200 * 1024;
 		if (shouldResize) {
-			await sharp(fileBuffer).resize({ width: 128 }).toFile(finalFilePath); // Rezolucija 128px
+			await sharp(fileBuffer).resize({ width: 128 }).toFile(finalFilePath);
 		} else {
 			await fs.promises.writeFile(finalFilePath, fileBuffer);
 		}
+
 		// Generate URL path for stored file
 		const relativeFilePath = path.relative(process.cwd(), finalFilePath);
 		const urlPath = `/icons/${path.basename(path.dirname(relativeFilePath))}/${path.basename(
 			relativeFilePath
 		)}`;
+
 		// Save file info in the database
 		const icon = await prisma.icon.create({
 			data: {
@@ -102,7 +86,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
 	try {
 		const formData = await request.formData();
-		const file = formData.get('icon') as File | null;
+		const file = formData.get('icon') as Blob | null;
 		const directory = formData.get('directory') as string;
 		const iconId = formData.get('iconId') as string | null;
 
@@ -120,15 +104,16 @@ export async function POST(request: NextRequest) {
 			const uploadDirectory = path.join(process.cwd(), `public/icons/${directory}`);
 			await fs.promises.mkdir(uploadDirectory, { recursive: true });
 
-			let iconId;
+			const fileName = 'uploaded_icon.png'; // Ili iz formData ako je ime dostupno
+			let newIconId;
 			try {
-				iconId = await uploadFile(file, uploadDirectory);
+				newIconId = await uploadFile(file, uploadDirectory, fileName);
 			} catch (error: any) {
 				const errorMessage = error instanceof Error ? error.message : 'Neuspešno učitavanje fajla';
 				return NextResponse.json({ error: errorMessage }, { status: 500 });
 			}
 
-			return NextResponse.json({ message: 'Fajl uspešno učitan', iconId });
+			return NextResponse.json({ message: 'Fajl uspešno učitan', iconId: newIconId });
 		}
 
 		// If iconId is provided but no file, return a success response with the provided iconId

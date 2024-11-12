@@ -8,7 +8,7 @@ import { FaSearchLocation } from 'react-icons/fa';
 import ListMapMarker from './ListMapMarker';
 import ResultTextIconBlock from './ResultTextIconBlock';
 import IconButton from '../../components/buttons/IconButton';
-import { GetRetailStoreApi, Category } from '@/utils/helpers/types';
+import { GetRetailStoreApi, Category, LocationDataForMap } from '@/utils/helpers/types';
 
 interface RetailStoreCardProps {
 	store: GetRetailStoreApi;
@@ -18,6 +18,8 @@ interface RetailStoreCardProps {
 	handleNavigationClick: (lat: number, lng: number) => void;
 	openModalForStore: (store: GetRetailStoreApi) => void;
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
+	getCategoryById: (id: number) => Category | undefined;
+	getLocationById: (id: number) => LocationDataForMap | undefined;
 }
 
 const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
@@ -28,6 +30,8 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 	handleNavigationClick,
 	openModalForStore,
 	getDisplayedCategories,
+	getCategoryById,
+	getLocationById,
 }) => {
 	const countAllCategories = (categories: Category[]): number => {
 		return categories.reduce(
@@ -35,6 +39,11 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 			0
 		);
 	};
+	const city = store.cityId ? getLocationById(store.cityId) : undefined;
+	const category =
+		store.objectTypeCategories[0] && typeof store.objectTypeCategories[0].id === 'number'
+			? getCategoryById(store.objectTypeCategories[0].id)
+			: undefined;
 
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>

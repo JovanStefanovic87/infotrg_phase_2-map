@@ -598,7 +598,7 @@ export interface LocationDataForMap {
 	id: number;
 	name: string;
 	icon?: string | null;
-	type: 'state' | 'county' | 'city' | 'suburb';
+	type: 'county' | 'city' | 'suburb';
 	children?: Location[];
 }
 

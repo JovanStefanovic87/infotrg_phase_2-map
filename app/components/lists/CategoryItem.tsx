@@ -70,7 +70,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		},
 		[expandedCategories]
 	);
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
 		try {
 			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
@@ -91,7 +91,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			setDisplayRelatedCategories([]);
 		}
 	}, [category.relatedIds, fetchRelatedCategoriesForDisplay]);
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const fetchRelatedCategoriesForEdit = useCallback(
 		async (relatedIds: number[]) => {
 			try {
@@ -103,7 +103,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		},
 		[setRelatedIds]
 	);
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const getCategoryName = useCallback(
 		(labelId: number, languageId: number) => {
 			const translation = translations.find(
@@ -116,7 +116,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		},
 		[translations]
 	);
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const getParentCategoryNames = useCallback(
 		(parents: Category[], languageId: number): string => {
 			if (parents.length === 0) return 'Ovo je glavna kategorija';
@@ -124,7 +124,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		},
 		[getCategoryName]
 	);
-
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const handleOpenEditModal = useCallback(
 		async (category: Category) => {
 			setLoading(true);
@@ -161,7 +161,21 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			setIsModalOpen(true);
 			setLoading(false);
 		},
-		[fetchRelatedCategoriesForEdit, setRelatedIds, setNewTranslations, setCurrentIcon, languages]
+		[
+			fetchRelatedCategoriesForEdit,
+			setRelatedIds,
+			setNewTranslations,
+			setCurrentIcon,
+			languages,
+			icons,
+			setCurrentEditCategory,
+			setIsModalOpen,
+			setLoading,
+			setNewIcon,
+			setParentIds,
+			setError,
+			setSuccessMessage,
+		]
 	);
 
 	return (

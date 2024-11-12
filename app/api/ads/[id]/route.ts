@@ -1,10 +1,14 @@
+//app\api\ads\[id]\route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import path from 'path';
 import { uploadImage } from '@/utils/helpers/file-utils';
 
-export async function DELETE(req: any, { params }: any) {
-	const adId = parseInt(params.id);
+export async function DELETE(
+	req: NextRequest,
+	context: Awaited<{ params: { id: string } }>
+): Promise<NextResponse> {
+	const adId = parseInt(context.params.id);
 
 	if (isNaN(adId)) {
 		return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
@@ -22,8 +26,11 @@ export async function DELETE(req: any, { params }: any) {
 	}
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-	const adId = parseInt(params.id);
+export async function PATCH(
+	req: NextRequest,
+	context: Awaited<{ params: { id: string } }>
+): Promise<NextResponse> {
+	const adId = parseInt(context.params.id);
 
 	if (isNaN(adId)) {
 		return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
@@ -61,11 +68,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 	}
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+	req: NextRequest,
+	context: Awaited<{ params: { id: string } }>
+): Promise<NextResponse> {
+	const { params } = context;
 	const adId = parseInt(params.id);
 
 	if (isNaN(adId)) {
-		console.error('Invalid ID:', params.id);
+		console.error('Invalid ID:', context.params.id);
 		return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 	}
 
@@ -84,12 +95,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 		const activityCategoryIds = JSON.parse(form.get('activityCategoryIds')?.toString() || '[]');
 		const objectTypeCategoryIds = JSON.parse(form.get('objectTypeCategoryIds')?.toString() || '[]');
 		const file = form.get('image') as File;
+
 		if (!name || !adType) {
 			console.error('Missing required fields:', { name, adType });
 			return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
 		}
 
-		// Check if the retail store exists
 		const retailStoreExists = await prisma.retailStore.findUnique({
 			where: { id: retailStoreId },
 		});
@@ -101,7 +112,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 		let imageId: number | null = null;
 
-		// Handle image upload or selection
 		if (file) {
 			const uploadDirectory = path.join(process.cwd(), 'public/images/advertisments');
 			await uploadImage(file, uploadDirectory);
@@ -117,7 +127,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			imageId = parseInt(imageIdFromLibrary);
 		}
 
-		// Prepare data for updating the advertisement
 		const updateData: any = {
 			name,
 			description,
@@ -128,7 +137,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			...(validTo && validTo !== 'null' && { validTo: new Date(validTo) }),
 		};
 
-		// Update categories
 		if (articleCategoryIds.length) {
 			updateData.articleCategories = {
 				set: articleCategoryIds.map((id: any) => ({ id })),
@@ -147,7 +155,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 			};
 		}
 
-		// Perform the update
 		const updatedAd = await prisma.advertising.update({
 			where: { id: adId },
 			data: updateData,

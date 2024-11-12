@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LocationList from '@/app/components/lists/LocationList';
 import { Location, Language, Icon, CurrentIcon } from '@/utils/helpers/types';
@@ -9,7 +9,6 @@ import DynamicPageContainer from '../containers/DynamicPageContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
 import { useFetchLocations, useCreateLocation } from '@/app/helpers/api/location';
 import { useFetchLanguages } from '@/app/helpers/api/language';
-import { useFetchIcons, useUploadIcon } from '@/app/helpers/api/icon';
 
 interface Props {
 	prefix: string;
@@ -52,15 +51,30 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		languageId,
 	});
 	const { data: languagesData, isLoading: isLoadingLanguages } = useFetchLanguages();
-	const { data: iconsData, isLoading: isLoadingIcons } = useFetchIcons({ directory: 'locations' });
 
-	// Use TanStack Mutation hooks for creating locations and uploading icons
+	// API poziv za dohvat ikona direktno u useEffect
+	useEffect(() => {
+		const fetchIcons = async () => {
+			try {
+				const response = await axios.get('/api/icons', {
+					params: { directory: 'locations' },
+				});
+				setIcons(response.data);
+			} catch (error) {
+				console.error('Error fetching icons:', error);
+				setError('Neuspešno preuzimanje ikona');
+			}
+		};
+
+		fetchIcons();
+	}, []);
+
+	// Use TanStack Mutation hook za kreiranje lokacije
 	const createLocationMutation = useCreateLocation();
-	const uploadIconMutation = useUploadIcon();
 
 	useEffect(() => {
-		setLoading(isLoadingLocations || isLoadingLanguages || isLoadingIcons);
-	}, [isLoadingLocations, isLoadingLanguages, isLoadingIcons]);
+		setLoading(isLoadingLocations || isLoadingLanguages);
+	}, [isLoadingLocations, isLoadingLanguages]);
 
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
@@ -69,10 +83,11 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 			let iconId = currentIcon.iconId;
 
 			if (icon) {
-				const iconResponse = await uploadIconMutation.mutateAsync({
-					icon: icon,
-					directory: 'locations',
-				});
+				const formData = new FormData();
+				formData.append('icon', icon);
+				formData.append('directory', 'locations');
+
+				const iconResponse = await axios.post('/api/icons', formData);
 
 				if (iconResponse.data.iconId) {
 					iconId = iconResponse.data.iconId;
@@ -105,7 +120,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				locationData.address = address;
 			}
 
-			// Create location using TanStack Mutation
 			await createLocationMutation.mutateAsync(locationData);
 
 			const translations = languages.map(language => ({
@@ -116,7 +130,6 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 
 			await axios.post('/api/translation', { translations });
 
-			// Reset the form and show success message
 			resetForm();
 			setSuccessMessage('Lokacija uspešno sačuvana.');
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
@@ -141,12 +154,32 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 		setIsIconPickerOpen(false);
 	};
 
-	// Ensure states are updated after the data is fetched
 	useEffect(() => {
 		if (locationsData) setLocations(locationsData);
 		if (languagesData) setLanguages(languagesData);
-		if (iconsData) setIcons(iconsData);
-	}, [locationsData, languagesData, iconsData]);
+	}, [locationsData, languagesData]);
+
+	const memoizedRefetchLocations = useCallback(async () => {
+		await refetchLocations();
+	}, [refetchLocations]);
+
+	const memoizedSetInitialExpandedLocations = useCallback(
+		(newSet: React.SetStateAction<Set<number>>) => {
+			setInitialExpandedLocations(newSet);
+		},
+		[]
+	);
+
+	const memoizedSetExpandedLocations = useCallback((newSet: React.SetStateAction<Set<number>>) => {
+		setExpandedLocations(newSet);
+	}, []);
+
+	const memoizedSetFilteredLocations = useCallback(
+		(locations: React.SetStateAction<Location[]>) => {
+			setFilteredLocations(locations);
+		},
+		[]
+	);
 
 	return (
 		<DynamicPageContainer
@@ -185,16 +218,14 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 					setCurrentIcon={setCurrentIcon}
 					languages={languages}
 					languageId={languageId}
-					refetchLocations={async () => {
-						await refetchLocations();
-					}}
+					refetchLocations={memoizedRefetchLocations}
 					expandedLocations={expandedLocations}
-					setExpandedLocations={setExpandedLocations}
+					setExpandedLocations={memoizedSetExpandedLocations}
 					manuallyExpandedLocations={manuallyExpandedLocations}
 					setManuallyExpandedLocations={setManuallyExpandedLocations}
-					setFilteredLocations={setFilteredLocations}
+					setFilteredLocations={memoizedSetFilteredLocations}
 					initialExpandedLocations={initialExpandedLocations}
-					setInitialExpandedLocations={setInitialExpandedLocations}
+					setInitialExpandedLocations={memoizedSetInitialExpandedLocations}
 					newIcon={newIcon}
 					setNewIcon={setNewIcon}
 					setIsIconPickerOpen={setIsIconPickerOpen}

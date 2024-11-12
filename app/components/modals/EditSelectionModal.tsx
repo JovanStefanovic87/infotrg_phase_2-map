@@ -1,15 +1,12 @@
-import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
-import { useCategories } from '@/app/helpers/api/category';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
-import { useFetchLocationsWithoutStates } from '@/app/helpers/api/location';
-import { prefixAticleCategory, location } from '@/app/api/prefix';
 import CategorySelection from './CategorySelection';
 import LocationSelection from './LocationSelection';
 import { TagIcon } from '@heroicons/react/24/outline';
 import CloseButton from '../buttons/CloseButton';
 import SelectableButton from '../buttons/SelectableButton';
-import { LocationDataForMap, CategoryDataForMap } from '@/utils/helpers/types';
+import { LocationDataForMap, CategoryDataForMap, Category } from '@/utils/helpers/types';
 
 interface Props {
 	isOpen: boolean;
@@ -19,6 +16,8 @@ interface Props {
 	selectedLocation: LocationDataForMap | null;
 	setSelectedCategory: Dispatch<SetStateAction<CategoryDataForMap | null>>;
 	setSelectedLocation: Dispatch<SetStateAction<LocationDataForMap | null>>;
+	categories: Category[];
+	locations: LocationDataForMap[];
 }
 
 const EditSelectionModal: React.FC<Props> = ({
@@ -29,12 +28,9 @@ const EditSelectionModal: React.FC<Props> = ({
 	selectedLocation,
 	setSelectedCategory,
 	setSelectedLocation,
+	categories,
+	locations,
 }) => {
-	const { data: categories = [] } = useCategories(prefixAticleCategory);
-	const { data: locations = [] } = useFetchLocationsWithoutStates({
-		prefix: location,
-		languageId: 1,
-	});
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
 
@@ -96,8 +92,8 @@ const EditSelectionModal: React.FC<Props> = ({
 							type: location.type as 'county' | 'city' | 'suburb',
 						})
 					}
-					locations={locations} // Pass the array of locations as expected by LocationSelection
-					selectedLocation={selectedLocation} // Use selectedLocation here instead of selectedItem
+					locations={locations}
+					selectedLocation={selectedLocation}
 				/>
 			</div>
 		</Dialog>

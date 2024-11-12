@@ -4,6 +4,8 @@ import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
+import { useCategories } from '@/app/helpers/api/category';
+import { useFetchLocationsWithoutStates } from '@/app/helpers/api/location';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { useFetchCategoryByIdAndLanguage } from '@/app/helpers/api/category';
 import { useFetchLocationByIdAndLanguage } from '@/app/helpers/api/location';
@@ -13,6 +15,7 @@ import {
 	LocationDataForMap,
 	CategoryDataForMap,
 } from '@/utils/helpers/types';
+import { prefixAticleCategory, location } from '@/app/api/prefix';
 import RetailStoreCard from './retailStoreList/RetailStoreCard';
 import AssortmentModal from './retailStoreList/AssortmentModal';
 import SpinnerForContainers from '../components/ui/SpinnerForContainers';
@@ -24,6 +27,11 @@ import EditSelectionModal from '../components/modals/EditSelectionModal';
 const MapContent: React.FC = () => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
+	const { data: categories = [] } = useCategories(prefixAticleCategory);
+	const { data: locations = [] } = useFetchLocationsWithoutStates({
+		prefix: location,
+		languageId: 1,
+	});
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
 	/* const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined; */
 	const countyId = params.get('countyId') ? Number(params.get('countyId')) : undefined;
@@ -74,6 +82,8 @@ const MapContent: React.FC = () => {
 		setSelectedCategory(category);
 		setSelectedLocation(location);
 	}; */
+
+	console.log('categories', categories);
 
 	useEffect(() => {
 		if (mainCategoryData) {
@@ -224,6 +234,8 @@ const MapContent: React.FC = () => {
 				selectedLocation={selectedLocation}
 				setSelectedCategory={setSelectedCategory}
 				setSelectedLocation={setSelectedLocation}
+				categories={categories}
+				locations={locations}
 			/>
 			<div id='map' className={`${styles.mapWrapper} relative`}>
 				<Map

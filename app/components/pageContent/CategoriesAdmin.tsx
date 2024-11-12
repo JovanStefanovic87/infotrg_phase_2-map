@@ -207,6 +207,13 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		}
 	};
 
+	const memoizedSetInitialExpandedCategories = useCallback(
+		(newSet: React.SetStateAction<Set<number>>) => {
+			setInitialExpandedCategories(newSet);
+		},
+		[]
+	);
+
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}
@@ -251,7 +258,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 						filteredCategories={filteredCategories}
 						setFilteredCategories={setFilteredCategories}
 						initialExpandedCategories={initialExpandedCategories}
-						setInitialExpandedCategories={setInitialExpandedCategories}
+						setInitialExpandedCategories={memoizedSetInitialExpandedCategories}
 						setError={setError}
 						setSuccessMessage={setSuccessMessage}
 						setLoading={setLoading}
