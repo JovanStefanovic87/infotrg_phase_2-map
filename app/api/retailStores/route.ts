@@ -91,43 +91,64 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-	const searchParams = new URL(req.url).searchParams;
-	const categoryId = searchParams.get('categoryId');
-	const stateId = searchParams.get('stateId');
-	const countyId = searchParams.get('countyId');
-	const cityId = searchParams.get('cityId');
-	const suburbId = searchParams.get('suburbId');
-
-	const where: any = {};
-
-	// Filtriranje po kategorijama
-	if (categoryId) {
-		where.OR = [
-			{ articleCategories: { some: { id: parseInt(categoryId) } } },
-			{ activityCategories: { some: { id: parseInt(categoryId) } } },
-			{ objectTypeCategories: { some: { id: parseInt(categoryId) } } },
-		];
-	}
-
-	// Filtriranje po lokacijama
-	if (stateId && stateId !== '0') where.stateId = parseInt(stateId);
-	if (countyId && countyId !== '0') where.countyId = parseInt(countyId);
-	if (cityId && cityId !== '0') where.cityId = parseInt(cityId);
-	if (suburbId && suburbId !== '0') where.suburbId = parseInt(suburbId);
+	const { searchParams } = new URL(req.url);
+	const languageId = parseInt(searchParams.get('languageId') ?? '1');
 
 	try {
 		const retailStores = await prisma.retailStore.findMany({
-			where,
-			select: {
-				id: true,
-				name: true,
-				articleCategories: { select: { id: true } },
-				activityCategories: { select: { id: true } },
-				objectTypeCategories: { select: { id: true } },
-				state: { select: { id: true } },
-				county: { select: { id: true } },
-				city: { select: { id: true } },
-				suburb: { select: { id: true } },
+			include: {
+				state: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				county: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				city: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				suburb: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
 				coordinates: {
 					select: {
 						latitude: true,
@@ -135,12 +156,51 @@ export async function GET(req: NextRequest) {
 						locationDescription: true,
 					},
 				},
+				articleCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				activityCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
+				objectTypeCategories: {
+					include: {
+						label: {
+							include: {
+								translations: {
+									where: {
+										languageId: languageId,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		});
 
 		return NextResponse.json(retailStores);
 	} catch (error) {
-		console.error('Error fetching filtered retail stores:', error);
+		console.error('Error fetching retail stores:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
 	}
 }

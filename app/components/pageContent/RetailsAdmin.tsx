@@ -67,7 +67,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	]);
 
 	const filteredCounties = formData.stateId
-		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.county || []
+		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.counties || []
 		: [];
 
 	const filteredCities = formData.countyId
@@ -113,7 +113,8 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 		});
 	};
 	// Format fetched retail stores for display
-
+	console.log('filteredCounties', filteredCounties);
+	console.log('locations', locations);
 	const formattedRetails = retails ? formatRetailData(retails) : [];
 
 	return (

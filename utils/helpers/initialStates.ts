@@ -14,9 +14,9 @@ export const retailInit: RetailFormState = {
 	email: '',
 	website: '',
 	stateId: 3, // Change to 1 in production
-	countyId: 0,
-	cityId: 0,
-	suburbId: 0,
+	countyId: 1,
+	cityId: 1,
+	suburbId: 1,
 	latitude: 0,
 	longitude: 0,
 	locationDescription: '',
