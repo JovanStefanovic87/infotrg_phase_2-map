@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
@@ -14,6 +14,7 @@ import {
 	GetRetailStoreApi,
 	LocationDataForMap,
 	CategoryDataForMap,
+	RawCategoryData,
 } from '@/utils/helpers/types';
 import { prefixAticleCategory, location } from '@/app/api/prefix';
 import RetailStoreCard from './retailStoreList/RetailStoreCard';
@@ -83,7 +84,7 @@ const MapContent: React.FC = () => {
 		setSelectedLocation(location);
 	}; */
 
-	console.log('categories', categories);
+	console.log('retailStores', retailStores);
 
 	useEffect(() => {
 		if (mainCategoryData) {
@@ -104,18 +105,23 @@ const MapContent: React.FC = () => {
 		}
 	}, [retailStores]);
 
-	const formatCategories = (categories: any[]): Category[] => {
+	const formatCategories = useCallback((categories: RawCategoryData[]): Category[] => {
 		return categories.map(category => ({
 			id: category.id,
 			name: category.name || 'Nedefinisano ime',
 			icon: category.icon || null,
-			iconId: category.icon?.id || null,
+			iconId: category.iconId || null,
 			labelId: category.labelId || 0,
 			parents: category.parents ? formatCategories(category.parents) : [],
 			children: category.childCategories ? formatCategories(category.childCategories) : [],
-			relatedIds: category.relatedCategories?.map((relCategory: any) => relCategory.id) || [],
+			relatedIds: category.relatedCategories?.map(relCategory => relCategory.id) || [],
+			synonyms: Array.isArray(category.synonyms)
+				? category.synonyms.map(synonym =>
+						typeof synonym === 'string' ? synonym : synonym.synonym
+				  )
+				: [],
 		}));
-	};
+	}, []);
 
 	const openModalForStore = (store: GetRetailStoreApi) => {
 		setActiveStore(store);
@@ -143,7 +149,7 @@ const MapContent: React.FC = () => {
 			const hierarchy = buildCategoryHierarchy(formattedCategories);
 			setCategoryHierarchy(hierarchy);
 		}
-	}, [retailStores]);
+	}, [retailStores, formatCategories]);
 
 	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
@@ -275,6 +281,7 @@ const MapContent: React.FC = () => {
 						getDisplayedCategories={getDisplayedCategories}
 						categoryId={categoryId || 0}
 						map={mapInstance}
+						openModalForStore={openModalForStore}
 					/>
 				</Map>
 			</div>

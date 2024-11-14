@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import MapMarker from './MapMarker';
 import { GetRetailStoreApi, Category } from '@/utils/helpers/types';
@@ -20,6 +20,7 @@ interface MapMarkersProps {
 	getDisplayedCategories: (store: GetRetailStoreApi, categoryId: number) => Category[];
 	categoryId: number;
 	map: google.maps.Map | null;
+	openModalForStore: (store: GetRetailStoreApi) => void;
 }
 
 const MapMarkers: React.FC<MapMarkersProps> = ({
@@ -33,31 +34,37 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 	setDefaultCenter,
 	setDefaultZoom,
 	map,
+	openModalForStore,
 }) => {
 	const [activeMarker, setActiveMarker] = useState<{
 		position: google.maps.LatLngLiteral;
 		title: string;
 	} | null>(null);
 
-	const activeMarkers = retailStores
-		? retailStores
-				.filter(store => store.coordinates)
-				.map((store, index) => ({
-					id: store.id,
-					index,
-					position: {
-						lat: store.coordinates!.latitude,
-						lng: store.coordinates!.longitude,
-					},
-					title: store.name,
-					description: store.coordinates!.locationDescription || '',
-					store,
-				}))
-		: [];
+	const activeMarkers = useMemo(() => {
+		return retailStores
+			? retailStores
+					.filter(store => store.coordinates)
+					.map((store, index) => ({
+						id: store.id,
+						index,
+						position: {
+							lat: store.coordinates!.latitude,
+							lng: store.coordinates!.longitude,
+						},
+						title: store.name,
+						description: store.coordinates!.locationDescription || '',
+						store,
+					}))
+			: [];
+	}, [retailStores]);
 
 	const centerRef = useRef(center);
 	const zoomRef = useRef(zoom);
 	const hasInitialized = useRef(false);
+
+	const memoizedSetDefaultCenter = useCallback(setDefaultCenter, [setDefaultCenter]);
+	const memoizedSetDefaultZoom = useCallback(setDefaultZoom, [setDefaultZoom]);
 
 	useEffect(() => {
 		if (activeMarkers.length > 0 && map && !hasInitialized.current) {
@@ -65,8 +72,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 
 			if (activeMarkers.length === 1) {
 				const singleMarker = activeMarkers[0].position;
-				setDefaultCenter(singleMarker);
-				setDefaultZoom(19); // Postavite željeni nivo zoom-a za jedan marker
+				memoizedSetDefaultCenter(singleMarker);
+				memoizedSetDefaultZoom(19); // Postavite željeni nivo zoom-a za jedan marker
 				map.panTo(singleMarker);
 				map.setZoom(19); // Zoom na 19 kada je samo jedan marker
 			} else {
@@ -98,8 +105,8 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 				centerRef.current = newCenter;
 				zoomRef.current = optimalZoom;
 
-				setDefaultCenter(newCenter);
-				setDefaultZoom(optimalZoom);
+				memoizedSetDefaultCenter(newCenter);
+				memoizedSetDefaultZoom(optimalZoom);
 
 				if (map) {
 					map.panTo(newCenter);
@@ -107,7 +114,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 				}
 			}
 		}
-	}, [activeMarkers, map, setCenter, setZoom]);
+	}, [activeMarkers, map, setCenter, setZoom, memoizedSetDefaultCenter, memoizedSetDefaultZoom]);
 
 	const handleMapChange = useCallback(() => {
 		if (map) {
@@ -195,9 +202,11 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 												</span>
 											)) || <span className='text-xs text-gray-500'>Tip nije definisan</span>}
 										</div>
-										<AutoScrollCategories
-											categories={getDisplayedCategories(marker.store, categoryId)}
-										/>
+										<div onClick={() => openModalForStore(marker.store)}>
+											<AutoScrollCategories
+												categories={getDisplayedCategories(marker.store, categoryId)}
+											/>
+										</div>
 
 										<div className='flex flex-col gap-1 text-xs sm:text-sm md:text-base pb-1'>
 											{marker.store.website && (

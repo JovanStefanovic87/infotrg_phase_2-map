@@ -39,10 +39,10 @@ export const contentData: BasicInformation[] = [
     email: 'suinfotrg@gmail.com',
     amount: '2.665,00',
     share: '5,33',
-    shareMinusTransfer: '5,30',
-    amountMinusTransfer: '2.650,00',
-    totalTransferedAmount: '15,00',
-    totalSharedShare: '0,03',
+    shareMinusTransfer: '5,28',
+    amountMinusTransfer: '2.640,00',
+    totalTransferedAmount: '25,00',
+    totalSharedShare: '0,05',
   },
   {
     id: 'IN-002',
@@ -50,6 +50,10 @@ export const contentData: BasicInformation[] = [
     email: 'jovanstefanovic024@gmail.com',
     amount: '1.594,77',
     share: '3,19',
+    shareMinusTransfer: '2,99',
+    amountMinusTransfer: '1.494,77',
+    totalTransferedAmount: '100,00',
+    totalSharedShare: '0,2',
   },
   {
     id: 'IN-003',
@@ -76,15 +80,15 @@ export const contentData: BasicInformation[] = [
     id: 'IN-006',
     name: 'Adrien Stefanović',
     email: 'adrienstefanovic@gmail.com',
-    amount: '50,00',
-    share: '0,1',
+    amount: '150,00',
+    share: '0,3',
   },
   {
     id: 'IN-007',
     name: 'Nebojša Lukić',
     email: 'nebojsa.3011992@gmail.com',
-    amount: '1.709,40',
-    share: '3,42',
+    amount: '1.714,40',
+    share: '3,43',
   },
   {
     id: 'IN-008',
@@ -118,8 +122,8 @@ export const contentData: BasicInformation[] = [
     id: 'IN-012',
     name: 'Vladimir Madžarević',
     phone: '0643151066',
-    amount: '50,00',
-    share: '0,10',
+    amount: '55,00',
+    share: '0,11',
   },
   {
     id: 'IN-013',
@@ -217,8 +221,12 @@ export const invested: InvestedData = {
   'IN-006': [
     { date: '05.10.2024.', amount: '30,00', share: '0,06%' },
     { date: '16.10.2024.', amount: '20,00', share: '0,04%' },
+    { date: '12.11.2024.', amount: '100,00', share: '0,2%' },
   ],
-  'IN-007': [{ date: '11.10.2024.', amount: '1.709,40', share: '3,42%' }],
+  'IN-007': [
+    { date: '11.10.2024.', amount: '1.709,40', share: '3,42%' },
+    { date: '08.11.2024.', amount: '5,00', share: '0,01%' },
+  ],
   'IN-008': [{ date: '11.10.2024.', amount: '10,00', share: '0,02%' }],
   'IN-009': [{ date: '14.10.2024.', amount: '50,00', share: '0,10%' }],
   'IN-010': [{ date: '14.10.2024.', amount: '100,00', share: '0,20%' }],
@@ -226,7 +234,10 @@ export const invested: InvestedData = {
     { date: '15.10.2024.', amount: '25,00', share: '0,05%' },
     { date: '31.10.2024.', amount: '60,00', share: '0,12%' },
   ],
-  'IN-012': [{ date: '15.10.2024.', amount: '50,00', share: '0,10%' }],
+  'IN-012': [
+    { date: '15.10.2024.', amount: '50,00', share: '0,10%' },
+    { date: '08.11.2024.', amount: '5,00', share: '0,01%' },
+  ],
   'IN-013': [{ date: '21.10.2024.', amount: '10,00', share: '0,02%' }],
   'IN-016': [{ date: '22.10.2024.', amount: '50,00', share: '0,10%' }],
   'IN-017': [{ date: '28.10.2024.', amount: '20,00', share: '0,04%' }],
@@ -327,8 +338,12 @@ export const withdrawn: WithdrawnData = {
 
 export const transfer: WithdrawnData = {
   'IN-001': {
-    amount: '15,00',
-    share: '0,03',
+    amount: '25,00',
+    share: '0,05',
+  },
+  'IN-002': {
+    amount: '100,00',
+    share: '0,2',
   },
 };
 
@@ -336,7 +351,9 @@ export const transfered: InvestedData = {
   'IN-001': [
     { date: '06.11.2024.', amount: '10,00', share: '0,02%' },
     { date: '07.11.2024.', amount: '5,00', share: '0,01%' },
+    { date: '08.11.2024.', amount: '10,00', share: '0,02%' },
   ],
+  'IN-002': [{ date: '12.11.2024.', amount: '100,00', share: '0,2%' }],
 };
 
 export const hyperlinks = [

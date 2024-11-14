@@ -113,8 +113,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 		});
 	};
 	// Format fetched retail stores for display
-	console.log('filteredCounties', filteredCounties);
-	console.log('locations', locations);
+
 	const formattedRetails = retails ? formatRetailData(retails) : [];
 
 	return (

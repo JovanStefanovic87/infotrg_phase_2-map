@@ -1,5 +1,5 @@
 import { prisma } from '@/app/lib/prisma';
-import { Category } from '@/utils/helpers/types';
+import { Category, EnhancedCategory } from '@/utils/helpers/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 const fetchParents = async (childId: number): Promise<Category[]> => {
@@ -13,7 +13,9 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 						include: {
 							translations: {
 								where: { languageId: 1 },
-								include: { synonyms: true },
+								include: {
+									synonyms: true,
+								},
 							},
 						},
 					},
@@ -52,19 +54,46 @@ const buildCategoryTree = async (
 	const categories = await prisma.category.findMany({
 		where: {
 			id: { in: categoryIds },
-			label: { name: { startsWith: prefix } },
+			label: {
+				name: {
+					startsWith: prefix,
+				},
+			},
 		},
 		include: {
 			icon: true,
-			childCategories: { include: { child: true } },
-			label: { include: { translations: { where: { languageId }, include: { synonyms: true } } } },
-			relatedCategories: { include: { related: true } },
-			relatedTo: { include: { category: true } },
+			childCategories: {
+				include: {
+					child: true,
+				},
+			},
+			label: {
+				include: {
+					translations: {
+						where: { languageId },
+						include: {
+							synonyms: true, // Uključujemo sinonime
+						},
+					},
+				},
+			},
+			relatedCategories: {
+				include: {
+					related: true,
+				},
+			},
+			relatedTo: {
+				include: {
+					category: true,
+				},
+			},
 		},
 	});
 
 	const categoryPromises = categories.map(async category => {
-		if (processedIds.has(category.id)) return undefined;
+		if (processedIds.has(category.id)) {
+			return undefined;
+		}
 		processedIds.add(category.id);
 
 		const relatedIds = [
@@ -77,12 +106,12 @@ const buildCategoryTree = async (
 
 		return {
 			id: category.id,
-			name: category.label.translations[0]?.translation || '',
+			name: category.label.translations[0]?.translation || '', // Koristimo prvi prevod
 			iconId: category.iconId,
 			labelId: category.labelId,
 			parents: await fetchParents(category.id),
 			children,
-			synonyms: category.label.translations[0]?.synonyms.map(syn => syn.synonym) || [],
+			synonyms: category.label.translations[0]?.synonyms.map(syn => syn.synonym) || [], // Mapiramo sinonime kao niz stringova
 			icon: category.icon
 				? {
 						id: category.icon.id,
@@ -99,10 +128,11 @@ const buildCategoryTree = async (
 	return categoryResults.filter((category): category is any => category !== undefined);
 };
 
+// Function to create a category tree
 export async function GET(req: NextRequest) {
 	const searchParams = new URL(req.url).searchParams;
 	const categoryId = searchParams.get('categoryId');
-	const stateId = searchParams.get('stateId');
+	const stateId = searchParams.get('stateId') || '3';
 	const countyId = searchParams.get('countyId');
 	const cityId = searchParams.get('cityId');
 	const suburbId = searchParams.get('suburbId');
@@ -110,7 +140,6 @@ export async function GET(req: NextRequest) {
 
 	const where: any = {};
 
-	// Add category-based filtering
 	if (categoryId) {
 		where.OR = [
 			{ articleCategories: { some: { id: parseInt(categoryId) } } },
@@ -118,12 +147,29 @@ export async function GET(req: NextRequest) {
 			{ objectTypeCategories: { some: { id: parseInt(categoryId) } } },
 		];
 	}
+	if (stateId && stateId !== '0') {
+		where.stateId = parseInt(stateId);
 
-	// Dynamically add location filtering only if the ID is non-zero and non-null
-	if (stateId && stateId !== '0') where.stateId = parseInt(stateId);
-	if (countyId && countyId !== '0') where.countyId = parseInt(countyId);
-	if (cityId && cityId !== '0') where.cityId = parseInt(cityId);
-	if (suburbId && suburbId !== '0') where.suburbId = parseInt(suburbId);
+		if (countyId && countyId !== '0') {
+			where.countyId = parseInt(countyId);
+
+			if (cityId && cityId !== '0') {
+				where.cityId = parseInt(cityId);
+
+				if (suburbId && suburbId !== '0') {
+					where.suburbId = parseInt(suburbId);
+				} else {
+					where.suburbId = null;
+				}
+			} else {
+				where.cityId = null;
+			}
+		} else {
+			where.countyId = null;
+		}
+	} else {
+		where.stateId = null;
+	}
 
 	try {
 		const retailStores = await prisma.retailStore.findMany({
@@ -134,29 +180,84 @@ export async function GET(req: NextRequest) {
 				objectTypeCategories: true,
 				state: {
 					include: {
-						label: { include: { translations: { where: { languageId } } } },
+						label: {
+							include: {
+								translations: {
+									where: { languageId },
+								},
+							},
+						},
 					},
 				},
 				county: {
 					include: {
-						label: { include: { translations: { where: { languageId } } } },
+						label: {
+							include: {
+								translations: {
+									where: { languageId },
+								},
+							},
+						},
 					},
 				},
 				city: {
 					include: {
-						label: { include: { translations: { where: { languageId } } } },
+						label: {
+							include: {
+								translations: {
+									where: { languageId },
+								},
+							},
+						},
 					},
 				},
 				suburb: {
 					include: {
-						label: { include: { translations: { where: { languageId } } } },
+						label: {
+							include: {
+								translations: {
+									where: { languageId },
+								},
+							},
+						},
 					},
 				},
 				coordinates: true,
 			},
 		});
 
-		return NextResponse.json(retailStores);
+		const enhancedRetailStores = await Promise.all(
+			retailStores.map(async store => {
+				const articleCategoryIds = store.articleCategories.map(category => category.id);
+				const activityCategoryIds = store.activityCategories.map(category => category.id);
+				const objectTypeCategoryIds = store.objectTypeCategories.map(category => category.id);
+
+				const articleCategories = await buildCategoryTree(
+					articleCategoryIds,
+					'article_category_',
+					languageId
+				);
+				const activityCategories = await buildCategoryTree(
+					activityCategoryIds,
+					'activity_category_',
+					languageId
+				);
+				const objectTypeCategories = await buildCategoryTree(
+					objectTypeCategoryIds,
+					'object_type_category_',
+					languageId
+				);
+
+				return {
+					...store,
+					articleCategories,
+					activityCategories,
+					objectTypeCategories,
+				};
+			})
+		);
+
+		return NextResponse.json(enhancedRetailStores);
 	} catch (error) {
 		console.error('Error fetching filtered retail stores:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

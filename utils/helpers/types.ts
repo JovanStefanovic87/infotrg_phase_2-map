@@ -608,3 +608,19 @@ export interface CategoryDataForMap {
 	icon?: string | null;
 	children?: Category[];
 }
+
+export interface RawCategoryData {
+	id: number;
+	name?: string;
+	icon?: any;
+	iconId?: number | null;
+	labelId?: number;
+	parents?: RawCategoryData[];
+	childCategories?: RawCategoryData[];
+	relatedCategories?: { id: number }[];
+	synonyms?: (string | { synonym: string })[];
+}
+
+export interface CategoryWithSynonyms extends Category {
+	synonyms?: string[];
+}

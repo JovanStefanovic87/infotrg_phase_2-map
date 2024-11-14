@@ -157,43 +157,13 @@ export async function GET(req: NextRequest) {
 					},
 				},
 				articleCategories: {
-					include: {
-						label: {
-							include: {
-								translations: {
-									where: {
-										languageId: languageId,
-									},
-								},
-							},
-						},
-					},
+					include: { label: { include: { translations: { where: { languageId } } } } },
 				},
 				activityCategories: {
-					include: {
-						label: {
-							include: {
-								translations: {
-									where: {
-										languageId: languageId,
-									},
-								},
-							},
-						},
-					},
+					include: { label: { include: { translations: { where: { languageId } } } } },
 				},
 				objectTypeCategories: {
-					include: {
-						label: {
-							include: {
-								translations: {
-									where: {
-										languageId: languageId,
-									},
-								},
-							},
-						},
-					},
+					include: { label: { include: { translations: { where: { languageId } } } } },
 				},
 			},
 		});

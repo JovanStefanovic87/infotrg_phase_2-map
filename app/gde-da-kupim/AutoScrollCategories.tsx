@@ -6,28 +6,43 @@ interface Props {
 
 const AutoScrollCategories: React.FC<Props> = ({ categories }) => {
 	const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-	const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	const animationFrameRef = useRef<number | null>(null);
+	const frameCounterRef = useRef(0);
+
+	// Set scroll speed parameters
+	const scrollIncrement = 0.7; // Smaller value to slow down the scroll speed
+	const frameSkip = 5; // Increase this number to slow down even more (e.g., scroll every 5th frame)
 
 	const startAutoScroll = () => {
 		if (scrollContainerRef.current) {
-			scrollIntervalRef.current = setInterval(() => {
-				scrollContainerRef.current!.scrollBy({
-					left: 1,
-					behavior: 'smooth',
-				});
+			const scrollStep = () => {
+				// Only scroll every nth frame, where n is defined by `frameSkip`
+				if (frameCounterRef.current % frameSkip === 0) {
+					if (scrollContainerRef.current) {
+						scrollContainerRef.current.scrollLeft += scrollIncrement;
 
-				if (
-					scrollContainerRef.current!.scrollLeft + scrollContainerRef.current!.clientWidth >=
-					scrollContainerRef.current!.scrollWidth
-				) {
-					stopAutoScroll();
+						// Loop back to the start when reaching the end
+						if (
+							scrollContainerRef.current.scrollLeft + scrollContainerRef.current.clientWidth >=
+							scrollContainerRef.current.scrollWidth - 1
+						) {
+							scrollContainerRef.current.scrollLeft = 0;
+						}
+					}
 				}
-			}, 20);
+
+				frameCounterRef.current += 1;
+				animationFrameRef.current = requestAnimationFrame(scrollStep);
+			};
+
+			animationFrameRef.current = requestAnimationFrame(scrollStep);
 		}
 	};
 
 	const stopAutoScroll = () => {
-		if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+		if (animationFrameRef.current) {
+			cancelAnimationFrame(animationFrameRef.current);
+		}
 	};
 
 	useEffect(() => {
@@ -39,13 +54,13 @@ const AutoScrollCategories: React.FC<Props> = ({ categories }) => {
 	}, []);
 
 	return (
-		<div className='flex items-center border-b-2 mb-2 '>
+		<div className='flex items-center border-b-2 mb-2'>
 			<div
 				ref={scrollContainerRef}
 				className='flex items-center overflow-x-auto whitespace-nowrap text-gray-700 cursor-pointer py-3 rounded-lg transition-colors duration-300 custom-scrollbar'
 				onMouseEnter={stopAutoScroll}
 				onTouchStart={stopAutoScroll}
-				/* onMouseLeave={() => !scrollEnded && startAutoScroll()} */
+				onMouseLeave={startAutoScroll}
 				style={{ width: '100%' }}>
 				{categories.map((category, idx) => (
 					<span key={idx} className='text-sm font-semibold text-gray-900 py-1 rounded-full'>
