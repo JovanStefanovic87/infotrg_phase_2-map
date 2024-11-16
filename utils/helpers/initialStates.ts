@@ -19,6 +19,7 @@ export const retailInit: RetailFormState = {
 	suburbId: 1,
 	latitude: 0,
 	longitude: 0,
+	address: 'Somborski put 79',
 	locationDescription: '',
 	articleCategoryIds: [] as number[],
 	activityCategoryIds: [] as number[],

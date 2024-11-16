@@ -3,6 +3,8 @@ import LabelInputForm from '../input/LabelInputForm';
 import SelectInputForm from '../input/SelectInputForm';
 import SubmitButton from '../buttons/SubmitButton';
 import { RetailFormState, State, County, City, Suburb } from '@/utils/helpers/types';
+import ErrorDisplay from '../modals/systemModals/ErrorDisplay';
+import SuccessDisplay from '../modals/systemModals/SuccessDisplay';
 
 interface Props {
 	formData: RetailFormState;
@@ -33,6 +35,15 @@ const RetailStoreForm: React.FC<Props> = ({
 }) => {
 	return (
 		<form onSubmit={handleSubmit} className='space-y-2 px-8 py-4 shadow-md'>
+			{mutation?.isError && (
+				<ErrorDisplay error={mutation.error?.message} clearError={mutation.reset} />
+			)}
+			{mutation?.isSuccess && (
+				<SuccessDisplay
+					success={successMessage || 'Neočekivana greška'}
+					clearSuccess={mutation.reset}
+				/>
+			)}
 			{/* Store Name */}
 			<LabelInputForm
 				id='name'
@@ -169,9 +180,6 @@ const RetailStoreForm: React.FC<Props> = ({
 			<div className='flex justify-end pt-4'>
 				<SubmitButton>{loading ? 'U toku...' : 'Sačuvaj'}</SubmitButton>
 			</div>
-			{/* Error and Success Messages */}
-			{mutation?.isError && <p className='text-red-500'>{mutation.error?.message}</p>}
-			{mutation?.isSuccess && <p className='text-green-500'>{successMessage}</p>}
 		</form>
 	);
 };

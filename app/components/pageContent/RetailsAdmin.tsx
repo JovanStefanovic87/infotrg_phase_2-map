@@ -84,6 +84,16 @@ const RetailsAdmin: React.FC<Props> = ({ title, initialData }) => {
 		? filteredCities.find((city: { id: number }) => city.id === formData.cityId)?.suburbs || []
 		: [];
 
+	const setSuccessMessageHandler = (message: string) => {
+		setError(''); // Obrišite prethodne greške
+		setSuccessMessage(message);
+	};
+
+	const setErrorHandler = (message: string) => {
+		setSuccessMessage(null); // Obrišite prethodnu uspešnu poruku
+		setError(message);
+	};
+
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -108,12 +118,12 @@ const RetailsAdmin: React.FC<Props> = ({ title, initialData }) => {
 
 		mutation.mutate(newRetailStore, {
 			onSuccess: () => {
-				setSuccessMessage('Retail store created successfully!');
+				setSuccessMessageHandler('Retail store created successfully!');
 				setFormData(retailInit);
 				setSubmitTrigger(prev => !prev);
 			},
 			onError: (error: any) => {
-				setError(error?.message || 'Došlo je do greške prilikom čuvanja.');
+				setErrorHandler(error?.message || 'Došlo je do greške prilikom čuvanja.');
 			},
 		});
 	};
@@ -150,11 +160,6 @@ const RetailsAdmin: React.FC<Props> = ({ title, initialData }) => {
 					handleSubmit={handleSubmit}
 					mutation={undefined}
 				/>
-				{error && (
-					<div className='mt-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded'>
-						{error}
-					</div>
-				)}
 			</CollapsibleFormContainer>
 			<div className='mt-8'>
 				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4 text-black'>

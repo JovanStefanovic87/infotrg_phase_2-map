@@ -13,12 +13,6 @@ const CategoriesAdminPage = async () => {
 
 	await prefetchData(queryClient, languageId);
 
-	console.log('Initial Data:', {
-		articleCategories: queryClient.getQueryData(['categories', 'article', languageId]),
-		activityCategories: queryClient.getQueryData(['categories', 'activity', languageId]),
-		objectTypeCategories: queryClient.getQueryData(['categories', 'objectType', languageId]),
-	});
-
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<RetailsAdmin
