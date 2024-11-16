@@ -14,12 +14,20 @@ import { retailInit } from '@/utils/helpers/initialStates';
 import RetailStoreList from '../lists/RetailStoreList';
 import { formatRetailData } from '@/app/admin/prodavci/formatRetailData';
 import { useCreateRetailStore, useFetchRetailStores } from '@/app/helpers/api/retailStore';
+import { Location, Category, RetailAdmin } from '@/utils/helpers/types';
 
 interface Props {
 	title: string;
+	initialData: {
+		locations: Location[];
+		articleCategories: Category[];
+		activityCategories: Category[];
+		objectTypeCategories: Category[];
+		retails: RetailAdmin[];
+	};
 }
 
-const RetailsAdmin: React.FC<Props> = ({ title }) => {
+const RetailsAdmin: React.FC<Props> = ({ title, initialData }) => {
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string>('');
 	const [loading, setLoading] = useState<boolean>(false);
@@ -28,46 +36,43 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 	const [submitTrigger, setSubmitTrigger] = useState<boolean>(false);
 	const mutation = useCreateRetailStore();
 
-	const { data: locations, isLoading: locationsLoading } = useFetchLocations({
-		prefix: '',
-		languageId: languageId,
-	});
-	const { data: articleCategories, isLoading: articleCategoriesLoading } =
+	const {
+		locations: initialLocations,
+		articleCategories: initialArticleCategories,
+		activityCategories: initialActivityCategories,
+		objectTypeCategories: initialObjectTypeCategories,
+		retails: initialRetails,
+	} = initialData;
+
+	const fetchedLocations =
+		useFetchLocations({
+			prefix: '',
+			languageId: 1,
+		}).data || initialLocations;
+
+	const articleCategories =
 		useCategoriesByPrefixAndLanguage({
 			prefix: prefixAticleCategory,
 			languageId: 1,
-		});
-	const { data: activityCategories, isLoading: activityCategoriesLoading } =
+		}).data || initialArticleCategories;
+
+	const activityCategories =
 		useCategoriesByPrefixAndLanguage({
 			prefix: prefixActivityCategory,
 			languageId: 1,
-		});
-	const { data: objectTypeCategories, isLoading: objectTypeCategoriesLoading } =
+		}).data || initialActivityCategories;
+
+	const objectTypeCategories =
 		useCategoriesByPrefixAndLanguage({
 			prefix: prefixObjectTypeCategory,
 			languageId: 1,
-		});
-	const { data: retails, isLoading: retailsLoading } = useFetchRetailStores(languageId);
+		}).data || initialObjectTypeCategories;
 
-	React.useEffect(() => {
-		const allDataLoaded = !(
-			locationsLoading ||
-			articleCategoriesLoading ||
-			activityCategoriesLoading ||
-			objectTypeCategoriesLoading ||
-			retailsLoading
-		);
-		setLoading(!allDataLoaded);
-	}, [
-		locationsLoading,
-		articleCategoriesLoading,
-		activityCategoriesLoading,
-		objectTypeCategoriesLoading,
-		retailsLoading,
-	]);
+	const retails = useFetchRetailStores(1).data || initialRetails;
 
 	const filteredCounties = formData.stateId
-		? locations?.find((state: { id: number }) => state.id === formData.stateId)?.counties || []
+		? fetchedLocations?.find((state: { id: number }) => state.id === formData.stateId)?.counties ||
+		  []
 		: [];
 
 	const filteredCities = formData.countyId
@@ -125,14 +130,14 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 			loading={loading}
 			title={title}>
 			<CollapsibleFormContainer
-				articleCategories={articleCategories || []}
-				activityCategories={activityCategories || []}
-				objectTypeCategories={objectTypeCategories || []}
+				articleCategories={initialArticleCategories || []}
+				activityCategories={initialActivityCategories || []}
+				objectTypeCategories={initialObjectTypeCategories || []}
 				setFormData={setFormData}
 				submitTrigger={submitTrigger}>
 				<RetailStoreForm
 					formData={formData}
-					states={locations}
+					states={fetchedLocations}
 					handleChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
 					handleSelectChange={e =>
 						setFormData({ ...formData, [e.target.name]: parseInt(e.target.value) })
@@ -152,7 +157,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 				)}
 			</CollapsibleFormContainer>
 			<div className='mt-8'>
-				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4'>
+				<h2 className='text-2xl md:text-3xl font-semibold uppercase text-center pb-4 text-black'>
 					Lista prodajnih objekata
 				</h2>
 				<RetailStoreList
@@ -162,7 +167,7 @@ const RetailsAdmin: React.FC<Props> = ({ title }) => {
 					articleCategories={articleCategories || []}
 					activityCategories={activityCategories || []}
 					objectTypeCategories={objectTypeCategories || []}
-					locations={locations}
+					locations={fetchedLocations}
 				/>
 			</div>
 		</DynamicPageContainer>

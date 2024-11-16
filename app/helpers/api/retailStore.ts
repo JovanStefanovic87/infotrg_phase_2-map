@@ -62,7 +62,7 @@ export const useFetchRetailStores = (languageId: number) => {
 	return useQuery<GetRetailStoreApi[]>({
 		queryKey: ['retailStores', languageId],
 		queryFn: () => fetchRetailStores(languageId),
-		staleTime: 1000 * 60 * 5,
+		staleTime: 1000,
 	});
 };
 
