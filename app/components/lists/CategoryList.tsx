@@ -15,6 +15,12 @@ interface CategoryListProps {
 	languages: Language[];
 	languageId: number;
 	refetchCategories: () => Promise<void>;
+	initialExpandedCategories: Set<number>;
+	setInitialExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	manuallyExpandedCategories: Set<number>;
+	setManuallyExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
+	expandedCategories: Set<number>;
+	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 	onDeleteCategory: (id: number) => Promise<void>;
 	setError: React.Dispatch<React.SetStateAction<string>>;
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
@@ -29,9 +35,16 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	languages,
 	languageId,
 	refetchCategories,
+	manuallyExpandedCategories,
+	setManuallyExpandedCategories,
+	initialExpandedCategories,
+	setInitialExpandedCategories,
+	expandedCategories,
+	setExpandedCategories,
 	onDeleteCategory,
 	setError,
 	setSuccessMessage,
+
 	setLoading,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,45 +54,81 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [currentEditCategory, setCurrentEditCategory] = useState<CategoryWithTranslations | null>(
 		null
 	);
-	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 
 	const lowercasedQuery = searchQuery.trim().toLowerCase();
+
+	const toggleCategoryExpansion = (id: number) => {
+		setManuallyExpandedCategories(prev => {
+			const updated = new Set(prev);
+			if (updated.has(id)) {
+				updated.delete(id);
+			} else {
+				updated.add(id);
+			}
+			return updated;
+		});
+	};
+
+	const isCategoryExpanded = (id: number) => expandedCategories.has(id);
 
 	// Recursive filtering function
 	const recursiveSearch = (
 		categories: CategoryWithTranslations[],
 		languageId: number,
-		query: string
+		query: string,
+		expandedIds: Set<number>
 	): CategoryWithTranslations[] => {
 		return categories
 			.map(category => {
 				const translation = category.translations.find(t => t.languageId === languageId);
 				const categoryName = translation?.name.toLowerCase() || '';
-				const matches = categoryName.includes(query);
 
+				// Proveri da li kategorija ili neka od potkategorija odgovara pretrazi
+				const matches = categoryName.includes(query);
 				const childMatches = recursiveSearch(
 					(category.children as CategoryWithTranslations[]) || [],
 					languageId,
-					query
+					query,
+					expandedIds
 				);
 
+				// Dodaj u expandedIds ako postoji podudaranje ili odgovarajuće potkategorije
 				if (matches || childMatches.length > 0) {
-					return { ...category, children: childMatches };
+					expandedIds.add(category.id);
+					return {
+						...category,
+						children: matches ? category.children : childMatches, // Zadrži sve potkategorije ako postoji podudaranje
+					};
 				}
-				return null;
+
+				return null; // Ignoriši kategorije koje nemaju podudaranje
 			})
 			.filter(Boolean) as CategoryWithTranslations[];
 	};
 
 	useEffect(() => {
 		if (searchQuery.trim()) {
-			const filtered = recursiveSearch(categories, languageId, lowercasedQuery);
+			const expanded = new Set<number>();
+			const filtered = recursiveSearch(categories, languageId, lowercasedQuery, expanded);
+
+			// Automatski proširi sve kategorije koje sadrže rezultat pretrage
+			const expandAllMatching = (categories: CategoryWithTranslations[]) => {
+				categories.forEach(category => {
+					expanded.add(category.id);
+					if (category.children) expandAllMatching(category.children as CategoryWithTranslations[]);
+				});
+			};
+			expandAllMatching(filtered);
+
+			setExpandedCategories(expanded);
 			setFilteredCategories(filtered);
 		} else {
 			setFilteredCategories(categories);
+			setExpandedCategories(new Set(initialExpandedCategories));
 		}
-	}, [searchQuery, categories, languageId]);
+	}, [searchQuery, categories, languageId, initialExpandedCategories]);
 
 	const handleDelete = useCallback(
 		async (id: number) => {
@@ -181,8 +230,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					setCurrentIcon={setCurrentIcon}
 					setCurrentEditCategory={setCurrentEditCategory}
 					setIsModalOpen={setIsModalOpen}
-					toggleCategory={toggleCategory} // Dodato
+					toggleCategory={toggleCategoryExpansion} // Dodato
 					expandedCategories={expandedCategories} // Dodato
+					isCategoryExpanded={isCategoryExpanded}
 				/>
 			))}
 

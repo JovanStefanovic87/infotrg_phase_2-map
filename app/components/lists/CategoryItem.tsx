@@ -22,6 +22,7 @@ interface CategoryItemProps {
 	handleDelete: (categoryId: number) => void;
 	toggleCategory: (id: number) => void;
 	expandedCategories: Set<number>;
+	isCategoryExpanded: (id: number) => boolean;
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
@@ -35,21 +36,12 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	handleDelete,
 	toggleCategory,
 	expandedCategories,
+	isCategoryExpanded,
 }) => {
-	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<
-		CategoryWithTranslations[]
-	>([]);
 	const [relatedCategories, setRelatedCategories] = useState<CategoryWithTranslations[]>([]);
 
-	console.log('category', category);
-
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
-
-	const isCategoryExpanded = useCallback(
-		(id: number) => expandedCategories.has(id),
-		[expandedCategories]
-	);
-
+	console.log('Category children for', category.name, category.children);
 	const getCategoryName = useCallback(
 		(category: CategoryWithTranslations) => {
 			// Proveri da li je category i category.translations definisan
@@ -150,7 +142,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			</div>
 
 			{/* Toggle Subcategories */}
-			{category.children?.length > 0 && (
+			{category.children && category.children.length > 0 && (
 				<ToggleButtonContainer
 					data={{ id: category.id.toString() }}
 					toggleFunction={(id: string) => toggleCategory(parseInt(id))}>
@@ -159,7 +151,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			)}
 
 			{/* Subcategory List */}
-			{category.children && isCategoryExpanded(category.id) && (
+			{category.children && category.children.length > 0 && isCategoryExpanded(category.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
 					{category.children.map(subCategory => (
 						<CategoryItem
@@ -174,6 +166,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							handleDelete={handleDelete}
 							toggleCategory={toggleCategory}
 							expandedCategories={expandedCategories}
+							isCategoryExpanded={isCategoryExpanded}
 						/>
 					))}
 				</div>

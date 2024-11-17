@@ -19,16 +19,31 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 				},
 			},
 		},
+		// Sortiranje unutar odnosa nije podržano direktno
+		// OrderBy može raditi samo na osnovu direktno dostupnih polja
+	});
+
+	// Sortirajte roditelje na nivou aplikacije
+	const sortedParentCategories = parentCategories.sort((a, b) => {
+		const aName =
+			a.parent.label.translations.length > 0
+				? a.parent.label.translations[0].translation.toLowerCase()
+				: '';
+		const bName =
+			b.parent.label.translations.length > 0
+				? b.parent.label.translations[0].translation.toLowerCase()
+				: '';
+		return aName.localeCompare(bName);
 	});
 
 	return Promise.all(
-		parentCategories.map(async ({ parent }) => ({
+		sortedParentCategories.map(async ({ parent }) => ({
 			id: parent.id,
-			name: parent.label.translations.length > 0 ? parent.label.translations[0].translation : '', // Handle no translation case
+			name: parent.label.translations.length > 0 ? parent.label.translations[0].translation : '',
 			iconId: parent.iconId,
 			labelId: parent.labelId,
 			parents: await fetchParents(parent.id),
-			children: [], // Not fetching children here, just parents
+			children: [],
 			icon: parent.icon
 				? {
 						id: parent.icon.id,

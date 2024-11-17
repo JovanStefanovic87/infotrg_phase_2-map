@@ -59,6 +59,38 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 
 	console.log('initial', initialData);
 
+	const toggleCategoryExpansion = (id: number) => {
+		setManuallyExpandedCategories(prev => {
+			const updated = new Set(prev);
+			if (updated.has(id)) {
+				updated.delete(id);
+			} else {
+				updated.add(id);
+			}
+			return updated;
+		});
+	};
+
+	const isCategoryExpanded = (id: number) => {
+		return expandedCategories.has(id) || manuallyExpandedCategories.has(id);
+	};
+
+	const updateExpandedCategories = useCallback(() => {
+		const expanded = new Set<number>();
+
+		// Dodaj sve kategorije koje su ručno proširene
+		manuallyExpandedCategories.forEach(id => expanded.add(id));
+
+		// Dodaj inicijalno proširene kategorije (ako je potrebno)
+		initialExpandedCategories.forEach(id => expanded.add(id));
+
+		setExpandedCategories(expanded);
+	}, [manuallyExpandedCategories, initialExpandedCategories]);
+
+	useEffect(() => {
+		updateExpandedCategories();
+	}, [updateExpandedCategories]);
+
 	const fetchCategories = () =>
 		apiClient<CategoryWithTranslations[]>({
 			method: 'GET',
@@ -70,26 +102,23 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 		try {
 			const [categoriesData] = await Promise.all([fetchCategories()]);
 
-			setCategories(categoriesData);
-			setFilteredCategories(categoriesData);
+			const sortedCategories = sortCategories(categoriesData);
+			setCategories(sortedCategories);
+			setFilteredCategories(sortedCategories);
 		} catch (err) {
 			handleError(err, setError, setSuccessMessage);
 		} finally {
-			setLoading(false); // Osiguraj da se loading uvek postavi na false
+			setLoading(false);
 		}
 	}, [languageId]);
 
 	useEffect(() => {
 		if (!initialData) {
-			refetchData(); // Povuci podatke samo ako nema initialData
-		}
-	}, [initialData, refetchData]);
-
-	useEffect(() => {
-		if (!initialData) {
 			refetchData();
 		} else {
-			setFilteredCategories(initialData.categories || []);
+			const sortedCategories = sortCategories(initialData.categories || []);
+			setFilteredCategories(sortedCategories);
+			setCategories(sortedCategories);
 		}
 	}, [refetchData, initialData]);
 
@@ -161,7 +190,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 			let iconId = currentIcon.iconId;
 			if (icon) {
 				const formData = new FormData();
-				formData.append('icon', icon);
+				formData.append('icon', icon, icon.name);
 				formData.append('directory', 'articles');
 				const { data } = await axios.post('/api/icons', formData, {
 					headers: { 'Content-Type': 'multipart/form-data' },
@@ -269,6 +298,15 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 
 	const translationOptions = generateTranslationOptions(categories, 1);
 
+	const sortCategories = (categories: CategoryWithTranslations[]): CategoryWithTranslations[] => {
+		return categories
+			.map(category => ({
+				...category,
+				children: sortCategories(category.children as CategoryWithTranslations[]),
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name, 'sr', { sensitivity: 'base' }));
+	};
+
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}
@@ -302,6 +340,12 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 						languages={languages}
 						languageId={languageId}
 						refetchCategories={refetchData}
+						expandedCategories={expandedCategories}
+						setExpandedCategories={setExpandedCategories}
+						manuallyExpandedCategories={manuallyExpandedCategories}
+						setManuallyExpandedCategories={setManuallyExpandedCategories}
+						initialExpandedCategories={initialExpandedCategories}
+						setInitialExpandedCategories={memoizedSetInitialExpandedCategories}
 						onDeleteCategory={handleDeleteCategory}
 						setError={setError}
 						setSuccessMessage={setSuccessMessage}

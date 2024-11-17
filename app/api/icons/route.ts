@@ -16,39 +16,40 @@ const uploadFile = async (
 	fileName: string
 ): Promise<number> => {
 	try {
-		const finalFilePath = path.join(uploadDirectory, fileName);
+		// Dodavanje ekstenzije .webp za konvertovane fajlove
+		const fileBaseName = path.parse(fileName).name; // Ime fajla bez ekstenzije
+		const webpFileName = `${fileBaseName}.webp`;
+		const finalFilePath = path.join(uploadDirectory, webpFileName);
 
-		// Check if file with the same name already exists in the directory
+		// Proveri da li fajl sa istim imenom već postoji
 		const existingIcon = await prisma.icon.findFirst({
-			where: { url: { contains: `/icons/${path.basename(uploadDirectory)}/${fileName}` } },
+			where: { url: { contains: `/icons/${path.basename(uploadDirectory)}/${webpFileName}` } },
 		});
 
 		if (existingIcon) {
-			throw new Error(`Ikona sa nazivom "${fileName}" već postoji u ovom direktorijumu.`);
+			throw new Error(`Ikona sa nazivom "${webpFileName}" već postoji u ovom direktorijumu.`);
 		}
 
-		// Convert Blob to Buffer
+		// Pretvaranje Blob u Buffer
 		const arrayBuffer = await file.arrayBuffer();
 		const fileBuffer = Buffer.from(arrayBuffer);
 
-		// Resize if file is larger than 200KB
-		const shouldResize = fileBuffer.length > 200 * 1024;
-		if (shouldResize) {
-			await sharp(fileBuffer).resize({ width: 128 }).toFile(finalFilePath);
-		} else {
-			await fs.promises.writeFile(finalFilePath, fileBuffer);
-		}
+		// Konvertovanje u WebP format koristeći sharp
+		await sharp(fileBuffer)
+			.resize({ width: 128 }) // Promena veličine, ako je potrebno
+			.toFormat('webp', { quality: 80 }) // Konvertovanje u WebP sa kvalitetom od 80
+			.toFile(finalFilePath);
 
-		// Generate URL path for stored file
+		// Generisanje URL-a za fajl
 		const relativeFilePath = path.relative(process.cwd(), finalFilePath);
 		const urlPath = `/icons/${path.basename(path.dirname(relativeFilePath))}/${path.basename(
 			relativeFilePath
 		)}`;
 
-		// Save file info in the database
+		// Čuvanje informacija o ikoni u bazi
 		const icon = await prisma.icon.create({
 			data: {
-				name: fileName,
+				name: webpFileName,
 				url: urlPath,
 			},
 		});
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
 			const uploadDirectory = path.join(process.cwd(), `public/icons/${directory}`);
 			await fs.promises.mkdir(uploadDirectory, { recursive: true });
 
-			const fileName = 'uploaded_icon.png'; // Ili iz formData ako je ime dostupno
+			const fileName = file instanceof File ? file.name : 'uploaded_icon.png';
+
 			let newIconId;
 			try {
 				newIconId = await uploadFile(file, uploadDirectory, fileName);

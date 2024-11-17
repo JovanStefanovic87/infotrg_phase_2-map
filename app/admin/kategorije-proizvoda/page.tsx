@@ -1,10 +1,10 @@
-import { NextPage } from 'next';
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { prefetchQueryFunction } from '@/app/helpers/api/prefetch/prefetchQueryFunction';
 import CategoriesAdmin from '../../components/pageContent/CategoriesAdmin';
 import { prefixAticleCategory } from '@/app/api/prefix';
+import { CategoryWithTranslations, Language } from '@/utils/helpers/types';
 
-const AticleCategoriesAdminPage: NextPage = async () => {
+export default async function AticleCategoriesAdminPage() {
 	const queryClient = new QueryClient();
 	const languageId = 1;
 
@@ -23,9 +23,8 @@ const AticleCategoriesAdminPage: NextPage = async () => {
 			/>
 		</HydrationBoundary>
 	);
-};
+}
 
-// Funkcija za prefetch podataka
 async function prefetchData(queryClient: QueryClient, languageId: number) {
 	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -53,11 +52,36 @@ async function prefetchData(queryClient: QueryClient, languageId: number) {
 				params: { directory: 'articles' },
 			}),
 		]);
-		console.log('Prefetch podaci uspešno povučeni.');
+
+		// Sortiranje kategorija
+		function sortCategories(categories: CategoryWithTranslations[]): CategoryWithTranslations[] {
+			return categories
+				.map(category => ({
+					...category,
+					children: sortCategories(category.children as CategoryWithTranslations[]),
+				}))
+				.sort((a, b) => a.name.localeCompare(b.name, 'sr', { sensitivity: 'base' }));
+		}
+
+		// Preuzimanje i sortiranje podataka
+		const categories =
+			(queryClient.getQueryData([
+				'categories',
+				'article',
+				languageId,
+			]) as CategoryWithTranslations[]) || [];
+		const sortedCategories = sortCategories(categories);
+		queryClient.setQueryData(['categories', 'article', languageId], sortedCategories);
+
+		const languages = (queryClient.getQueryData(['languages']) as Language[]) || [];
+		queryClient.setQueryData(['languages'], languages);
+
+		const icons = queryClient.getQueryData(['icons', 'articles']) || [];
+		queryClient.setQueryData(['icons', 'articles'], icons);
+
+		console.log('Prefetch podaci uspešno povučeni i obrađeni.');
 	} catch (error) {
 		console.error('Greška prilikom prefetch podataka:', error);
 		throw error;
 	}
 }
-
-export default AticleCategoriesAdminPage;
