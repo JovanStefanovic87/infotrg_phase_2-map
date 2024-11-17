@@ -1,14 +1,7 @@
 'use client';
-import React, { useState, useCallback, useEffect } from 'react';
-import {
-	Category,
-	CategoryWithTranslations,
-	Icon,
-	Translation,
-	Language,
-} from '@/utils/helpers/types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { CategoryWithTranslations, Icon, Translation, Language } from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
-import axios from 'axios';
 import CategoryItem from './CategoryItem';
 import EditCategoryForm from '../forms/EditCategoryForm';
 import InputDefault from '../input/InputDefault';
@@ -16,45 +9,20 @@ import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryListProps {
 	categories: CategoryWithTranslations[];
-	translations: Translation[];
 	icons: Icon[];
-	currentIcon: {
-		iconId: number | null;
-		iconUrl: string | null;
-	};
+	currentIcon: { iconId: number | null; iconUrl: string | null };
 	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
 	languages: Language[];
 	languageId: number;
-	relatedIds: number[];
-	setRelatedIds: (relatedIds: number[]) => void;
 	refetchCategories: () => Promise<void>;
 	onDeleteCategory: (id: number) => Promise<void>;
-	isIconPickerOpen: boolean;
-	setIsIconPickerOpen: (isOpen: boolean) => void;
-	filteredCategories: CategoryWithTranslations[];
-	setFilteredCategories: React.Dispatch<React.SetStateAction<CategoryWithTranslations[]>>;
-	initialExpandedCategories: Set<number>;
-	setInitialExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
-	manuallyExpandedCategories: Set<number>;
-	setManuallyExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
-	expandedCategories: Set<number>;
-	setExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 	setError: React.Dispatch<React.SetStateAction<string>>;
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-interface TranslationUpdate {
-	translationId: number;
-	languageId: number;
-	translation: string;
-	description?: string;
-	synonyms: string[];
-}
-
 const CategoryList: React.FC<CategoryListProps> = ({
 	categories,
-	translations,
 	icons,
 	currentIcon,
 	setCurrentIcon,
@@ -62,142 +30,82 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	languageId,
 	refetchCategories,
 	onDeleteCategory,
-	setIsIconPickerOpen,
-	relatedIds,
-	setRelatedIds,
-	manuallyExpandedCategories,
-	setManuallyExpandedCategories,
-	filteredCategories,
-	setFilteredCategories,
-	initialExpandedCategories,
-	setInitialExpandedCategories,
-	expandedCategories,
-	setExpandedCategories,
 	setError,
 	setSuccessMessage,
 	setLoading,
 }) => {
-	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [searchQuery, setSearchQuery] = useState('');
+	const [filteredCategories, setFilteredCategories] =
+		useState<CategoryWithTranslations[]>(categories);
 	const [currentEditCategory, setCurrentEditCategory] = useState<CategoryWithTranslations | null>(
 		null
 	);
+	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 	const [newIcon, setNewIcon] = useState<File | null>(null);
-	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
-	const [parentIds, setParentIds] = useState<number[]>([]);
-	const [searchQuery, setSearchQuery] = useState<string>('');
 
 	const lowercasedQuery = searchQuery.trim().toLowerCase();
 
+	// Recursive filtering function
 	const recursiveSearch = (
 		categories: CategoryWithTranslations[],
 		languageId: number,
-		lowercasedQuery: string,
-		expandedIds: Set<number>
+		query: string
 	): CategoryWithTranslations[] => {
 		return categories
 			.map(category => {
-				const translation = Array.isArray(category.translations)
-					? category.translations.find(t => t.languageId === languageId)
-					: null;
+				const translation = category.translations.find(t => t.languageId === languageId);
+				const categoryName = translation?.name.toLowerCase() || '';
+				const matches = categoryName.includes(query);
 
-				const categoryName =
-					translation?.name.trim().toLowerCase() || category.name.trim().toLowerCase();
-				const matches = categoryName.includes(lowercasedQuery);
-
-				const childMatches = category.children
-					? recursiveSearch(
-							category.children as CategoryWithTranslations[],
-							languageId,
-							lowercasedQuery,
-							expandedIds
-					  )
-					: [];
+				const childMatches = recursiveSearch(
+					(category.children as CategoryWithTranslations[]) || [],
+					languageId,
+					query
+				);
 
 				if (matches || childMatches.length > 0) {
-					expandedIds.add(category.id);
-
-					return {
-						...category,
-						children: childMatches.length > 0 ? childMatches : category.children,
-					};
+					return { ...category, children: childMatches };
 				}
 				return null;
 			})
 			.filter(Boolean) as CategoryWithTranslations[];
 	};
 
-	// Primer upotrebe
-	const expandedIds = new Set<number>();
-	const updatedFilteredCategories = recursiveSearch(
-		categories,
-		languageId,
-		lowercasedQuery,
-		expandedIds
-	);
-
 	useEffect(() => {
-		if (!searchQuery.trim()) {
-			setInitialExpandedCategories(new Set(manuallyExpandedCategories));
-		}
-	}, [searchQuery, manuallyExpandedCategories, setInitialExpandedCategories]);
-
-	useEffect(() => {
-		if (!searchQuery.trim()) {
-			const sortedCategories = [...categories].sort((a, b) => {
-				return a.name.localeCompare(b.name);
-			});
-
-			setFilteredCategories(sortedCategories);
-			setExpandedCategories(new Set(initialExpandedCategories));
+		if (searchQuery.trim()) {
+			const filtered = recursiveSearch(categories, languageId, lowercasedQuery);
+			setFilteredCategories(filtered);
 		} else {
-			const { filteredCategories: filtered, expandedIds } = {
-				filteredCategories: recursiveSearch(
-					categories,
-					languageId,
-					lowercasedQuery,
-					new Set<number>()
-				),
-				expandedIds: new Set<number>(),
-			};
-
-			const sortedFiltered = filtered.sort((a, b) => {
-				return a.name.localeCompare(b.name);
-			});
-
-			setFilteredCategories(sortedFiltered);
-			setExpandedCategories(expandedIds);
+			setFilteredCategories(categories);
 		}
-	}, [searchQuery, categories, initialExpandedCategories]);
+	}, [searchQuery, categories, languageId]);
 
-	useEffect(() => {
-		if (!searchQuery.trim()) {
-			setExpandedCategories(prev => {
-				const manuallyExpanded = manuallyExpandedCategories;
-
-				if (
-					prev.size !== manuallyExpanded.size ||
-					[...prev].some(id => !manuallyExpanded.has(id))
-				) {
-					return new Set(manuallyExpanded);
+	const handleDelete = useCallback(
+		async (id: number) => {
+			if (confirm('Da li ste sigurni da želite obrisati ovu kategoriju?')) {
+				try {
+					await onDeleteCategory(id);
+					await refetchCategories();
+				} catch (err) {
+					handleError(err, setError, setSuccessMessage);
 				}
-				return prev;
-			});
-		}
-	}, [manuallyExpandedCategories, searchQuery]);
-
-	useEffect(() => {
-		if (!searchQuery.trim()) {
-			setExpandedCategories(new Set(manuallyExpandedCategories));
-		}
-	}, [manuallyExpandedCategories]);
+			}
+		},
+		[onDeleteCategory, refetchCategories, setError, setSuccessMessage]
+	);
 
 	const handleCloseModal = () => {
 		setIsModalOpen(false);
+		setCurrentEditCategory(null);
 		setNewIcon(null);
 		setCurrentIcon({ iconId: null, iconUrl: null });
-		setRelatedIds([]);
-		setParentIds([]);
-		setNewTranslations([]);
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files && event.target.files.length > 0) {
+			setNewIcon(event.target.files[0]);
+		}
 	};
 
 	const handleSubmitEdit = useCallback(
@@ -205,7 +113,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			event.preventDefault();
 
 			if (!currentIcon.iconId && !newIcon) {
-				setError('Morate izabrati postojeću ikonu ili dodati novu ikonu za upload.');
+				setError('Morate izabrati postojeću ikonu ili dodati novu.');
 				return;
 			}
 
@@ -219,138 +127,29 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					formData.append('icon', newIcon);
 					formData.append('directory', 'articles');
 
-					const { data: iconData } = await axios.post('/api/icons', formData, {
-						headers: { 'Content-Type': 'multipart/form-data' },
-					});
-
-					iconId = iconData?.iconId;
+					const { data } = await fetch('/api/icons', {
+						method: 'POST',
+						body: formData,
+					}).then(res => res.json());
+					iconId = data.iconId;
 				}
 
-				if (iconId) {
-					await axios.put(`/api/categories/${currentEditCategory.id}`, {
-						iconId,
-						parentIds,
-						relatedIds,
-						translations: newTranslations.map(
-							({ translationId, languageId, translation, description, synonyms }) => ({
-								translationId,
-								languageId,
-								translation,
-								description,
-								synonyms: synonyms || [],
-							})
-						),
-						labelId: currentEditCategory.labelId,
-					});
-				}
+				await fetch(`/api/categories/${currentEditCategory.id}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ iconId }),
+				});
 
 				setIsModalOpen(false);
-				setRelatedIds([]);
 				await refetchCategories();
 			} catch (err) {
 				handleError(err, setError, setSuccessMessage);
 			}
 		},
-		[
-			currentEditCategory,
-			newTranslations,
-			newIcon,
-			currentIcon.iconId,
-			parentIds,
-			refetchCategories,
-			relatedIds,
-		]
+		[currentIcon, newIcon, currentEditCategory, refetchCategories, setError, setSuccessMessage]
 	);
-
-	// Handle file change for the icon
-	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (event.target.files && event.target.files.length > 0) {
-			const selectedFile = event.target.files[0];
-			setNewIcon(selectedFile);
-		}
-	};
-
-	const handleDelete = useCallback(
-		async (id: number) => {
-			if (
-				confirm('Da li ste sigurni da želite obrisati ovu kategoriju i njene moguće potkategorije?')
-			) {
-				try {
-					await onDeleteCategory(id);
-					await refetchCategories();
-				} catch (err) {
-					handleError(err, setError, setSuccessMessage);
-				}
-			}
-		},
-		[onDeleteCategory, refetchCategories]
-	);
-
-	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
-		const allCategories: CategoryWithTranslations[] = [];
-
-		const traverseCategories = (categoryList: CategoryWithTranslations[]) => {
-			categoryList.forEach(cat => {
-				allCategories.push(cat);
-				if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
-					// Kastovanje `cat.children` u `CategoryWithTranslations[]`
-					traverseCategories(cat.children as CategoryWithTranslations[]);
-				}
-			});
-		};
-
-		traverseCategories(categories);
-
-		return allCategories.filter(
-			cat =>
-				!relatedIds.includes(cat.id) &&
-				!parentIds.includes(cat.id) &&
-				cat.id !== currentEditCategory?.id
-		);
-	};
-
-	const getDescendants = (
-		category: CategoryWithTranslations,
-		descendants: Set<number> = new Set()
-	): Set<number> => {
-		if (category.children && Array.isArray(category.children)) {
-			category.children.forEach(child => {
-				// Kastovanje child u CategoryWithTranslations
-				const childWithTranslations = child as CategoryWithTranslations;
-				descendants.add(childWithTranslations.id);
-				getDescendants(childWithTranslations, descendants);
-			});
-		}
-		return descendants;
-	};
-
-	// Recursive function to get all ancestors of a category
-	const getAncestors = (
-		category: CategoryWithTranslations,
-		ancestors: Set<number> = new Set()
-	): Set<number> => {
-		if (category.parents && Array.isArray(category.parents)) {
-			category.parents.forEach(parent => {
-				ancestors.add(parent.id);
-				const parentCategory = categories.find(cat => cat.id === parent.id);
-				if (parentCategory) {
-					getAncestors(parentCategory, ancestors);
-				}
-			});
-		}
-		return ancestors;
-	};
 
 	const toggleCategory = (id: number) => {
-		setManuallyExpandedCategories(prev => {
-			const newSet = new Set(prev);
-			if (newSet.has(id)) {
-				newSet.delete(id);
-			} else {
-				newSet.add(id);
-			}
-			return newSet;
-		});
 		setExpandedCategories(prev => {
 			const newSet = new Set(prev);
 			if (newSet.has(id)) {
@@ -366,11 +165,9 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		<>
 			<div className='mb-4'>
 				<InputDefault
-					placeholder='Brza pretraga kategorija'
+					placeholder='Pretraži kategorije'
 					value={searchQuery}
-					onChange={(e: { target: { value: React.SetStateAction<string> } }) =>
-						setSearchQuery(e.target.value)
-					}
+					onChange={e => setSearchQuery(e.target.value)}
 				/>
 			</div>
 			{filteredCategories.map(category => (
@@ -378,42 +175,24 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					key={category.id}
 					category={category}
 					icons={icons}
-					languages={languages}
 					languageId={languageId}
+					allCategories={categories}
 					handleDelete={handleDelete}
 					setCurrentIcon={setCurrentIcon}
 					setCurrentEditCategory={setCurrentEditCategory}
-					setParentIds={setParentIds}
-					setNewIcon={setNewIcon}
 					setIsModalOpen={setIsModalOpen}
-					setNewTranslations={setNewTranslations}
-					toggleCategory={toggleCategory}
-					expandedCategories={expandedCategories}
-					setRelatedIds={setRelatedIds}
-					setError={setError}
-					setSuccessMessage={setSuccessMessage}
-					setLoading={setLoading}
+					toggleCategory={toggleCategory} // Dodato
+					expandedCategories={expandedCategories} // Dodato
 				/>
 			))}
 
 			{isModalOpen && currentEditCategory && (
-				<CustomModal isOpen={isModalOpen} onRequestClose={handleCloseModal} mt='10'>
+				<CustomModal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
 					<EditCategoryForm
-						categories={categories}
 						currentIcon={currentIcon}
 						newIcon={newIcon}
-						filterCategoriesForSelect={filterCategoriesForSelect}
 						handleFileChange={handleFileChange}
 						handleSubmitEdit={handleSubmitEdit}
-						languages={languages}
-						newTranslations={newTranslations}
-						parentIds={parentIds}
-						setNewTranslations={setNewTranslations}
-						setParentIds={setParentIds}
-						setIsIconPickerOpen={setIsIconPickerOpen}
-						translations={translations}
-						relatedIds={relatedIds}
-						setRelatedIds={setRelatedIds}
 					/>
 				</CustomModal>
 			)}

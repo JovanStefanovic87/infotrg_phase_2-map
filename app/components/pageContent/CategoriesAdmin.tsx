@@ -57,8 +57,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 		new Set()
 	);
 
-	/* console.log('initial', initialData); */
-	console.log('parentIds', parentIds);
+	console.log('initial', initialData);
 
 	const fetchCategories = () =>
 		apiClient<CategoryWithTranslations[]>({
@@ -183,10 +182,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 
 			await axios.post('/api/translation', { translations });
 
-			// Pronađite samo leaf kategorije
-			const selectedLeafIds = getLeafCategoryIds(parentIds, categories);
-			console.log('selectedLeafIds', selectedLeafIds);
-			const { data: categoryData } = await axios.post('/api/categories', {
+			await axios.post('/api/categories', {
 				parentIds,
 				relatedIds,
 				labelId: newLabelId,
@@ -300,26 +296,13 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 				{categories.length > 0 || loading ? (
 					<CategoryList
 						categories={categories}
-						translations={translations}
 						icons={icons}
 						currentIcon={currentIcon}
 						setCurrentIcon={setCurrentIcon}
 						languages={languages}
 						languageId={languageId}
-						relatedIds={relatedIds}
-						setRelatedIds={setRelatedIds}
 						refetchCategories={refetchData}
-						onDeleteCategory={(id: number) => handleDeleteCategory(id)}
-						isIconPickerOpen={isIconPickerOpen}
-						setIsIconPickerOpen={setIsIconPickerOpen}
-						expandedCategories={expandedCategories}
-						setExpandedCategories={setExpandedCategories}
-						manuallyExpandedCategories={manuallyExpandedCategories}
-						setManuallyExpandedCategories={setManuallyExpandedCategories}
-						filteredCategories={filteredCategories}
-						setFilteredCategories={setFilteredCategories}
-						initialExpandedCategories={initialExpandedCategories}
-						setInitialExpandedCategories={memoizedSetInitialExpandedCategories}
+						onDeleteCategory={handleDeleteCategory}
 						setError={setError}
 						setSuccessMessage={setSuccessMessage}
 						setLoading={setLoading}
