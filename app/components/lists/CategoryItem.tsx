@@ -3,7 +3,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import {
-	Category,
+	CategoryWithTranslations,
 	Icon,
 	Language,
 	Translation,
@@ -20,13 +20,12 @@ import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryItemProps {
-	category: Category;
+	category: CategoryWithTranslations;
 	icons: Icon[];
-	translations: Translation[];
 	languages: Language[];
 	languageId: number;
 	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
-	setCurrentEditCategory: React.Dispatch<React.SetStateAction<Category | null>>;
+	setCurrentEditCategory: React.Dispatch<React.SetStateAction<CategoryWithTranslations | null>>;
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
 	setNewTranslations: React.Dispatch<React.SetStateAction<TranslationUpdate[]>>;
 	setNewIcon: React.Dispatch<React.SetStateAction<File | null>>;
@@ -43,7 +42,6 @@ interface CategoryItemProps {
 const CategoryItem: React.FC<CategoryItemProps> = ({
 	category,
 	icons,
-	translations,
 	languages,
 	languageId,
 	setCurrentIcon,
@@ -60,8 +58,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setSuccessMessage,
 	setLoading,
 }) => {
-	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
-
+	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<
+		CategoryWithTranslations[]
+	>([]);
+	/* console.log('category', category); */
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
 
 	const isCategoryExpanded = useCallback(
@@ -73,7 +73,9 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const fetchRelatedCategoriesForDisplay = useCallback(async (relatedIds: number[]) => {
 		try {
-			const promises = relatedIds.map(id => axios.get<Category>(`/api/categories/${id}`));
+			const promises = relatedIds.map(id =>
+				axios.get<CategoryWithTranslations>(`/api/categories/${id}`)
+			);
 			const relatedData = await Promise.all(promises);
 
 			const categories = relatedData.map(response => response.data);
@@ -104,29 +106,41 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[setRelatedIds]
 	);
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const getCategoryName = useCallback(
-		(labelId: number, languageId: number) => {
-			const translation = translations.find(
-				t => t.labelId === labelId && t.languageId === languageId
-			);
-			if (translation && translation.translation) {
-				return translation.translation.charAt(0).toUpperCase() + translation.translation.slice(1);
+	const getCategoryName = useCallback((category: CategoryWithTranslations, languageId: number) => {
+		// Proveri da li `translations` postoji i da li je niz
+		if (Array.isArray(category.translations)) {
+			const translation = category.translations.find(t => t.languageId === languageId);
+			if (translation?.name?.trim()) {
+				return translation.name.charAt(0).toUpperCase() + translation.name.slice(1);
 			}
-			return 'Unknown';
-		},
-		[translations]
-	);
+		}
+
+		// Fallback na category.name ako prevod nije dostupan
+		return category.name
+			? category.name.charAt(0).toUpperCase() + category.name.slice(1)
+			: 'Naziv nije dostupan';
+	}, []);
+
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const getParentCategoryNames = useCallback(
-		(parents: Category[], languageId: number): string => {
+		(parents: CategoryWithTranslations[], languageId: number): string => {
 			if (parents.length === 0) return 'Ovo je glavna kategorija';
-			return parents.map(parent => getCategoryName(parent.labelId, languageId)).join(', ');
+
+			return parents
+				.map(parent => {
+					const translation = Array.isArray(parent.translations)
+						? parent.translations.find(t => t.languageId === languageId)
+						: null;
+					return translation?.name || parent.name || 'Naziv nije dostupan';
+				})
+				.join(', ');
 		},
-		[getCategoryName]
+		[]
 	);
+
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const handleOpenEditModal = useCallback(
-		async (category: Category) => {
+		async (category: CategoryWithTranslations) => {
 			setLoading(true);
 			setCurrentEditCategory(category);
 			setParentIds(category.parents.map(parent => parent.id));
@@ -180,7 +194,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
-			<H4 text={getCategoryName(category.labelId, languageId)} color='black' shouldBreak />
+			<H4 text={getCategoryName(category, languageId)} color='black' shouldBreak />
 
 			{/* Display Icon */}
 			<div className='mt-2'>
@@ -197,20 +211,24 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 			{/* Parent Categories */}
 			<TextNormal text={`Natkategorije:`} weight='bold' />
-			<TextWrapped block={getParentCategoryNames(category.parents, languageId)} />
+			<TextWrapped
+				block={getParentCategoryNames(
+					category.parents as CategoryWithTranslations[], // Ako su roditelji već tipa Category, kastujte ih
+					languageId
+				)}
+			/>
 
 			{/* Related Categories */}
 			<TextNormal text={`Povezane kategorije:`} weight='bold' />
 			{displayRelatedCategories.length > 0 ? (
 				<ul className='list-disc pl-5 text-gray-800'>
 					{displayRelatedCategories.map(relatedCategory => (
-						<li key={relatedCategory.id}>{getCategoryName(relatedCategory.labelId, languageId)}</li>
+						<li key={relatedCategory.id}>{getCategoryName(relatedCategory, languageId)}</li>
 					))}
 				</ul>
 			) : (
 				<TextWrapped block='Nema povezanih kategorija' />
 			)}
-
 			{/* Edit and Delete Buttons */}
 			<div className='mt-4 flex space-x-2'>
 				<EditButton onClick={() => handleOpenEditModal(category)} />
@@ -229,12 +247,11 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			{/* Subcategory List */}
 			{category.children && isCategoryExpanded(category.id) && (
 				<div className='mt-4 pl-4 border-l-2 border-gray-200'>
-					{category.children.map(subCategory => (
+					{(category.children as CategoryWithTranslations[]).map(subCategory => (
 						<CategoryItem
 							key={subCategory.id}
 							category={subCategory}
 							icons={icons}
-							translations={translations}
 							languages={languages}
 							languageId={languageId}
 							setCurrentIcon={setCurrentIcon}

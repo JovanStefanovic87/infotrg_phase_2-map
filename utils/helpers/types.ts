@@ -201,6 +201,17 @@ export interface Category {
 	children: Category[];
 }
 
+export interface TranslationSimple {
+	name: string;
+	languageId: number;
+	labelId: number;
+	caegoryId: number;
+}
+
+export interface CategoryWithTranslations extends Category {
+	translations: TranslationSimple[];
+}
+
 export interface Synonym {
 	id: number;
 	translationId: number;

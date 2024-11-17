@@ -1,8 +1,14 @@
 import React from 'react';
 import ImageUploadButton from '../../components/buttons/ImageUploadButton';
 import ChooseImageButton from '../../components/buttons/ChooseImageButton';
-import Combobox from '@/app/components/input/CustomCombobox';
-import { Translation, Icon, Language } from '@/utils/helpers/types';
+import Custom2Combobox from '@/app/components/input/Custom2Combobox';
+import {
+	Translation,
+	TranslationSimple,
+	Icon,
+	Language,
+	CategoryWithTranslations,
+} from '@/utils/helpers/types';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
 import Label from '../../components/text/Label';
 import LabelInputDefault from '../input/LabelInputDefault';
@@ -12,8 +18,9 @@ interface CategoryFormProps {
 	setName: React.Dispatch<React.SetStateAction<string>>;
 	parentIds: number[];
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
-	translations: Translation[];
+	categories: CategoryWithTranslations[];
 	languages: Language[];
+	translationOptions: TranslationSimple[];
 	translationValues: { [key: number]: string };
 	setTranslationValues: (
 		values:
@@ -23,6 +30,7 @@ interface CategoryFormProps {
 	onFileChange: (file: File | null) => void;
 	onSubmit: (event: React.FormEvent) => Promise<void>;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
+	handleCategorySelection: (selectedCategoryIds: number[]) => void;
 }
 
 const NewCategoryForm: React.FC<CategoryFormProps> = ({
@@ -30,26 +38,40 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	setName,
 	parentIds,
 	setParentIds,
-	translations,
+	categories,
 	languages,
 	translationValues,
+	translationOptions,
 	setTranslationValues,
 	onFileChange,
 	onSubmit,
 	setIsIconPickerOpen,
+	handleCategorySelection,
 }) => {
-	const selectedParents = translations.filter(t => parentIds.includes(t.labelId));
+	const selectedParents = translationOptions.filter(t => parentIds.includes(t.labelId));
+
+	const adjustedTranslationOptions = translationOptions.map(option => ({
+		name: option.name || '',
+		languageId: option.languageId,
+		labelId: option.labelId,
+	}));
+
+	const adjustedSelectedParents = selectedParents.map(parent => ({
+		categoryId: parent.caegoryId,
+		name: parent.name,
+		languageId: parent.languageId,
+		labelId: parent.labelId,
+	}));
 
 	const handleSelectParents = (newSelectedOptions: { labelId: number }[]) => {
 		const newParentIds = newSelectedOptions.map(option => option.labelId);
-		setParentIds(newParentIds);
+		handleCategorySelection(newParentIds);
 	};
 
 	const handleRemoveParent = (labelId: number) => {
 		setParentIds(prev => prev.filter(id => id !== labelId));
 	};
 
-	// Handler for updating translations based on language ID
 	const handleTranslationChange = (languageId: number, value: string) => {
 		setTranslationValues((prev: { [key: number]: string }) => ({
 			...prev,
@@ -86,9 +108,9 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 				<Label htmlFor='parentId' color='black'>
 					Izbor natkategorije (opciono):
 				</Label>
-				<Combobox
-					options={translations}
-					selectedOptions={selectedParents}
+				<Custom2Combobox
+					options={adjustedTranslationOptions}
+					selectedOptions={adjustedSelectedParents}
 					onSelect={handleSelectParents}
 					placeholder='Izaberite natkategoriju'
 				/>
@@ -100,16 +122,16 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 						Izabrane natkategorije:
 					</Label>
 					<div className='flex flex-wrap gap-2 mt-1'>
-						{selectedParents.map(parent => (
+						{selectedParents.map((parent, index) => (
 							<div
-								key={parent.labelId}
+								key={`${parent.labelId}-${index}`}
 								className='flex items-center bg-gray-200 text-blueDarker font-semibold rounded-full px-3 py-1 text-base shadow-sm hover:bg-red-950 transition-all duration-200 ease-in-out cursor-pointer'
 								onClick={() => handleRemoveParent(parent.labelId)}>
-								<span className='mr-2'>{parent.translation}</span>
+								<span className='mr-2'>{parent.name}</span>
 								<button
 									type='button'
 									className='text-red-600 focus:outline-none'
-									aria-label={`Ukloni ${parent.translation}`}>
+									aria-label={`Ukloni ${parent.name}`}>
 									&times;
 								</button>
 							</div>

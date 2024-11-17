@@ -2,7 +2,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import CategoryList from '../lists/CategoryList';
-import { Category, Language, Translation, Icon, CurrentIcon } from '@/utils/helpers/types';
+import {
+	CategoryWithTranslations,
+	Language,
+	TranslationSimple,
+	Icon,
+	CurrentIcon,
+} from '@/utils/helpers/types';
 import NewCategoryForm from '../forms/NewCategoryForm';
 import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
@@ -12,86 +18,83 @@ import { handleError } from '@/utils/helpers/universalFunctions';
 interface Props {
 	prefix: string;
 	title: string;
+	initialData?: {
+		categories: CategoryWithTranslations[];
+		languages: Language[];
+		icons: Icon[];
+	};
 }
 
-const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
+const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [categories, setCategories] = useState<Category[]>([]);
-	const [languages, setLanguages] = useState<Language[]>([]);
-	const [translations, setTranslations] = useState<Translation[]>([]);
-	const [icons, setIcons] = useState<Icon[]>([]);
+	const [categories, setCategories] = useState<CategoryWithTranslations[]>(
+		initialData?.categories || []
+	);
+	const [languages, setLanguages] = useState<Language[]>(initialData?.languages || []);
+	const [translations, setTranslations] = useState<TranslationSimple[]>([]);
+	const [icons, setIcons] = useState<Icon[]>(initialData?.icons || []);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [relatedIds, setRelatedIds] = useState<number[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
+	const [loading, setLoading] = useState<boolean>(!initialData);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
-	const [translationValues, setTranslationValues] = useState<{ [key: number]: string }>({});
+	const [translationValues, setTranslationValues] = useState<{
+		[key: number]: string;
+	}>({});
 	const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
-	const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+	const [filteredCategories, setFilteredCategories] = useState<CategoryWithTranslations[]>(
+		initialData?.categories || []
+	);
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
+
+	/* console.log('initial', initialData); */
+	console.log('parentIds', parentIds);
+
 	const fetchCategories = () =>
-		apiClient<Category[]>({
+		apiClient<CategoryWithTranslations[]>({
 			method: 'GET',
-			url: `/api/categoriesByLanguage?prefix=${prefix}&languageId=${languageId}`,
+			url: `/api/categories?prefix=${prefix}`,
 		});
-
-	const fetchLanguages = () => apiClient<Language[]>({ method: 'GET', url: '/api/languages' });
-	const fetchIcons = () =>
-		apiClient<Icon[]>({ method: 'GET', url: '/api/icons?directory=articles' });
-	const fetchTranslations = async (languageId: number): Promise<Translation[]> => {
-		try {
-			const labels = await apiClient<{ id: number }[]>({
-				method: 'GET',
-				url: `/api/labels?languageId=${languageId}&prefix=${prefix}`,
-			});
-			const labelIds = labels.map(({ id }) => id).join(',');
-
-			if (!labelIds) return [];
-			return await apiClient<Translation[]>({
-				method: 'GET',
-				url: `/api/translation?languageId=${languageId}&labelIds=${labelIds}`,
-			});
-		} catch (error) {
-			handleError(error, setError, setSuccessMessage);
-			return [];
-		}
-	};
 
 	const refetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [categoriesData, translationsData, iconsData] = await Promise.all([
-				fetchCategories(),
-				fetchTranslations(languageId),
-				fetchIcons(),
-			]);
+			const [categoriesData] = await Promise.all([fetchCategories()]);
 
 			setCategories(categoriesData);
-			setTranslations(translationsData);
-			setIcons(iconsData);
 			setFilteredCategories(categoriesData);
 		} catch (err) {
 			handleError(err, setError, setSuccessMessage);
 		} finally {
-			setLoading(false);
+			setLoading(false); // Osiguraj da se loading uvek postavi na false
 		}
 	}, [languageId]);
 
 	useEffect(() => {
-		refetchData();
-	}, [refetchData]);
+		if (!initialData) {
+			refetchData(); // Povuci podatke samo ako nema initialData
+		}
+	}, [initialData, refetchData]);
 
 	useEffect(() => {
+		if (!initialData) {
+			refetchData();
+		} else {
+			setFilteredCategories(initialData.categories || []);
+		}
+	}, [refetchData, initialData]);
+
+	/* useEffect(() => {
 		const fetchLanguagesData = async () => {
 			try {
 				const data = await fetchLanguages();
@@ -101,9 +104,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			}
 		};
 		fetchLanguagesData();
-	}, []);
+	}, []); */
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (languageId) {
 			const fetchTranslationsData = async () => {
 				try {
@@ -115,7 +118,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			};
 			fetchTranslationsData();
 		}
-	}, [languageId]);
+	}, [languageId]); */
 
 	const resetTranslationValues = () => {
 		const resetValues = languages.reduce((acc, language) => {
@@ -123,6 +126,23 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			return acc;
 		}, {} as { [key: number]: string });
 		setTranslationValues(resetValues);
+	};
+
+	const getLeafCategoryIds = (parentIds: number[], categories: CategoryWithTranslations[]) => {
+		// Mapirajte parentIds u odgovarajuće kategorije
+		const mappedCategories = mapParentIdsToCategories(parentIds, categories);
+
+		// Filtrirajte samo leaf kategorije (one koje nemaju children)
+		return mappedCategories
+			.filter(category => category.children.length === 0)
+			.map(category => category.id); // Vratite ID-ove leaf kategorija
+	};
+
+	const handleCategorySelection = (selectedCategoryIds: number[]) => {
+		console.log('Odabrani categoryIds:', selectedCategoryIds);
+
+		// Proverite da li su ID-ovi već prisutni
+		setParentIds(prev => [...new Set([...prev, ...selectedCategoryIds])]);
 	};
 
 	const handleSubmit = async (event: React.FormEvent) => {
@@ -161,10 +181,11 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				translation: language.id === 1 ? name : translationValues[language.id] || '',
 			}));
 
-			console.log('Slanjem prevode:', translations);
-
 			await axios.post('/api/translation', { translations });
 
+			// Pronađite samo leaf kategorije
+			const selectedLeafIds = getLeafCategoryIds(parentIds, categories);
+			console.log('selectedLeafIds', selectedLeafIds);
 			const { data: categoryData } = await axios.post('/api/categories', {
 				parentIds,
 				relatedIds,
@@ -172,10 +193,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				iconId,
 				name,
 			});
-
-			console.log('Kategorija sačuvana sa podacima:', categoryData);
-
-			if (!categoryData) throw new Error('Failed to create category');
 
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
@@ -214,6 +231,48 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		[]
 	);
 
+	const mapParentIdsToCategories = (
+		parentIds: number[],
+		categories: CategoryWithTranslations[]
+	): CategoryWithTranslations[] => {
+		// Koristimo Set da uklonimo duplikate iz parentIds
+		const uniqueParentIds = Array.from(new Set(parentIds));
+
+		return uniqueParentIds
+			.map(parentId => categories.find(category => category.id === parentId))
+			.filter((category): category is CategoryWithTranslations => !!category);
+	};
+
+	const generateTranslationOptions = (
+		categories: CategoryWithTranslations[],
+		languageId: number
+	): TranslationSimple[] => {
+		const options: TranslationSimple[] = [];
+
+		const traverseCategories = (categories: CategoryWithTranslations[], parentPrefix = '') => {
+			categories.forEach(category => {
+				const translation = category.translations.find(t => t.languageId === languageId);
+				options.push({
+					labelId: category.labelId,
+					name: `${parentPrefix}${translation?.name || category.name}`,
+					languageId: languageId,
+					caegoryId: category.id,
+				});
+				if (category.children && category.children.length > 0) {
+					traverseCategories(
+						category.children as CategoryWithTranslations[],
+						`${parentPrefix}${translation?.name || category.name} > `
+					);
+				}
+			});
+		};
+
+		traverseCategories(categories);
+		return options;
+	};
+
+	const translationOptions = generateTranslationOptions(categories, 1);
+
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}
@@ -227,13 +286,15 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				setName={setName}
 				parentIds={parentIds}
 				setParentIds={setParentIds}
-				translations={translations}
+				translationOptions={translationOptions}
 				languages={languages}
 				translationValues={translationValues}
 				setTranslationValues={setTranslationValues}
 				onFileChange={handleFileChange}
 				onSubmit={handleSubmit}
 				setIsIconPickerOpen={setIsIconPickerOpen}
+				categories={categories}
+				handleCategorySelection={handleCategorySelection}
 			/>
 			<div className='mt-8'>
 				{categories.length > 0 || loading ? (

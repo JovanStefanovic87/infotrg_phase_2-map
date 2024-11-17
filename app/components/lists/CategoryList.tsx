@@ -1,6 +1,12 @@
 'use client';
 import React, { useState, useCallback, useEffect } from 'react';
-import { Category, Icon, Translation, Language } from '@/utils/helpers/types';
+import {
+	Category,
+	CategoryWithTranslations,
+	Icon,
+	Translation,
+	Language,
+} from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
 import axios from 'axios';
 import CategoryItem from './CategoryItem';
@@ -9,7 +15,7 @@ import InputDefault from '../input/InputDefault';
 import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryListProps {
-	categories: Category[];
+	categories: CategoryWithTranslations[];
 	translations: Translation[];
 	icons: Icon[];
 	currentIcon: {
@@ -25,8 +31,8 @@ interface CategoryListProps {
 	onDeleteCategory: (id: number) => Promise<void>;
 	isIconPickerOpen: boolean;
 	setIsIconPickerOpen: (isOpen: boolean) => void;
-	filteredCategories: Category[];
-	setFilteredCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+	filteredCategories: CategoryWithTranslations[];
+	setFilteredCategories: React.Dispatch<React.SetStateAction<CategoryWithTranslations[]>>;
 	initialExpandedCategories: Set<number>;
 	setInitialExpandedCategories: React.Dispatch<React.SetStateAction<Set<number>>>;
 	manuallyExpandedCategories: Set<number>;
@@ -72,49 +78,68 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	setLoading,
 }) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-	const [currentEditCategory, setCurrentEditCategory] = useState<Category | null>(null);
+	const [currentEditCategory, setCurrentEditCategory] = useState<CategoryWithTranslations | null>(
+		null
+	);
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [searchQuery, setSearchQuery] = useState<string>('');
 
-	const searchCategories = (
-		categories: Category[],
-		query: string
-	): { filteredCategories: Category[]; expandedIds: Set<number> } => {
-		const lowercasedQuery = query.toLowerCase();
-		const expandedIds = new Set<number>();
+	const lowercasedQuery = searchQuery.trim().toLowerCase();
 
-		const recursiveSearch = (categories: Category[]): Category[] => {
-			return categories
-				.map(category => {
-					const categoryName = getCategoryName(category.labelId, languageId).toLowerCase();
-					const matches = categoryName.includes(lowercasedQuery);
+	const recursiveSearch = (
+		categories: CategoryWithTranslations[],
+		languageId: number,
+		lowercasedQuery: string,
+		expandedIds: Set<number>
+	): CategoryWithTranslations[] => {
+		return categories
+			.map(category => {
+				const translation = Array.isArray(category.translations)
+					? category.translations.find(t => t.languageId === languageId)
+					: null;
 
-					const childMatches = category.children ? recursiveSearch(category.children) : [];
+				const categoryName =
+					translation?.name.trim().toLowerCase() || category.name.trim().toLowerCase();
+				const matches = categoryName.includes(lowercasedQuery);
 
-					if (matches || childMatches.length > 0) {
-						expandedIds.add(category.id);
+				const childMatches = category.children
+					? recursiveSearch(
+							category.children as CategoryWithTranslations[],
+							languageId,
+							lowercasedQuery,
+							expandedIds
+					  )
+					: [];
 
-						return {
-							...category,
-							children: childMatches.length > 0 ? childMatches : category.children,
-						};
-					}
-					return null;
-				})
-				.filter(Boolean) as Category[];
-		};
+				if (matches || childMatches.length > 0) {
+					expandedIds.add(category.id);
 
-		const filteredCategories = recursiveSearch(categories);
-		return { filteredCategories, expandedIds };
+					return {
+						...category,
+						children: childMatches.length > 0 ? childMatches : category.children,
+					};
+				}
+				return null;
+			})
+			.filter(Boolean) as CategoryWithTranslations[];
 	};
+
+	// Primer upotrebe
+	const expandedIds = new Set<number>();
+	const updatedFilteredCategories = recursiveSearch(
+		categories,
+		languageId,
+		lowercasedQuery,
+		expandedIds
+	);
 
 	useEffect(() => {
 		if (!searchQuery.trim()) {
 			setInitialExpandedCategories(new Set(manuallyExpandedCategories));
 		}
-	}, [manuallyExpandedCategories]);
+	}, [searchQuery, manuallyExpandedCategories, setInitialExpandedCategories]);
 
 	useEffect(() => {
 		if (!searchQuery.trim()) {
@@ -125,10 +150,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			setFilteredCategories(sortedCategories);
 			setExpandedCategories(new Set(initialExpandedCategories));
 		} else {
-			const { filteredCategories: filtered, expandedIds } = searchCategories(
-				categories,
-				searchQuery
-			);
+			const { filteredCategories: filtered, expandedIds } = {
+				filteredCategories: recursiveSearch(
+					categories,
+					languageId,
+					lowercasedQuery,
+					new Set<number>()
+				),
+				expandedIds: new Set<number>(),
+			};
 
 			const sortedFiltered = filtered.sort((a, b) => {
 				return a.name.localeCompare(b.name);
@@ -256,15 +286,15 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		[onDeleteCategory, refetchCategories]
 	);
 
-	const filterCategoriesForSelect = () => {
-		const allCategories: Category[] = [];
+	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
+		const allCategories: CategoryWithTranslations[] = [];
 
-		const traverseCategories = (categoryList: Category[]) => {
+		const traverseCategories = (categoryList: CategoryWithTranslations[]) => {
 			categoryList.forEach(cat => {
 				allCategories.push(cat);
-
-				if (cat.children && cat.children.length > 0) {
-					traverseCategories(cat.children);
+				if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
+					// Kastovanje `cat.children` u `CategoryWithTranslations[]`
+					traverseCategories(cat.children as CategoryWithTranslations[]);
 				}
 			});
 		};
@@ -280,20 +310,25 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	};
 
 	const getDescendants = (
-		category: Category,
+		category: CategoryWithTranslations,
 		descendants: Set<number> = new Set()
 	): Set<number> => {
 		if (category.children && Array.isArray(category.children)) {
 			category.children.forEach(child => {
-				descendants.add(child.id);
-				getDescendants(child, descendants);
+				// Kastovanje child u CategoryWithTranslations
+				const childWithTranslations = child as CategoryWithTranslations;
+				descendants.add(childWithTranslations.id);
+				getDescendants(childWithTranslations, descendants);
 			});
 		}
 		return descendants;
 	};
 
 	// Recursive function to get all ancestors of a category
-	const getAncestors = (category: Category, ancestors: Set<number> = new Set()): Set<number> => {
+	const getAncestors = (
+		category: CategoryWithTranslations,
+		ancestors: Set<number> = new Set()
+	): Set<number> => {
 		if (category.parents && Array.isArray(category.parents)) {
 			category.parents.forEach(parent => {
 				ancestors.add(parent.id);
@@ -305,19 +340,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		}
 		return ancestors;
 	};
-
-	const getCategoryName = useCallback(
-		(labelId: number, languageId: number) => {
-			const translation = translations.find(
-				t => t.labelId === labelId && t.languageId === languageId
-			);
-			if (translation && translation.translation) {
-				return translation.translation.charAt(0).toUpperCase() + translation.translation.slice(1);
-			}
-			return 'Nedostaje naziv kategorije';
-		},
-		[translations]
-	);
 
 	const toggleCategory = (id: number) => {
 		setManuallyExpandedCategories(prev => {
@@ -356,7 +378,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					key={category.id}
 					category={category}
 					icons={icons}
-					translations={translations}
 					languages={languages}
 					languageId={languageId}
 					handleDelete={handleDelete}

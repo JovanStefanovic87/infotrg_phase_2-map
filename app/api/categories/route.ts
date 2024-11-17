@@ -89,8 +89,13 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 
 			return {
 				id: category.id,
+				translations: category.label.translations.map(translation => ({
+					languageId: translation.languageId,
+					name: translation.translation || '',
+					labelId: category.labelId,
+				})), // Extract translations for each language
 				name:
-					category.label.translations.length > 0 ? category.label.translations[0].translation : '', // Ensure we handle empty translations array
+					category.label.translations.length > 0 ? category.label.translations[0].translation : '', // Default to the first translation
 				iconId: category.iconId,
 				labelId: category.labelId,
 				parents: await fetchParents(category.id), // Recursively fetch parent categories
