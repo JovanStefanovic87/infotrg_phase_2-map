@@ -24,6 +24,42 @@ export async function GET(request: Request, { params }: { params: { id: string }
 						},
 					},
 				},
+				relatedCategories: {
+					include: {
+						related: {
+							include: {
+								icon: true,
+								label: {
+									include: {
+										translations: {
+											include: {
+												synonyms: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				relatedTo: {
+					include: {
+						category: {
+							include: {
+								icon: true,
+								label: {
+									include: {
+										translations: {
+											include: {
+												synonyms: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				icon: true,
 				label: {
 					include: {
@@ -72,6 +108,30 @@ export async function GET(request: Request, { params }: { params: { id: string }
 				  }
 				: null,
 			parents,
+			relatedCategories: [
+				...category.relatedCategories.map(related => ({
+					id: related.related.id,
+					name: related.related.label.translations[0]?.translation || 'Nedefinisana kategorija',
+					icon: related.related.icon
+						? {
+								id: related.related.icon.id,
+								name: related.related.icon.name,
+								url: related.related.icon.url,
+						  }
+						: null,
+				})),
+				...category.relatedTo.map(related => ({
+					id: related.category.id,
+					name: related.category.label.translations[0]?.translation || 'Nedefinisana kategorija',
+					icon: related.category.icon
+						? {
+								id: related.category.icon.id,
+								name: related.category.icon.name,
+								url: related.category.icon.url,
+						  }
+						: null,
+				})),
+			],
 			label: {
 				id: category.label.id,
 				translations: category.label.translations.map(t => ({
