@@ -78,8 +78,6 @@ async function prefetchData(queryClient: QueryClient, languageId: number) {
 
 		const icons = queryClient.getQueryData(['icons', 'articles']) || [];
 		queryClient.setQueryData(['icons', 'articles'], icons);
-
-		console.log('Prefetch podaci uspešno povučeni i obrađeni.');
 	} catch (error) {
 		console.error('Greška prilikom prefetch podataka:', error);
 		throw error;

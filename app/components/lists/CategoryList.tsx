@@ -1,6 +1,12 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { CategoryWithTranslations, Icon, Translation, Language } from '@/utils/helpers/types';
+import {
+	CategoryWithTranslations,
+	Icon,
+	Translation,
+	TranslationUpdate,
+	Language,
+} from '@/utils/helpers/types';
 import CustomModal from '@/app/components/modals/CustomModal';
 import CategoryItem from './CategoryItem';
 import EditCategoryForm from '../forms/EditCategoryForm';
@@ -54,6 +60,11 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [currentEditCategory, setCurrentEditCategory] = useState<CategoryWithTranslations | null>(
 		null
 	);
+	const [relatedIds, setRelatedIds] = useState<number[]>([]);
+	const [parentIds, setParentIds] = useState<number[]>([]);
+	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
+	const [translations, setTranslations] = useState<Translation[]>([]);
+	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 
@@ -69,6 +80,34 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			}
 			return updated;
 		});
+	};
+
+	console.log('currentEditCategory:', currentEditCategory); // Dodaj ovo
+
+	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
+		const allCategories: CategoryWithTranslations[] = [];
+
+		// Rekurzivna funkcija za prolazak kroz sve kategorije
+		const traverseCategories = (categoryList: CategoryWithTranslations[]) => {
+			categoryList.forEach(cat => {
+				allCategories.push(cat); // Dodaj trenutnu kategoriju u listu
+				if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
+					// Ako postoje deca, rekurzivno ih dodaj
+					traverseCategories(cat.children as CategoryWithTranslations[]);
+				}
+			});
+		};
+
+		// Pozovi rekurzivnu funkciju za sve kategorije
+		traverseCategories(categories);
+
+		// Filtriraj kategorije prema potrebama
+		return allCategories.filter(
+			cat =>
+				!relatedIds.includes(cat.id) && // Kategorije koje nisu u povezanim kategorijama
+				!parentIds.includes(cat.id) && // Kategorije koje nisu u natkategorijama
+				cat.id !== currentEditCategory?.id // Kategorije koje nisu trenutna kategorija za uređivanje
+		);
 	};
 
 	const isCategoryExpanded = (id: number) => expandedCategories.has(id);
@@ -229,20 +268,39 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					handleDelete={handleDelete}
 					setCurrentIcon={setCurrentIcon}
 					setCurrentEditCategory={setCurrentEditCategory}
+					setParentIds={setParentIds}
+					setNewTranslations={setNewTranslations}
 					setIsModalOpen={setIsModalOpen}
+					setRelatedIds={setRelatedIds}
 					toggleCategory={toggleCategoryExpansion} // Dodato
 					expandedCategories={expandedCategories} // Dodato
 					isCategoryExpanded={isCategoryExpanded}
+					setError={setError}
+					setSuccessMessage={setSuccessMessage}
+					setLoading={setLoading}
 				/>
 			))}
 
 			{isModalOpen && currentEditCategory && (
 				<CustomModal isOpen={isModalOpen} onRequestClose={handleCloseModal}>
 					<EditCategoryForm
+						categories={categories}
 						currentIcon={currentIcon}
 						newIcon={newIcon}
+						filterCategoriesForSelect={filterCategoriesForSelect}
 						handleFileChange={handleFileChange}
 						handleSubmitEdit={handleSubmitEdit}
+						languages={languages}
+						newTranslations={newTranslations}
+						parentIds={parentIds}
+						setNewTranslations={setNewTranslations}
+						setParentIds={setParentIds}
+						setIsIconPickerOpen={setIsIconPickerOpen}
+						translations={translations}
+						relatedIds={relatedIds}
+						setRelatedIds={setRelatedIds}
+						currentEditCategory={currentEditCategory}
+						allCategories={categories}
 					/>
 				</CustomModal>
 			)}

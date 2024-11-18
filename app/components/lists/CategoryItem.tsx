@@ -1,7 +1,8 @@
 'use client';
 import React, { useCallback, useState, useEffect } from 'react';
+import axios from 'axios';
 import Image from 'next/image';
-import { CategoryWithTranslations, Icon } from '@/utils/helpers/types';
+import { CategoryWithTranslations, Icon, Category, TranslationUpdate } from '@/utils/helpers/types';
 import { getCategoryIconUrl } from '@/utils/helpers/universalFunctions';
 import H4 from '../text/H4';
 import TextNormal from '../text/TextNormal';
@@ -10,6 +11,7 @@ import ArrowToggleButton from '../buttons/ArrowToggleButton';
 import EditButton from '../buttons/EditButton';
 import DeleteButton from '../buttons/DeleteButton';
 import ToggleButtonContainer from '../buttons/ToggleButtonContainer';
+import { handleError } from '@/utils/helpers/universalFunctions';
 
 interface CategoryItemProps {
 	category: CategoryWithTranslations;
@@ -18,11 +20,17 @@ interface CategoryItemProps {
 	allCategories: CategoryWithTranslations[];
 	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
 	setCurrentEditCategory: React.Dispatch<React.SetStateAction<CategoryWithTranslations | null>>;
+	setParentIds: (parentIds: number[]) => void;
+	setNewTranslations: React.Dispatch<React.SetStateAction<TranslationUpdate[]>>;
 	setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+	setRelatedIds: (relatedIds: number[]) => void;
 	handleDelete: (categoryId: number) => void;
 	toggleCategory: (id: number) => void;
 	expandedCategories: Set<number>;
 	isCategoryExpanded: (id: number) => boolean;
+	setError: (error: string) => void;
+	setSuccessMessage: (message: string | null) => void;
+	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const CategoryItem: React.FC<CategoryItemProps> = ({
@@ -32,16 +40,49 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	allCategories,
 	setCurrentIcon,
 	setCurrentEditCategory,
+	setParentIds,
+	setNewTranslations,
 	setIsModalOpen,
+	setRelatedIds,
 	handleDelete,
 	toggleCategory,
 	expandedCategories,
 	isCategoryExpanded,
+	setError,
+	setSuccessMessage,
+	setLoading,
 }) => {
 	const [relatedCategories, setRelatedCategories] = useState<CategoryWithTranslations[]>([]);
+	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
 
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
-	console.log('Category children for', category.name, category.children);
+
+	/* const fetchRelatedCategoriesForEdit = useCallback(async () => {
+		console.log('category.relatedIds', category.relatedIds); // Dodaj ovo
+		if (category.relatedIds && category.relatedIds.length > 0) {
+			setLoading(true);
+			try {
+				await fetchRelatedCategoriesForDisplay(category.relatedIds);
+				setRelatedIds(category.relatedIds);
+			} catch (error) {
+				handleError(error, setError, setSuccessMessage);
+				setRelatedIds([]);
+			} finally {
+				setLoading(false);
+			}
+		} else {
+			setDisplayRelatedCategories([]);
+			setRelatedIds([]);
+		}
+	}, [
+		category.relatedIds,
+		fetchRelatedCategoriesForDisplay,
+		setRelatedIds,
+		setError,
+		setSuccessMessage,
+		setLoading,
+	]); */
+
 	const getCategoryName = useCallback(
 		(category: CategoryWithTranslations) => {
 			// Proveri da li je category i category.translations definisan
@@ -60,25 +101,57 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		[languageId]
 	);
 
-	const getParentCategoryNames = useCallback(
-		(parents: CategoryWithTranslations[]): string => {
-			if (parents.length === 0) return 'Ovo je glavna kategorija';
+	const handleOpenEditModal = async () => {
+		setIsModalOpen(true);
+		setLoading(true);
 
-			return parents.map(parent => getCategoryName(parent)).join(', ');
-		},
-		[getCategoryName]
-	);
+		try {
+			// Dohvati kategoriju sa svim podacima
+			const response = await axios.get(`/api/categoriesWithTranslations/${category.id}`);
+			const categoryData = response.data;
 
-	/* useEffect(() => {
-		if (category.relatedIds?.length) {
-			const relatedCategories = category.relatedIds
-				.map(id => category.children.find(child => child.id === id))
-				.filter(relatedCategory => relatedCategory && typeof relatedCategory.id === 'number'); // Proverava validnost objekta
-			setDisplayRelatedCategories(relatedCategories as CategoryWithTranslations[]);
-		} else {
-			setDisplayRelatedCategories([]);
+			console.log('categoryData', categoryData);
+
+			// Postavljanje trenutne kategorije
+			setCurrentEditCategory(categoryData);
+
+			// Postavljanje ikonice
+			setCurrentIcon({
+				iconId: categoryData.icon?.id || null,
+				iconUrl: categoryData.icon?.url || null,
+			});
+
+			// Postavljanje natkategorija i povezanih kategorija
+			setParentIds(
+				categoryData.parents
+					.filter((parent: Category) => parent.id !== categoryData.id) // Isključi trenutnu kategoriju
+					.map((parent: Category) => parent.id) // Uzmite samo ID-ove roditelja
+			);
+
+			setRelatedIds(
+				categoryData.relatedIds?.filter(
+					(relatedId: number) =>
+						relatedId !== categoryData.id && // Isključi trenutnu kategoriju
+						!categoryData.children.some((child: Category) => child.id === relatedId) // Isključi child-ove
+				) || []
+			);
+
+			// Postavljanje prevoda
+			const translations = categoryData.label.translations.map(
+				(t: { languageId: number; translation: string; description: string; synonyms: any[] }) => ({
+					languageId: t.languageId,
+					translation: t.translation,
+					description: t.description || '',
+					synonyms: t.synonyms ? t.synonyms.map(s => s.synonym) : [],
+				})
+			);
+			setNewTranslations(translations);
+		} catch (error) {
+			handleError(error, setError, setSuccessMessage);
+		} finally {
+			setLoading(false);
 		}
-	}, [category]); */
+	};
 
 	useEffect(() => {
 		// Pretraži sve kategorije kako bi našli one iz relatedIds
@@ -88,12 +161,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 		setRelatedCategories(related);
 	}, [category.relatedIds, allCategories]);
-
-	const handleOpenEditModal = () => {
-		setCurrentEditCategory(category);
-		setCurrentIcon({ iconId: category.iconId, iconUrl: iconUrl || '' });
-		setIsModalOpen(true);
-	};
 
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
@@ -162,11 +229,17 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 							allCategories={allCategories}
 							setCurrentIcon={setCurrentIcon}
 							setCurrentEditCategory={setCurrentEditCategory}
+							setParentIds={setParentIds}
+							setNewTranslations={setNewTranslations}
 							setIsModalOpen={setIsModalOpen}
+							setRelatedIds={setRelatedIds}
 							handleDelete={handleDelete}
 							toggleCategory={toggleCategory}
 							expandedCategories={expandedCategories}
 							isCategoryExpanded={isCategoryExpanded}
+							setError={setError}
+							setSuccessMessage={setSuccessMessage}
+							setLoading={setLoading}
 						/>
 					))}
 				</div>

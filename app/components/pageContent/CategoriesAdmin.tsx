@@ -167,8 +167,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 	};
 
 	const handleCategorySelection = (selectedCategoryIds: number[]) => {
-		console.log('Odabrani categoryIds:', selectedCategoryIds);
-
 		// Proverite da li su ID-ovi već prisutni
 		setParentIds(prev => [...new Set([...prev, ...selectedCategoryIds])]);
 	};

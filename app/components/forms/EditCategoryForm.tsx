@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import H2 from '../../components/text/H2';
 import Image from 'next/image';
 import TextBlockItem from '../../ulaganje/collapsible/TextBlockItem';
@@ -31,6 +32,8 @@ interface Props {
 	handleSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => void;
 	relatedIds: number[];
 	setRelatedIds: (relatedIds: number[]) => void;
+	currentEditCategory: Category | null;
+	allCategories: Category[];
 }
 
 const EditCategoryForm: React.FC<Props> = ({
@@ -49,12 +52,15 @@ const EditCategoryForm: React.FC<Props> = ({
 	handleSubmitEdit,
 	relatedIds,
 	setRelatedIds,
+	currentEditCategory,
+	allCategories,
 }) => {
 	const handleTranslationChange = (languageId: number, translation: string) => {
 		setNewTranslations(prevTranslations =>
 			prevTranslations.map(t => (t.languageId === languageId ? { ...t, translation } : t))
 		);
 	};
+	console.log('currentEditCategory:', currentEditCategory);
 
 	const handleDescriptionChange = (languageId: number, description: string) => {
 		setNewTranslations(prevTranslations =>
@@ -83,6 +89,28 @@ const EditCategoryForm: React.FC<Props> = ({
 
 	const flatCategories = flattenCategories(categories);
 	const uniqueParentIds = Array.from(new Set(parentIds));
+
+	useEffect(() => {
+		if (currentEditCategory) {
+			// Postavite početne vrednosti za prevode
+			setNewTranslations(
+				currentEditCategory?.label?.translations?.map(
+					(t: { languageId: any; translation: any; description: any; synonyms: any[] }) => ({
+						languageId: t.languageId,
+						translation: t.translation,
+						description: t.description || '',
+						synonyms: t.synonyms ? t.synonyms.map(s => s.synonym) : [],
+					})
+				) || [] // Ako nema prevoda, postavi prazan niz
+			);
+
+			// Postavite natkategorije i povezane kategorije ako postoje
+			setParentIds(currentEditCategory.parents?.map(pc => pc.id) || []);
+			setRelatedIds(
+				currentEditCategory.relatedCategories?.map(rc => rc.id) || [] // Provera za undefined
+			);
+		}
+	}, [currentEditCategory]);
 
 	return (
 		<form
