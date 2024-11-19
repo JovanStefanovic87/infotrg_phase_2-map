@@ -1,12 +1,16 @@
-// app\components\input\CustomCombobox.tsx
-'use client';
-import React, { useState } from 'react';
-import { Translation } from '@/utils/helpers/types';
+import React, { useState, useEffect } from 'react';
+
+interface Option {
+	id: number;
+	labelId: number;
+	languageId: number;
+	translation: string;
+}
 
 interface CustomComboboxProps {
-	options: Translation[];
-	selectedOptions: Translation[]; // New prop to keep track of selected options
-	onSelect: (selectedOptions: Translation[]) => void; // Updated to handle multiple selections
+	options: Option[];
+	selectedOptions: Option[];
+	onSelect: (selectedOptions: Option[]) => void;
 	placeholder?: string;
 }
 
@@ -19,70 +23,25 @@ const CustomCombobox: React.FC<CustomComboboxProps> = ({
 	const [isOpen, setIsOpen] = useState(false);
 	const [inputValue, setInputValue] = useState('');
 
-	const getCommonCharacterCount = (str1: string, str2: string) => {
-		const charCount1 = Array.from(str1).reduce((acc, char) => {
-			acc[char] = (acc[char] || 0) + 1;
-			return acc;
-		}, {} as Record<string, number>);
-
-		const charCount2 = Array.from(str2).reduce((acc, char) => {
-			acc[char] = (acc[char] || 0) + 1;
-			return acc;
-		}, {} as Record<string, number>);
-
-		return Object.keys(charCount1).reduce((acc, char) => {
-			if (charCount2[char]) {
-				acc += Math.min(charCount1[char], charCount2[char]);
-			}
-			return acc;
-		}, 0);
-	};
-
 	const filterOptions = (searchTerm: string) => {
 		const lowercasedSearch = searchTerm.trim().toLowerCase();
-		const exactMatches = options.filter(translation =>
-			translation.translation.trim().toLowerCase().includes(lowercasedSearch)
-		);
-
-		if (exactMatches.length > 0) {
-			return exactMatches.sort((a, b) => a.translation.localeCompare(b.translation));
-		}
-
-		const closeMatches = options
-			.map(translation => ({
-				...translation,
-				commonChars: getCommonCharacterCount(
-					lowercasedSearch,
-					translation.translation.trim().toLowerCase()
-				),
-			}))
-			.filter(translation => translation.commonChars > 0)
-			.sort((a, b) => b.commonChars - a.commonChars);
-
-		return closeMatches;
+		return options.filter(option => option.translation.toLowerCase().includes(lowercasedSearch));
 	};
-
-	const filteredOptions = filterOptions(inputValue);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInputValue(e.target.value);
 		setIsOpen(true);
 	};
 
-	const handleOptionClick = (option: Translation) => {
-		const alreadySelected = selectedOptions.find(opt => opt.labelId === option.labelId);
-		let newSelectedOptions;
-		if (alreadySelected) {
-			// Remove from selected
-			newSelectedOptions = selectedOptions.filter(opt => opt.labelId !== option.labelId);
-		} else {
-			// Add to selected
-			newSelectedOptions = [...selectedOptions, option];
-		}
+	const handleOptionClick = (option: Option) => {
+		const alreadySelected = selectedOptions.some(opt => opt.labelId === option.labelId);
+		const updatedSelectedOptions = alreadySelected
+			? selectedOptions.filter(opt => opt.labelId !== option.labelId)
+			: [...selectedOptions, option];
 
-		setInputValue(''); // Clear the input field after selection
-		setIsOpen(false);
-		onSelect(newSelectedOptions); // Pass updated selections back to parent
+		onSelect(updatedSelectedOptions);
+		setInputValue(''); // Clear the input
+		setIsOpen(false); // Close the dropdown
 	};
 
 	const handleInputClick = () => {
@@ -95,12 +54,14 @@ const CustomCombobox: React.FC<CustomComboboxProps> = ({
 		}
 	};
 
-	React.useEffect(() => {
+	useEffect(() => {
 		document.addEventListener('mousedown', handleClickOutside);
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 		};
 	}, []);
+
+	const filteredOptions = filterOptions(inputValue);
 
 	return (
 		<div className='relative combobox'>
@@ -116,7 +77,7 @@ const CustomCombobox: React.FC<CustomComboboxProps> = ({
 				<div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto'>
 					{filteredOptions.map(option => (
 						<div
-							key={option.id}
+							key={option.labelId}
 							onClick={() => handleOptionClick(option)}
 							className={`cursor-pointer p-2 hover:bg-gray-200 text-black ${
 								selectedOptions.some(selected => selected.labelId === option.labelId)

@@ -82,31 +82,33 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		});
 	};
 
-	console.log('currentEditCategory:', currentEditCategory); // Dodaj ovo
+	useEffect(() => {
+		console.log('currentEditCategory updated:', currentEditCategory);
+	}, [currentEditCategory]);
 
 	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
 		const allCategories: CategoryWithTranslations[] = [];
 
-		// Rekurzivna funkcija za prolazak kroz sve kategorije
 		const traverseCategories = (categoryList: CategoryWithTranslations[]) => {
 			categoryList.forEach(cat => {
-				allCategories.push(cat); // Dodaj trenutnu kategoriju u listu
+				allCategories.push(cat);
 				if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
-					// Ako postoje deca, rekurzivno ih dodaj
 					traverseCategories(cat.children as CategoryWithTranslations[]);
 				}
 			});
 		};
 
-		// Pozovi rekurzivnu funkciju za sve kategorije
 		traverseCategories(categories);
 
-		// Filtriraj kategorije prema potrebama
-		return allCategories.filter(
+		// Uklonite duplikate pomoću Map-a za unique kategorije prema ID-u
+		const uniqueCategories = Array.from(new Map(allCategories.map(cat => [cat.id, cat])).values());
+
+		// Filtrirajte prema potrebama
+		return uniqueCategories.filter(
 			cat =>
-				!relatedIds.includes(cat.id) && // Kategorije koje nisu u povezanim kategorijama
-				!parentIds.includes(cat.id) && // Kategorije koje nisu u natkategorijama
-				cat.id !== currentEditCategory?.id // Kategorije koje nisu trenutna kategorija za uređivanje
+				!relatedIds.includes(cat.id) &&
+				!parentIds.includes(cat.id) &&
+				cat.id !== currentEditCategory?.id
 		);
 	};
 
@@ -249,6 +251,14 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		});
 	};
 
+	useEffect(() => {
+		if (currentEditCategory) {
+			console.log('Current edit category changed:', currentEditCategory); // Provera
+			setParentIds(currentEditCategory.parents?.map(pc => pc.id) || []);
+			setRelatedIds(currentEditCategory.relatedCategories?.map(rc => rc.id) || []);
+		}
+	}, [currentEditCategory]);
+
 	return (
 		<>
 			<div className='mb-4'>
@@ -300,7 +310,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						relatedIds={relatedIds}
 						setRelatedIds={setRelatedIds}
 						currentEditCategory={currentEditCategory}
-						allCategories={categories}
+						setCurrentEditCategory={setCurrentEditCategory}
 					/>
 				</CustomModal>
 			)}

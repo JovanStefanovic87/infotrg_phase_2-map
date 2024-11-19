@@ -5,7 +5,13 @@ import TextBlockItem from '../../ulaganje/collapsible/TextBlockItem';
 import ChooseImageButton from '../../components/buttons/ChooseImageButton';
 import CustomCombobox from '../../components/input/CustomCombobox';
 import SumbitButton from '../../components/buttons/SubmitButton';
-import { Translation, Category, Language, TranslationUpdate } from '../../../utils/helpers/types';
+import {
+	Translation,
+	Category,
+	CategoryWithTranslations,
+	Language,
+	TranslationUpdate,
+} from '../../../utils/helpers/types';
 import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
 import LabelInputDefault from '../input/LabelInputDefault';
 import Label from '../text/Label';
@@ -27,13 +33,13 @@ interface Props {
 	categories: Category[];
 	translations: Translation[];
 	setParentIds: React.Dispatch<React.SetStateAction<number[]>>;
-	filterCategoriesForSelect: () => Category[];
+	filterCategoriesForSelect: () => CategoryWithTranslations[];
 	setIsIconPickerOpen: (isOpen: boolean) => void;
 	handleSubmitEdit: (e: React.FormEvent<HTMLFormElement>) => void;
 	relatedIds: number[];
 	setRelatedIds: (relatedIds: number[]) => void;
-	currentEditCategory: Category | null;
-	allCategories: Category[];
+	currentEditCategory: CategoryWithTranslations | null;
+	setCurrentEditCategory: React.Dispatch<React.SetStateAction<CategoryWithTranslations | null>>;
 }
 
 const EditCategoryForm: React.FC<Props> = ({
@@ -53,14 +59,13 @@ const EditCategoryForm: React.FC<Props> = ({
 	relatedIds,
 	setRelatedIds,
 	currentEditCategory,
-	allCategories,
+	setCurrentEditCategory,
 }) => {
 	const handleTranslationChange = (languageId: number, translation: string) => {
 		setNewTranslations(prevTranslations =>
 			prevTranslations.map(t => (t.languageId === languageId ? { ...t, translation } : t))
 		);
 	};
-	console.log('currentEditCategory:', currentEditCategory);
 
 	const handleDescriptionChange = (languageId: number, description: string) => {
 		setNewTranslations(prevTranslations =>
@@ -87,7 +92,44 @@ const EditCategoryForm: React.FC<Props> = ({
 		}, [] as Category[]);
 	};
 
+	const updateRelatedIds = (newRelatedIds: number[]) => {
+		console.log('updateRelatedIds called with:', newRelatedIds);
+
+		if (currentEditCategory) {
+			const updatedRelatedCategories = [
+				...(currentEditCategory.relatedCategories || []), // Provera undefined
+				...newRelatedIds
+					.map(id => flatCategories.find(cat => cat.labelId === id))
+					.filter((cat): cat is Category => Boolean(cat)), // Osigurava da nema undefined
+			];
+
+			setCurrentEditCategory({
+				...currentEditCategory,
+				relatedCategories: [...new Set(updatedRelatedCategories)],
+			});
+		}
+	};
+
+	const updateParentIds = (newParentIds: number[]) => {
+		console.log('updateParentIds called with:', newParentIds);
+
+		if (currentEditCategory) {
+			const updatedParents = [
+				...(currentEditCategory.parents || []), // Provera undefined
+				...newParentIds
+					.map(id => flatCategories.find(cat => cat.labelId === id))
+					.filter((cat): cat is Category => Boolean(cat)), // Osigurava da nema undefined
+			];
+
+			setCurrentEditCategory({
+				...currentEditCategory,
+				parents: [...new Set(updatedParents)],
+			});
+		}
+	};
+
 	const flatCategories = flattenCategories(categories);
+	console.log('Flat categories:', flatCategories); // Provera
 	const uniqueParentIds = Array.from(new Set(parentIds));
 
 	useEffect(() => {
@@ -195,61 +237,54 @@ const EditCategoryForm: React.FC<Props> = ({
 			<div className='mb-6 w-full'>
 				<H3 text='Povezane kategorije' />
 				<ul className='list-disc pl-5 text-black space-y-2 mb-4 max-h-48 overflow-y-auto'>
-					{relatedIds.map(relatedId => {
-						const relatedCategory = flatCategories.find(cat => cat.id === relatedId);
-						return (
-							<li key={`related-${relatedId}`} className='flex items-center justify-between'>
-								<span className='text-sm text-gray-800'>
-									{relatedCategory ? relatedCategory.name : 'Nepoznato'}
-								</span>
-								<DeleteTextButton
-									relatedId={relatedId}
-									relatedIds={relatedIds}
-									setRelatedIds={setRelatedIds}
-								/>
-							</li>
-						);
-					})}
+					{currentEditCategory?.relatedCategories?.map(relatedCategory => (
+						<li key={relatedCategory.id} className='flex items-center justify-between'>
+							<span className='text-sm text-gray-800'>{relatedCategory.name || 'Nepoznato'}</span>
+							<DeleteTextButton
+								stateId={relatedCategory.id}
+								stateIds={
+									currentEditCategory?.relatedCategories?.map(related => related.labelId) || []
+								}
+								setStateIds={() => {
+									if (currentEditCategory) {
+										const updatedRelatedCategories =
+											currentEditCategory.relatedCategories?.filter(
+												related => related.labelId !== relatedCategory.labelId
+											) || [];
+										setCurrentEditCategory({
+											...currentEditCategory,
+											relatedCategories: updatedRelatedCategories,
+										});
+									}
+								}}
+							/>
+						</li>
+					))}
 				</ul>
+
 				<CustomCombobox
 					options={filterCategoriesForSelect().map(cat => {
-						const translation = translations.find(
-							t => t.labelId === cat.labelId && t.languageId === 1
-						);
-
+						const translation = cat.translations.find(t => t.languageId === 1);
 						return {
 							id: cat.id,
 							labelId: cat.labelId,
 							languageId: 1,
-							translation: translation?.translation || 'No translation',
-							description: translation?.description || '',
-							createdAt: translation?.createdAt || new Date(),
-							synonyms: translation?.synonyms || [],
-							translationId: translation?.translationId ?? null,
-						};
+							translation: translation?.name || 'Ne postoji prevod',
+						} as Translation;
 					})}
-					selectedOptions={categories
-						.filter(cat => relatedIds.includes(cat.id))
-						.map(cat => {
-							const translation = translations.find(
-								t => t.labelId === cat.labelId && t.languageId === 1
-							);
-							return {
-								id: cat.id,
-								labelId: cat.labelId,
-								languageId: 1,
-								translation: translation?.translation || 'No translation',
-								description: translation?.description || '',
-								createdAt: translation?.createdAt || new Date(),
-								synonyms: translation?.synonyms || [],
-								translationId: translation?.translationId ?? null,
-							} as Translation;
-						})}
+					selectedOptions={
+						currentEditCategory?.relatedCategories?.map(cat => ({
+							id: cat.id,
+							labelId: cat.labelId,
+							languageId: 1, // Dodaj validan languageId (može biti dinamičan ako je potrebno)
+							translation: cat.name || 'Ne postoji prevod',
+						})) || []
+					}
 					onSelect={selectedOptions => {
-						const newRelatedIds = selectedOptions.map(option => option.id);
-						setRelatedIds(newRelatedIds);
+						const newRelatedIds = selectedOptions.map(option => option.labelId);
+						updateRelatedIds(newRelatedIds);
 					}}
-					placeholder='Select related categories'
+					placeholder='Izaberite povezanu kategoriju'
 				/>
 			</div>
 
@@ -266,9 +301,19 @@ const EditCategoryForm: React.FC<Props> = ({
 										{parentCategory ? parentCategory.name : 'Prevod nije dostupan'}
 									</span>
 									<DeleteTextButton
-										relatedId={parentId}
-										relatedIds={parentIds}
-										setRelatedIds={setParentIds}
+										stateId={parentId}
+										stateIds={currentEditCategory?.parents.map(parent => parent.id) || []}
+										setStateIds={() => {
+											if (currentEditCategory) {
+												const updatedParents = currentEditCategory.parents.filter(
+													parent => parent.id !== parentId
+												);
+												setCurrentEditCategory({
+													...currentEditCategory,
+													parents: updatedParents,
+												});
+											}
+										}}
 									/>
 								</li>
 							);
@@ -279,25 +324,25 @@ const EditCategoryForm: React.FC<Props> = ({
 				</ul>
 				<CustomCombobox
 					options={filterCategoriesForSelect().map(cat => {
-						const translation = translations.find(
-							t => t.labelId === cat.labelId && t.languageId === 1
-						);
-
+						const translation = cat.translations.find(t => t.languageId === 1);
 						return {
-							id: translation?.id || cat.id,
-							labelId: cat.id,
+							id: cat.id,
+							labelId: cat.labelId,
 							languageId: 1,
-							translation: translation?.translation || 'Ne postoji prevod',
-							description: translation?.description || '',
-							createdAt: translation?.createdAt || new Date(),
-							synonyms: translation?.synonyms || [],
-							translationId: translation?.translationId ?? null,
+							translation: translation?.name || 'Ne postoji prevod',
 						} as Translation;
 					})}
-					selectedOptions={translations.filter(t => parentIds.includes(t.labelId))}
+					selectedOptions={
+						currentEditCategory?.parents.map(parent => ({
+							id: parent.id,
+							labelId: parent.labelId,
+							languageId: 1, // Dodaj validan languageId (ako je statičan ili dohvaćen iz nekog drugog izvora)
+							translation: parent.name || 'Ne postoji prevod',
+						})) || []
+					}
 					onSelect={selectedOptions => {
 						const newParentIds = selectedOptions.map(option => option.labelId);
-						setParentIds(prevParentIds => [...new Set([...prevParentIds, ...newParentIds])]);
+						updateParentIds(newParentIds);
 					}}
 					placeholder='Izaberite natkategorije'
 				/>

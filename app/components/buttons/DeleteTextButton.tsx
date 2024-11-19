@@ -1,18 +1,14 @@
 import React from 'react';
 
 interface DeleteTextButtonProps {
-	relatedId: number;
-	relatedIds: number[];
-	setRelatedIds: (ids: number[]) => void;
+	stateId: number;
+	stateIds: number[];
+	setStateIds: (ids: number[]) => void;
 }
 
-const DeleteTextButton: React.FC<DeleteTextButtonProps> = ({
-	relatedId,
-	relatedIds,
-	setRelatedIds,
-}) => {
+const DeleteTextButton: React.FC<DeleteTextButtonProps> = ({ stateId, stateIds, setStateIds }) => {
 	const handleClick = () => {
-		setRelatedIds(relatedIds.filter(id => id !== relatedId));
+		setStateIds(stateIds.filter(id => id !== stateId));
 	};
 
 	return (
