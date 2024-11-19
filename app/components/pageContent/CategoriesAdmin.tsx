@@ -348,6 +348,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 						setError={setError}
 						setSuccessMessage={setSuccessMessage}
 						setLoading={setLoading}
+						setIsIconPickerOpen={setIsIconPickerOpen}
 					/>
 				) : (
 					<p className='text-center text-lg font-semibold text-gray-500 mt-4 p-4 bg-gray-100 rounded-md shadow-md'>

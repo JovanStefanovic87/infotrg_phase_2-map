@@ -32,6 +32,7 @@ interface CategoryListProps {
 	setError: React.Dispatch<React.SetStateAction<string>>;
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	setIsIconPickerOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({
@@ -51,6 +52,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	onDeleteCategory,
 	setError,
 	setSuccessMessage,
+	setIsIconPickerOpen,
 
 	setLoading,
 }) => {
@@ -65,7 +67,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [newTranslations, setNewTranslations] = useState<TranslationUpdate[]>([]);
 	const [translations, setTranslations] = useState<Translation[]>([]);
-	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 
 	const [newIcon, setNewIcon] = useState<File | null>(null);
 
