@@ -69,8 +69,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
 			},
 		});
 
-		console.log('category', category);
-
 		// Provera da li kategorija postoji
 		if (!category) {
 			return NextResponse.json({ error: 'Category not found' }, { status: 404 });

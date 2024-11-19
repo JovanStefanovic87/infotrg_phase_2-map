@@ -74,7 +74,7 @@ const EditCategoryForm: React.FC<Props> = ({
 	};
 
 	const handleSynonymsChange = (languageId: number, synonyms: string) => {
-		const synonymsArray = synonyms.split(',').map(synonym => synonym.trim());
+		const synonymsArray = synonyms.split(',').map(s => s.trim());
 		setNewTranslations(prevTranslations =>
 			prevTranslations.map(t =>
 				t.languageId === languageId ? { ...t, synonyms: synonymsArray } : t
@@ -93,8 +93,6 @@ const EditCategoryForm: React.FC<Props> = ({
 	};
 
 	const updateRelatedIds = (newRelatedIds: number[]) => {
-		console.log('updateRelatedIds called with:', newRelatedIds);
-
 		if (currentEditCategory) {
 			const updatedRelatedCategories = [
 				...(currentEditCategory.relatedCategories || []), // Provera undefined
@@ -110,9 +108,35 @@ const EditCategoryForm: React.FC<Props> = ({
 		}
 	};
 
-	const updateParentIds = (newParentIds: number[]) => {
-		console.log('updateParentIds called with:', newParentIds);
+	const updateTranslationField = (
+		languageId: number,
+		field: 'translation' | 'description' | 'synonyms',
+		value: string | string[]
+	) => {
+		setCurrentEditCategory(prev => {
+			if (!prev) return null;
 
+			return {
+				...prev,
+				label: {
+					...prev.label,
+					translations: prev.label.translations.map((t: { languageId: number }) =>
+						t.languageId === languageId
+							? {
+									...t,
+									[field]:
+										field === 'synonyms' && Array.isArray(value)
+											? value.map(v => ({ synonym: v }))
+											: value,
+							  }
+							: t
+					),
+				},
+			};
+		});
+	};
+
+	const updateParentIds = (newParentIds: number[]) => {
 		if (currentEditCategory) {
 			const updatedParents = [
 				...(currentEditCategory.parents || []), // Provera undefined
@@ -129,30 +153,27 @@ const EditCategoryForm: React.FC<Props> = ({
 	};
 
 	const flatCategories = flattenCategories(categories);
-	console.log('Flat categories:', flatCategories); // Provera
 	const uniqueParentIds = Array.from(new Set(parentIds));
 
 	useEffect(() => {
-		if (currentEditCategory) {
-			// Postavite početne vrednosti za prevode
-			setNewTranslations(
-				currentEditCategory?.label?.translations?.map(
-					(t: { languageId: any; translation: any; description: any; synonyms: any[] }) => ({
-						languageId: t.languageId,
-						translation: t.translation,
-						description: t.description || '',
-						synonyms: t.synonyms ? t.synonyms.map(s => s.synonym) : [],
-					})
-				) || [] // Ako nema prevoda, postavi prazan niz
-			);
+		if (!currentEditCategory) return;
 
-			// Postavite natkategorije i povezane kategorije ako postoje
-			setParentIds(currentEditCategory.parents?.map(pc => pc.id) || []);
-			setRelatedIds(
-				currentEditCategory.relatedCategories?.map(rc => rc.id) || [] // Provera za undefined
-			);
-		}
-	}, [currentEditCategory]);
+		const updatedTranslations = currentEditCategory.label.translations.map(
+			(t: { id: any; languageId: any; translation: any; description: any; synonyms: any[] }) => ({
+				translationId: t.id,
+				languageId: t.languageId,
+				translation: t.translation,
+				description: t.description || '',
+				synonyms: t.synonyms?.map(s => s.synonym) || [],
+			})
+		);
+
+		// Proveri da li su prevodi stvarno promenjeni pre ažuriranja stanja
+		setNewTranslations(prev => {
+			const isSame = JSON.stringify(prev) === JSON.stringify(updatedTranslations);
+			return isSame ? prev : updatedTranslations;
+		});
+	}, [currentEditCategory, setNewTranslations]);
 
 	return (
 		<form
@@ -193,11 +214,13 @@ const EditCategoryForm: React.FC<Props> = ({
 						{/* Translation Input */}
 						<div>
 							<LabelInputDefault
-								label={`${language.name.charAt(0).toUpperCase()}${language.name
-									.slice(1)
-									.toLocaleLowerCase()} naziv`}
-								onChange={e => handleTranslationChange(language.id, e.target.value)}
-								value={newTranslations.find(t => t.languageId === language.id)?.translation || ''}
+								label={`${language.name} naziv`}
+								onChange={e => updateTranslationField(language.id, 'translation', e.target.value)}
+								value={
+									currentEditCategory?.label.translations.find(
+										(t: { languageId: number }) => t.languageId === language.id
+									)?.translation || ''
+								}
 								id={`translation-${language.id}`}
 								placeholder=''
 							/>
@@ -210,21 +233,31 @@ const EditCategoryForm: React.FC<Props> = ({
 								.toUpperCase()}${language.name.slice(1).toLocaleLowerCase()} opis`}</Label>
 							<textarea
 								id={`description-${language.id}`}
-								className='border p-2 rounded-md w-full text-black focus:outline-none focus:ring-2 focus:ring-sky-500'
-								value={newTranslations.find(t => t.languageId === language.id)?.description || ''}
-								onChange={e => handleDescriptionChange(language.id, e.target.value)}
+								onChange={e => updateTranslationField(language.id, 'description', e.target.value)}
+								value={
+									currentEditCategory?.label.translations.find(
+										(t: { languageId: number }) => t.languageId === language.id
+									)?.description || ''
+								}
 							/>
 						</div>
 
 						{/* Synonyms Input */}
 						<div>
 							<LabelInputDefault
-								label={`${language.name.charAt(0).toUpperCase()}${language.name
-									.slice(1)
-									.toLocaleLowerCase()} sinonimi`}
-								onChange={e => handleSynonymsChange(language.id, e.target.value)}
+								label={`${language.name} sinonimi`}
+								onChange={e =>
+									updateTranslationField(
+										language.id,
+										'synonyms',
+										e.target.value.split(',').map(s => s.trim())
+									)
+								}
 								value={
-									newTranslations.find(t => t.languageId === language.id)?.synonyms.join(', ') || ''
+									currentEditCategory?.label.translations
+										.find((t: { languageId: number }) => t.languageId === language.id)
+										?.synonyms.map((s: { synonym: any }) => s.synonym)
+										.join(', ') || ''
 								}
 								id={`synonyms-${language.id}`}
 								placeholder='Odvojite ih zarezom'

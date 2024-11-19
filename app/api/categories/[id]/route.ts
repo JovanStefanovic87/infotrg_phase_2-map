@@ -241,6 +241,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 		const body = await request.json();
 		const { parentIds, relatedIds, labelId, iconId, translations } = body;
 
+		console.log('body', body);
+
 		if (!Array.isArray(parentIds) || !Array.isArray(relatedIds)) {
 			return NextResponse.json(
 				{ error: 'parentIds and relatedIds should be arrays' },

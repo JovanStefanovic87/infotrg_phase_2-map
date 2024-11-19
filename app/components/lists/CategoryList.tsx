@@ -12,6 +12,7 @@ import CategoryItem from './CategoryItem';
 import EditCategoryForm from '../forms/EditCategoryForm';
 import InputDefault from '../input/InputDefault';
 import { handleError } from '@/utils/helpers/universalFunctions';
+import axios from 'axios';
 
 interface CategoryListProps {
 	categories: CategoryWithTranslations[];
@@ -81,10 +82,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			return updated;
 		});
 	};
-
-	useEffect(() => {
-		console.log('currentEditCategory updated:', currentEditCategory);
-	}, [currentEditCategory]);
 
 	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
 		const allCategories: CategoryWithTranslations[] = [];
@@ -212,6 +209,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			try {
 				let iconId = currentIcon.iconId;
 
+				// Ako je nova ikonica postavljena, prvo je uploadujte na server
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
@@ -221,19 +219,45 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						method: 'POST',
 						body: formData,
 					}).then(res => res.json());
-					iconId = data.iconId;
+
+					iconId = data.iconId; // Dohvatanje `iconId` iz odgovora
 				}
 
-				await fetch(`/api/categories/${currentEditCategory.id}`, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ iconId }),
-				});
+				// Pripremite payload za API
+				if (iconId) {
+					const payload = {
+						iconId,
+						parentIds: currentEditCategory.parents?.map(parent => parent.id) || [],
+						relatedIds: currentEditCategory.relatedCategories?.map(related => related.id) || [],
+						translations: currentEditCategory.label.translations.map(
+							(translation: {
+								id: number | null;
+								languageId: number;
+								translation: string;
+								description: string | null;
+								synonyms: { synonym: string }[];
+							}) => ({
+								translationId: translation.id, // Postojeći ID prevoda, ako postoji
+								labelId: currentEditCategory.labelId, // ID labele
+								languageId: translation.languageId, // ID jezika
+								translation: translation.translation, // Tekst prevoda
+								description: translation.description || null, // Opis
+								synonyms: translation.synonyms?.map(synonym => synonym.synonym) || [], // Sinonimi kao niz stringova
+							})
+						),
+						labelId: currentEditCategory.labelId, // ID labele kategorije
+					};
 
-				setIsModalOpen(false);
-				await refetchCategories();
+					console.log('Payload:', payload); // Debugging za proveru podataka
+
+					// Pošaljite podatke API-ju
+					await axios.put(`/api/categories/${currentEditCategory.id}`, payload);
+				}
+
+				setIsModalOpen(false); // Zatvorite modal
+				await refetchCategories(); // Osvežite kategorije nakon uspešnog ažuriranja
 			} catch (err) {
-				handleError(err, setError, setSuccessMessage);
+				handleError(err, setError, setSuccessMessage); // Obrada grešaka
 			}
 		},
 		[currentIcon, newIcon, currentEditCategory, refetchCategories, setError, setSuccessMessage]
@@ -253,7 +277,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 	useEffect(() => {
 		if (currentEditCategory) {
-			console.log('Current edit category changed:', currentEditCategory); // Provera
 			setParentIds(currentEditCategory.parents?.map(pc => pc.id) || []);
 			setRelatedIds(currentEditCategory.relatedCategories?.map(rc => rc.id) || []);
 		}
