@@ -241,8 +241,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 		const body = await request.json();
 		const { parentIds, relatedIds, labelId, iconId, translations } = body;
 
-		console.log('body', body);
-
 		if (!Array.isArray(parentIds) || !Array.isArray(relatedIds)) {
 			return NextResponse.json(
 				{ error: 'parentIds and relatedIds should be arrays' },
@@ -258,7 +256,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Invalid iconId' }, { status: 400 });
 		}
 
-		// Validate translations
 		if (!Array.isArray(translations)) {
 			return NextResponse.json({ error: 'Translations should be an array' }, { status: 400 });
 		}
@@ -270,33 +267,39 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				dataToUpdate.iconId = iconId;
 			}
 
+			// Update the category itself
 			const category = await prisma.category.update({
 				where: { id: Number(id) },
 				data: dataToUpdate,
 			});
 
-			// Handle parent categories
+			// Remove all existing parent-child relations
 			await prisma.parentCategory.deleteMany({
 				where: { childId: Number(id) },
 			});
 
-			await prisma.parentCategory.createMany({
-				data: parentIds.map((parentId: number) => ({
-					parentId: parentId,
-					childId: Number(id),
-				})),
-			});
+			// Add new parent-child relations
+			if (parentIds.length > 0) {
+				await prisma.parentCategory.createMany({
+					data: parentIds.map(parentId => ({
+						childId: Number(id),
+						parentId,
+					})),
+				});
+			}
 
 			// Handle related categories
 			await prisma.relatedCategory.deleteMany({
-				where: { categoryId: Number(id) },
+				where: {
+					OR: [{ categoryId: Number(id) }, { relatedId: Number(id) }],
+				},
 			});
 
 			if (relatedIds.length > 0) {
 				await prisma.relatedCategory.createMany({
-					data: relatedIds.map((relatedId: number) => ({
+					data: relatedIds.map(relatedId => ({
 						categoryId: Number(id),
-						relatedId: relatedId,
+						relatedId,
 					})),
 				});
 			}
@@ -311,7 +314,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					synonyms,
 				} = translation;
 
-				await prisma.translation.upsert({
+				const createdTranslation = await prisma.translation.upsert({
 					where: { id: translationId },
 					update: { translation: translationText, description },
 					create: {
@@ -324,13 +327,13 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
 				// Handle synonyms
 				await prisma.synonym.deleteMany({
-					where: { translationId },
+					where: { translationId: createdTranslation.id },
 				});
 
-				if (Array.isArray(synonyms)) {
+				if (Array.isArray(synonyms) && synonyms.length > 0) {
 					await prisma.synonym.createMany({
-						data: synonyms.map((synonym: string) => ({
-							translationId,
+						data: synonyms.map(synonym => ({
+							translationId: createdTranslation.id,
 							synonym,
 						})),
 					});

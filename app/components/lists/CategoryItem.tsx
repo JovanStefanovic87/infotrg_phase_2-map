@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import { CategoryWithTranslations, Icon, Category, TranslationUpdate } from '@/utils/helpers/types';
@@ -85,7 +85,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
 	const getCategoryName = useCallback(
 		(category: CategoryWithTranslations) => {
-			// Proveri da li je category i category.translations definisan
 			if (!category || !Array.isArray(category.translations)) {
 				return 'Naziv nije dostupan';
 			}
@@ -109,8 +108,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			// Dohvati kategoriju sa svim podacima
 			const response = await axios.get(`/api/categoriesWithTranslations/${category.id}`);
 			const categoryData = response.data;
-
-			console.log('categoryData', categoryData);
 
 			// Postavljanje trenutne kategorije
 			setCurrentEditCategory(categoryData);
@@ -153,15 +150,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		}
 	};
 
-	useEffect(() => {
-		// Pretraži sve kategorije kako bi našli one iz relatedIds
-		const related = category.relatedIds
-			?.map(relatedId => allCategories.find(cat => cat.id === relatedId))
-			.filter(Boolean) as CategoryWithTranslations[];
-
-		setRelatedCategories(related);
-	}, [category.relatedIds, allCategories]);
-
 	return (
 		<div className='border p-4 mb-4 rounded-lg shadow-md bg-white'>
 			<H4 text={getCategoryName(category)} color='black' shouldBreak />
@@ -192,10 +180,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 			/>
 			{/* Related Categories */}
 			<TextNormal text='Povezane kategorije:' weight='bold' />
-			{relatedCategories.length > 0 ? (
+			{category.relatedCategories && category.relatedCategories.length > 0 ? (
 				<ul className='list-disc pl-5 text-gray-800'>
-					{relatedCategories.map(relatedCategory => (
-						<li key={relatedCategory.id}>{getCategoryName(relatedCategory)}</li>
+					{category.relatedCategories.map(relatedCategory => (
+						<li key={relatedCategory.id}>{relatedCategory.name || 'Nepoznato'}</li>
 					))}
 				</ul>
 			) : (

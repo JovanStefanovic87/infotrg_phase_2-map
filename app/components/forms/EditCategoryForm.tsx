@@ -151,7 +151,7 @@ const EditCategoryForm: React.FC<Props> = ({
 			});
 		}
 	};
-
+	console.log('currentEditCategory', currentEditCategory);
 	const flatCategories = flattenCategories(categories);
 	const uniqueParentIds = Array.from(new Set(parentIds));
 
@@ -275,18 +275,16 @@ const EditCategoryForm: React.FC<Props> = ({
 							<span className='text-sm text-gray-800'>{relatedCategory.name || 'Nepoznato'}</span>
 							<DeleteTextButton
 								stateId={relatedCategory.id}
-								stateIds={
-									currentEditCategory?.relatedCategories?.map(related => related.labelId) || []
-								}
+								stateIds={currentEditCategory?.relatedCategories?.map(related => related.id) || []}
 								setStateIds={() => {
 									if (currentEditCategory) {
 										const updatedRelatedCategories =
 											currentEditCategory.relatedCategories?.filter(
-												related => related.labelId !== relatedCategory.labelId
+												related => related.id !== relatedCategory.id // Ovde koristimo `id` umesto `labelId`
 											) || [];
 										setCurrentEditCategory({
 											...currentEditCategory,
-											relatedCategories: updatedRelatedCategories,
+											relatedCategories: updatedRelatedCategories, // Postavljamo samo ažuriranu listu
 										});
 									}
 								}}

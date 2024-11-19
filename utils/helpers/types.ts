@@ -1,4 +1,5 @@
 import { RetailStore } from '@prisma/client';
+import exp from 'constants';
 
 export interface LinkData {
 	text: string;
@@ -188,6 +189,13 @@ export interface Language {
 	name: string;
 }
 
+export interface relatedCategory {
+	id: number;
+	name: string;
+	iconId: number | null;
+	labelId: number;
+}
+
 export interface Category {
 	icon: any;
 	label?: any;
@@ -197,7 +205,7 @@ export interface Category {
 	name: string;
 	parents: Category[];
 	relatedIds?: number[];
-	relatedCategories?: Category[];
+	relatedCategories?: relatedCategory[];
 	children: Category[];
 }
 

@@ -83,12 +83,30 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 			},
 			relatedCategories: {
 				include: {
-					related: true, // Categories that are related to the current category
+					related: {
+						include: {
+							label: {
+								include: {
+									translations: true,
+								},
+							},
+							icon: true,
+						},
+					},
 				},
 			},
 			relatedTo: {
 				include: {
-					category: true, // Categories that the current category is related to
+					category: {
+						include: {
+							label: {
+								include: {
+									translations: true,
+								},
+							},
+							icon: true,
+						},
+					},
 				},
 			},
 		},
@@ -101,6 +119,26 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 				...(category.relatedCategories?.map(rc => rc.related.id) || []),
 				...(category.relatedTo?.map(rt => rt.category.id) || []),
 			];
+
+			const relatedCategories = category.relatedCategories.map(rc => ({
+				id: rc.related.id,
+				name:
+					rc.related.label.translations.length > 0
+						? rc.related.label.translations[0].translation
+						: '',
+				iconId: rc.related.iconId,
+				labelId: rc.related.labelId,
+			}));
+
+			const relatedToCategories = category.relatedTo.map(rt => ({
+				id: rt.category.id,
+				name:
+					rt.category.label.translations.length > 0
+						? rt.category.label.translations[0].translation
+						: '',
+				iconId: rt.category.iconId,
+				labelId: rt.category.labelId,
+			}));
 
 			return {
 				id: category.id,
@@ -123,6 +161,7 @@ const buildCategoryTree = async (parentId: number | null, prefix: string): Promi
 							createdAt: category.icon.createdAt,
 					  }
 					: null,
+				relatedCategories: relatedCategories.concat(relatedToCategories),
 				relatedIds, // Add related category IDs to the category response
 			};
 		})
