@@ -31,7 +31,10 @@ const ContentBlock: React.FC<Props> = ({
 		<ContentBlockContainer contentBlocks={[]} isLink={false} openContentModal={() => {}}>
 			<div className='w-full p-2 rounded-md overflow-hidden'>
 				<div className='flex flex-col h-ful p-4 rounded-md overflow-hidden'>
-					<BlockTitle text={name} bgColor='gray-100' align='center' />
+					<div className='mb-4 border-2 border-gray-200'>
+						<BlockTitle text={name} bgColor='gray-50' align='center' mb={0} />
+					</div>
+
 					<div className='flex flex-col h-full justify-between'>
 						<div className='flex flex-col mb-4'>
 							<TextTable label='Registarski broj:' value={id} />

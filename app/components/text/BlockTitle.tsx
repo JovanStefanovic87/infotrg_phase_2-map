@@ -5,6 +5,7 @@ interface Props {
 	bgColor?: string;
 	align?: 'left' | 'center' | 'right';
 	textColor?: string;
+	mb?: number;
 }
 
 const BlockTitle: React.FC<Props> = ({
@@ -12,9 +13,10 @@ const BlockTitle: React.FC<Props> = ({
 	bgColor = 'yellowLighter',
 	align = 'left',
 	textColor = 'grayDarkest',
+	mb = 4,
 }) => {
 	return (
-		<div className={`mb-4 bg-${bgColor} p-2 rounded-md`}>
+		<div className={`mb-${mb} bg-${bgColor} p-2 rounded-md`}>
 			<h2
 				className={`text-lg text-${align} text-${textColor} font-semibold overflow-hidden whitespace-nowrap`}>
 				{text}
