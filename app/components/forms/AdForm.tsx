@@ -68,8 +68,8 @@ const AdForm: React.FC<Props> = ({
 			setPreviewImage(imageUrl);
 			setFormData(prev => ({
 				...prev,
-				newImageFile: file, // Postavlja novu sliku
-				imageId: undefined, // Resetovanje ID-a slike
+				newImageFile: file,
+				imageId: undefined,
 			}));
 		} else {
 			setPreviewImage(null);
@@ -185,7 +185,7 @@ const AdForm: React.FC<Props> = ({
 			)}
 
 			{/* State Selection */}
-			<SelectInputForm
+			{/* <SelectInputForm
 				id='stateId'
 				label='Izaberite državu'
 				value={formData.stateId || 0}
@@ -198,57 +198,51 @@ const AdForm: React.FC<Props> = ({
 						{location.label.translations[0]?.translation}
 					</option>
 				))}
-			</SelectInputForm>
+			</SelectInputForm> */}
 
 			{/* County Selection */}
-			{formData.stateId > 0 && (
-				<SelectInputForm
-					id='countyId'
-					label='Izaberite državu'
-					value={formData.countyId || 0}
-					onChange={handleSelectChange}>
-					<option value={0} disabled>
-						Izaberite grad
+			<SelectInputForm
+				id='countyId'
+				label='Izaberite državu'
+				value={formData.countyId || 0}
+				onChange={handleSelectChange}>
+				<option value={0} disabled>
+					Izaberite grad
+				</option>
+				{filteredCounties.map((county: any) => (
+					<option key={county.id} value={county.id} className='text-black'>
+						{county.label.translations[0]?.translation}
 					</option>
-					{filteredCounties.map(county => (
-						<option key={county.id} value={county.id} className='text-black'>
-							{county.label.translations[0]?.translation}
-						</option>
-					))}
-				</SelectInputForm>
-			)}
-
-			{/* City Selection */}
-			{(formData.countyId ?? 0) > 0 && (
-				<SelectInputForm
-					id='cityId'
-					label='Izaberite deo grada'
-					value={formData.city || 0}
-					onChange={handleSelectChange}>
-					<option value={0}>Izaberite grad</option>
-					{filteredCities.map(city => (
-						<option key={city.id} value={city.id} className='text-black'>
-							{city.label.translations[0]?.translation}
-						</option>
-					))}
-				</SelectInputForm>
-			)}
+				))}
+			</SelectInputForm>
 
 			{/* Suburb Selection */}
-			{formData.cityId && formData.cityId > 0 && (
-				<SelectInputForm
-					id='suburbId'
-					label='Izaberite tržni centar'
-					value={formData.suburbId || 0}
-					onChange={handleSelectChange}>
-					<option value={0}>Izaberite deo grada</option>
-					{filteredSuburbs.map(suburb => (
-						<option key={suburb.id} value={suburb.id} className='text-black'>
-							{suburb.label.translations[0]?.translation}
-						</option>
-					))}
-				</SelectInputForm>
-			)}
+			<SelectInputForm
+				id='cityId'
+				label='Izaberite grad'
+				value={formData.cityId || 0}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite deo grada</option>
+				{filteredCities.map((city: any) => (
+					<option key={city.id} value={city.id} className='text-black'>
+						{city.label.translations[0]?.translation}
+					</option>
+				))}
+			</SelectInputForm>
+
+			{/* Suburb Selection */}
+			<SelectInputForm
+				id='suburbId'
+				label='Izaberite lokaciju'
+				value={formData.suburbId || 0}
+				onChange={handleSelectChange}>
+				<option value={0}>Izaberite tržni centar</option>
+				{filteredSuburbs.map((suburb: any) => (
+					<option key={suburb.id} value={suburb.id} className='text-black'>
+						{suburb.label.translations[0]?.translation}
+					</option>
+				))}
+			</SelectInputForm>
 
 			{/* Retail Store Selection */}
 			<SelectInputForm

@@ -15,12 +15,11 @@ interface Props {
 	setSuccessMessage: React.Dispatch<React.SetStateAction<string | null>>;
 	successMessage: string | null;
 	setError: React.Dispatch<React.SetStateAction<string>>;
-	ads: AdAdmin[];
+	ads: AdFormState[];
 	locations: any[];
 	articleCategories: any[];
 	activityCategories: any[];
 	objectTypeCategories: any[];
-	retails: any[];
 	imagesData: any[];
 	filteredCounties: any[];
 	filteredCities: any[];
@@ -37,7 +36,6 @@ const AdsList: React.FC<Props> = ({
 	articleCategories,
 	activityCategories,
 	objectTypeCategories,
-	retails,
 	imagesData,
 	filteredCounties,
 	filteredCities,
@@ -70,7 +68,6 @@ const AdsList: React.FC<Props> = ({
 	const [adToDelete, setAdToDelete] = useState<AdAdmin | null>(null);
 
 	const [currentAd, setCurrentAd] = useState<AdAdmin | null>(null);
-
 	// Filter ads based on the search query
 	const filteredAds = ads
 		.filter(ad => ad.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -103,24 +100,24 @@ const AdsList: React.FC<Props> = ({
 			adType: value,
 		}));
 	};
-
+	console.log('ads', ads);
 	const handleEditClick = (ad: AdAdmin) => {
 		setCurrentAd(ad);
 
 		setFormData({
-			id: ad.id,
+			id: ad.id || 0,
 			name: ad.name || '',
 			description: ad.description || '',
-			adType: ad.adType,
+			adType: ad.adType || 'SMALL',
 			url: ad.url || '',
 			validTo: ad.validTo ? new Date(ad.validTo).toISOString() : new Date().toISOString(),
-			articleCategoryIds: ad.articleCategories.map(category => category.id) || [],
-			activityCategoryIds: ad.activityCategories.map(category => category.id) || [],
-			objectTypeCategoryIds: ad.objectTypeCategories.map(category => category.id) || [],
-			imageId: ad.imageId || undefined,
+			articleCategoryIds: ad.articleCategories?.map(category => category.id) || [],
+			activityCategoryIds: ad.activityCategories?.map(category => category.id) || [],
+			objectTypeCategoryIds: ad.objectTypeCategories?.map(category => category.id) || [],
+			imageId: ad.imageId ?? undefined,
 			newImageFile: null,
-			stateId: ad.state?.id || 1,
-			countyId: ad.county?.id || 1,
+			stateId: ad.state?.id || 3,
+			countyId: ad.county?.id || 0,
 			cityId: ad.city?.id || 0,
 			suburbId: ad.suburb?.id || 0,
 			retailStoreId: ad.retailStore?.id || 0,
@@ -175,7 +172,6 @@ const AdsList: React.FC<Props> = ({
 						onError: (err: any) => {
 							setError('Failed to upload image');
 							setLoading(false);
-							console.error('Image upload error:', err);
 							reject();
 						},
 					});
@@ -243,8 +239,8 @@ const AdsList: React.FC<Props> = ({
 					<AdItem
 						key={ad.id}
 						ad={ad}
-						onDeleteClick={() => handleDeleteClick(ad)}
-						onEditClick={() => handleEditClick(ad)}
+						onDeleteClick={() => handleDeleteClick(ad as AdAdmin)}
+						onEditClick={() => handleEditClick(ad as AdAdmin)}
 						setIsModalOpen={setIsModalOpen}
 					/>
 				))}

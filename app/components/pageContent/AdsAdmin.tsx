@@ -98,7 +98,6 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 					uploadImage(imageUploadData, {
 						onSuccess: (response: any) => {
 							imageId = response?.data?.imageId;
-
 							if (imageId) {
 								resolve();
 							} else {
@@ -198,43 +197,6 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 		return true;
 	});
 
-	const transformedAds: AdAdmin[] = (ads || []).map(ad => ({
-		...ad,
-		id: typeof ad.id === 'number' ? ad.id : 0, // Ensure id is always a number
-		retailStore: ad.retailStore || {
-			name: '',
-			id: 0,
-			phoneNumber: null,
-			email: null,
-			website: null,
-			viewCount: 0,
-			isPhoneConfirmed: false,
-			isEmailConfirmed: false,
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			stateId: 0,
-			countyId: 0,
-			cityId: 0,
-			suburbId: 0,
-			locationId: null,
-			coordinatesId: null,
-			address: '',
-		},
-		Image:
-			ad.imageId && ad.image ? { id: ad.image.id, name: ad.image.name, url: ad.image.url } : null,
-		description: ad.description,
-		viewCount: ad.viewCount || 0,
-		state: ad.state ? ad.state : { id: ad.stateId, translation: '' },
-		county: ad.county ? ad.county : { id: ad.countyId, translation: '' },
-		city: ad.cityId ? { id: ad.cityId, translation: '' } : null,
-		suburb: ad.suburbId ? { id: ad.suburbId, translation: '' } : null,
-		articleCategories: ad.articleCategories.map((category: any) => category),
-		activityCategories: ad.activityCategories.map((category: any) => category),
-		objectTypeCategories: ad.objectTypeCategories.map((category: any) => category),
-		validTo: ad.validTo,
-		adType: ad.adType as AdType,
-	}));
-
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}
@@ -274,7 +236,7 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 				</CollapsibleFormContainer>
 			</div>
 			<AdsList
-				ads={transformedAds}
+				ads={ads || []}
 				successMessage={successMessage}
 				setSuccessMessage={setSuccessMessage}
 				setError={setError}
@@ -282,7 +244,6 @@ const AdsAdmin: React.FC<Props> = ({ title }) => {
 				articleCategories={articleCategories || []}
 				activityCategories={activityCategories || []}
 				objectTypeCategories={objectTypeCategories || []}
-				retails={retails || []}
 				imagesData={imagesData || []}
 				filteredCounties={filteredCounties}
 				filteredCities={filteredCities}

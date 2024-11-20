@@ -107,9 +107,9 @@ export async function POST(req: NextRequest) {
 
 		if (retailStoreId) data.RetailStore = { connect: { id: retailStoreId } };
 
-		if (stateId) data.stateId = { connect: { id: stateId } };
-		if (countyId) data.countyId = { connect: { id: countyId } };
-		if (cityId) data.cityId = { connect: { id: cityId } };
+		if (stateId) data.state = { connect: { id: stateId } };
+		if (countyId) data.county = { connect: { id: countyId } };
+		if (cityId) data.city = { connect: { id: cityId } };
 		if (suburbId) data.suburb = { connect: { id: suburbId } };
 
 		const advertising = await prisma.advertising.create({ data });
@@ -152,7 +152,9 @@ export async function GET() {
 						id: true,
 						label: {
 							select: {
-								translations: true,
+								translations: {
+									where: { languageId: 1 }, // Uzimamo prevod za `languageId: 1`
+								},
 							},
 						},
 					},
@@ -162,7 +164,9 @@ export async function GET() {
 						id: true,
 						label: {
 							select: {
-								translations: true,
+								translations: {
+									where: { languageId: 1 },
+								},
 							},
 						},
 					},
@@ -220,6 +224,7 @@ export async function GET() {
 			},
 		});
 		const normalizedResponse = convertKeysToLowerCase(advertisings);
+		console.log('normalizedResponse', normalizedResponse);
 		return NextResponse.json(normalizedResponse, { status: 200 });
 	} catch (error) {
 		console.error('Error fetching advertisings:', error);

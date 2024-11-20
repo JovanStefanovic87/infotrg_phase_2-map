@@ -8,7 +8,7 @@ import H3Title from '../text/H3Title';
 import PopoverButtonDefault from '../popovers/PopoverButtonDefault';
 import PopoverPanelList from '../popovers/PopoverPanelList';
 import PopoverContainerBackdrop from '../popovers/PopoverContainerBackdrop';
-import { AdAdmin } from '@/utils/helpers/types';
+import { AdAdmin, AdFormState } from '@/utils/helpers/types';
 import { reverseAdTypeOptions } from '@/utils/helpers/varStrings';
 import {
 	getCategoryTranslations,
@@ -17,21 +17,21 @@ import {
 import { useExtendAd } from '@/app/helpers/api/ads';
 
 interface Props {
-	ad: AdAdmin;
+	ad: AdFormState;
 	onDeleteClick: () => void;
-	onEditClick: (ad: AdAdmin) => void;
+	onEditClick: (ad: AdFormState) => void;
 	setIsModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpen }) => {
 	const extendAdMutation = useExtendAd();
-	const state = ad.state?.label.translations[0].translation;
-	const county = ad.city?.label.translations[0].translation;
-	const city = ad.city?.label.translations[0].translation;
-	const suburb = ad.suburb?.label.translations[0].translation;
+	/* const state = ad.state?.label?.translations?.[0]?.translation || 'N/A'; */
+	const county = ad.county?.label?.translations?.[0]?.translation || 'N/A';
+	const city = ad.city?.label?.translations?.[0]?.translation || 'N/A';
+	const suburb = ad.suburb?.label?.translations?.[0]?.translation || 'N/A';
 
 	const shortLocation = `${county}${suburb ? `, ${suburb}` : ''}`;
-	const fullLocation = `${state} - ${county}${
+	const fullLocation = ` ${county}${
 		city || suburb ? ` (${city ? city : ''}${suburb ? `, ${suburb}` : ''})` : ''
 	}`;
 
@@ -52,16 +52,30 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpe
 				: new Date(currentDate.setDate(currentDate.getDate() + 31));
 
 		try {
-			await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: newValidTo } });
+			if (ad.id !== undefined) {
+				await extendAdMutation.mutateAsync({
+					adId: Number(ad.id),
+					updatedData: { validTo: newValidTo },
+				});
+			} else {
+				console.error('Ad ID is undefined');
+			}
 		} catch (error) {
 			console.error('Error extending ad:', error);
 		}
 	};
-
+	/* console.log('ad', ad); */
 	const handleStopAd = async () => {
 		const currentDate = new Date();
 		try {
-			await extendAdMutation.mutateAsync({ adId: ad.id, updatedData: { validTo: currentDate } });
+			if (ad.id !== undefined) {
+				await extendAdMutation.mutateAsync({
+					adId: Number(ad.id),
+					updatedData: { validTo: currentDate },
+				});
+			} else {
+				console.error('Ad ID is undefined');
+			}
 		} catch (error) {
 			console.error('Error stopping ad:', error);
 		}
@@ -73,7 +87,7 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpe
 
 			<div className='flex justify-between items-center'>
 				<div className='text-center p-4 mb-4 bg-yellowLighter rounded-3xl shadow-md w-full'>
-					<H3Title text={ad.retailStore.name} />
+					<H3Title text={ad.retailStore?.name || 'N/A'} />
 				</div>
 			</div>
 
@@ -104,10 +118,14 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpe
 
 				<PopoverContainerBackdrop>
 					<PopoverButtonDefault>
-						<TextList label='Lokacija' value={shortLocation} />
+						<TextList label='Lokacija' value={shortLocation || 'Lokacija nije dostupna'} />
 					</PopoverButtonDefault>
-					<PopoverPanelList list={[fullLocation]} label='Puna Lokacija' />
+					<PopoverPanelList
+						list={[fullLocation || 'Puna lokacija nije dostupna']}
+						label='Puna Lokacija'
+					/>
 				</PopoverContainerBackdrop>
+
 				{ad.articleCategories.length && (
 					<PopoverContainerBackdrop>
 						<PopoverButtonDefault>
