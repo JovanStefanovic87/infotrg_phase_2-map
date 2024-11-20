@@ -17,6 +17,7 @@ import axios from 'axios';
 interface CategoryListProps {
 	categories: CategoryWithTranslations[];
 	icons: Icon[];
+	setIcons: React.Dispatch<React.SetStateAction<Icon[]>>;
 	currentIcon: { iconId: number | null; iconUrl: string | null };
 	setCurrentIcon: (icon: { iconId: number | null; iconUrl: string | null }) => void;
 	languages: Language[];
@@ -38,6 +39,7 @@ interface CategoryListProps {
 const CategoryList: React.FC<CategoryListProps> = ({
 	categories,
 	icons,
+	setIcons,
 	currentIcon,
 	setCurrentIcon,
 	languages,
@@ -215,13 +217,12 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					const formData = new FormData();
 					formData.append('icon', newIcon);
 					formData.append('directory', 'articles');
-
-					const { data } = await fetch('/api/icons', {
-						method: 'POST',
-						body: formData,
-					}).then(res => res.json());
-
-					iconId = data.iconId; // Dohvatanje `iconId` iz odgovora
+					const { data } = await axios.post('/api/icons', formData, {
+						headers: { 'Content-Type': 'multipart/form-data' },
+					});
+					iconId = data.iconId;
+					if (!iconId) throw new Error('Neuspešno kreiranje ikonice.');
+					/* setIcons(prevIcons => [...prevIcons, { id: iconId, url: data.iconUrl }]); */
 				}
 
 				// Pripremite payload za API

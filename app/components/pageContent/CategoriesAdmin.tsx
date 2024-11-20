@@ -331,6 +331,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 					<CategoryList
 						categories={categories}
 						icons={icons}
+						setIcons={setIcons}
 						currentIcon={currentIcon}
 						setCurrentIcon={setCurrentIcon}
 						languages={languages}
