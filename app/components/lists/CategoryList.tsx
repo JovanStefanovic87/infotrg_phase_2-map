@@ -212,7 +212,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			try {
 				let iconId = currentIcon.iconId;
 
-				// Ako je nova ikonica postavljena, prvo je uploadujte na server
 				if (newIcon) {
 					const formData = new FormData();
 					formData.append('icon', newIcon);
@@ -222,7 +221,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 					});
 					iconId = data.iconId;
 					if (!iconId) throw new Error('Neuspešno kreiranje ikonice.');
-					/* setIcons(prevIcons => [...prevIcons, { id: iconId, url: data.iconUrl }]); */
 				}
 
 				// Pripremite payload za API
