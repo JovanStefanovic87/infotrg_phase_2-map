@@ -32,7 +32,6 @@ const fetchAds = async (): Promise<AdFormState[]> => {
 	if (!response || !Array.isArray(response)) {
 		throw new Error('Invalid data received from API');
 	}
-	/* console.log('response', response); */
 
 	return response;
 };

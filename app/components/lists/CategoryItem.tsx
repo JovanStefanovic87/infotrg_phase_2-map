@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import { CategoryWithTranslations, Icon, Category, TranslationUpdate } from '@/utils/helpers/types';
@@ -52,9 +52,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 	setSuccessMessage,
 	setLoading,
 }) => {
-	const [relatedCategories, setRelatedCategories] = useState<CategoryWithTranslations[]>([]);
-	const [displayRelatedCategories, setDisplayRelatedCategories] = useState<Category[]>([]);
-
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
 
 	/* const fetchRelatedCategoriesForEdit = useCallback(async () => {
@@ -105,35 +102,30 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		setLoading(true);
 
 		try {
-			// Dohvati kategoriju sa svim podacima
 			const response = await axios.get(`/api/categoriesWithTranslations/${category.id}`);
 			const categoryData = response.data;
 
-			// Postavljanje trenutne kategorije
 			setCurrentEditCategory(categoryData);
 
-			// Postavljanje ikonice
 			setCurrentIcon({
 				iconId: categoryData.icon?.id || null,
 				iconUrl: categoryData.icon?.url || null,
 			});
 
-			// Postavljanje natkategorija i povezanih kategorija
 			setParentIds(
 				categoryData.parents
-					.filter((parent: Category) => parent.id !== categoryData.id) // Isključi trenutnu kategoriju
-					.map((parent: Category) => parent.id) // Uzmite samo ID-ove roditelja
+					.filter((parent: Category) => parent.id !== categoryData.id)
+					.map((parent: Category) => parent.id)
 			);
 
 			setRelatedIds(
 				categoryData.relatedIds?.filter(
 					(relatedId: number) =>
-						relatedId !== categoryData.id && // Isključi trenutnu kategoriju
-						!categoryData.children.some((child: Category) => child.id === relatedId) // Isključi child-ove
+						relatedId !== categoryData.id &&
+						!categoryData.children.some((child: Category) => child.id === relatedId)
 				) || []
 			);
 
-			// Postavljanje prevoda
 			const translations = categoryData.label.translations.map(
 				(t: { languageId: number; translation: string; description: string; synonyms: any[] }) => ({
 					languageId: t.languageId,

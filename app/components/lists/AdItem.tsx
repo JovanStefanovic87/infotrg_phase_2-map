@@ -64,7 +64,7 @@ const AdItem: React.FC<Props> = ({ ad, onDeleteClick, onEditClick, setIsModalOpe
 			console.error('Error extending ad:', error);
 		}
 	};
-	/* console.log('ad', ad); */
+
 	const handleStopAd = async () => {
 		const currentDate = new Date();
 		try {

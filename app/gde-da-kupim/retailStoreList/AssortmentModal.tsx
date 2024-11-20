@@ -17,8 +17,6 @@ const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose }
 
 	if (!isOpen || !store) return null;
 
-	console.log('categories', categories);
-
 	// Funkcija za računanje Levenshteinove distance između dve reči
 	const searchCategoriesRecursive = (
 		categories: CategoryWithSynonyms[],

@@ -57,8 +57,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 		new Set()
 	);
 
-	console.log('initial', initialData);
-
 	const toggleCategoryExpansion = (id: number) => {
 		setManuallyExpandedCategories(prev => {
 			const updated = new Set(prev);

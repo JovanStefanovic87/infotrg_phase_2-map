@@ -11,6 +11,7 @@ import {
 	CategoryWithTranslations,
 	Language,
 	TranslationUpdate,
+	relatedCategory,
 } from '../../../utils/helpers/types';
 import UploadNewIconOnEditButton from '../buttons/UploadNewIconOnEditButton';
 import LabelInputDefault from '../input/LabelInputDefault';
@@ -46,42 +47,16 @@ const EditCategoryForm: React.FC<Props> = ({
 	currentIcon,
 	newIcon,
 	languages,
-	newTranslations,
 	handleFileChange,
 	setNewTranslations,
 	parentIds,
 	categories,
-	translations,
-	setParentIds,
 	filterCategoriesForSelect,
 	setIsIconPickerOpen,
 	handleSubmitEdit,
-	relatedIds,
-	setRelatedIds,
 	currentEditCategory,
 	setCurrentEditCategory,
 }) => {
-	const handleTranslationChange = (languageId: number, translation: string) => {
-		setNewTranslations(prevTranslations =>
-			prevTranslations.map(t => (t.languageId === languageId ? { ...t, translation } : t))
-		);
-	};
-
-	const handleDescriptionChange = (languageId: number, description: string) => {
-		setNewTranslations(prevTranslations =>
-			prevTranslations.map(t => (t.languageId === languageId ? { ...t, description } : t))
-		);
-	};
-
-	const handleSynonymsChange = (languageId: number, synonyms: string) => {
-		const synonymsArray = synonyms.split(',').map(s => s.trim());
-		setNewTranslations(prevTranslations =>
-			prevTranslations.map(t =>
-				t.languageId === languageId ? { ...t, synonyms: synonymsArray } : t
-			)
-		);
-	};
-
 	const flattenCategories = (nestedCategories: Category[]) => {
 		return nestedCategories.reduce((acc, category) => {
 			acc.push(category);
@@ -98,7 +73,7 @@ const EditCategoryForm: React.FC<Props> = ({
 				...(currentEditCategory.relatedCategories || []), // Provera undefined
 				...newRelatedIds
 					.map(id => flatCategories.find(cat => cat.labelId === id))
-					.filter((cat): cat is Category => Boolean(cat)), // Osigurava da nema undefined
+					.filter((cat): cat is relatedCategory => Boolean(cat)), // Osigurava da nema undefined
 			];
 
 			setCurrentEditCategory({
@@ -139,10 +114,10 @@ const EditCategoryForm: React.FC<Props> = ({
 	const updateParentIds = (newParentIds: number[]) => {
 		if (currentEditCategory) {
 			const updatedParents = [
-				...(currentEditCategory.parents || []), // Provera undefined
+				...(currentEditCategory.parents || []),
 				...newParentIds
 					.map(id => flatCategories.find(cat => cat.labelId === id))
-					.filter((cat): cat is Category => Boolean(cat)), // Osigurava da nema undefined
+					.filter((cat): cat is Category => Boolean(cat)),
 			];
 
 			setCurrentEditCategory({
@@ -151,7 +126,7 @@ const EditCategoryForm: React.FC<Props> = ({
 			});
 		}
 	};
-	console.log('currentEditCategory', currentEditCategory);
+
 	const flatCategories = flattenCategories(categories);
 	const uniqueParentIds = Array.from(new Set(parentIds));
 
@@ -168,7 +143,6 @@ const EditCategoryForm: React.FC<Props> = ({
 			})
 		);
 
-		// Proveri da li su prevodi stvarno promenjeni pre ažuriranja stanja
 		setNewTranslations(prev => {
 			const isSame = JSON.stringify(prev) === JSON.stringify(updatedTranslations);
 			return isSame ? prev : updatedTranslations;

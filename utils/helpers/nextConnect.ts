@@ -5,7 +5,6 @@ import { createEdgeRouter } from 'next-connect';
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
 router.use(async (request, event, next) => {
-	console.log(`${request.method} ${request.url}`);
 	return next();
 });
 

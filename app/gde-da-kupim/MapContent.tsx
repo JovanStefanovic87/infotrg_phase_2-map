@@ -79,13 +79,6 @@ const MapContent: React.FC = () => {
 	1;
 	const closeEditModal = () => setEditModalOpen(false);
 
-	/* const handleSaveSelection = (category: string, location: string) => {
-		setSelectedCategory(category);
-		setSelectedLocation(location);
-	}; */
-
-	console.log('retailStores', retailStores);
-
 	useEffect(() => {
 		if (mainCategoryData) {
 			setSelectedCategory({ id: mainCategoryData.id, name: mainCategoryData.name || '' });
@@ -321,7 +314,14 @@ const MapContent: React.FC = () => {
 					/>
 				)}
 				{relatedCategories.length > 0 && (
-					<RelatedCategories relatedCategories={relatedCategories} />
+					<RelatedCategories
+						relatedCategories={relatedCategories.map(category => ({
+							...category,
+							icon: category.icon || null,
+							parents: category.parents || [],
+							children: category.children || [],
+						}))}
+					/>
 				)}
 			</div>
 		</div>

@@ -224,7 +224,6 @@ export async function GET() {
 			},
 		});
 		const normalizedResponse = convertKeysToLowerCase(advertisings);
-		console.log('normalizedResponse', normalizedResponse);
 		return NextResponse.json(normalizedResponse, { status: 200 });
 	} catch (error) {
 		console.error('Error fetching advertisings:', error);

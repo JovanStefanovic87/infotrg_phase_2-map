@@ -249,8 +249,6 @@ const CategoryList: React.FC<CategoryListProps> = ({
 						labelId: currentEditCategory.labelId, // ID labele kategorije
 					};
 
-					console.log('Payload:', payload); // Debugging za proveru podataka
-
 					// Pošaljite podatke API-ju
 					await axios.put(`/api/categories/${currentEditCategory.id}`, payload);
 				}

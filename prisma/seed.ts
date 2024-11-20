@@ -16,7 +16,6 @@ const createAdminUser = async () => {
 
 const main = async () => {
 	await createAdminUser();
-	console.log('Admin user created');
 };
 
 main()

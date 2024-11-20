@@ -100,7 +100,7 @@ const AdsList: React.FC<Props> = ({
 			adType: value,
 		}));
 	};
-	console.log('ads', ads);
+
 	const handleEditClick = (ad: AdAdmin) => {
 		setCurrentAd(ad);
 
