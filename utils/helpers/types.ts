@@ -190,6 +190,9 @@ export interface Language {
 }
 
 export interface relatedCategory {
+	icon: null;
+	parents: never[];
+	children: never[];
 	id: number;
 	name: string;
 	iconId: number | null;
@@ -203,21 +206,30 @@ export interface Category {
 	iconId: number | null;
 	labelId: number;
 	name: string;
-	parents: Category[];
+	parents: SimplifiedCategory[];
 	relatedIds?: number[];
 	relatedCategories?: relatedCategory[];
 	children: Category[];
+}
+
+export interface SimplifiedCategory {
+	id: number;
+	name: string;
+	iconId: number | null;
+	labelId: number;
 }
 
 export interface TranslationSimple {
 	name: string;
 	languageId: number;
 	labelId: number;
-	caegoryId: number;
+	categoryId: number;
 }
 
 export interface CategoryWithTranslations extends Category {
 	translations: TranslationSimple[];
+	advertisingId?: number | null;
+	createdAt?: Date;
 }
 
 export interface Synonym {
@@ -300,7 +312,7 @@ export interface LocationBase {
 		id: number;
 		name: string;
 	};
-	createdAt: string;
+	createdAt: Date;
 	icon?: Icon; // Optional field for an icon
 }
 
@@ -327,7 +339,7 @@ export interface Suburb extends LocationBase {
 	name: string;
 	address: string;
 	cityId: number;
-	createdAt: string;
+	createdAt: Date;
 	iconId?: number;
 	icon?: Icon;
 	labelId: number;
@@ -381,7 +393,7 @@ export interface GetRetailStoreApi {
 	viewCount: number;
 	isPhoneConfirmed: boolean;
 	isEmailConfirmed: boolean;
-	createdAt: string;
+	createdAt: Date;
 	updatedAt: string;
 
 	// Direct top-level IDs
@@ -536,7 +548,7 @@ export interface AdAdmin {
 	articleCategories: Category[];
 	activityCategories: Category[];
 	objectTypeCategories: Category[];
-	validTo: string | number | Date;
+	validTo: string | number;
 }
 
 export interface AdFormState {

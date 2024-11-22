@@ -1,10 +1,11 @@
+import { SimplifiedCategory } from '@/utils/helpers/types';
 import CustomModalAdmin from './CustomModalAdmin';
 
 interface Category {
 	id: number;
 	name: string;
 	children: Category[];
-	parents?: Category[];
+	parents?: SimplifiedCategory[];
 }
 
 interface CategoryModalProps {
@@ -33,9 +34,15 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 		let parents: Category[] = [];
 
 		if (category.parents && category.parents.length > 0) {
-			category.parents.forEach((parent: Category) => {
-				parents.push(parent);
-				parents = [...parents, ...findAllParents(parent, allCategories)];
+			category.parents.forEach((parent: SimplifiedCategory) => {
+				// Dynamically map SimplifiedCategory to Category
+				const parentAsCategory: Category = {
+					...parent,
+					children: [], // Add an empty children array
+					parents: [], // Optionally set this if needed for recursion
+				};
+				parents.push(parentAsCategory);
+				parents = [...parents, ...findAllParents(parentAsCategory, allCategories)];
 			});
 		}
 

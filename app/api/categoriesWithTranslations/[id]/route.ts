@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 
+const serializeData = (data: any) => {
+	return JSON.parse(JSON.stringify(data));
+};
+
 export async function GET(request: Request, { params }: { params: { id: string } }) {
 	const id = parseInt(params.id, 10);
 	if (isNaN(id)) {
@@ -94,7 +98,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 				})) || null;
 
 		// Vraćanje odgovora
-		return NextResponse.json({
+		const serializedResponse = serializeData({
 			id: category.id,
 			labelId: category.labelId,
 			name: category.label.translations.find(t => t.languageId === 1)?.translation || 'Unknown',
@@ -141,6 +145,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
 				})),
 			},
 		});
+
+		return NextResponse.json(serializedResponse);
 	} catch (error) {
 		console.error('Error fetching category:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

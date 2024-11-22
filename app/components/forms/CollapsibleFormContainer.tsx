@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react';
 import FormDefaultButton from '../buttons/FormDefaultButton';
 import CategoryModal from '../modals/CategoryModal';
 import H3Title from '../text/H3Title';
+import { SimplifiedCategory } from '@/utils/helpers/types';
 
 interface Category {
 	id: number;
 	name: string;
 	children: Category[];
-	parents?: Category[];
+	parents?: SimplifiedCategory[];
 }
 
 interface Props {

@@ -6,7 +6,7 @@ import {
 	putData,
 	getWithParamsWithNull,
 } from '@/app/helpers/api/common/base';
-import { Category } from '@/utils/helpers/types';
+import { Category, CategoryWithTranslations } from '@/utils/helpers/types';
 
 export const fetchCategoriesByPrefixAndLanguage = async (prefix: string, languageId: number) => {
 	const response = await fetch(
@@ -31,7 +31,7 @@ export const useCategoriesByPrefixAndLanguage = ({ prefix, languageId }: UseCate
 	});
 };
 
-const fetchCategories = async (prefix: string): Promise<Category[]> => {
+const fetchCategories = async (prefix: string): Promise<CategoryWithTranslations[]> => {
 	return await getWithParams(`/api/categories`, { prefix });
 };
 

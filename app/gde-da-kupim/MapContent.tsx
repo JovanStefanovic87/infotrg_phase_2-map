@@ -15,6 +15,7 @@ import {
 	LocationDataForMap,
 	CategoryDataForMap,
 	RawCategoryData,
+	SimplifiedCategory,
 } from '@/utils/helpers/types';
 import { prefixAticleCategory, location } from '@/app/api/prefix';
 import RetailStoreCard from './retailStoreList/RetailStoreCard';
@@ -157,7 +158,7 @@ const MapContent: React.FC = () => {
 		}));
 
 		const directSubcategories = formattedCategories.filter((category: Category) =>
-			category.parents.some((parent: Category) => parent.id === categoryId)
+			category.parents.some((parent: SimplifiedCategory) => parent.id === categoryId)
 		);
 
 		if (directSubcategories.length > 0) {

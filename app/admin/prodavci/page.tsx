@@ -7,6 +7,10 @@ import {
 	prefixObjectTypeCategory,
 } from '@/app/api/prefix';
 
+const serializeData = (data: any) => {
+	return JSON.parse(JSON.stringify(data));
+};
+
 const CategoriesAdminPage = async () => {
 	const queryClient = new QueryClient();
 	const languageId = 1;
@@ -18,13 +22,17 @@ const CategoriesAdminPage = async () => {
 			<RetailsAdmin
 				title='PRODAVCI'
 				initialData={{
-					locations: queryClient.getQueryData(['locations', '']) || [],
-					articleCategories: queryClient.getQueryData(['categories', 'article', languageId]) || [],
-					activityCategories:
-						queryClient.getQueryData(['categories', 'activity', languageId]) || [],
-					objectTypeCategories:
-						queryClient.getQueryData(['categories', 'objectType', languageId]) || [],
-					retails: queryClient.getQueryData(['retailStores', languageId]) || [],
+					locations: serializeData(queryClient.getQueryData(['locations', '']) || []),
+					articleCategories: serializeData(
+						queryClient.getQueryData(['categories', 'article', languageId]) || []
+					),
+					activityCategories: serializeData(
+						queryClient.getQueryData(['categories', 'activity', languageId]) || []
+					),
+					objectTypeCategories: serializeData(
+						queryClient.getQueryData(['categories', 'objectType', languageId]) || []
+					),
+					retails: serializeData(queryClient.getQueryData(['retailStores', languageId]) || []),
 				}}
 			/>
 		</HydrationBoundary>

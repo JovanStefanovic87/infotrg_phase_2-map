@@ -14,33 +14,25 @@ import apiClient from '@/utils/helpers/apiClient';
 import ImagePickerForm from '../forms/ImagePickerForm';
 import DynamicPageContainer from '../containers/DynamicPageContainer';
 import { handleError } from '@/utils/helpers/universalFunctions';
+import { useCategories } from '@/app/helpers/api/category';
+import { useFetchLanguages } from '@/app/helpers/api/language';
 
 interface Props {
 	prefix: string;
 	title: string;
-	initialData?: {
-		categories: CategoryWithTranslations[];
-		languages: Language[];
-		icons: Icon[];
-	};
 }
 
-const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
+const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const [parentIds, setParentIds] = useState<number[]>([]);
 	const [languageId, setLanguageId] = useState<number>(1);
 	const [name, setName] = useState<string>('');
 	const [error, setError] = useState<string>('');
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [categories, setCategories] = useState<CategoryWithTranslations[]>(
-		initialData?.categories || []
-	);
-	const [languages, setLanguages] = useState<Language[]>(initialData?.languages || []);
-	const [translations, setTranslations] = useState<TranslationSimple[]>([]);
-	const [icons, setIcons] = useState<Icon[]>(initialData?.icons || []);
+	const [icons, setIcons] = useState<Icon[]>([]);
 	const [icon, setIcon] = useState<File | null>(null);
 	const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
 	const [relatedIds, setRelatedIds] = useState<number[]>([]);
-	const [loading, setLoading] = useState<boolean>(!initialData);
+	const [loading, setLoading] = useState<boolean>(false);
 	const fileUploadButtonRef = useRef<{ resetFileName?: () => void }>({});
 	const [currentIcon, setCurrentIcon] = useState<CurrentIcon>({ iconId: null, iconUrl: null });
 	const [translationValues, setTranslationValues] = useState<{
@@ -50,12 +42,34 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 	const [manuallyExpandedCategories, setManuallyExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
-	const [filteredCategories, setFilteredCategories] = useState<CategoryWithTranslations[]>(
-		initialData?.categories || []
-	);
+	const [filteredCategories, setFilteredCategories] = useState<CategoryWithTranslations[]>([]);
 	const [initialExpandedCategories, setInitialExpandedCategories] = useState<Set<number>>(
 		new Set()
 	);
+
+	const {
+		data: categories = [],
+		isLoading: isCategoriesLoading,
+		error: categoriesError,
+	} = useCategories(prefix);
+	const {
+		data: languages,
+		isLoading: isLanguagesLoading,
+		error: LangagesError,
+	} = useFetchLanguages();
+
+	useEffect(() => {
+		const fetchIcons = async () => {
+			try {
+				const response = await axios.get('/api/icons?directory=articles'); // Assuming 'articles' is the directory
+				setIcons(response.data);
+			} catch (err) {
+				handleError(err, setError, setSuccessMessage);
+			}
+		};
+
+		fetchIcons();
+	}, []);
 
 	const toggleCategoryExpansion = (id: number) => {
 		setManuallyExpandedCategories(prev => {
@@ -101,7 +115,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 			const [categoriesData] = await Promise.all([fetchCategories()]);
 
 			const sortedCategories = sortCategories(categoriesData);
-			setCategories(sortedCategories);
 			setFilteredCategories(sortedCategories);
 		} catch (err) {
 			handleError(err, setError, setSuccessMessage);
@@ -109,16 +122,6 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 			setLoading(false);
 		}
 	}, [languageId]);
-
-	useEffect(() => {
-		if (!initialData) {
-			refetchData();
-		} else {
-			const sortedCategories = sortCategories(initialData.categories || []);
-			setFilteredCategories(sortedCategories);
-			setCategories(sortedCategories);
-		}
-	}, [refetchData, initialData]);
 
 	/* useEffect(() => {
 		const fetchLanguagesData = async () => {
@@ -147,10 +150,13 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 	}, [languageId]); */
 
 	const resetTranslationValues = () => {
-		const resetValues = languages.reduce((acc, language) => {
-			acc[language.id] = ''; // Reset every language translation to an empty string
-			return acc;
-		}, {} as { [key: number]: string });
+		const resetValues = languages.reduce(
+			(acc: { [x: string]: string }, language: { id: string | number }) => {
+				acc[language.id] = ''; // Reset every language translation to an empty string
+				return acc;
+			},
+			{} as { [key: number]: string }
+		);
 		setTranslationValues(resetValues);
 	};
 
@@ -199,7 +205,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 
 			if (!newLabelId) throw new Error('Failed to create label');
 
-			const translations = languages.map(language => ({
+			const translations = languages.map((language: { id: number }) => ({
 				labelId: newLabelId,
 				languageId: language.id,
 				translation: language.id === 1 ? name : translationValues[language.id] || '',
@@ -277,7 +283,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 					labelId: category.labelId,
 					name: `${parentPrefix}${translation?.name || category.name}`,
 					languageId: languageId,
-					caegoryId: category.id,
+					categoryId: category.id,
 				});
 				if (category.children && category.children.length > 0) {
 					traverseCategories(
@@ -292,7 +298,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 		return options;
 	};
 
-	const translationOptions = generateTranslationOptions(categories, 1);
+	const translationOptions = categories ? generateTranslationOptions(categories, 1) : [];
 
 	const sortCategories = (categories: CategoryWithTranslations[]): CategoryWithTranslations[] => {
 		return categories
@@ -302,6 +308,10 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title, initialData }) => {
 			}))
 			.sort((a, b) => a.name.localeCompare(b.name, 'sr', { sensitivity: 'base' }));
 	};
+
+	if (isCategoriesLoading || isLanguagesLoading) {
+		return <p>Loading...</p>;
+	}
 
 	return (
 		<DynamicPageContainer

@@ -9,6 +9,29 @@ export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
+const sanitizeIconData = (icons: any[]) => {
+	return icons.map(icon => ({
+		...icon,
+		createdAt: icon.createdAt ? icon.createdAt.toISOString() : null,
+	}));
+};
+
+// Validate directory parameter to ensure it is valid
+function validateIconData(icons: any[]): string[] {
+	const errors: string[] = [];
+
+	icons.forEach((icon, index) => {
+		if (typeof icon.id !== 'number') errors.push(`icons[${index}].id is not a number`);
+		if (typeof icon.name !== 'string') errors.push(`icons[${index}].name is not a string`);
+		if (typeof icon.url !== 'string') errors.push(`icons[${index}].url is not a string`);
+		if (typeof icon.createdAt !== 'string' || !icon.createdAt) {
+			errors.push(`icons[${index}].createdAt is not a valid string`);
+		}
+	});
+
+	return errors;
+}
+
 // Handle file upload, resizing if necessary, and saving to the database
 const uploadFile = async (
 	file: Blob,
@@ -67,16 +90,25 @@ export async function GET(request: NextRequest) {
 		const { searchParams } = new URL(request.url);
 		const directory = searchParams.get('directory');
 
-		// Fetch icons only from specified directory
+		// Validate the 'directory' parameter
+
+		// Fetch icons only from the specified directory
 		const icons = await prisma.icon.findMany({
 			where: {
 				url: {
-					contains: `/icons/${directory}`,
+					contains: `/icons/${directory}`, // Search for icons in the specific directory
 				},
 			},
 		});
 
-		return NextResponse.json(icons);
+		// Sanitize icons to ensure createdAt is a string
+		const sanitizedIcons = sanitizeIconData(icons);
+		const iconErrors = validateIconData(sanitizedIcons);
+		if (iconErrors.length > 0) {
+			return NextResponse.json({ error: iconErrors.join(', ') }, { status: 400 });
+		}
+		// Return sanitized icons
+		return NextResponse.json(sanitizedIcons);
 	} catch (error) {
 		console.error('Greška pri preuzimanju ikona:', error);
 		return NextResponse.json({ error: 'Neuspešno preuzimanje ikona' }, { status: 500 });

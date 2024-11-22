@@ -70,15 +70,29 @@ const EditCategoryForm: React.FC<Props> = ({
 	const updateRelatedIds = (newRelatedIds: number[]) => {
 		if (currentEditCategory) {
 			const updatedRelatedCategories = [
-				...(currentEditCategory.relatedCategories || []), // Provera undefined
+				...(currentEditCategory.relatedCategories || []), // Postojeće `relatedCategories`
 				...newRelatedIds
-					.map(id => flatCategories.find(cat => cat.labelId === id))
-					.filter((cat): cat is relatedCategory => Boolean(cat)), // Osigurava da nema undefined
+					.map(id => {
+						const category = flatCategories.find(cat => cat.labelId === id);
+						// Pretvorite `Category` u `relatedCategory`
+						return category
+							? ({
+									id: category.id,
+									labelId: category.labelId,
+									name: category.name,
+									iconId: category.iconId,
+									icon: null, // `relatedCategory` nema `icon` podatke
+									parents: [], // `relatedCategory` nema roditelje
+									children: [], // `relatedCategory` nema decu
+							  } as relatedCategory)
+							: null;
+					})
+					.filter((cat): cat is relatedCategory => Boolean(cat)), // Uklonite `null` vrednosti
 			];
 
 			setCurrentEditCategory({
 				...currentEditCategory,
-				relatedCategories: [...new Set(updatedRelatedCategories)],
+				relatedCategories: [...new Set(updatedRelatedCategories)], // Uklanjanje duplikata
 			});
 		}
 	};

@@ -15,9 +15,13 @@ async function fetchWithNoCache<T>(url: string, params: Record<string, any>) {
 		cache: 'no-store', // Prevent caching
 	});
 	if (!response.ok) {
+		console.error(`Fetch error for ${url}:`, response.status);
 		throw new Error(`Error fetching data: ${response.statusText}`);
 	}
-	return response.json() as Promise<T>;
+	const data = await response.json();
+	const sanitizedData = JSON.parse(JSON.stringify(data));
+
+	return sanitizedData as T;
 }
 
 // Prefetch query function with caching options
@@ -36,13 +40,16 @@ export const prefetchQueryFunction = async <T>({
 				const queryParams = new URLSearchParams(params).toString();
 				const response = await fetch(`${url}?${queryParams}`, { cache: 'no-store' });
 				if (!response.ok) {
+					console.error(`Prefetch error for ${url}:`, response.status);
 					throw new Error(`Error fetching data: ${response.statusText}`);
 				}
-				return response.json() as Promise<T>;
+				const data = await response.json();
+				const sanitizedData = JSON.parse(JSON.stringify(data));
+
+				return sanitizedData as T;
 			},
 		});
 	} else {
-		// No caching
 		return fetchWithNoCache<T>(url, params);
 	}
 };

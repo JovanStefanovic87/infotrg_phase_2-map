@@ -9,12 +9,13 @@ import { retailInit } from '@/utils/helpers/initialStates';
 import FormDefaultButton from '../buttons/FormDefaultButton';
 import CategoryModal from '../modals/CategoryModal';
 import ConfirmationModal from '../modals/systemModals/ConfirmationModal';
+import { SimplifiedCategory } from '@/utils/helpers/types';
 
 interface Category {
 	id: number;
 	name: string;
 	children: Category[];
-	parents?: Category[];
+	parents?: SimplifiedCategory[];
 }
 
 interface Props {
@@ -195,9 +196,15 @@ const RetailStoreList: React.FC<Props> = ({
 		let parents: Category[] = [];
 
 		if (category.parents && category.parents.length > 0) {
-			category.parents.forEach((parent: Category) => {
-				parents.push(parent);
-				parents = [...parents, ...findAllParents(parent, allCategories)];
+			category.parents.forEach((parent: SimplifiedCategory) => {
+				// Convert SimplifiedCategory to Category
+				const parentAsCategory: Category = {
+					...parent,
+					children: [], // Add empty children
+					parents: [], // Prevent further recursion if unnecessary
+				};
+				parents.push(parentAsCategory);
+				parents = [...parents, ...findAllParents(parentAsCategory, allCategories)];
 			});
 		}
 

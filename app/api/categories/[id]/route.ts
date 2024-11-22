@@ -3,6 +3,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { Category } from '@/utils/helpers/types';
 
+const serializeData = (data: any) => {
+	return JSON.parse(JSON.stringify(data));
+};
+
 const getCategoryTranslation = async (labelId: number, languageId: number = 1) => {
 	const translation = await prisma.translation.findFirst({
 		where: { labelId, languageId },
@@ -133,7 +137,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 			icon: undefined,
 		};
 
-		return NextResponse.json(transformedCategory);
+		return serializeData(NextResponse.json(transformedCategory));
 	} catch (error) {
 		console.error('Error fetching category:', error);
 		return NextResponse.json({ error: 'Error fetching category' }, { status: 500 });
@@ -143,6 +147,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
 	const { id } = params;
 
+	// Validate if ID is valid
 	if (!id || isNaN(Number(id))) {
 		return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
 	}
@@ -150,62 +155,68 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 	try {
 		const categoryId = Number(id);
 
+		// Function to delete category and related data
 		const deleteCategoryAndRelatedData = async (id: number) => {
-			// Recursively find and delete subcategories
-			const subcategories = await prisma.parentCategory.findMany({
-				where: { parentId: id },
-				select: { childId: true },
-			});
-
-			// Recursively delete subcategories
-			for (const subcategory of subcategories) {
-				await deleteCategoryAndRelatedData(subcategory.childId);
-			}
-
-			// Find the label associated with the category
-			const category = await prisma.category.findUnique({
-				where: { id },
-				select: { labelId: true },
-			});
-
-			// Delete the category itself
-			await prisma.category.delete({
-				where: { id },
-			});
-
-			// Delete the related categories for this category
-			await prisma.relatedCategory.deleteMany({
-				where: {
-					OR: [
-						{ categoryId: id }, // Delete where the category is the main category
-						{ relatedId: id }, // Delete where the category is the related one
-					],
-				},
-			});
-
-			if (category?.labelId) {
-				// Delete the synonyms associated with the label's translations
-				const translations = await prisma.translation.findMany({
-					where: { labelId: category.labelId },
-					select: { id: true },
+			try {
+				// Recursively find and delete subcategories
+				const subcategories = await prisma.parentCategory.findMany({
+					where: { parentId: id },
+					select: { childId: true },
 				});
 
-				// Delete all synonyms for the translations
-				for (const translation of translations) {
-					await prisma.synonym.deleteMany({
-						where: { translationId: translation.id },
-					});
+				// Recursively delete subcategories
+				for (const subcategory of subcategories) {
+					await deleteCategoryAndRelatedData(subcategory.childId);
 				}
 
-				// Delete translations associated with the label
-				await prisma.translation.deleteMany({
-					where: { labelId: category.labelId },
+				// Find the label associated with the category
+				const category = await prisma.category.findUnique({
+					where: { id },
+					select: { labelId: true },
 				});
 
-				// Delete the label itself (once all categories that reference it are deleted)
-				await prisma.label.delete({
-					where: { id: category.labelId },
+				// Delete the category itself
+				await prisma.category.delete({
+					where: { id },
 				});
+
+				// Delete the related categories for this category
+				await prisma.relatedCategory.deleteMany({
+					where: {
+						OR: [
+							{ categoryId: id }, // Delete where the category is the main category
+							{ relatedId: id }, // Delete where the category is the related one
+						],
+					},
+				});
+
+				if (category?.labelId) {
+					// Delete the synonyms associated with the label's translations
+					const translations = await prisma.translation.findMany({
+						where: { labelId: category.labelId },
+						select: { id: true },
+					});
+
+					// Delete all synonyms for the translations
+					for (const translation of translations) {
+						await prisma.synonym.deleteMany({
+							where: { translationId: translation.id },
+						});
+					}
+
+					// Delete translations associated with the label
+					await prisma.translation.deleteMany({
+						where: { labelId: category.labelId },
+					});
+
+					// Delete the label itself (once all categories that reference it are deleted)
+					await prisma.label.delete({
+						where: { id: category.labelId },
+					});
+				}
+			} catch (error) {
+				console.error('Error during deletion of category and related data:', error);
+				throw new Error('Error during deletion of category and related data');
 			}
 		};
 
@@ -241,6 +252,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 		const body = await request.json();
 		const { parentIds, relatedIds, labelId, iconId, translations } = body;
 
+		// Validate input data
 		if (!Array.isArray(parentIds) || !Array.isArray(relatedIds)) {
 			return NextResponse.json(
 				{ error: 'parentIds and relatedIds should be arrays' },
@@ -260,6 +272,16 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return NextResponse.json({ error: 'Translations should be an array' }, { status: 400 });
 		}
 
+		// Ensure category exists
+		const category = await prisma.category.findUnique({
+			where: { id: Number(id) },
+		});
+
+		if (!category) {
+			return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+		}
+
+		// Update the category and related data
 		const updatedCategory = await prisma.$transaction(async prisma => {
 			const dataToUpdate: { labelId: number; iconId?: number | null } = { labelId };
 
@@ -304,7 +326,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 				});
 			}
 
-			// Handle translations
+			// Handle translations and synonyms
 			for (const translation of translations) {
 				const {
 					translationId,
@@ -343,7 +365,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 			return category;
 		});
 
-		return NextResponse.json(updatedCategory);
+		return NextResponse.json(updatedCategory, { status: 200 });
 	} catch (error) {
 		console.error('Error updating category:', error);
 		return NextResponse.json({ error: 'Error updating category' }, { status: 500 });

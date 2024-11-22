@@ -57,7 +57,7 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 	}));
 
 	const adjustedSelectedParents = selectedParents.map(parent => ({
-		categoryId: parent.caegoryId,
+		categoryId: parent.categoryId,
 		name: parent.name,
 		languageId: parent.languageId,
 		labelId: parent.labelId,
