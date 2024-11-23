@@ -51,6 +51,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		data: categories = [],
 		isLoading: isCategoriesLoading,
 		error: categoriesError,
+		refetch: refetchCategories,
 	} = useCategories(prefix);
 	const {
 		data: languages,
@@ -109,7 +110,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			url: `/api/categories?prefix=${prefix}`,
 		});
 
-	const refetchData = useCallback(async () => {
+	/* const refetchData = useCallback(async () => {
 		setLoading(true);
 		try {
 			const [categoriesData] = await Promise.all([fetchCategories()]);
@@ -121,7 +122,8 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 		} finally {
 			setLoading(false);
 		}
-	}, [languageId]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [languageId]); */
 
 	/* useEffect(() => {
 		const fetchLanguagesData = async () => {
@@ -198,6 +200,8 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 					headers: { 'Content-Type': 'multipart/form-data' },
 				});
 				iconId = data.iconId;
+				const response = await axios.get('/api/icons?directory=articles');
+				setIcons(response.data);
 			}
 
 			const { data: labelData } = await axios.post('/api/labels', { name, prefix });
@@ -220,11 +224,11 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 				iconId,
 				name,
 			});
-
+			await refetchCategories();
 			resetForm();
 			setSuccessMessage('Kategorija uspešno sačuvana.');
+
 			if (fileUploadButtonRef.current.resetFileName) fileUploadButtonRef.current.resetFileName();
-			await refetchData();
 		} catch (err) {
 			handleError(err, setError, setSuccessMessage);
 		}
@@ -245,7 +249,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 	const handleDeleteCategory = async (id: number) => {
 		try {
 			await axios.delete(`/api/categories/${id}`);
-			await refetchData();
+			/* await refetchData(); */
 		} catch (err) {
 			handleError(err, setError, setSuccessMessage);
 		}
@@ -346,7 +350,9 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 						setCurrentIcon={setCurrentIcon}
 						languages={languages}
 						languageId={languageId}
-						refetchCategories={refetchData}
+						refetchCategories={async () => {
+							await refetchCategories();
+						}}
 						expandedCategories={expandedCategories}
 						setExpandedCategories={setExpandedCategories}
 						manuallyExpandedCategories={manuallyExpandedCategories}

@@ -169,6 +169,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
 			setFilteredCategories(categories);
 			setExpandedCategories(new Set(initialExpandedCategories));
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [searchQuery, categories, languageId, initialExpandedCategories]);
 
 	const handleDelete = useCallback(
