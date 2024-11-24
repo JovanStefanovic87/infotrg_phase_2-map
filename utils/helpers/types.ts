@@ -190,9 +190,9 @@ export interface Language {
 }
 
 export interface relatedCategory {
-	icon: { id: number; name: string; url: string } | null; // Ako koristite objekat za ikonu
-	parents?: never[]; // Opciono svojstvo
-	children?: never[]; // Opciono svojstvo
+	icon: { id: number; name: string; url: string } | null;
+	parents?: never[]; // optional property
+	children?: never[]; // optional property
 	id: number;
 	name: string;
 	iconId: number | null;
