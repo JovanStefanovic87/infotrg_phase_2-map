@@ -4,10 +4,10 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 const createAdminUser = async () => {
-	const hashedPassword = await bcrypt.hash('5NuEiAkC9@)/', 10);
+	const hashedPassword = await bcrypt.hash('nekalozinka', 10);
 	await prisma.user.create({
 		data: {
-			email: 'suinfotrg@gmail.com',
+			email: 'dfgdgdg',
 			password: hashedPassword,
 			role: 'admin',
 		},
