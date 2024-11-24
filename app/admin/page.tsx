@@ -37,7 +37,7 @@ const AdminPage = () => {
 			</div>
 		);
 	}
-	console.log('session', session);
+
 	return (
 		<PageContainer>
 			<header className='bg-blue-600 text-white py-4 px-6 shadow-md'>

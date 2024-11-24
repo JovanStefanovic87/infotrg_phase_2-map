@@ -143,6 +143,7 @@ model RelatedCategory {
 model Icon {
   id        Int        @id @default(autoincrement())
   name      String
+  folder    String     @default("articles")
   url       String
   createdAt DateTime   @default(now())
   Category  Category[]
@@ -151,7 +152,7 @@ model Icon {
   City      City[]
   Suburb    Suburb[]
 
-  @@index([name])
+  @@unique([name, folder])
 }
 
 model Synonym {

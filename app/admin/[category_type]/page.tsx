@@ -7,6 +7,7 @@ import {
 	prefixObjectTypeCategory,
 } from '@/app/api/prefix';
 import PageContainer from '@/app/components/containers/PageContainer';
+import CategoriesAutoInput from '@/app/components/autoInputFromExcel/categoriesAutoInput';
 type CategoryType = 'kategorije-delatnosti' | 'kategorije-proizvoda' | 'kategorije-tipova-objekata';
 interface Props {
 	params: {
@@ -40,6 +41,7 @@ const DynamicCategoriesAdminPage: FC<Props> = ({ params }) => {
 	return (
 		<PageContainer>
 			<CategoriesAdmin prefix={currentConfig.prefix} title={currentConfig.title} />
+			<CategoriesAutoInput prefix={currentConfig.prefix} title={currentConfig.title} />
 		</PageContainer>
 	);
 };

@@ -519,6 +519,7 @@ export interface RetailFormState {
 
 export enum AdType {
 	NONE = 'NONE',
+	PRIORITY = 'PRIORITY',
 	SMALL = 'SMALL',
 	BIG = 'BIG',
 	PREMIUM = 'PREMIUM',
