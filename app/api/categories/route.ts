@@ -23,8 +23,6 @@ const validateCategoryData = (data: any) => {
 };
 
 function sanitizeCategory(category: CategoryWithTranslations): CategoryWithTranslations {
-	console.log('Sanitizing category:', category); // Provera pre sanitizacije
-
 	const sanitizedCategory = {
 		...category,
 		advertisingId: category.advertisingId || 1,
@@ -49,8 +47,6 @@ function sanitizeCategory(category: CategoryWithTranslations): CategoryWithTrans
 		children: category.children.map(child => sanitizeCategory(child as CategoryWithTranslations)),
 		createdAt: category.createdAt ? category.icon.createdAt : new Date().toISOString(), // Pretvori u string
 	};
-
-	console.log('Sanitized category:', sanitizedCategory); // Provera nakon sanitizacije
 
 	return sanitizedCategory;
 }
@@ -237,9 +233,6 @@ export async function GET(request: Request) {
 		const topLevelCategories: CategoryWithTranslations[] = await buildCategoryTree(null, prefix);
 		const sanitizedCategories = topLevelCategories.map(sanitizeCategory);
 		const validationErrors = validateCategories(sanitizedCategories);
-		console.log('Sanitized categories:', sanitizedCategories);
-		console.log('Validation errors:', validationErrors);
-		// Validacija kategorija
 
 		if (validationErrors.length > 0) {
 			console.error('Validation errors in categories:', validationErrors);
@@ -254,7 +247,6 @@ export async function GET(request: Request) {
 
 		// Serializacija podataka
 		const serializedData = serializeData(sanitizedCategories);
-		/* console.log('Sanitized Data:', JSON.stringify(sanitizedCategories, null, 2)); */
 		// Provera veličine podataka
 		const jsonSize = Buffer.byteLength(JSON.stringify(serializedData), 'utf8'); // Velicina JSON-a u bajtovima
 		const maxJsonSize = 1 * 1024 * 1024; // Ograničenje na 1 MB

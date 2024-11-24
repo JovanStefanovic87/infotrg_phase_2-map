@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { contentData, contentBlocksData } from '../ulaganjeData';
 import ImageModal from '../../components/modals/ImageModal';
 import ImageBlock from '../../components/image/ImageBlock';
@@ -37,7 +38,9 @@ const PageContent: React.FC = () => {
 	const block = contentData.find(item => item.id === blockId);
 	const contentBlocks = (contentBlocksData as any)[blockId] || [];
 
-	if (!block) return <p>Block not found</p>;
+	if (!block || contentBlocks.length === 0) {
+		notFound(); // Prikazuje 404 stranicu ako podaci nisu validni
+	}
 
 	return (
 		<PageContainer>

@@ -16,7 +16,6 @@ interface Props {
 
 const DynamicCategoriesAdminPage: FC<Props> = ({ params }) => {
 	const { category_type } = params;
-	console.log(params);
 	const config = {
 		'kategorije-delatnosti': {
 			prefix: prefixActivityCategory,

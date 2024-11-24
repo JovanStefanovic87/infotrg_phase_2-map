@@ -7,7 +7,7 @@ import H1 from '@/app/components/text/H1';
 export default function ClientNotFound() {
 	const handleGoBack = () => {
 		if (typeof window !== 'undefined') {
-			window.history.back(); // Vraća korisnika na prethodnu stranicu
+			window.history.back();
 		}
 	};
 

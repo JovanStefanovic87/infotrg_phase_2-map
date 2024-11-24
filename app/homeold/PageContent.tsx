@@ -1,5 +1,4 @@
 'use client';
-import React, { useState, useEffect } from 'react';
 import { contentData, mapIdToPath } from './pocetnaData';
 import ContentBlock from '../components/blocks/ContentBlock';
 import PageContainer from '../components/containers/PageContainer';
@@ -10,7 +9,6 @@ import H2 from '../components/text/H2';
 import TextSpecifications from '../components/text/TextSpecifications';
 import H3Title from '../components/text/H3Title';
 import useResponsiveColumns from '@/utils/helpers/useResponsiveColumns';
-import BlockButton from '../components/buttons/BlockButton';
 import CallToActionButton from '../components/buttons/CallToActionButton';
 
 const PageContent: React.FC = () => {
@@ -22,7 +20,7 @@ const PageContent: React.FC = () => {
 		<PageContainer>
 			<AnimationBlock />
 			<div className='mt-2 sm:mt-4 mb-4'>
-				<H2Title text={INVEST_CALL_TO_ACTION} size='xl' />
+				<H2Title text={INVEST_CALL_TO_ACTION} size='xl' color='black' />
 			</div>
 			<div className='flex flex-col items-center bg-mainWhite rounded-lg p-6 shadow-lg mb-4 sm:mb-0 mx-0 sm:mx-2'>
 				<H2

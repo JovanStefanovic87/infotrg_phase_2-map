@@ -16,20 +16,42 @@ const truncateLabel = (label: string, maxLength: number) => {
 const Breadcrumb: React.FC = () => {
 	const currentPath = usePathname();
 	const [breadcrumbPath, setBreadcrumbPath] = useState<{ href: string; label: string }[]>([]);
+	const [isNotFound, setIsNotFound] = useState(false);
 
 	useEffect(() => {
+		const checkPageExists = async () => {
+			try {
+				const response = await fetch(currentPath, { method: 'HEAD' });
+				if (!response.ok) {
+					setIsNotFound(true);
+				} else {
+					setIsNotFound(false);
+				}
+			} catch (error) {
+				setIsNotFound(true);
+			}
+		};
+
 		if (currentPath === '/') {
 			setBreadcrumbPath([]);
 		} else {
 			const pathSegments = currentPath.split('/').filter(Boolean);
-			const pathArray = pathSegments.map((segment, index) => {
+			let pathArray = pathSegments.map((segment, index) => {
 				const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
 				const label = capitalize(segment.replace(/-/g, ' '));
 				return { href, label };
 			});
+
+			// Ako je stranica nepostojeća, ukloni poslednji segment
+			if (isNotFound) {
+				pathArray = pathArray.slice(0, -1);
+			}
+
 			setBreadcrumbPath([{ href: '/', label: 'Početna' }, ...pathArray]);
 		}
-	}, [currentPath]);
+
+		checkPageExists();
+	}, [currentPath, isNotFound]);
 
 	if (breadcrumbPath.length === 0) {
 		return null;
@@ -39,9 +61,11 @@ const Breadcrumb: React.FC = () => {
 		<BreadcrumbsContainer>
 			{breadcrumbPath.map((route, index) => (
 				<React.Fragment key={route.href}>
-					{index > 0 && <span className='mx-1 text-bgMain'>/</span>}
-					{index === breadcrumbPath.length - 1 ? (
-						<span className='text-black font-bold'>{truncateLabel(route.label, 10)}</span>
+					{index > 0 && <span className='mx-1 text-bgMain font-bold'>/</span>}
+					{index === breadcrumbPath.length - 1 && !isNotFound ? (
+						<Link href={route.href}>
+							<span className='text-black font-bold'>{truncateLabel(route.label, 10)}</span>
+						</Link>
 					) : (
 						<Link href={route.href}>
 							<span className='text-bgMain hover:text-sky-600'>
@@ -51,6 +75,12 @@ const Breadcrumb: React.FC = () => {
 					)}
 				</React.Fragment>
 			))}
+			{isNotFound && (
+				<>
+					<span className='mx-1 text-bgMain'>/</span>
+					<span className='text-red-600 font-bold'>Nepostojeća stranica</span>
+				</>
+			)}
 		</BreadcrumbsContainer>
 	);
 };
