@@ -86,6 +86,8 @@ const CategoryList: React.FC<CategoryListProps> = ({
 		});
 	};
 
+	console.log('categories', categories);
+
 	const filterCategoriesForSelect = (): CategoryWithTranslations[] => {
 		const allCategories: CategoryWithTranslations[] = [];
 

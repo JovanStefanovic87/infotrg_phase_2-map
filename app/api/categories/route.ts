@@ -132,19 +132,7 @@ const fetchParents = async (childId: number): Promise<SimplifiedCategory[]> => {
 		},
 	});
 
-	const sortedParentCategories = parentCategories.sort((a, b) => {
-		const aName =
-			a.parent.label.translations.length > 0
-				? a.parent.label.translations[0].translation.toLowerCase()
-				: '';
-		const bName =
-			b.parent.label.translations.length > 0
-				? b.parent.label.translations[0].translation.toLowerCase()
-				: '';
-		return aName.localeCompare(bName);
-	});
-
-	const parents = sortedParentCategories.map(({ parent }) => ({
+	return parentCategories.map(({ parent }) => ({
 		id: parent.id,
 		name:
 			parent.label.translations.length > 0
@@ -157,12 +145,9 @@ const fetchParents = async (childId: number): Promise<SimplifiedCategory[]> => {
 					id: parent.icon.id,
 					name: parent.icon.name || 'unknown',
 					url: parent.icon.url || '/default-icon.png',
-					createdAt: parent.icon.createdAt,
 			  }
 			: null,
 	}));
-
-	return serializeData(parents);
 };
 
 // Function to build the category tree
@@ -190,13 +175,49 @@ const buildCategoryTree = async (
 			icon: true,
 			label: {
 				include: {
-					translations: true, // Ostaje ako su prevodi potrebni
+					translations: true,
+				},
+			},
+			relatedCategories: {
+				include: {
+					related: {
+						include: {
+							label: {
+								include: {
+									translations: true,
+								},
+							},
+							icon: true,
+						},
+					},
+				},
+			},
+			relatedTo: {
+				include: {
+					category: {
+						include: {
+							label: {
+								include: {
+									translations: true,
+								},
+							},
+							icon: true,
+						},
+					},
 				},
 			},
 		},
 	});
 
 	visited.add(parentId ?? -1);
+
+	const sortedCategories = categories.sort((a, b) => {
+		const aName =
+			a.label.translations.length > 0 ? a.label.translations[0].translation.toLowerCase() : '';
+		const bName =
+			b.label.translations.length > 0 ? b.label.translations[0].translation.toLowerCase() : '';
+		return aName.localeCompare(bName);
+	});
 
 	return Promise.all(
 		categories.map(async category => ({
@@ -217,6 +238,38 @@ const buildCategoryTree = async (
 				url: '/default-icon.png',
 				createdAt: new Date().toISOString(),
 			},
+			relatedCategories: [
+				...category.relatedCategories.map(related => ({
+					id: related.related.id,
+					name: related.related.label.translations[0]?.translation || 'Unnamed related category',
+					icon: related.related.icon
+						? {
+								id: related.related.icon.id,
+								name: related.related.icon.name,
+								url: related.related.icon.url,
+						  }
+						: null,
+					parents: [], // Prazna vrednost jer nije dostupno
+					children: [], // Prazna vrednost jer nije dostupno
+					iconId: related.related.iconId,
+					labelId: related.related.labelId,
+				})),
+				...category.relatedTo.map(related => ({
+					id: related.category.id,
+					name: related.category.label.translations[0]?.translation || 'Unnamed related category',
+					icon: related.category.icon
+						? {
+								id: related.category.icon.id,
+								name: related.category.icon.name,
+								url: related.category.icon.url,
+						  }
+						: null,
+					parents: [], // Prazna vrednost jer nije dostupno
+					children: [], // Prazna vrednost jer nije dostupno
+					iconId: related.category.iconId,
+					labelId: related.category.labelId,
+				})),
+			],
 			parents: await fetchParents(category.id),
 			children: await buildCategoryTree(category.id, prefix),
 			label: 'Nedefinisana kategorija',
@@ -245,22 +298,7 @@ export async function GET(request: Request) {
 			);
 		}
 
-		// Serializacija podataka
-		const serializedData = serializeData(sanitizedCategories);
-		// Provera veličine podataka
-		const jsonSize = Buffer.byteLength(JSON.stringify(serializedData), 'utf8'); // Velicina JSON-a u bajtovima
-		const maxJsonSize = 1 * 1024 * 1024; // Ograničenje na 1 MB
-
-		if (jsonSize > maxJsonSize) {
-			console.error(`JSON data exceeds size limit: ${jsonSize} bytes`);
-			return NextResponse.json(
-				{ error: 'The requested data is too large. Please refine your query.' },
-				{ status: 413 } // HTTP status code 413: Payload Too Large
-			);
-		}
-
-		// Vraćamo podatke ako su validni i veličina je u granicama
-		return NextResponse.json(serializedData);
+		return NextResponse.json(serializeData(sanitizedCategories));
 	} catch (error) {
 		console.error('Error fetching categories:', error);
 		return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 });

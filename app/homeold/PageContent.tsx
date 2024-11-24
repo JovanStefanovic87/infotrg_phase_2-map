@@ -1,4 +1,5 @@
 'use client';
+import React, { useState, useEffect } from 'react';
 import { contentData, mapIdToPath } from './pocetnaData';
 import ContentBlock from '../components/blocks/ContentBlock';
 import PageContainer from '../components/containers/PageContainer';
@@ -19,7 +20,7 @@ const PageContent: React.FC = () => {
 	return (
 		<PageContainer>
 			<AnimationBlock />
-			<div className='mt-2 sm:mt-4 mb-4'>
+			<div className='mt-2 sm:mt-4 mb-4 pt-4 border-t-2'>
 				<H2Title text={INVEST_CALL_TO_ACTION} size='xl' color='black' />
 			</div>
 			<div className='flex flex-col items-center bg-mainWhite rounded-lg p-6 shadow-lg mb-4 sm:mb-0 mx-0 sm:mx-2'>

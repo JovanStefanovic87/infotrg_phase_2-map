@@ -96,7 +96,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 		},
 		[languageId]
 	);
-
+	console.log('Related Categories:', category.relatedCategories);
 	const handleOpenEditModal = async () => {
 		setIsModalOpen(true);
 		setLoading(true);
