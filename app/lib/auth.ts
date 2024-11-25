@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth/next';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -57,6 +57,7 @@ export const authOptions = {
 	pages: {
 		signIn: '/auth/signin',
 	},
+	trustHost: true,
 };
 
 // For Next.js App Router

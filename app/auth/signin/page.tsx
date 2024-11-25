@@ -25,7 +25,7 @@ const SignInPage = () => {
 		});
 
 		if (result?.error) {
-			setError('Neispravno korisničko ime ili lozinka');
+			setError('Neispravan email ili lozinka');
 		} else if (result?.ok) {
 			router.push('/admin');
 		} else {
@@ -41,7 +41,10 @@ const SignInPage = () => {
 					{error && <p className='text-red-500 text-sm text-center mb-4'>{error}</p>}
 					<form onSubmit={handleSubmit} className='space-y-6'>
 						<div>
-							<HydratationAuthInput placeholder='Korisničko ime*' value={email} setValue={setEmail}>
+							<HydratationAuthInput
+								placeholder='Email adresa korisnika*'
+								value={email}
+								setValue={setEmail}>
 								<IconInput icon={<FaUser />} />
 							</HydratationAuthInput>
 						</div>
