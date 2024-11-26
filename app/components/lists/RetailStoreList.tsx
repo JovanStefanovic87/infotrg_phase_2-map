@@ -59,8 +59,9 @@ const RetailStoreList: React.FC<Props> = ({
 	const [activitySearchQuery, setActivitySearchQuery] = useState('');
 	const [objectTypeSearchQuery, setObjectTypeSearchQuery] = useState('');
 	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+	const [retailList, setRetailList] = useState<RetailAdmin[]>(retails);
 	const [retailToDelete, setRetailToDelete] = useState<RetailAdmin | null>(null);
-	const filteredRetails = retails
+	const filteredRetails = retailList
 		.filter(
 			retail =>
 				retail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -105,6 +106,13 @@ const RetailStoreList: React.FC<Props> = ({
 				},
 			}
 		);
+	};
+
+	const handleDeleteSuccess = (deletedRetailId: number) => {
+		// Ukloni obrisani objekat iz lokalne liste
+		setRetailList(prevList => prevList.filter(retail => retail.id !== deletedRetailId));
+		setIsDeleteModalOpen(false); // Zatvori modal
+		setSuccessMessage('Prodajni objekat uspešno obrisan!');
 	};
 
 	const handleEditClick = (retail: RetailAdmin) => {
@@ -164,10 +172,17 @@ const RetailStoreList: React.FC<Props> = ({
 		if (retailToDelete) {
 			deleteMutation.mutate(retailToDelete.id.toString(), {
 				onSuccess: () => {
+					// Remove deleted retail from the local list
+					setRetailList(prevList => prevList.filter(retail => retail.id !== retailToDelete.id));
+					setIsDeleteModalOpen(false); // Close the modal
 					setSuccessMessage('Prodajni objekat uspešno obrisan!');
-					setIsDeleteModalOpen(false); // Zatvori modal
 				},
 				onError: error => {
+					if (error.message.includes('404')) {
+						// Assume already deleted, remove from list
+						setRetailList(prevList => prevList.filter(retail => retail.id !== retailToDelete.id));
+						setIsDeleteModalOpen(false);
+					}
 					setError(error.message || 'Greška prilikom brisanja prodajnog objekta');
 				},
 			});

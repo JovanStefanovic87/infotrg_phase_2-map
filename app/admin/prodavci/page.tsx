@@ -6,6 +6,7 @@ import {
 	prefixAticleCategory,
 	prefixObjectTypeCategory,
 } from '@/app/api/prefix';
+import RetailStoresAutoInput from '@/app/components/autoInputFromExcel/retailStroresAutoInput';
 
 const serializeData = (data: any) => {
 	return JSON.parse(JSON.stringify(data));
@@ -19,6 +20,7 @@ const CategoriesAdminPage = async () => {
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
+			<RetailStoresAutoInput />
 			<RetailsAdmin
 				title='PRODAVCI'
 				initialData={{

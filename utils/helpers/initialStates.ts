@@ -13,7 +13,7 @@ export const retailInit: RetailFormState = {
 	phoneNumber: '',
 	email: '',
 	website: '',
-	stateId: 3, // Change to 1 in production
+	stateId: 1, // Change to 1 in production
 	countyId: 1,
 	cityId: 1,
 	suburbId: 1,

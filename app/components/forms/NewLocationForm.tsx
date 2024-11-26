@@ -115,7 +115,9 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 		<form onSubmit={onSubmit} className='space-y-4 bg-white p-4 rounded shadow-md'>
 			{/* Location Type */}
 			<div className='flex flex-col'>
-				<Label htmlFor='type'>Tip lokacije</Label>
+				<Label htmlFor='type' color='black'>
+					Tip lokacije
+				</Label>
 				<SelectInput
 					id='type'
 					value={type}
@@ -128,10 +130,10 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 					]}
 				/>
 			</div>
-			{/* Location Name */}
+			{/* State Name */}
 			<div className='flex flex-col'>
 				<LabelInputDefault
-					label='Naziv lokacije'
+					label='Naziv saveza država'
 					value={name}
 					onChange={handleNameChange}
 					placeholder=''
@@ -153,7 +155,9 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			)}
 			{(type === 'county' || type === 'city' || type === 'suburb') && (
 				<div className='flex flex-col'>
-					<Label htmlFor='stateId'>Izaberite savez</Label>
+					<Label htmlFor='stateId' color='black'>
+						Izaberite savez
+					</Label>
 					<select
 						id='stateId'
 						value={stateId ?? ''}
@@ -269,12 +273,12 @@ const NewLocationForm: React.FC<NewLocationFormProps> = ({
 			<div className='flex flex-col'>
 				<ImageUploadButton
 					id='upload-icon'
-					label='Dodajte novi logo'
+					label='Dodajte novu ikonicu'
 					onChange={e => handleIconChange(e.target.files?.[0] || null)}
 				/>
 				<ChooseImageButton
 					onClick={() => setIsIconPickerOpen(true)}
-					label='Izaberite postojeći logo'
+					label='Izaberite postojeću ikonicu'
 				/>
 			</div>
 

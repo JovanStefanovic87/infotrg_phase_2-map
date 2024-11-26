@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import HydratationAuthInput from '@/app/components/ui/input/HydratationAuthInput';
 import IconInput from '@/app/components/ui/Icons/IconInput';
-import { FaUser, FaLock } from 'react-icons/fa';
+import { FaAt, FaLock } from 'react-icons/fa';
 import SubmitButton from '@/app/components/buttons/SubmitButton';
 import PageContainer from '@/app/components/containers/PageContainer';
 
@@ -37,7 +37,7 @@ const SignInPage = () => {
 		<PageContainer>
 			<div className='flex justify-center'>
 				<div className='p-8 w-full max-w-md'>
-					<h1 className='text-2xl font-bold text-center mb-6'>Prijava</h1>
+					<h1 className='text-2xl font-bold text-center mb-6 text-black'>Prijava</h1>
 					{error && <p className='text-red-500 text-sm text-center mb-4'>{error}</p>}
 					<form onSubmit={handleSubmit} className='space-y-6'>
 						<div>
@@ -45,7 +45,7 @@ const SignInPage = () => {
 								placeholder='Email adresa korisnika*'
 								value={email}
 								setValue={setEmail}>
-								<IconInput icon={<FaUser />} />
+								<IconInput icon={<FaAt />} />
 							</HydratationAuthInput>
 						</div>
 						<div>
@@ -61,14 +61,6 @@ const SignInPage = () => {
 							<SubmitButton>Prijavi se</SubmitButton>
 						</div>
 					</form>
-					<div className='text-sm text-center mt-4'>
-						<p>
-							Zaboravljena lozinka?{' '}
-							<a href='/auth/reset-password' className='text-blue-600 hover:underline'>
-								Resetuj
-							</a>
-						</p>
-					</div>
 				</div>
 			</div>
 		</PageContainer>

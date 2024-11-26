@@ -40,8 +40,8 @@ const DynamicCategoriesAdminPage: FC<Props> = ({ params }) => {
 
 	return (
 		<PageContainer>
-			<CategoriesAdmin prefix={currentConfig.prefix} title={currentConfig.title} />
 			<CategoriesAutoInput prefix={currentConfig.prefix} title={currentConfig.title} />
+			<CategoriesAdmin prefix={currentConfig.prefix} title={currentConfig.title} />
 		</PageContainer>
 	);
 };

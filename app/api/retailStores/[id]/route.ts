@@ -104,6 +104,10 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 	try {
 		const { id } = params;
 
+		// Log ID for debugging
+		console.log('Deleting RetailStore with ID:', id);
+
+		// Check if RetailStore exists
 		const retailStore = await prisma.retailStore.findUnique({
 			where: { id: Number(id) },
 		});
@@ -112,13 +116,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 			return NextResponse.json({ error: 'Retail Store not found' }, { status: 404 });
 		}
 
-		// Brisanje prodavnice
+		// Delete linked coordinates if present
+		if (retailStore.coordinatesId) {
+			await prisma.coordinates.delete({
+				where: { id: retailStore.coordinatesId },
+			});
+		}
+
+		// Delete RetailStore
 		await prisma.retailStore.delete({
 			where: { id: Number(id) },
 		});
 
 		return NextResponse.json({ message: 'Retail Store deleted successfully' }, { status: 200 });
 	} catch (error) {
+		if ((error as any).code === 'P2025') {
+			return NextResponse.json({ error: 'Record to delete does not exist' }, { status: 404 });
+		}
 		console.error('Error deleting Retail Store:', error);
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
 	}

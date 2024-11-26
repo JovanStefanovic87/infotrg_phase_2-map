@@ -32,7 +32,6 @@ const RetailsAdmin: React.FC<Props> = ({ title, initialData }) => {
 	const [error, setError] = useState<string>('');
 	const [loading, setLoading] = useState<boolean>(false);
 	const [formData, setFormData] = useState(retailInit);
-	const [languageId, setLanguageId] = useState<number>(1);
 	const [submitTrigger, setSubmitTrigger] = useState<boolean>(false);
 	const mutation = useCreateRetailStore();
 

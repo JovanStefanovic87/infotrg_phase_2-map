@@ -61,6 +61,11 @@ const AdminPage = () => {
 				</div>
 				<div className='mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
 					<Link
+						href='/admin/jezici'
+						className='block bg-sky-600 text-white text-center py-3 px-4 rounded-lg shadow hover:bg-sky-700 transition'>
+						Jezici
+					</Link>
+					<Link
 						href='/admin/lokacije'
 						className='block bg-sky-600 text-white text-center py-3 px-4 rounded-lg shadow hover:bg-sky-700 transition'>
 						Lokacije
