@@ -132,7 +132,7 @@ const buildCategoryTree = async (
 export async function GET(req: NextRequest) {
 	const searchParams = new URL(req.url).searchParams;
 	const categoryId = searchParams.get('categoryId');
-	const stateId = searchParams.get('stateId') || '3';
+	const stateId = searchParams.get('stateId');
 	const countyId = searchParams.get('countyId');
 	const cityId = searchParams.get('cityId');
 	const suburbId = searchParams.get('suburbId');

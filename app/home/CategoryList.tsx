@@ -84,8 +84,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 														src={subCategory.icon.url}
 														alt={subCategory.icon.name}
 														layout='fill'
-														objectFit='contain'
-														className='transition-transform duration-200 hover:scale-105'
+														className='transition-transform duration-200 hover:scale-105 ovject-contain'
 													/>
 												)}
 											</div>

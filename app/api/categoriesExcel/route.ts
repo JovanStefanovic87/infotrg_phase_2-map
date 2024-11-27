@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as xlsx from 'xlsx';
 import { prisma } from '@/app/lib/prisma';
+import slugify from 'slugify';
 
 interface ExcelRow {
 	translation1: string;
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 		const formData = await request.formData();
 		const file = formData.get('file') as File;
 		const prefix = formData.get('prefix') as string;
-		console.log(`Fajl ime: ${file.name}, tip: ${file.type}, veličina: ${file.size}`);
+
 		if (file.size === 0) {
 			console.error('Fajl je prazan.');
 			return NextResponse.json({ error: 'File is empty' }, { status: 400 });
@@ -42,6 +43,9 @@ export async function POST(request: Request) {
 
 			const labelName = `${prefix}${translation1}`;
 
+			const slug1 = slugify(`${translation1}-rs`, { lower: true, strict: true });
+			const slug2 = slugify(`${translation2}-hu`, { lower: true, strict: true });
+
 			// Kreiranje etikete (Label)
 			const label = await prisma.label.create({
 				data: {
@@ -51,10 +55,12 @@ export async function POST(request: Request) {
 							{
 								languageId: 1,
 								translation: translation1,
+								slug: slug1,
 							},
 							{
 								languageId: 2,
 								translation: translation2,
+								slug: slug2,
 							},
 						],
 					},
@@ -119,24 +125,23 @@ export async function POST(request: Request) {
 				}
 			}
 
-			// Kreiranje nove kategorije
-			await prisma.category.create({
-				data: {
-					labelId: label.id,
-					iconId: icon?.id || null,
-					parentCategories: parentCategory
-						? {
-								create: [
-									{
-										child: {
-											connect: { id: parentCategory.id },
-										},
-									},
-								],
-						  }
-						: undefined,
-				},
-			});
+			await prisma.category
+				.create({
+					data: {
+						labelId: label.id,
+						iconId: icon?.id || null,
+					},
+				})
+				.then(async newCategory => {
+					if (parentCategory) {
+						await prisma.parentCategory.create({
+							data: {
+								parentId: parentCategory.id,
+								childId: newCategory.id,
+							},
+						});
+					}
+				});
 		}
 
 		return NextResponse.json({ message: 'Data imported successfully' });

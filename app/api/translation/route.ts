@@ -1,6 +1,7 @@
 // app\api\translation\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
+import slugify from 'slugify';
 
 export async function GET(request: Request) {
 	const url = new URL(request.url);
@@ -70,21 +71,44 @@ export async function POST(request: Request) {
 		for (const translation of translations) {
 			const { labelId, languageId, translation: translationText } = translation;
 
-			if (typeof labelId !== 'number' || typeof languageId !== 'number') {
+			if (
+				typeof labelId !== 'number' ||
+				typeof languageId !== 'number' ||
+				typeof translationText !== 'string'
+			) {
 				continue;
 			}
 
+			// Dohvatanje jezičkog koda
+			const language = await prisma.language.findUnique({
+				where: { id: languageId },
+			});
+
+			if (!language) {
+				console.error(`Jezik sa ID-jem ${languageId} nije pronađen.`);
+				continue;
+			}
+
+			// Generisanje sluga sa jezičkim kodom
+			const slug = slugify(`${translationText}-${language.code}`, {
+				lower: true,
+				strict: true, // Uklanja specijalne karaktere
+			});
+
+			// Upsert operacija za kreiranje ili ažuriranje prevoda
 			const upsertedTranslation = await prisma.translation.upsert({
 				where: {
 					labelId_languageId: { labelId, languageId },
 				},
 				update: {
 					translation: translationText,
+					slug,
 				},
 				create: {
 					labelId,
 					languageId,
 					translation: translationText,
+					slug,
 				},
 			});
 

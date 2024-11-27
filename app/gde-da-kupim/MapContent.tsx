@@ -35,7 +35,7 @@ const MapContent: React.FC = () => {
 		languageId: 1,
 	});
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
-	/* const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined; */
+	const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined;
 	const countyId = params.get('countyId') ? Number(params.get('countyId')) : undefined;
 	const cityId = params.get('cityId') ? Number(params.get('cityId')) : null;
 	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : null;
@@ -53,7 +53,6 @@ const MapContent: React.FC = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<CategoryDataForMap | null>(null);
 	const [selectedLocation, setSelectedLocation] = useState<LocationDataForMap | null>(null);
-
 	useScrollToTop();
 
 	const {
@@ -62,11 +61,14 @@ const MapContent: React.FC = () => {
 		error,
 	} = useFetchFilteredRetailStores({
 		categoryId: categoryId || 0,
+		stateId: stateId || 1,
 		countyId: countyId || 1,
 		cityId: cityId ?? null,
 		suburbId: suburbId ?? null,
 		languageId: 1,
 	});
+
+	console.log('retailStores', retailStores);
 
 	const languageId = 1;
 	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId);

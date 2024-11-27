@@ -28,7 +28,7 @@ model Language {
 
 model Label {
   id           Int           @id @default(autoincrement())
-  name         String // Naziv etikete
+  name         String
   translations Translation[] @relation("LabelTranslations")
   categories   Category[]    @relation("CategoryToLabel")
   createdAt    DateTime      @default(now())
@@ -47,11 +47,12 @@ model Translation {
   languageId  Int
   Language    Language  @relation("LanguageTranslations", fields: [languageId], references: [id], onDelete: Cascade)
   translation String
-  description String? // New field for category description in each language
-  synonyms    Synonym[] // Ensure this matches the TypeScript code
+  description String?
+  synonyms    Synonym[]
+  slug        String?   @unique
   createdAt   DateTime  @default(now())
 
-  @@unique([labelId, languageId]) // Composite unique constraint
+  @@unique([labelId, languageId])
 }
 
 model State {
