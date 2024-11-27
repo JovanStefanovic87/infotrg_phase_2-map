@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, Dispatch, SetStateAction } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
@@ -11,6 +12,7 @@ import { LocationDataForMap, CategoryDataForMap, Category } from '@/utils/helper
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
+	onSave: () => void;
 	location: Location;
 	selectedCategory: CategoryDataForMap | null;
 	selectedLocation: LocationDataForMap | null;
@@ -23,7 +25,7 @@ interface Props {
 const EditSelectionModal: React.FC<Props> = ({
 	isOpen,
 	onClose,
-	/* onSave, */
+	onSave,
 	selectedCategory,
 	selectedLocation,
 	setSelectedCategory,
@@ -33,6 +35,47 @@ const EditSelectionModal: React.FC<Props> = ({
 }) => {
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
+
+	// Function to update URL parameters
+	const updateUrlParams = (categoryId: number | null, location: LocationDataForMap | null) => {
+		const url = new URL(window.location.href);
+
+		// Postavljanje categoryId
+		if (categoryId) {
+			url.searchParams.set('categoryId', categoryId.toString());
+		} else {
+			url.searchParams.delete('categoryId');
+		}
+
+		// Postavljanje lokacija prema tipu
+		if (location?.type === 'suburb') {
+			url.searchParams.set('suburbId', location.id.toString());
+			if (location.cityId) {
+				url.searchParams.set('cityId', location.cityId.toString());
+			}
+			if (location.countyId) {
+				url.searchParams.set('countyId', location.countyId.toString());
+			}
+		} else if (location?.type === 'city') {
+			url.searchParams.set('cityId', location.id.toString());
+			if (location.countyId) {
+				url.searchParams.set('countyId', location.countyId.toString());
+			}
+			url.searchParams.delete('suburbId'); // Uklanja suburb ako prelazimo na city
+		} else if (location?.type === 'county') {
+			url.searchParams.set('countyId', location.id.toString());
+			url.searchParams.delete('cityId');
+			url.searchParams.delete('suburbId');
+		} else {
+			// Brisanje svih lokacijskih parametara ako nema validne lokacije
+			url.searchParams.delete('countyId');
+			url.searchParams.delete('cityId');
+			url.searchParams.delete('suburbId');
+		}
+
+		// Ažuriranje URL-a
+		history.pushState({}, '', url.toString());
+	};
 
 	return (
 		<Dialog
@@ -66,8 +109,8 @@ const EditSelectionModal: React.FC<Props> = ({
 					<CloseButton onClose={onClose} />
 					<DefaultButton
 						onClick={() => {
-							if (selectedCategory && selectedLocation) {
-								/* onSave(selectedCategory.name, selectedLocation.name); */
+							if (selectedCategory || selectedLocation) {
+								updateUrlParams(selectedCategory?.id || null, selectedLocation || null);
 								onClose();
 							}
 						}}

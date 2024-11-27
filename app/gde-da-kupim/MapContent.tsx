@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
@@ -34,11 +35,12 @@ const MapContent: React.FC = () => {
 		prefix: location,
 		languageId: 1,
 	});
-	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : undefined;
-	const stateId = params.get('stateId') ? Number(params.get('stateId')) : undefined;
-	const countyId = params.get('countyId') ? Number(params.get('countyId')) : undefined;
-	const cityId = params.get('cityId') ? Number(params.get('cityId')) : null;
-	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : null;
+	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : 0;
+	const stateId = params.get('stateId') ? Number(params.get('stateId')) : 1;
+	const countyId = params.get('countyId') ? Number(params.get('countyId')) : 0;
+	const cityId = params.get('cityId') ? Number(params.get('cityId')) : 0;
+	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : 0;
+
 	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
 		lat: 0,
 		lng: 0,
@@ -49,10 +51,11 @@ const MapContent: React.FC = () => {
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [activeStore, setActiveStore] = useState<GetRetailStoreApi | null>(null);
 	const [categoryHierarchy, setCategoryHierarchy] = useState<Category[]>([]);
-	const [isMarkersLoading, setIsMarkersLoading] = useState(true);
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<CategoryDataForMap | null>(null);
 	const [selectedLocation, setSelectedLocation] = useState<LocationDataForMap | null>(null);
+	const [id, setId] = useState<number | null>(null);
+	const [type, setType] = useState<'county' | 'city' | 'suburb' | null>(null);
 	useScrollToTop();
 
 	const {
@@ -63,10 +66,11 @@ const MapContent: React.FC = () => {
 		categoryId: categoryId || 0,
 		stateId: stateId || 1,
 		countyId: countyId || 1,
-		cityId: cityId ?? null,
-		suburbId: suburbId ?? null,
+		cityId: cityId ?? 0,
+		suburbId: suburbId ?? 0,
 		languageId: 1,
 	});
+	const isMarkersLoading = !retailStores;
 
 	console.log('retailStores', retailStores);
 
@@ -94,12 +98,6 @@ const MapContent: React.FC = () => {
 			setSelectedLocation({ id: mainCounty.id, name: mainCounty.name, type: 'county' });
 		}
 	}, [mainCategoryData, mainSuburb, mainCity, mainCounty]);
-
-	useEffect(() => {
-		if (retailStores) {
-			setIsMarkersLoading(false);
-		}
-	}, [retailStores]);
 
 	const formatCategories = useCallback((categories: RawCategoryData[]): Category[] => {
 		return categories.map(category => ({
@@ -217,6 +215,89 @@ const MapContent: React.FC = () => {
 		}
 	};
 
+	const reloadData = () => {
+		const currentParams = new URLSearchParams(window.location.search);
+		const categoryId = currentParams.get('categoryId')
+			? Number(currentParams.get('categoryId'))
+			: undefined;
+		const stateId = currentParams.get('stateId') ? Number(currentParams.get('stateId')) : undefined;
+		const countyId = currentParams.get('countyId') ? Number(currentParams.get('countyId')) : 0;
+		const cityId = currentParams.get('cityId') ? Number(currentParams.get('cityId')) : 0;
+		const suburbId = currentParams.get('suburbId') ? Number(currentParams.get('suburbId')) : 0;
+
+		// Update local state
+		setSelectedCategory(categoryId ? { id: categoryId, name: '' } : null);
+		setSelectedLocation(
+			suburbId
+				? { id: suburbId, name: '', type: 'suburb' }
+				: cityId
+				? { id: cityId, name: '', type: 'city' }
+				: countyId
+				? { id: countyId, name: '', type: 'county' }
+				: null
+		);
+	};
+
+	const handleUpdateParams = (newId: number, newType: 'county' | 'city' | 'suburb') => {
+		setId(newId);
+		setType(newType);
+	};
+
+	const { refetch } = useFetchLocationByIdAndLanguage(id || 0, type || 'county', languageId);
+
+	useEffect(() => {
+		if (id && type && languageId) {
+			refetch(); // Ručno osvežavanje podataka
+		}
+	}, [id, type, languageId, refetch]);
+
+	const onSave = () => {
+		// Koristimo trenutno selektovane kategorije i lokacije
+		const categoryId = selectedCategory?.id || null;
+		const location = selectedLocation || null;
+
+		const url = new URL(window.location.href);
+
+		// Ažuriraj URL parametre za kategoriju
+		if (categoryId) {
+			url.searchParams.set('categoryId', categoryId.toString());
+		} else {
+			url.searchParams.delete('categoryId');
+		}
+
+		// Ažuriraj URL parametre za lokaciju prema tipu
+		if (location?.type === 'suburb') {
+			url.searchParams.set('suburbId', location.id.toString());
+			if (location.cityId) {
+				url.searchParams.set('cityId', location.cityId.toString());
+			}
+			if (location.countyId) {
+				url.searchParams.set('countyId', location.countyId.toString());
+			}
+		} else if (location?.type === 'city') {
+			url.searchParams.set('cityId', location.id.toString());
+			if (location.countyId) {
+				url.searchParams.set('countyId', location.countyId.toString());
+			}
+			url.searchParams.delete('suburbId'); // Uklanja suburb ako je prelazak na city
+		} else if (location?.type === 'county') {
+			url.searchParams.set('countyId', location.id.toString());
+			url.searchParams.delete('cityId');
+			url.searchParams.delete('suburbId');
+		} else {
+			// Ako nema validne lokacije, brišu se svi lokacijski parametri
+			url.searchParams.delete('countyId');
+			url.searchParams.delete('cityId');
+			url.searchParams.delete('suburbId');
+		}
+
+		// Ažuriranje URL-a
+		history.pushState({}, '', url.toString());
+
+		// Osvježavanje lokalnog stanja sa ažuriranim parametrima
+		reloadData();
+	};
+
 	const relatedCategories = mainCategoryData?.relatedCategories || [];
 
 	return (
@@ -231,6 +312,7 @@ const MapContent: React.FC = () => {
 			<EditSelectionModal
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
+				onSave={onSave}
 				location={mainSuburb}
 				selectedCategory={selectedCategory}
 				selectedLocation={selectedLocation}
@@ -261,7 +343,7 @@ const MapContent: React.FC = () => {
 					streetViewControlOptions={{
 						position: ControlPosition.RIGHT_TOP,
 					}}>
-					{isMarkersLoading && (
+					{isLoading && (
 						<div className='absolute inset-0 flex justify-center items-center bg-white bg-opacity-80 z-10'>
 							<SpinnerForContainers />
 						</div>

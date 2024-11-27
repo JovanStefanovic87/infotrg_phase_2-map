@@ -631,7 +631,16 @@ export interface LocationDataForMap {
 	name: string;
 	icon?: string | null;
 	type: 'county' | 'city' | 'suburb';
-	children?: Location[];
+	cityId?: number | null;
+	countyId?: number | null;
+	children?: LocationDataForMap[];
+	parentId?: number;
+}
+
+export interface RefetchOptions {
+	id: number;
+	type: 'county' | 'city' | 'suburb';
+	languageId: number;
 }
 
 export interface CategoryDataForMap {

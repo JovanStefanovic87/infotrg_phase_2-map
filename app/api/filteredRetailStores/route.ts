@@ -131,15 +131,23 @@ const buildCategoryTree = async (
 // Function to create a category tree
 export async function GET(req: NextRequest) {
 	const searchParams = new URL(req.url).searchParams;
+
+	// Extract query parameters
 	const categoryId = searchParams.get('categoryId');
 	const stateId = searchParams.get('stateId');
 	const countyId = searchParams.get('countyId');
 	const cityId = searchParams.get('cityId');
-	const suburbId = searchParams.get('suburbId');
+	const suburbId =
+		searchParams.get('suburbId') === '0' || searchParams.get('suburbId') === 'null'
+			? null
+			: parseInt(searchParams.get('suburbId') ?? '0');
+
 	const languageId = parseInt(searchParams.get('languageId') ?? '1');
 
+	// Initialize where conditions
 	const where: any = {};
 
+	// Add category filtering
 	if (categoryId) {
 		where.OR = [
 			{ articleCategories: { some: { id: parseInt(categoryId) } } },
@@ -147,31 +155,39 @@ export async function GET(req: NextRequest) {
 			{ objectTypeCategories: { some: { id: parseInt(categoryId) } } },
 		];
 	}
+
+	// Add state filtering
 	if (stateId && stateId !== '0') {
 		where.stateId = parseInt(stateId);
 
+		// Add county filtering
 		if (countyId && countyId !== '0') {
 			where.countyId = parseInt(countyId);
 
+			// Add city filtering
 			if (cityId && cityId !== '0') {
 				where.cityId = parseInt(cityId);
 
-				if (suburbId && suburbId !== '0') {
-					where.suburbId = parseInt(suburbId);
+				// Add suburb filtering (if suburbId is not null)
+				if (suburbId !== null) {
+					where.suburbId = suburbId;
 				} else {
-					where.suburbId = null;
+					delete where.suburbId; // Include all suburbs within the city
 				}
 			} else {
-				where.cityId = null;
+				delete where.cityId; // Include all cities within the county
 			}
 		} else {
-			where.countyId = null;
+			delete where.countyId; // Include all counties within the state
 		}
 	} else {
-		where.stateId = null;
+		delete where.stateId; // No location filtering
 	}
 
+	console.log('WHERE CONDITIONS:', where);
+
 	try {
+		// Fetch retail stores with filters and relations
 		const retailStores = await prisma.retailStore.findMany({
 			where,
 			include: {
@@ -226,6 +242,7 @@ export async function GET(req: NextRequest) {
 			},
 		});
 
+		// Enhance each retail store with category hierarchies
 		const enhancedRetailStores = await Promise.all(
 			retailStores.map(async store => {
 				const articleCategoryIds = store.articleCategories.map(category => category.id);
