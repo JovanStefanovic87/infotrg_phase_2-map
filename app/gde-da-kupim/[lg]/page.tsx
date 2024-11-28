@@ -4,6 +4,7 @@ import { NextPage } from 'next';
 import MapProvider from '../MapProvider';
 import { Suspense } from 'react';
 import { prefixAticleCategory } from '@/app/api/prefix';
+import LanguageSelector from '@/app/components/ui/LanguageSelector';
 
 export function generateMetadata({ params }: { params: { lg: string } }) {
 	const currentUrl = `https://infotrg.com/gde-da-kupim/${params.lg}`;
@@ -45,6 +46,12 @@ const Map: NextPage<{ params: { lg: string } }> = async ({
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
+			<div className='flex justify-end w-full pr-2'>
+				<LanguageSelector
+					languages={serializeData(queryClient.getQueryData(['languages']) || [])}
+				/>
+			</div>
+
 			<Suspense fallback={<div>Učitavanje mape...</div>}>
 				<MapProvider
 					initialData={{
@@ -100,12 +107,6 @@ async function prefetchData(queryClient: QueryClient, languageCode: string) {
 			queryKey: ['locations', ''],
 			url: `${baseUrl}/api/locationsByLanguage`,
 			params: { prefix: '', languageId },
-		}),
-		prefetchQueryFunction({
-			queryClient,
-			queryKey: ['categories', 'article', languageId],
-			url: `${baseUrl}/api/categoriesByLanguage`,
-			params: { prefix: prefixAticleCategory, languageId },
 		}),
 	]);
 }

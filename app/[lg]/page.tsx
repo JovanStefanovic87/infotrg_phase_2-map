@@ -1,5 +1,5 @@
 import { NextPage } from 'next';
-import PageContent from './home/PageContent';
+import PageContent from '../home/PageContent';
 
 export const metadata = {
 	title: 'Infotrg',

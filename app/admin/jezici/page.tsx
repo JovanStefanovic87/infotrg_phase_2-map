@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import PageContainer from '@/app/components/containers/PageContainer';
 import AddLanguageForm from './AddLanguageForm';
-import LanguageFlag from './LanguageFlag';
+import LanguageFlag from '../../components/ui/LanguageFlag';
 import ConfirmationModal from '@/app/components/modals/systemModals/ConfirmationModal';
 import {
 	useFetchLanguages,
