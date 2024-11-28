@@ -6,7 +6,6 @@ import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import { useSearchParams } from 'next/navigation';
 import { useCategories } from '@/app/helpers/api/category';
-import { useFetchLocationsWithoutStates } from '@/app/helpers/api/location';
 import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
 import { useFetchCategoryByIdAndLanguage } from '@/app/helpers/api/category';
 import { useFetchLocationByIdAndLanguage } from '@/app/helpers/api/location';
@@ -17,8 +16,9 @@ import {
 	CategoryDataForMap,
 	RawCategoryData,
 	SimplifiedCategory,
+	RetailFormState,
+	Language,
 } from '@/utils/helpers/types';
-import { prefixAticleCategory, location } from '@/app/api/prefix';
 import RetailStoreCard from './retailStoreList/RetailStoreCard';
 import AssortmentModal from './retailStoreList/AssortmentModal';
 import SpinnerForContainers from '../components/ui/SpinnerForContainers';
@@ -27,15 +27,23 @@ import RelatedCategories from './retailStoreList/RelatedCategroies';
 import CurrentSelectionPanel from './retailStoreList/CurrentSelectionPanel';
 import EditSelectionModal from '../components/modals/EditSelectionModal';
 
-const MapContent: React.FC = () => {
+interface Props {
+	initialData: {
+		locations: LocationDataForMap[];
+		articleCategories: Category[];
+		retails: RetailFormState[];
+		lang: Language[];
+	};
+}
+
+const MapContent: React.FC<Props> = ({ initialData }) => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
-	const { data: categories = [] } = useCategories(prefixAticleCategory);
-	const { data: locations = [] } = useFetchLocationsWithoutStates({
-		prefix: location,
-		languageId: 1,
-	});
+	const languageId = 1;
+	const locations = initialData.locations;
+	const articleCategories = initialData.articleCategories;
 	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : 0;
+	const mainCategoryData = articleCategories.find(category => category.id === categoryId);
 	const stateId = params.get('stateId') ? Number(params.get('stateId')) : 1;
 	const countyId = params.get('countyId') ? Number(params.get('countyId')) : 0;
 	const cityId = params.get('cityId') ? Number(params.get('cityId')) : 0;
@@ -45,6 +53,7 @@ const MapContent: React.FC = () => {
 		lat: 0,
 		lng: 0,
 	});
+
 	const [defaultZoom, setDefaultZoom] = useState(10);
 	const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 });
 	const [zoom, setZoom] = useState(0);
@@ -57,7 +66,6 @@ const MapContent: React.FC = () => {
 	const [id, setId] = useState<number | null>(null);
 	const [type, setType] = useState<'county' | 'city' | 'suburb' | null>(null);
 	useScrollToTop();
-
 	const {
 		data: retailStores,
 		isLoading,
@@ -71,14 +79,37 @@ const MapContent: React.FC = () => {
 		languageId: 1,
 	});
 	const isMarkersLoading = !retailStores;
+	/* 	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId); */
+	const flattenLocations = (locations: LocationDataForMap[]): LocationDataForMap[] => {
+		const flatLocations: LocationDataForMap[] = [];
 
-	console.log('retailStores', retailStores);
+		const flatten = (locs: LocationDataForMap[]) => {
+			for (const location of locs) {
+				flatLocations.push(location); // Dodaj trenutnu lokaciju
+				if (location.children?.length) {
+					flatten(location.children); // Rekurzivno obradi children
+				}
+			}
+		};
 
-	const languageId = 1;
-	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId);
-	const { data: mainCounty } = useFetchLocationByIdAndLanguage(countyId || 0, 'county', languageId);
-	const { data: mainCity } = useFetchLocationByIdAndLanguage(cityId || 0, 'city', languageId);
-	const { data: mainSuburb } = useFetchLocationByIdAndLanguage(suburbId || 0, 'suburb', languageId);
+		flatten(locations);
+		return flatLocations;
+	};
+
+	const flatLocations = flattenLocations(locations);
+
+	const mainCounty = flatLocations.find(
+		location => location.id === countyId && location.type === 'county'
+	);
+	const mainCity = flatLocations.find(
+		location => location.id === cityId && location.type === 'city'
+	);
+	const mainSuburb = flatLocations.find(
+		location => location.id === suburbId && location.type === 'suburb'
+	);
+
+	console.log('mainSuburb', mainSuburb);
+
 	const locationText =
 		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';
 
@@ -209,7 +240,7 @@ const MapContent: React.FC = () => {
 				// Smooth scroll to the map container
 				const mapContainer = document.getElementById('map');
 				mapContainer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-			}, 100); // Adjust timeout as needed for smoother behavior
+			}, 100);
 		} else {
 			console.warn('Map or coordinates are not available');
 		}
@@ -242,14 +273,6 @@ const MapContent: React.FC = () => {
 		setId(newId);
 		setType(newType);
 	};
-
-	const { refetch } = useFetchLocationByIdAndLanguage(id || 0, type || 'county', languageId);
-
-	useEffect(() => {
-		if (id && type && languageId) {
-			refetch(); // Ručno osvežavanje podataka
-		}
-	}, [id, type, languageId, refetch]);
 
 	const onSave = () => {
 		// Koristimo trenutno selektovane kategorije i lokacije
@@ -313,12 +336,12 @@ const MapContent: React.FC = () => {
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
 				onSave={onSave}
-				location={mainSuburb}
+				location={selectedLocation}
 				selectedCategory={selectedCategory}
 				selectedLocation={selectedLocation}
 				setSelectedCategory={setSelectedCategory}
 				setSelectedLocation={setSelectedLocation}
-				categories={categories}
+				categories={articleCategories}
 				locations={locations}
 			/>
 			<div id='map' className={`${styles.mapWrapper} relative`}>

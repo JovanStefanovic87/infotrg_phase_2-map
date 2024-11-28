@@ -107,10 +107,11 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const prefix = searchParams.get('prefix') || 'article_category_';
 	const languageId = Number(searchParams.get('languageId')) || 1;
+	console.log('Fetching categories with prefix:', prefix, 'and language ID:', languageId);
 
 	try {
-		const topLevelCategories: Category[] = await buildCategoryTree(null, prefix, languageId);
-		return NextResponse.json(topLevelCategories);
+		const categoires: Category[] = await buildCategoryTree(null, prefix, languageId);
+		return NextResponse.json(categoires);
 	} catch (error) {
 		console.error('Greška prilikom dohvatanja kategorija:', error);
 		return NextResponse.json(

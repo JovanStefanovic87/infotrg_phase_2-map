@@ -32,8 +32,6 @@ export const prefetchQueryFunction = async <T>({
 	params = {},
 	useCash = true,
 }: PrefetchOptions<T>) => {
-	console.log(`Prefetching data for key: ${queryKey}`);
-
 	// Prefetches data with or without cache
 	if (useCash) {
 		return queryClient.prefetchQuery({

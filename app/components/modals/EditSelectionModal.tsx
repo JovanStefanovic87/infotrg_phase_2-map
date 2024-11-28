@@ -13,7 +13,7 @@ interface Props {
 	isOpen: boolean;
 	onClose: () => void;
 	onSave: () => void;
-	location: Location;
+	location: LocationDataForMap | null;
 	selectedCategory: CategoryDataForMap | null;
 	selectedLocation: LocationDataForMap | null;
 	setSelectedCategory: Dispatch<SetStateAction<CategoryDataForMap | null>>;
