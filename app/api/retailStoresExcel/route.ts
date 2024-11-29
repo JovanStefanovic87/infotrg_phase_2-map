@@ -44,9 +44,6 @@ export async function POST(request: Request) {
 
 		// Procesiranje podataka
 		for (const row of data) {
-			// Log podataka reda radi provere
-			console.log('Processing normalized row:', row);
-
 			if (!row.name || !row.stateId || !row.address) {
 				console.error('Invalid normalized row:', row);
 				throw new Error('Mandatory fields: name, stateId, and address are required.');

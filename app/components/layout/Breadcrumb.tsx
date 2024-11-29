@@ -75,12 +75,7 @@ const Breadcrumb: React.FC = () => {
 					)}
 				</React.Fragment>
 			))}
-			{isNotFound && (
-				<>
-					<span className='mx-1 text-bgMain'>/</span>
-					<span className='text-red-600 font-bold'>Nepostojeća stranica</span>
-				</>
-			)}
+			{isNotFound && <span className='text-red-600 font-bold'>Nepostojeća stranica</span>}
 		</BreadcrumbsContainer>
 	);
 };

@@ -30,6 +30,7 @@ function sanitizeCategory(category: CategoryWithTranslations): CategoryWithTrans
 		translations: category.translations.map(translation => ({
 			name: translation.name || 'No translation available',
 			languageId: translation.languageId,
+			slug: translation.slug || '',
 			labelId: translation.labelId,
 			categoryId: translation.categoryId,
 		})),
@@ -225,6 +226,7 @@ const buildCategoryTree = async (
 			translations: category.label.translations.map(translation => ({
 				languageId: translation.languageId || 1,
 				name: translation.translation || 'No translation available',
+				slug: translation.slug || '',
 				labelId: category.labelId || 1,
 				categoryId: category.id || 1,
 			})),

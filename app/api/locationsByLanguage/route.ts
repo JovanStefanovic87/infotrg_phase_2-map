@@ -57,26 +57,31 @@ export async function GET(req: Request) {
 		});
 
 		const filterTranslationsByLanguage = (translations: any[], languageId: number) => {
-			return (
-				translations.find(t => t.languageId === languageId)?.translation ||
-				translations[0]?.translation ||
-				''
-			);
+			const translation = translations.find(t => t.languageId === languageId) || translations[0];
+			return {
+				name: translation?.translation || '',
+				slug: translation?.slug || '',
+			};
 		};
 
-		const transformLocation = (location: any, type: string) => ({
-			id: location.id,
-			name: filterTranslationsByLanguage(location.label.translations, languageId),
-			icon: location.icon,
-			type,
-			children: location.counties
-				? location.counties.map((county: County) => transformLocation(county, 'county'))
-				: location.cities
-				? location.cities.map((city: City) => transformLocation(city, 'city'))
-				: location.suburbs
-				? location.suburbs.map((suburb: Suburb) => transformLocation(suburb, 'suburb'))
-				: [],
-		});
+		const transformLocation = (location: any, type: string) => {
+			const { name, slug } = filterTranslationsByLanguage(location.label.translations, languageId);
+
+			return {
+				id: location.id,
+				name,
+				slug,
+				icon: location.icon,
+				type,
+				children: location.counties
+					? location.counties.map((county: County) => transformLocation(county, 'county'))
+					: location.cities
+					? location.cities.map((city: City) => transformLocation(city, 'city'))
+					: location.suburbs
+					? location.suburbs.map((suburb: Suburb) => transformLocation(suburb, 'suburb'))
+					: [],
+			};
+		};
 
 		const filteredLocations = locations.map(state => transformLocation(state, 'state'));
 

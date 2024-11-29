@@ -25,6 +25,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 			parentCategories.map(async ({ parent }) => ({
 				id: parent.id,
 				name: parent.label.translations[0]?.translation || '',
+				slug: parent.label.translations[0]?.slug || '',
 				iconId: parent.iconId,
 				labelId: parent.labelId,
 				parents: await fetchParents(parent.id),
@@ -77,6 +78,7 @@ const buildCategoryTree = async (
 			categories.map(async category => ({
 				id: category.id,
 				name: category.label.translations[0]?.translation || '',
+				slug: category.label.translations[0]?.slug || '',
 				iconId: category.iconId,
 				labelId: category.labelId,
 				parents: await fetchParents(category.id),
@@ -97,8 +99,8 @@ const buildCategoryTree = async (
 			}))
 		);
 	} catch (error) {
-		console.error('Greška prilikom izgradnje stabla kategorija:', error);
-		throw new Error('Došlo je do greške pri izgradnji stabla kategorija. Molimo pokušajte ponovo.');
+		console.error('Error building category tree:', error);
+		throw error;
 	}
 };
 
@@ -106,8 +108,7 @@ const buildCategoryTree = async (
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const prefix = searchParams.get('prefix') || 'article_category_';
-	const languageId = Number(searchParams.get('languageId')) || 1;
-	console.log('Fetching categories with prefix:', prefix, 'and language ID:', languageId);
+	const languageId = Number(searchParams.get('languageId'));
 
 	try {
 		const categoires: Category[] = await buildCategoryTree(null, prefix, languageId);

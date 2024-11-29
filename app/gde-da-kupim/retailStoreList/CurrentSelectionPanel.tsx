@@ -18,6 +18,7 @@ const CurrentSelectionPanel: React.FC<Props> = ({
 	locationText,
 	openEditModal,
 }) => {
+	console.log('mainCategoryData', mainCategoryData);
 	return (
 		<div className='flex gap-2 bg-yellowLogo rounded-lg px-4 w-full max-w-xs md:max-w-lg mx-auto relative shadow-inner shadow-black'>
 			<div className='relative flex items-center justify-center py-7'>

@@ -31,7 +31,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
 			}
 		}
 
-		return 'rs';
+		return 'rs'; // Podrazumevani jezik
 	};
 
 	const [selectedLanguage, setSelectedLanguage] = useState<string>(extractLanguageFromUrl());

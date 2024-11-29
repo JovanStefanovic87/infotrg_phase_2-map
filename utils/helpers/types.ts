@@ -222,6 +222,7 @@ export interface SimplifiedCategory {
 export interface TranslationSimple {
 	name: string;
 	languageId: number;
+	slug: string;
 	labelId: number;
 	categoryId: number;
 }
@@ -586,6 +587,7 @@ export interface AdFormState {
 export interface fetchedCategories {
 	id: number;
 	name: string;
+	slug: string;
 	iconId: number;
 	labelId: number;
 	parents: fetchedCategories[];

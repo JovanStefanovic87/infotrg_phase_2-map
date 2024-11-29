@@ -2,7 +2,7 @@ import { prisma } from '@/app/lib/prisma';
 import { Category, EnhancedCategory } from '@/utils/helpers/types';
 import { NextRequest, NextResponse } from 'next/server';
 
-const fetchParents = async (childId: number): Promise<Category[]> => {
+const fetchParents = async (childId: number, languageId: number): Promise<Category[]> => {
 	const parentCategories = await prisma.parentCategory.findMany({
 		where: { childId },
 		include: {
@@ -12,7 +12,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 					label: {
 						include: {
 							translations: {
-								where: { languageId: 1 },
+								where: { languageId },
 								include: {
 									synonyms: true,
 								},
@@ -30,7 +30,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 			name: parent.label.translations[0]?.translation || '',
 			iconId: parent.iconId,
 			labelId: parent.labelId,
-			parents: await fetchParents(parent.id),
+			parents: await fetchParents(parent.id, languageId),
 			children: [],
 			synonyms: parent.label.translations[0]?.synonyms.map(syn => syn.synonym) || [],
 			icon: parent.icon
@@ -109,7 +109,7 @@ const buildCategoryTree = async (
 			name: category.label.translations[0]?.translation || '', // Koristimo prvi prevod
 			iconId: category.iconId,
 			labelId: category.labelId,
-			parents: await fetchParents(category.id),
+			parents: await fetchParents(category.id, languageId),
 			children,
 			synonyms: category.label.translations[0]?.synonyms.map(syn => syn.synonym) || [], // Mapiramo sinonime kao niz stringova
 			icon: category.icon
@@ -143,6 +143,9 @@ export async function GET(req: NextRequest) {
 			: parseInt(searchParams.get('suburbId') ?? '0');
 
 	const languageId = parseInt(searchParams.get('languageId') ?? '1');
+
+	console.log('languageId:', languageId);
+	console.log('categoryId:', categoryId);
 
 	// Initialize where conditions
 	const where: any = {};
@@ -183,8 +186,6 @@ export async function GET(req: NextRequest) {
 	} else {
 		delete where.stateId; // No location filtering
 	}
-
-	console.log('WHERE CONDITIONS:', where);
 
 	try {
 		// Fetch retail stores with filters and relations

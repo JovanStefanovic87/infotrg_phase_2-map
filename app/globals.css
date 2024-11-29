@@ -65,3 +65,9 @@ div[data-lastpass] {
 .maxWidthCustom {
 	max-width: calc(100dvw - 80px);
 }
+
+@media (max-width: 768px) {
+	.breadcrumb-item:not(:last-child):not(:first-child) {
+		display: none;
+	}
+}

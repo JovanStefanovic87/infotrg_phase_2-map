@@ -46,7 +46,6 @@ interface Props {
 const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
-	const languageId = 1;
 	const locations = initialData.locations;
 	const articleCategories = initialData.articleCategories;
 	const categoryId = queryParams.categoryId ? Number(queryParams.categoryId) : 0;
@@ -114,8 +113,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const mainSuburb = flatLocations.find(
 		location => location.id === suburbId && location.type === 'suburb'
 	);
-
-	console.log('mainSuburb', mainSuburb);
 
 	const locationText =
 		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';

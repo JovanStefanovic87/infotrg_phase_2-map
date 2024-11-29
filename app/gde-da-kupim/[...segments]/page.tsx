@@ -4,6 +4,7 @@ import { NextPage } from 'next';
 import MapProvider from '../MapProvider';
 import { Suspense } from 'react';
 import { prefixAticleCategory } from '@/app/api/prefix';
+import { cookies } from 'next/headers';
 import LanguageSelector from '@/app/components/ui/LanguageSelector';
 
 export function generateMetadata({ params }: { params: { segments: string[] } }) {
@@ -71,13 +72,18 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const queryClient = new QueryClient();
 	const segments = params.segments;
 
-	const languageCode = segments[0]; // Prvi segment je jezik (lg)
+	const languageCode = segments[0] || cookies().get('languageCode')?.value || 'rs';
 
 	// Prefetch data
 	await prefetchData(queryClient, languageCode);
 
 	const languages = queryClient.getQueryData<{ id: number; code: string }[]>(['languages']);
 	const language = languages?.find(lang => lang.code === languageCode);
+	const categories = queryClient.getQueryData<{ id: number; slug: string }[]>([
+		'categories',
+		'article',
+		language?.id || 1,
+	]);
 
 	if (!language) {
 		throw new Error(`Language with code '${languageCode}' not found.`);
@@ -86,13 +92,16 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const languageId = language.id;
 
 	// Ostali parametri
-	const categoryId = segments.includes('category')
-		? segments[segments.indexOf('category') + 1]
-		: null;
 	const stateId = segments.includes('state') ? segments[segments.indexOf('state') + 1] : null;
 	const countyId = segments.includes('county') ? segments[segments.indexOf('county') + 1] : null;
 	const cityId = segments.includes('city') ? segments[segments.indexOf('city') + 1] : null;
 	const suburbId = segments.includes('suburb') ? segments[segments.indexOf('suburb') + 1] : null;
+
+	const categorySlug = segments.find(segment => segment.includes('odeca'));
+	const category = categories?.find(
+		(cat: { slug: string | undefined }) => cat.slug === categorySlug
+	);
+	const categoryId = category ? category.id.toString() : null;
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>

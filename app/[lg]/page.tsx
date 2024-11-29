@@ -1,8 +1,10 @@
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { prefetchQueryFunction } from '@/app/helpers/api/prefetch/prefetchQueryFunction';
 import PageContent from '../home/PageContent';
+import { prefixAticleCategory } from '../api/prefix';
 import LanguageSelector from '@/app/components/ui/LanguageSelector';
 import { cookies } from 'next/headers';
+import { Synonym } from '@/utils/helpers/types';
 
 export const metadata = {
 	title: 'Infotrg',
@@ -13,6 +15,15 @@ export interface Language {
 	id: number;
 	code: string;
 	name: string;
+}
+
+interface Category {
+	id: number;
+	name: string;
+	iconId?: number;
+	parents: Category[];
+	children: Category[];
+	synonyms: Synonym[];
 }
 
 // Definišemo pomoćnu funkciju unutar istog fajla
@@ -49,25 +60,27 @@ const Home = async () => {
 		url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/languages`,
 	});
 
-	// Dohvati jezike iz Query Client-a
 	const languages = queryClient.getQueryData<Language[]>(['languages']) || [];
+
+	const languageId = languages.find(lang => lang.code === savedLanguage)?.id || 1;
 
 	// Prefetch kategorija
 	await prefetchData({
 		queryClient,
 		queryKey: ['categories'],
-		url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/categories`,
-		params: { language: savedLanguage },
+		url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/categoriesByLanguage`,
+		params: { languageId: languageId.toString(), prefix: prefixAticleCategory },
 	});
+
+	const categories = queryClient.getQueryData<Category[]>(['categories']) || [];
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<div className='flex justify-end w-full pr-2'>
-				{/* Prosledi jezike u LanguageSelector */}
 				<LanguageSelector languages={languages} />
 			</div>
 			<div className='lg:-mt-8'>
-				<PageContent />
+				<PageContent categories={categories} />
 			</div>
 		</HydrationBoundary>
 	);

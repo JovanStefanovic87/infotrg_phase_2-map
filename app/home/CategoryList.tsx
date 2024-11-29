@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 interface CategoryListProps {
-	categories: fetchedCategories[] | undefined;
+	categories: any;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
@@ -20,10 +20,38 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 		setLanguageCode(cookieLanguage);
 	}, []);
 
-	const handleNavigation = (categoryId: number) => {
-		router.push(
-			`/gde-da-kupim/${languageCode}/?categoryId=${categoryId}&stateId=1&countyId=1&cityId=1&suburbId=1`
-		);
+	const defaultLocationSlugs: { [key: string]: string[] } = {
+		rs: ['srbija', 'subotica', 'buvljak-subotica'],
+		hu: ['szerbia', 'szabadka', 'szabadkai-bolhapiac'],
+	};
+
+	const getParentSlugs = (
+		category: fetchedCategories,
+		categories: fetchedCategories[]
+	): string[] => {
+		const parent = categories.find(cat => cat.id === category.parents[0]?.id);
+
+		// Koristimo slug direktno iz kategorije
+		const currentSlug = category.slug;
+
+		if (!parent) return [currentSlug];
+
+		return [...getParentSlugs(parent, categories), currentSlug];
+	};
+
+	const handleNavigation = (category: fetchedCategories) => {
+		if (!categories) return;
+
+		// Prikupljanje slugova svih nadkategorija i podkategorije
+		const slugs = getParentSlugs(category, categories);
+
+		// Dohvatanje podrazumevanih slugova za trenutni jezik
+		const locationSlugs = defaultLocationSlugs[languageCode] || defaultLocationSlugs.rs;
+
+		// Generisanje URL-a
+		const urlPath = [...locationSlugs, ...slugs].join('/');
+
+		router.push(`/gde-da-kupim/${languageCode}/${urlPath}`);
 	};
 
 	const startDragging = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -51,14 +79,14 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 			{categories && categories.length > 0 ? (
 				categories
 					.slice()
-					.sort((a, b) => a.name.localeCompare(b.name))
-					.map(category => (
+					.sort((a: { name: string }, b: { name: any }) => a.name.localeCompare(b.name))
+					.map((category: fetchedCategories) => (
 						<div
 							key={category.id}
 							className='relative p-5 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white shadow-sm'>
 							<div
 								className='flex flex-col items-center cursor-pointer space-y-3 mb-3'
-								onClick={() => handleNavigation(category.id)}>
+								onClick={() => handleNavigation(category)}>
 								{category.icon && (
 									<div className='shadow-inner shadow-gray-300 overflow-hidden mr-4 rounded-full p-3 hover:overflow-visible hover:rotate-3 flex-shrink-0 relative w-[80px] h-[80px] transition-all duration-200'>
 										<Image
@@ -75,35 +103,24 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 								</span>
 							</div>
 
-							{category.children && category.children.length > 0 && (
+							{category.children.map((subCategory: fetchedCategories) => (
 								<div
-									className='relative flex overflow-x-auto space-x-3 px-1 custom-scrollbar scrollbar-thin min-h-32'
-									onMouseDown={startDragging}
-									onMouseLeave={stopDragging}
-									onMouseUp={stopDragging}
-									onMouseMove={handleDragging}
-									style={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
-									{category.children.map(subCategory => (
-										<div
-											key={subCategory.id}
-											className='flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all w-20 flex-shrink-0 outline-none select-none'>
-											<div className='mb-1 rounded-md  p-1 overflow-visible flex-shrink-0 relative w-[50px] h-[50px] transition-all duration-200 hover:overflow-visible hover:rotate-3'>
-												{subCategory.icon && (
-													<Image
-														src={subCategory.icon.url}
-														alt={subCategory.icon.name}
-														layout='fill'
-														className='transition-transform duration-200 hover:scale-105 ovject-contain'
-													/>
-												)}
-											</div>
-											<span className='text-xs text-gray-700 mt-1 text-center'>
-												{subCategory.name}
-											</span>
-										</div>
-									))}
+									key={subCategory.id}
+									className='flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all w-20 flex-shrink-0 outline-none select-none'
+									onClick={() => handleNavigation(subCategory)}>
+									<div className='mb-1 rounded-md p-1 overflow-visible flex-shrink-0 relative w-[50px] h-[50px] transition-all duration-200 hover:overflow-visible hover:rotate-3'>
+										{subCategory.icon && (
+											<Image
+												src={subCategory.icon.url}
+												alt={subCategory.icon.name}
+												layout='fill'
+												className='transition-transform duration-200 hover:scale-105 ovject-contain'
+											/>
+										)}
+									</div>
+									<span className='text-xs text-gray-700 mt-1 text-center'>{subCategory.name}</span>
 								</div>
-							)}
+							))}
 						</div>
 					))
 			) : (

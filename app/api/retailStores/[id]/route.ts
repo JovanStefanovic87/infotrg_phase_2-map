@@ -104,9 +104,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 	try {
 		const { id } = params;
 
-		// Log ID for debugging
-		console.log('Deleting RetailStore with ID:', id);
-
 		// Check if RetailStore exists
 		const retailStore = await prisma.retailStore.findUnique({
 			where: { id: Number(id) },

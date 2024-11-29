@@ -1,8 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
 import PageContainer from '../components/containers/PageContainer';
-import { prefixAticleCategory } from '@/app/api/prefix';
-import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';
 import CategoryList from './CategoryList';
 import QuickSearch from '../components/input/QuickSearch';
 import { Synonym } from '@/utils/helpers/types';
@@ -23,12 +21,11 @@ interface CategoryOption {
 	synonyms?: string[];
 }
 
-const PageContent: React.FC = () => {
-	const { data: categories } = useCategoriesByPrefixAndLanguage({
-		prefix: prefixAticleCategory,
-		languageId: 1,
-	});
+interface Props {
+	categories: Category[];
+}
 
+const PageContent: React.FC<Props> = ({ categories }) => {
 	const transformCategoriesToOptions = (categories: Category[]): CategoryOption[] => {
 		const options: CategoryOption[] = [];
 
