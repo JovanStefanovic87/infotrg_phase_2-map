@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PageContainer from '../components/containers/PageContainer';
 import { prefixAticleCategory } from '@/app/api/prefix';
 import { useCategoriesByPrefixAndLanguage } from '@/app/helpers/api/category';

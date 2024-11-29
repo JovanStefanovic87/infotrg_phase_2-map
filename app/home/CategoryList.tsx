@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchedCategories } from '@/utils/helpers/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface CategoryListProps {
 	categories: fetchedCategories[] | undefined;
@@ -12,10 +13,16 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
+	const [languageCode, setLanguageCode] = useState('rs');
+
+	useEffect(() => {
+		const cookieLanguage = Cookies.get('languageCode') || 'rs';
+		setLanguageCode(cookieLanguage);
+	}, []);
 
 	const handleNavigation = (categoryId: number) => {
 		router.push(
-			`/gde-da-kupim/rs/?categoryId=${categoryId}&stateId=1&countyId=1&cityId=1&suburbId=1`
+			`/gde-da-kupim/${languageCode}/?categoryId=${categoryId}&stateId=1&countyId=1&cityId=1&suburbId=1`
 		);
 	};
 

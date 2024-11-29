@@ -34,20 +34,27 @@ interface Props {
 		retails: RetailFormState[];
 		lang: Language[];
 	};
+	queryParams: {
+		categoryId: string | null;
+		stateId: string | null;
+		countyId: string | null;
+		cityId: string | null;
+		suburbId: string | null;
+	};
 }
 
-const MapContent: React.FC<Props> = ({ initialData }) => {
+const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const mapInstance = useMap('my-map-id');
 	const params = useSearchParams();
 	const languageId = 1;
 	const locations = initialData.locations;
 	const articleCategories = initialData.articleCategories;
-	const categoryId = params.get('categoryId') ? Number(params.get('categoryId')) : 0;
+	const categoryId = queryParams.categoryId ? Number(queryParams.categoryId) : 0;
 	const mainCategoryData = articleCategories.find(category => category.id === categoryId);
-	const stateId = params.get('stateId') ? Number(params.get('stateId')) : 1;
-	const countyId = params.get('countyId') ? Number(params.get('countyId')) : 0;
-	const cityId = params.get('cityId') ? Number(params.get('cityId')) : 0;
-	const suburbId = params.get('suburbId') ? Number(params.get('suburbId')) : 0;
+	const stateId = queryParams.stateId ? Number(queryParams.stateId) : 1;
+	const countyId = queryParams.countyId ? Number(queryParams.countyId) : 0;
+	const cityId = queryParams.cityId ? Number(queryParams.cityId) : 0;
+	const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 0;
 
 	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
 		lat: 0,

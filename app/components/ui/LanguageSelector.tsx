@@ -1,7 +1,9 @@
+//app\components\ui\LanguageSelector.tsx
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import LanguageFlag from './LanguageFlag';
+import Cookies from 'js-cookie';
 
 interface Language {
 	id: number;
@@ -14,23 +16,34 @@ interface LanguageSelectorProps {
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
-	const [selectedLanguage, setSelectedLanguage] = useState<string>('rs');
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const pathname = usePathname();
 	const router = useRouter();
 
-	useEffect(() => {
-		// Proveri da li postoji jezik u localStorage prilikom učitavanja
-		const savedLanguage = localStorage.getItem('languageCode') || 'rs';
-		setSelectedLanguage(savedLanguage);
-	}, []);
+	// Ekstraktujte jezik iz URL-a
+	const extractLanguageFromUrl = () => {
+		const segments = pathname?.split('/') || [];
+		const validLanguages = ['rs', 'hu'];
+
+		// Pronađi prvi validni jezik u segmentima
+		for (let i = 1; i < segments.length; i++) {
+			if (validLanguages.includes(segments[i])) {
+				return segments[i];
+			}
+		}
+
+		return 'rs';
+	};
+
+	const [selectedLanguage, setSelectedLanguage] = useState<string>(extractLanguageFromUrl());
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	const handleLanguageChange = (language: string) => {
-		// Sačuvaj jezik u localStorage
-		localStorage.setItem('languageCode', language);
-		setSelectedLanguage(language);
-
-		// Preusmeri na novu stranicu sa izabranim jezikom
-		router.push(`/gde-da-kupim/${language}`);
+		// Preusmeri samo ako se jezik menja
+		if (language !== selectedLanguage) {
+			Cookies.set('languageCode', language, { path: '/', expires: 365 });
+			const newPath = pathname.replace(`/${selectedLanguage}`, `/${language}`);
+			router.push(newPath);
+		}
 	};
 
 	return (
@@ -59,7 +72,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
 									handleLanguageChange(lang.code);
 									setIsDropdownOpen(false);
 								}}
-								className='flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full'>
+								className={`flex items-center px-4 py-2 text-sm ${
+									selectedLanguage === lang.code
+										? 'bg-gray-300 text-black'
+										: 'text-gray-700 hover:bg-gray-100'
+								} w-full`}>
 								<LanguageFlag code={lang.code} />
 								<span className='ml-2'>{lang.name}</span>
 							</button>
