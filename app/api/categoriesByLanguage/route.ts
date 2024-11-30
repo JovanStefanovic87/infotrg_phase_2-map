@@ -1,3 +1,4 @@
+//app\api\categoriesByLanguage\route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/app/lib/prisma';
 import { Category } from '@/utils/helpers/types';

@@ -84,7 +84,6 @@ const CollapsibleFormContainer: React.FC<Props> = ({
 				</div>
 				{children}
 			</div>
-
 			<CategoryModal
 				isOpen={isArticleModalOpen}
 				onClose={toggleArticleModal}

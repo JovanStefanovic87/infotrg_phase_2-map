@@ -206,6 +206,7 @@ export interface Category {
 	iconId: number | null;
 	labelId: number;
 	name: string;
+	slug?: string;
 	parents: SimplifiedCategory[];
 	relatedIds?: number[];
 	relatedCategories?: relatedCategory[];
@@ -396,8 +397,6 @@ export interface GetRetailStoreApi {
 	isEmailConfirmed: boolean;
 	createdAt: Date;
 	updatedAt: string;
-
-	// Direct top-level IDs
 	stateId: number;
 	countyId?: number;
 	cityId?: number | null;
@@ -406,7 +405,7 @@ export interface GetRetailStoreApi {
 	totalArticleCategoryCount: number;
 
 	// Related entities as objects
-	state: {
+	state?: {
 		id: number;
 		label: {
 			translations: {

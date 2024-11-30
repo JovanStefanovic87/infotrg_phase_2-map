@@ -8,7 +8,6 @@ import { cookies } from 'next/headers';
 import LanguageSelector from '@/app/components/ui/LanguageSelector';
 
 export function generateMetadata({ params }: { params: { segments: string[] } }) {
-	const languageCode = params.segments[0];
 	const currentUrl = `https://infotrg.com/gde-da-kupim/${params.segments.join('/')}`;
 	return {
 		title: 'Infotrg | Gde da kupim?',
@@ -24,7 +23,7 @@ export function generateMetadata({ params }: { params: { segments: string[] } })
 
 const serializeData = (data: any) => JSON.parse(JSON.stringify(data));
 
-const prefetchData = async (queryClient: QueryClient, languageCode: string) => {
+const prefetchData = async (queryClient: QueryClient, languageCode: string, segments: string[]) => {
 	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
 	if (!baseUrl) {
@@ -46,26 +45,53 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string) => {
 
 	const languageId = language.id;
 
+	// Dohvaćanje kategorija i lokacija
 	await Promise.all([
-		prefetchQueryFunction({
-			queryClient,
-			queryKey: ['retailStores', languageId],
-			url: `${baseUrl}/api/filteredRetailStores`,
-			params: { languageId },
-		}),
-		prefetchQueryFunction({
-			queryClient,
-			queryKey: ['locations', ''],
-			url: `${baseUrl}/api/locationsByLanguage`,
-			params: { prefix: '', languageId },
-		}),
 		prefetchQueryFunction({
 			queryClient,
 			queryKey: ['categories', 'article', languageId],
 			url: `${baseUrl}/api/categoriesByLanguage`,
 			params: { prefix: prefixAticleCategory, languageId },
 		}),
+		prefetchQueryFunction({
+			queryClient,
+			queryKey: ['locations', ''],
+			url: `${baseUrl}/api/locationsByLanguage`,
+			params: { languageId },
+		}),
 	]);
+
+	// Ekstrahujemo poslednji segment za filtriranje
+	const categorySlug = segments[segments.length - 1];
+	const categories = queryClient.getQueryData<{ id: number; slug: string }[]>([
+		'categories',
+		'article',
+		languageId,
+	]);
+	console.log('categories:', categories);
+	if (!segments || !Array.isArray(segments) || segments.length === 0) {
+		throw new Error('Segments array is empty or undefined in prefetchData.');
+	}
+	const category = categories?.find(cat => cat.slug === categorySlug);
+	if (!category) {
+		console.warn(`Category with slug "${categorySlug}" not found in prefetchData.`);
+	}
+	const categoryId = category ? category.id.toString() : null;
+
+	// Dodajemo filtriranje za lokaciju i prodavce
+	await prefetchQueryFunction({
+		queryClient,
+		queryKey: ['retailStores', languageId],
+		url: `${baseUrl}/api/filteredRetailStores`,
+		params: {
+			languageId,
+			categoryId,
+			stateId: segments.find(segment => segment.includes('state')) || null,
+			countyId: segments.find(segment => segment.includes('county')) || null,
+			cityId: segments.find(segment => segment.includes('city')) || null,
+			suburbId: segments.find(segment => segment.includes('suburb')) || null,
+		},
+	});
 };
 
 const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => {
@@ -75,7 +101,7 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const languageCode = segments[0] || cookies().get('languageCode')?.value || 'rs';
 
 	// Prefetch data
-	await prefetchData(queryClient, languageCode);
+	await prefetchData(queryClient, languageCode, segments);
 
 	const languages = queryClient.getQueryData<{ id: number; code: string }[]>(['languages']);
 	const language = languages?.find(lang => lang.code === languageCode);
@@ -84,24 +110,31 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 		'article',
 		language?.id || 1,
 	]);
+	const locations = queryClient.getQueryData<{ id: number; slug: string }[]>([
+		'locations',
+		language?.id || 1,
+	]);
 
 	if (!language) {
 		throw new Error(`Language with code '${languageCode}' not found.`);
 	}
-
 	const languageId = language.id;
 
-	// Ostali parametri
-	const stateId = segments.includes('state') ? segments[segments.indexOf('state') + 1] : null;
-	const countyId = segments.includes('county') ? segments[segments.indexOf('county') + 1] : null;
-	const cityId = segments.includes('city') ? segments[segments.indexOf('city') + 1] : null;
-	const suburbId = segments.includes('suburb') ? segments[segments.indexOf('suburb') + 1] : null;
-
-	const categorySlug = segments.find(segment => segment.includes('odeca'));
-	const category = categories?.find(
-		(cat: { slug: string | undefined }) => cat.slug === categorySlug
-	);
+	// Ekstrahujemo parametre za kategorije i lokacije
+	const categorySlug = segments[segments.length - 1];
+	const category = categories?.find(cat => cat.slug === categorySlug);
 	const categoryId = category ? category.id.toString() : null;
+
+	const stateSlug = segments.find(segment => segment.includes('state'));
+	const state = locations?.find(loc => loc.slug === stateSlug)?.id;
+	const stateId = state ? state.toString() : null;
+
+	const countySlug = segments.find(segment => segment.includes('county'));
+	const countyId = countySlug ? countySlug.split('-')[1] : null;
+	const citySlug = segments.find(segment => segment.includes('city'));
+	const cityId = citySlug ? citySlug.split('-')[1] : null;
+	const suburbSlug = segments.find(segment => segment.includes('suburb'));
+	const suburbId = suburbSlug ? suburbSlug.split('-')[1] : null;
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>

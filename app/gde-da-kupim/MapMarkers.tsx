@@ -129,7 +129,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 		}
 	}, [map, setCenter, setZoom]);
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (map) {
 			map.addListener('center_changed', handleMapChange);
 			map.addListener('zoom_changed', handleMapChange);
@@ -140,7 +140,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 				google.maps.event.clearListeners(map, 'zoom_changed');
 			}
 		};
-	}, [map, handleMapChange]);
+	}, [map, handleMapChange]); */
 
 	const handleMarkerClick = (marker: {
 		position: google.maps.LatLngLiteral;

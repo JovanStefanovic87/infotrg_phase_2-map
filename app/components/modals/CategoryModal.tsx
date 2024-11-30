@@ -62,6 +62,32 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 		return childrenIds;
 	};
 
+	const filterCategories = (categories: Category[], query: string): Category[] => {
+		if (!query.trim()) {
+			return categories; // Ako nema unosa, prikazujemo sve kategorije
+		}
+
+		return categories
+			.map(category => {
+				// Filtriramo decu
+				const filteredChildren = filterCategories(category.children, query);
+				if (
+					category.name.toLowerCase().includes(query.toLowerCase()) ||
+					filteredChildren.length > 0
+				) {
+					// Vraćamo kategoriju ako se podudara ili neka od njenih podkategorija
+					return {
+						...category,
+						children: filteredChildren,
+					};
+				}
+				return null;
+			})
+			.filter(Boolean) as Category[]; // Uklanjamo null vrednosti
+	};
+
+	const filteredCategories = filterCategories(categories, searchQuery);
+
 	// CategoryTree component
 	const CategoryTree: React.FC<{
 		categories: Category[];
@@ -111,7 +137,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 			));
 		};
 
-		return <div>{renderCategories(categories)}</div>;
+		return <div className='overflow-hidden'>{renderCategories(categories)}</div>;
 	};
 
 	return (
@@ -121,13 +147,15 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 				value={searchQuery}
 				onChange={e => setSearchQuery(e.target.value)}
 				placeholder='Search categories...'
-				className='border p-2 rounded w-full mb-4'
+				className='border p-2 rounded w-full mb-4 text-black'
 			/>
-			<CategoryTree
-				categories={categories}
-				selectedCategories={selectedCategories}
-				setSelectedCategories={setSelectedCategories}
-			/>
+			<div className='border p-4 rounded max-h-[calc(100%-100px)] overflow-hidden'>
+				<CategoryTree
+					categories={filteredCategories}
+					selectedCategories={selectedCategories}
+					setSelectedCategories={setSelectedCategories}
+				/>
+			</div>
 		</CustomModalAdmin>
 	);
 };

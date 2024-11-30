@@ -288,6 +288,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 					name: `${parentPrefix}${translation?.name || category.name}`,
 					languageId: languageId,
 					categoryId: category.id,
+					slug: '',
 				});
 				if (category.children && category.children.length > 0) {
 					traverseCategories(

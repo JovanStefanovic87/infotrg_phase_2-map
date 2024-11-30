@@ -3,7 +3,6 @@ import React from 'react';
 import PageContainer from '../components/containers/PageContainer';
 import MapContent from './MapContent';
 import { APIProvider } from '@vis.gl/react-google-maps';
-import { LocationDataForMap, Category, RetailFormState, Language } from '@/utils/helpers/types';
 
 interface Props {
 	initialData: {

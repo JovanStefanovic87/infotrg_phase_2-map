@@ -20,7 +20,7 @@ const CustomModalAdmin: React.FC<Props> = ({ isOpen, onClose, children, title })
 		<div
 			className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'
 			onClick={handleOverlayClick}>
-			<div className='bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-2xl relative'>
+			<div className='bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-2xl h-[90vh] overflow-y-auto relative'>
 				<h2 className='text-2xl font-bold text-center mb-4'>{title}</h2>
 				<button
 					onClick={onClose}

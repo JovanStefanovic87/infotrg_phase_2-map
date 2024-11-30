@@ -1,5 +1,6 @@
+//
 import { prisma } from '@/app/lib/prisma';
-import { Category, EnhancedCategory } from '@/utils/helpers/types';
+import { Category, GetRetailStoreApi } from '@/utils/helpers/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 const fetchParents = async (childId: number, languageId: number): Promise<Category[]> => {
@@ -137,15 +138,15 @@ export async function GET(req: NextRequest) {
 	const stateId = searchParams.get('stateId');
 	const countyId = searchParams.get('countyId');
 	const cityId = searchParams.get('cityId');
-	const suburbId =
-		searchParams.get('suburbId') === '0' || searchParams.get('suburbId') === 'null'
-			? null
-			: parseInt(searchParams.get('suburbId') ?? '0');
+	const suburbId = searchParams.get('suburbId');
+
+	const stateIdValue = stateId && stateId !== '0' ? parseInt(stateId) : 1;
+	const countyIdValue = countyId && countyId !== '0' ? parseInt(countyId) : 1;
+	const cityIdValue = cityId && cityId !== '0' ? parseInt(cityId) : 1;
+	const suburbIdValue =
+		suburbId && suburbId !== '0' && suburbId !== 'null' ? parseInt(suburbId) : 1;
 
 	const languageId = parseInt(searchParams.get('languageId') ?? '1');
-
-	console.log('languageId:', languageId);
-	console.log('categoryId:', categoryId);
 
 	// Initialize where conditions
 	const where: any = {};
@@ -160,31 +161,16 @@ export async function GET(req: NextRequest) {
 	}
 
 	// Add state filtering
-	if (stateId && stateId !== '0') {
-		where.stateId = parseInt(stateId);
-
-		// Add county filtering
-		if (countyId && countyId !== '0') {
-			where.countyId = parseInt(countyId);
-
-			// Add city filtering
-			if (cityId && cityId !== '0') {
-				where.cityId = parseInt(cityId);
-
-				// Add suburb filtering (if suburbId is not null)
-				if (suburbId !== null) {
-					where.suburbId = suburbId;
-				} else {
-					delete where.suburbId; // Include all suburbs within the city
-				}
-			} else {
-				delete where.cityId; // Include all cities within the county
-			}
-		} else {
-			delete where.countyId; // Include all counties within the state
-		}
+	if (suburbIdValue && suburbIdValue !== 1) {
+		where.suburbId = suburbIdValue;
+	} else if (cityIdValue && cityIdValue !== 1) {
+		where.cityId = cityIdValue;
+	} else if (countyIdValue && countyIdValue !== 1) {
+		where.countyId = countyIdValue;
+	} else if (stateIdValue && stateIdValue !== 1) {
+		where.stateId = stateIdValue;
 	} else {
-		delete where.stateId; // No location filtering
+		delete where.stateId; // Uklanjamo sve uslove za lokaciju ako nijedan nivo nije specifično prosleđen
 	}
 
 	try {

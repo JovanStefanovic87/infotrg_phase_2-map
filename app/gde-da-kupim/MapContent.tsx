@@ -1,14 +1,8 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import useScrollToTop from '../../utils/helpers/useScrollToTop';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
-import { useSearchParams } from 'next/navigation';
-import { useCategories } from '@/app/helpers/api/category';
-import { useFetchFilteredRetailStores } from '@/app/helpers/api/retailStore';
-import { useFetchCategoryByIdAndLanguage } from '@/app/helpers/api/category';
-import { useFetchLocationByIdAndLanguage } from '@/app/helpers/api/location';
 import {
 	Category,
 	GetRetailStoreApi,
@@ -26,12 +20,13 @@ import ErrorDisplay from '../components/modals/systemModals/ErrorDisplay';
 import RelatedCategories from './retailStoreList/RelatedCategroies';
 import CurrentSelectionPanel from './retailStoreList/CurrentSelectionPanel';
 import EditSelectionModal from '../components/modals/EditSelectionModal';
+import { usePathname } from 'next/navigation';
 
 interface Props {
 	initialData: {
 		locations: LocationDataForMap[];
 		articleCategories: Category[];
-		retails: RetailFormState[];
+		retails: GetRetailStoreApi[];
 		lang: Language[];
 	};
 	queryParams: {
@@ -44,16 +39,37 @@ interface Props {
 }
 
 const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
+	const pathname = usePathname();
 	const mapInstance = useMap('my-map-id');
-	const params = useSearchParams();
 	const locations = initialData.locations;
 	const articleCategories = initialData.articleCategories;
-	const categoryId = queryParams.categoryId ? Number(queryParams.categoryId) : 0;
-	const mainCategoryData = articleCategories.find(category => category.id === categoryId);
+	const categoryId =
+		queryParams.categoryId && Number(queryParams.categoryId) > 0
+			? Number(queryParams.categoryId)
+			: articleCategories[0]?.id || null;
+	const segments = pathname.split('/').filter(segment => segment);
+	const lastSegment = segments[segments.length - 1];
+	const findCategoryBySlug = (categories: Category[], slug: string): Category | null => {
+		for (const category of categories) {
+			if (category.slug === slug) {
+				return category;
+			}
+			if (category.children && category.children.length > 0) {
+				const found = findCategoryBySlug(category.children, slug);
+				if (found) {
+					return found;
+				}
+			}
+		}
+		return null;
+	};
+
+	const mainCategoryData = findCategoryBySlug(articleCategories, lastSegment);
+
 	const stateId = queryParams.stateId ? Number(queryParams.stateId) : 1;
-	const countyId = queryParams.countyId ? Number(queryParams.countyId) : 0;
-	const cityId = queryParams.cityId ? Number(queryParams.cityId) : 0;
-	const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 0;
+	const countyId = queryParams.countyId ? Number(queryParams.countyId) : 1;
+	const cityId = queryParams.cityId ? Number(queryParams.cityId) : 1;
+	const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 1;
 
 	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
 		lat: 0,
@@ -71,48 +87,31 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const [selectedLocation, setSelectedLocation] = useState<LocationDataForMap | null>(null);
 	const [id, setId] = useState<number | null>(null);
 	const [type, setType] = useState<'county' | 'city' | 'suburb' | null>(null);
-	useScrollToTop();
-	const {
-		data: retailStores,
-		isLoading,
-		error,
-	} = useFetchFilteredRetailStores({
-		categoryId: categoryId || 0,
-		stateId: stateId || 1,
-		countyId: countyId || 1,
-		cityId: cityId ?? 0,
-		suburbId: suburbId ?? 0,
-		languageId: 1,
-	});
-	const isMarkersLoading = !retailStores;
-	/* 	const { data: mainCategoryData } = useFetchCategoryByIdAndLanguage(categoryId || 10, languageId); */
-	const flattenLocations = (locations: LocationDataForMap[]): LocationDataForMap[] => {
-		const flatLocations: LocationDataForMap[] = [];
+	const retailStores = initialData.retails;
+	const isLoading = !retailStores;
 
-		const flatten = (locs: LocationDataForMap[]) => {
-			for (const location of locs) {
-				flatLocations.push(location); // Dodaj trenutnu lokaciju
-				if (location.children?.length) {
-					flatten(location.children); // Rekurzivno obradi children
+	const findLocation = (
+		locations: LocationDataForMap[],
+		id: number,
+		type: string
+	): LocationDataForMap | undefined => {
+		for (const location of locations) {
+			if (location.id === id && location.type === type) {
+				return location; // Pronađena lokacija
+			}
+			if (location.children && location.children.length > 0) {
+				const result = findLocation(location.children, id, type);
+				if (result) {
+					return result; // Pronađeno u podnivoima
 				}
 			}
-		};
-
-		flatten(locations);
-		return flatLocations;
+		}
+		return undefined; // Nije pronađeno
 	};
 
-	const flatLocations = flattenLocations(locations);
-
-	const mainCounty = flatLocations.find(
-		location => location.id === countyId && location.type === 'county'
-	);
-	const mainCity = flatLocations.find(
-		location => location.id === cityId && location.type === 'city'
-	);
-	const mainSuburb = flatLocations.find(
-		location => location.id === suburbId && location.type === 'suburb'
-	);
+	const mainCounty = findLocation(locations, countyId, 'county');
+	const mainCity = findLocation(locations, cityId, 'city');
+	const mainSuburb = findLocation(locations, suburbId, 'suburb');
 
 	const locationText =
 		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';
@@ -171,14 +170,14 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		window.open(url, '_blank');
 	};
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (retailStores) {
 			const categories = retailStores.flatMap(store => store.articleCategories);
 			const formattedCategories = formatCategories(categories);
 			const hierarchy = buildCategoryHierarchy(formattedCategories);
 			setCategoryHierarchy(hierarchy);
 		}
-	}, [retailStores, formatCategories]);
+	}, [retailStores, formatCategories]); */
 
 	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
@@ -255,10 +254,10 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		const categoryId = currentParams.get('categoryId')
 			? Number(currentParams.get('categoryId'))
 			: undefined;
-		const stateId = currentParams.get('stateId') ? Number(currentParams.get('stateId')) : undefined;
-		const countyId = currentParams.get('countyId') ? Number(currentParams.get('countyId')) : 0;
-		const cityId = currentParams.get('cityId') ? Number(currentParams.get('cityId')) : 0;
-		const suburbId = currentParams.get('suburbId') ? Number(currentParams.get('suburbId')) : 0;
+		const stateId = queryParams.stateId ? Number(queryParams.stateId) : 1;
+		const countyId = queryParams.countyId ? Number(queryParams.countyId) : 1; // Koristite validnu podrazumevanu vrednost
+		const cityId = queryParams.cityId ? Number(queryParams.cityId) : 1;
+		const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 1;
 
 		// Update local state
 		setSelectedCategory(categoryId ? { id: categoryId, name: '' } : null);
@@ -393,12 +392,12 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 
 			<div className='results-container p-2 bg-white mt-8 lg:mx-16'>
 				{isLoading && <p className='text-center text-gray-500'>Učitavanje...</p>}
-				{error && (
+				{/* {error && (
 					<ErrorDisplay
 						error={'Došlo je do greške prilikom učitavanja podataka.'}
 						clearError={() => {}}
 					/>
-				)}
+				)} */}
 				{retailStores && retailStores.length > 0 ? (
 					<div className='grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2 2xl:grid-cols-3'>
 						{retailStores.map((store, index) => (

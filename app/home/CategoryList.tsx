@@ -92,9 +92,10 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 										<Image
 											src={category.icon.url}
 											alt={category.icon.name}
-											layout='fill'
-											objectFit='cover'
-											className='transition-transform duration-200 ease-in-out hover:scale-105'
+											fill
+											sizes='100px'
+											quality={100}
+											className='transition-transform duration-200 ease-in-out hover:scale-105 object-contain'
 										/>
 									</div>
 								)}
@@ -113,7 +114,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 											<Image
 												src={subCategory.icon.url}
 												alt={subCategory.icon.name}
-												layout='fill'
+												fill
+												sizes='50px'
 												className='transition-transform duration-200 hover:scale-105 ovject-contain'
 											/>
 										)}
