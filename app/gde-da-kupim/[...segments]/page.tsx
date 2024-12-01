@@ -154,7 +154,6 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const cityId = citySlug ? citySlug.split('-')[1] : null;
 	const suburbSlug = segments.find(segment => segment.includes('suburb'));
 	const suburbId = suburbSlug ? suburbSlug.split('-')[1] : null;
-	console.log('categoryId:', categoryId);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>

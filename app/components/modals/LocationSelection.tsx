@@ -7,7 +7,12 @@ import { LocationDataForMap } from '@/utils/helpers/types';
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
-	onSelect: (item: { id: number; name: string; type: 'county' | 'city' | 'suburb' }) => void;
+	onSelect: (item: {
+		slug: string;
+		id: number;
+		name: string;
+		type: 'county' | 'city' | 'suburb';
+	}) => void;
 	locations: Array<{
 		id: number;
 		name: string;
@@ -67,6 +72,7 @@ const LocationSelection: React.FC<Props> = ({
 		id: number;
 		name: string;
 		type: 'county' | 'city' | 'suburb';
+		slug: string;
 	}) => {
 		onSelect(item);
 		onClose();

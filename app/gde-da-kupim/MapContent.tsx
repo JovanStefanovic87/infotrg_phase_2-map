@@ -122,14 +122,37 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 
 	useEffect(() => {
 		if (mainCategoryData) {
-			setSelectedCategory({ id: mainCategoryData.id, name: mainCategoryData.name || '' });
+			setSelectedCategory({
+				id: mainCategoryData.id,
+				name: mainCategoryData.name || '',
+				slug: mainCategoryData.slug,
+				parents: mainCategoryData.parents || [],
+			});
 		}
 		if (mainSuburb) {
-			setSelectedLocation({ id: mainSuburb.id, name: mainSuburb.name, type: 'suburb' });
+			setSelectedLocation({
+				id: mainSuburb.id,
+				name: mainSuburb.name,
+				slug: mainSuburb.slug,
+				type: 'suburb',
+				parents: mainSuburb.parents,
+			});
 		} else if (mainCity) {
-			setSelectedLocation({ id: mainCity.id, name: mainCity.name, type: 'city' });
+			setSelectedLocation({
+				id: mainCity.id,
+				name: mainCity.name,
+				slug: mainCity.slug,
+				type: 'city',
+				parents: mainCity.parents,
+			});
 		} else if (mainCounty) {
-			setSelectedLocation({ id: mainCounty.id, name: mainCounty.name, type: 'county' });
+			setSelectedLocation({
+				id: mainCounty.id,
+				name: mainCounty.name,
+				slug: mainCounty.slug,
+				type: 'county',
+				parents: mainCounty.parents,
+			});
 		}
 	}, [mainCategoryData, mainSuburb, mainCity, mainCounty]);
 
@@ -169,15 +192,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 		window.open(url, '_blank');
 	};
-
-	/* useEffect(() => {
-		if (retailStores) {
-			const categories = retailStores.flatMap(store => store.articleCategories);
-			const formattedCategories = formatCategories(categories);
-			const hierarchy = buildCategoryHierarchy(formattedCategories);
-			setCategoryHierarchy(hierarchy);
-		}
-	}, [retailStores, formatCategories]); */
 
 	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
@@ -249,81 +263,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		}
 	};
 
-	const reloadData = () => {
-		const currentParams = new URLSearchParams(window.location.search);
-		const categoryId = currentParams.get('categoryId')
-			? Number(currentParams.get('categoryId'))
-			: undefined;
-		const stateId = queryParams.stateId ? Number(queryParams.stateId) : 1;
-		const countyId = queryParams.countyId ? Number(queryParams.countyId) : 1; // Koristite validnu podrazumevanu vrednost
-		const cityId = queryParams.cityId ? Number(queryParams.cityId) : 1;
-		const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 1;
-
-		// Update local state
-		setSelectedCategory(categoryId ? { id: categoryId, name: '' } : null);
-		setSelectedLocation(
-			suburbId
-				? { id: suburbId, name: '', type: 'suburb' }
-				: cityId
-				? { id: cityId, name: '', type: 'city' }
-				: countyId
-				? { id: countyId, name: '', type: 'county' }
-				: null
-		);
-	};
-
-	const handleUpdateParams = (newId: number, newType: 'county' | 'city' | 'suburb') => {
-		setId(newId);
-		setType(newType);
-	};
-
-	const onSave = () => {
-		// Koristimo trenutno selektovane kategorije i lokacije
-		const categoryId = selectedCategory?.id || null;
-		const location = selectedLocation || null;
-
-		const url = new URL(window.location.href);
-
-		// Ažuriraj URL parametre za kategoriju
-		if (categoryId) {
-			url.searchParams.set('categoryId', categoryId.toString());
-		} else {
-			url.searchParams.delete('categoryId');
-		}
-
-		// Ažuriraj URL parametre za lokaciju prema tipu
-		if (location?.type === 'suburb') {
-			url.searchParams.set('suburbId', location.id.toString());
-			if (location.cityId) {
-				url.searchParams.set('cityId', location.cityId.toString());
-			}
-			if (location.countyId) {
-				url.searchParams.set('countyId', location.countyId.toString());
-			}
-		} else if (location?.type === 'city') {
-			url.searchParams.set('cityId', location.id.toString());
-			if (location.countyId) {
-				url.searchParams.set('countyId', location.countyId.toString());
-			}
-			url.searchParams.delete('suburbId'); // Uklanja suburb ako je prelazak na city
-		} else if (location?.type === 'county') {
-			url.searchParams.set('countyId', location.id.toString());
-			url.searchParams.delete('cityId');
-			url.searchParams.delete('suburbId');
-		} else {
-			// Ako nema validne lokacije, brišu se svi lokacijski parametri
-			url.searchParams.delete('countyId');
-			url.searchParams.delete('cityId');
-			url.searchParams.delete('suburbId');
-		}
-
-		// Ažuriranje URL-a
-		history.pushState({}, '', url.toString());
-
-		// Osvježavanje lokalnog stanja sa ažuriranim parametrima
-		reloadData();
-	};
-
 	const relatedCategories = mainCategoryData?.relatedCategories || [];
 
 	return (
@@ -338,7 +277,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 			<EditSelectionModal
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
-				onSave={onSave}
 				location={selectedLocation}
 				selectedCategory={selectedCategory}
 				selectedLocation={selectedLocation}

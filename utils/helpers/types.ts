@@ -628,6 +628,7 @@ export interface EnhancedCategory {
 }
 
 export interface LocationDataForMap {
+	slug: string;
 	id: number;
 	name: string;
 	icon?: string | null;
@@ -635,6 +636,7 @@ export interface LocationDataForMap {
 	cityId?: number | null;
 	countyId?: number | null;
 	children?: LocationDataForMap[];
+	parents?: LocationDataForMap[];
 	parentId?: number;
 }
 
@@ -649,6 +651,8 @@ export interface CategoryDataForMap {
 	name: string;
 	icon?: string | null;
 	children?: Category[];
+	slug?: string;
+	parents?: CategoryDataForMap[];
 }
 
 export interface RawCategoryData {

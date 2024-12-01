@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
 import CategorySelection from './CategorySelection';
@@ -8,11 +8,11 @@ import { TagIcon } from '@heroicons/react/24/outline';
 import CloseButton from '../buttons/CloseButton';
 import SelectableButton from '../buttons/SelectableButton';
 import { LocationDataForMap, CategoryDataForMap, Category } from '@/utils/helpers/types';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: () => void;
 	location: LocationDataForMap | null;
 	selectedCategory: CategoryDataForMap | null;
 	selectedLocation: LocationDataForMap | null;
@@ -25,7 +25,6 @@ interface Props {
 const EditSelectionModal: React.FC<Props> = ({
 	isOpen,
 	onClose,
-	onSave,
 	selectedCategory,
 	selectedLocation,
 	setSelectedCategory,
@@ -33,49 +32,149 @@ const EditSelectionModal: React.FC<Props> = ({
 	categories,
 	locations,
 }) => {
+	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
+	const segments = pathname.split('/').filter(Boolean);
 
-	// Function to update URL parameters
-	const updateUrlParams = (categoryId: number | null, location: LocationDataForMap | null) => {
-		const url = new URL(window.location.href);
+	const categorySlug = selectedCategory?.slug || '';
+	const parentSlug = selectedCategory?.parents?.[0]?.slug;
+	const categoryFullPath = `${parentSlug ? parentSlug + '/' : ''}${categorySlug}`;
+	const currentPage = segments[0] || 'gde-da-kupim';
+	const currentLanguage = segments[1] || 'rs';
+	const languageId = currentLanguage === 'rs' ? 1 : 2;
 
-		// Postavljanje categoryId
-		if (categoryId) {
-			url.searchParams.set('categoryId', categoryId.toString());
-		} else {
-			url.searchParams.delete('categoryId');
+	console.log('currentLanguage:', currentLanguage);
+
+	const findCategoryIdBySlug = (slug: string, categories: Category[]): number | null => {
+		for (const category of categories) {
+			// Ako je slug kategorije isti kao traženi slug, vraćamo ID
+			if (category.slug === slug) {
+				return category.id;
+			}
+
+			// Ako kategorija ima podkategorije (children), pozivamo rekurzivno funkciju za podkategorije
+			if (category.children && category.children.length > 0) {
+				const foundCategory = findCategoryIdBySlug(slug, category.children);
+				if (foundCategory) {
+					return foundCategory; // Vraćamo ID podkategorije ako je pronađena
+				}
+			}
 		}
-
-		// Postavljanje lokacija prema tipu
-		if (location?.type === 'suburb') {
-			url.searchParams.set('suburbId', location.id.toString());
-			if (location.cityId) {
-				url.searchParams.set('cityId', location.cityId.toString());
-			}
-			if (location.countyId) {
-				url.searchParams.set('countyId', location.countyId.toString());
-			}
-		} else if (location?.type === 'city') {
-			url.searchParams.set('cityId', location.id.toString());
-			if (location.countyId) {
-				url.searchParams.set('countyId', location.countyId.toString());
-			}
-			url.searchParams.delete('suburbId'); // Uklanja suburb ako prelazimo na city
-		} else if (location?.type === 'county') {
-			url.searchParams.set('countyId', location.id.toString());
-			url.searchParams.delete('cityId');
-			url.searchParams.delete('suburbId');
-		} else {
-			// Brisanje svih lokacijskih parametara ako nema validne lokacije
-			url.searchParams.delete('countyId');
-			url.searchParams.delete('cityId');
-			url.searchParams.delete('suburbId');
-		}
-
-		// Ažuriranje URL-a
-		history.pushState({}, '', url.toString());
+		return null; // Ako nije pronađena kategorija
 	};
+
+	const locationSlug = selectedLocation?.slug || '';
+
+	const findLocationBySlug = (
+		slug: string,
+		locations: LocationDataForMap[]
+	): { id: number; type: string } | null => {
+		for (const location of locations) {
+			// Ako je slug kategorije isti kao traženi slug, vraćamo objekat sa id i type
+			if (location.slug === slug) {
+				return { id: location.id, type: location.type };
+			}
+
+			// Ako lokacija ima podlokacije (children), pozivamo rekurzivno funkciju za podlokacije
+			if (location.children && location.children.length > 0) {
+				const foundLocation = findLocationBySlug(slug, location.children);
+				if (foundLocation) {
+					return foundLocation;
+				}
+			}
+		}
+		return null; // Ako nije pronađena kategorija
+	};
+
+	const selectedLocationData = findLocationBySlug(locationSlug, locations);
+	const selectedLocationParams = `${selectedLocationData?.type}Id=${selectedLocationData?.id}`;
+
+	console.log('selectedLocationData:', selectedLocationData);
+
+	const findParentLocationByIdAndType = (
+		id: number,
+		type: string,
+		locations: LocationDataForMap[]
+	): LocationDataForMap | null => {
+		for (const location of locations) {
+			// Ako se ID i tip podudaraju, vraćamo ovu lokaciju (to je roditelj)
+			if (location.id === id && location.type === type) {
+				return location;
+			}
+
+			// Ako lokacija ima podlokacije (children), pozivamo rekurzivno funkciju za podlokacije
+			if (location.children && location.children.length > 0) {
+				for (const child of location.children) {
+					if (child.id === id && child.type === type) {
+						return location; // Ovo je roditelj
+					}
+				}
+
+				// Rekurzivno proveravamo podlokacije
+				const foundParent = findParentLocationByIdAndType(id, type, location.children);
+				if (foundParent) {
+					return foundParent;
+				}
+			}
+		}
+
+		return null; // Ako roditelj nije pronađen
+	};
+
+	const selectedLocationParent = selectedLocationData
+		? findParentLocationByIdAndType(selectedLocationData.id, selectedLocationData.type, locations)
+		: null;
+
+	const locationFullPath = `${
+		selectedLocationParent?.slug ? selectedLocationParent?.slug + '/' : ''
+	}${locationSlug}`;
+
+	const updateLocationAndCategory = (newLocationSlug: string, newCategorySlug: string) => {
+		const segments = pathname.split('/').filter(Boolean);
+
+		// Find the index of the location and category segments
+		const locationIndex = segments.findIndex(segment => segment === locationSlug);
+		const categoryIndex = segments.findIndex(segment => segment === categorySlug);
+
+		// Replace the location and category segments with the new values
+		if (locationIndex !== -1) {
+			segments[locationIndex] = newLocationSlug;
+		}
+		if (categoryIndex !== -1) {
+			segments[categoryIndex] = newCategorySlug;
+		}
+
+		// Construct the new URL
+		const newUrl = `${baseUrl}/${segments.join('/')}`;
+		console.log('newUrl:', newUrl);
+
+		// Use router.push to change the URL without reloading the page
+		router.push(newUrl);
+	};
+	const [data, setData] = useState<any>(null);
+	useEffect(() => {
+		const fetchData = async () => {
+			// Fetch data based on the new category and location
+			try {
+				const response = await fetch(
+					`${baseUrl}/api/filteredRetailStores?languageId=${languageId}${selectedLocationParams}&categoryId=${findCategoryIdBySlug(
+						categorySlug,
+						categories
+					)}`
+				);
+				const fetchedData = await response.json();
+				setData(fetchedData); // Update state with the fetched data
+			} catch (error) {
+				console.error('Error fetching data:', error);
+			}
+		};
+
+		fetchData();
+	}, [pathname, searchParams, selectedCategory, selectedLocation]);
 
 	return (
 		<Dialog
@@ -109,8 +208,21 @@ const EditSelectionModal: React.FC<Props> = ({
 					<CloseButton onClose={onClose} />
 					<DefaultButton
 						onClick={() => {
+							// Check if a category or location is selected
 							if (selectedCategory || selectedLocation) {
-								updateUrlParams(selectedCategory?.id || null, selectedLocation || null);
+								const newCategorySlug = selectedCategory?.slug || categorySlug;
+								const newLocationSlug = selectedLocation?.slug || locationSlug;
+								const newLocationFullPath = selectedLocationParent?.slug
+									? `${selectedLocationParent.slug}/${newLocationSlug}`
+									: newLocationSlug;
+								const newCategoryFullPath = parentSlug
+									? `${parentSlug}/${newCategorySlug}`
+									: newCategorySlug;
+
+								// Construct the new URL
+								const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationFullPath}/${newCategoryFullPath}`;
+								console.log('newUrl:', newUrl);
+								router.push(newUrl);
 								onClose();
 							}
 						}}
@@ -126,12 +238,14 @@ const EditSelectionModal: React.FC<Props> = ({
 					categories={categories}
 					selectedItem={selectedCategory}
 				/>
+
 				<LocationSelection
 					isOpen={locationModalOpen}
 					onClose={() => setLocationModalOpen(false)}
 					onSelect={location =>
 						setSelectedLocation({
 							...location,
+							slug: location.slug,
 							type: location.type as 'county' | 'city' | 'suburb',
 						})
 					}

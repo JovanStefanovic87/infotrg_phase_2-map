@@ -59,6 +59,10 @@ export default async function middleware(request: NextRequest) {
 		return response;
 	}
 
+	if (pathname.startsWith('/gde-da-kupim') && segments.length > 2) {
+		return NextResponse.next();
+	}
+
 	return NextResponse.next();
 }
 
