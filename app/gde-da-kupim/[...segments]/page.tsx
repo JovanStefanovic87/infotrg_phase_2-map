@@ -68,13 +68,32 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 		'article',
 		languageId,
 	]);
-	console.log('categories:', categories);
+
 	if (!segments || !Array.isArray(segments) || segments.length === 0) {
 		throw new Error('Segments array is empty or undefined in prefetchData.');
 	}
-	const category = categories?.find(cat => cat.slug === categorySlug);
+	const findCategoryBySlug = (slug: string, categories: any[]): any | null => {
+		for (const category of categories) {
+			// Ako je trenutna kategorija ta koja se traži
+			if (category.slug === slug) {
+				return category;
+			}
+
+			// Ako kategorija ima podkategorije, proveri ih rekurzivno
+			if (category.children && category.children.length > 0) {
+				const foundInChildren = findCategoryBySlug(slug, category.children);
+				if (foundInChildren) {
+					return foundInChildren;
+				}
+			}
+		}
+		return null; // Ako nije pronađeno
+	};
+
+	const category = categories ? findCategoryBySlug(categorySlug, categories) : null;
+
 	if (!category) {
-		console.warn(`Category with slug "${categorySlug}" not found in prefetchData.`);
+		console.warn(`Category with slug "${categorySlug}" not found.`);
 	}
 	const categoryId = category ? category.id.toString() : null;
 
@@ -135,6 +154,7 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const cityId = citySlug ? citySlug.split('-')[1] : null;
 	const suburbSlug = segments.find(segment => segment.includes('suburb'));
 	const suburbId = suburbSlug ? suburbSlug.split('-')[1] : null;
+	console.log('categoryId:', categoryId);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
