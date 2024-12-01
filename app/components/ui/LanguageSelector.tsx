@@ -1,9 +1,8 @@
-//app\components\ui\LanguageSelector.tsx
 'use client';
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import LanguageFlag from './LanguageFlag';
-import Cookies from 'js-cookie';
 
 interface Language {
 	id: number;
@@ -13,18 +12,18 @@ interface Language {
 
 interface LanguageSelectorProps {
 	languages: Language[];
+	onLanguageChange?: (newLanguage: string) => void; // Callback za promenu jezika
 }
 
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLanguageChange }) => {
 	const pathname = usePathname();
 	const router = useRouter();
 
-	// Ekstraktujte jezik iz URL-a
-	const extractLanguageFromUrl = () => {
+	// Ekstraktujte trenutni jezik iz URL-a
+	const extractLanguageFromUrl = (): string => {
 		const segments = pathname?.split('/') || [];
-		const validLanguages = ['rs', 'hu'];
+		const validLanguages = languages.map(lang => lang.code); // Validni jezici
 
-		// Pronađi prvi validni jezik u segmentima
 		for (let i = 1; i < segments.length; i++) {
 			if (validLanguages.includes(segments[i])) {
 				return segments[i];
@@ -37,18 +36,24 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
 	const [selectedLanguage, setSelectedLanguage] = useState<string>(extractLanguageFromUrl());
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-	const handleLanguageChange = (language: string) => {
-		// Preusmeri samo ako se jezik menja
-		if (language !== selectedLanguage) {
-			Cookies.set('languageCode', language, { path: '/', expires: 365 });
-			const newPath = pathname.replace(`/${selectedLanguage}`, `/${language}`);
-			router.push(newPath);
-		}
+	// Funkcija za promenu jezika
+	const handleLanguageChange = async (newLanguage: string) => {
+		setSelectedLanguage(newLanguage);
+
+		// Preusmerite korisnika na početnu stranu sa izabranim jezikom
+		const updatedPath = `/${newLanguage}`; // Početna stranica sa jezičkim prefiksom
+		router.push(updatedPath); // Preusmeri korisnika na početnu stranu sa novim jezikom
+
+		// Postavite kolačić sa novim jezikom
+		document.cookie = `languageCode=${newLanguage}; path=/;`;
+
+		// Pozovite callback za promenu jezika
+		onLanguageChange?.(newLanguage);
 	};
 
 	return (
 		<div className='relative inline-block text-left'>
-			{/* Aktivni jezik */}
+			{/* Prikaz trenutno selektovanog jezika */}
 			<button
 				onClick={() => setIsDropdownOpen(!isDropdownOpen)}
 				className='flex items-center px-4 py-2 bg-gray-200 rounded hover:bg-gray-300'>
@@ -57,7 +62,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
 				<span className='ml-2'>&#x25BC;</span>
 			</button>
 
-			{/* Padajući meni */}
+			{/* Padajući meni za izbor jezika */}
 			{isDropdownOpen && (
 				<div className='absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5'>
 					<div
@@ -70,7 +75,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages }) => {
 								key={lang.id}
 								onClick={() => {
 									handleLanguageChange(lang.code);
-									setIsDropdownOpen(false);
+									setIsDropdownOpen(false); // Zatvaramo dropdown
 								}}
 								className={`flex items-center px-4 py-2 text-sm ${
 									selectedLanguage === lang.code
