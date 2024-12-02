@@ -635,6 +635,7 @@ export interface LocationDataForMap {
 	type: 'county' | 'city' | 'suburb';
 	cityId?: number | null;
 	countyId?: number | null;
+	suburbId?: number | null;
 	children?: LocationDataForMap[];
 	parents?: LocationDataForMap[];
 	parentId?: number;

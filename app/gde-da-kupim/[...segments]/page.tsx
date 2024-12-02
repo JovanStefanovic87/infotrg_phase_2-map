@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { prefixAticleCategory } from '@/app/api/prefix';
 import { cookies } from 'next/headers';
 import LanguageSelector from '@/app/components/ui/LanguageSelector';
+import { Category } from '@/utils/helpers/types';
 
 export function generateMetadata({ params }: { params: { segments: string[] } }) {
 	const currentUrl = `https://infotrg.com/gde-da-kupim/${params.segments.join('/')}`;
@@ -22,6 +23,39 @@ export function generateMetadata({ params }: { params: { segments: string[] } })
 }
 
 const serializeData = (data: any) => JSON.parse(JSON.stringify(data));
+
+const findCategoryIdBySlug = (slug: string, categories: Category[]): number | null => {
+	for (const category of categories) {
+		// Ako je slug kategorije isti kao traženi slug, vraćamo ID
+		if (category.slug === slug) {
+			return category.id; // Vraćamo ID kategorije
+		}
+
+		// Ako kategorija ima podkategorije (children), pozivamo rekurzivno funkciju za podkategorije
+		if (category.children && category.children.length > 0) {
+			const foundCategoryId = findCategoryIdBySlug(slug, category.children);
+			if (foundCategoryId) {
+				return foundCategoryId; // Vraćamo ID podkategorije ako je pronađena
+			}
+		}
+	}
+	return null; // Ako nije pronađena kategorija
+};
+
+const getLocationBySlug = (slug: string, locations: any[]): any => {
+	// Pronađi lokaciju koja odgovara slugu
+	for (const location of locations) {
+		if (location.slug === slug) {
+			return location; // Vraća objekat lokacije sa ID-jem i ostalim podacima
+		}
+		// Ako lokacija ima decu (children), proveri i njih
+		if (location.children) {
+			const childLocation = getLocationBySlug(slug, location.children);
+			if (childLocation) return childLocation;
+		}
+	}
+	return null; // Ako nije pronađena
+};
 
 const prefetchData = async (queryClient: QueryClient, languageCode: string, segments: string[]) => {
 	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -44,7 +78,6 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 	}
 
 	const languageId = language.id;
-
 	// Dohvaćanje kategorija i lokacija
 	await Promise.all([
 		prefetchQueryFunction({
@@ -62,42 +95,31 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 	]);
 
 	// Ekstrahujemo poslednji segment za filtriranje
-	const categorySlug = segments[segments.length - 1];
-	const categories = queryClient.getQueryData<{ id: number; slug: string }[]>([
-		'categories',
-		'article',
-		languageId,
-	]);
+	const categories = queryClient.getQueryData<Category[]>(['categories', 'article', languageId]);
 
 	if (!segments || !Array.isArray(segments) || segments.length === 0) {
 		throw new Error('Segments array is empty or undefined in prefetchData.');
 	}
-	const findCategoryBySlug = (slug: string, categories: any[]): any | null => {
-		for (const category of categories) {
-			// Ako je trenutna kategorija ta koja se traži
-			if (category.slug === slug) {
-				return category;
+	const categorySlug = segments[segments.length - 1];
+	const categoryId = categories ? findCategoryIdBySlug(categorySlug, categories) : null;
+
+	const allLocation: any[] = queryClient.getQueryData(['locations', '']) || [];
+
+	// Pronalazak ID-ja lokacija na osnovu segmenata
+	const locationIds = await Promise.all(
+		segments.map(async segment => {
+			const [type, name] = segment.split('-');
+			if (['state', 'county', 'city', 'suburb'].includes(type)) {
+				const location = getLocationBySlug(segment, allLocation); // Pronađi lokaciju prema slugu
+				if (location) return { type, id: location.id }; // Vratimo ID ako je pronađena lokacija
 			}
+			return null; // Ako nije tip lokacije, vratimo null
+		})
+	);
 
-			// Ako kategorija ima podkategorije, proveri ih rekurzivno
-			if (category.children && category.children.length > 0) {
-				const foundInChildren = findCategoryBySlug(slug, category.children);
-				if (foundInChildren) {
-					return foundInChildren;
-				}
-			}
-		}
-		return null; // Ako nije pronađeno
-	};
+	// Filtriramo null vrednosti i uzimamo samo validne ID-jeve
+	const filteredLocationIds = locationIds.filter(location => location !== null);
 
-	const category = categories ? findCategoryBySlug(categorySlug, categories) : null;
-
-	if (!category) {
-		console.warn(`Category with slug "${categorySlug}" not found.`);
-	}
-	const categoryId = category ? category.id.toString() : null;
-
-	// Dodajemo filtriranje za lokaciju i prodavce
 	await prefetchQueryFunction({
 		queryClient,
 		queryKey: ['retailStores', languageId],
@@ -105,12 +127,17 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 		params: {
 			languageId,
 			categoryId,
-			stateId: segments.find(segment => segment.includes('state')) || null,
-			countyId: segments.find(segment => segment.includes('county')) || null,
-			cityId: segments.find(segment => segment.includes('city')) || null,
-			suburbId: segments.find(segment => segment.includes('suburb')) || null,
+			stateId: filteredLocationIds.find(location => location.type === 'state')?.id || null,
+			countyId: filteredLocationIds.find(location => location.type === 'county')?.id || null,
+			cityId: filteredLocationIds.find(location => location.type === 'city')?.id || null,
+			suburbId: filteredLocationIds.find(location => location.type === 'suburb')?.id || null,
 		},
 	});
+
+	return {
+		filteredLocationIds,
+		categoryId,
+	};
 };
 
 const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => {
@@ -120,7 +147,11 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	const languageCode = segments[0] || cookies().get('languageCode')?.value || 'rs';
 
 	// Prefetch data
-	await prefetchData(queryClient, languageCode, segments);
+	const { filteredLocationIds, categoryId } = await prefetchData(
+		queryClient,
+		languageCode,
+		segments
+	);
 
 	const languages = queryClient.getQueryData<{ id: number; code: string }[]>(['languages']);
 	const language = languages?.find(lang => lang.code === languageCode);
@@ -142,18 +173,10 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 	// Ekstrahujemo parametre za kategorije i lokacije
 	const categorySlug = segments[segments.length - 1];
 	const category = categories?.find(cat => cat.slug === categorySlug);
-	const categoryId = category ? category.id.toString() : null;
+	const categoryIdStr = category ? category.id.toString() : null;
 
 	const stateSlug = segments.find(segment => segment.includes('state'));
 	const state = locations?.find(loc => loc.slug === stateSlug)?.id;
-	const stateId = state ? state.toString() : null;
-
-	const countySlug = segments.find(segment => segment.includes('county'));
-	const countyId = countySlug ? countySlug.split('-')[1] : null;
-	const citySlug = segments.find(segment => segment.includes('city'));
-	const cityId = citySlug ? citySlug.split('-')[1] : null;
-	const suburbSlug = segments.find(segment => segment.includes('suburb'));
-	const suburbId = suburbSlug ? suburbSlug.split('-')[1] : null;
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
@@ -172,11 +195,11 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 						lang: serializeData(languages || []),
 					}}
 					queryParams={{
-						categoryId,
-						stateId,
-						countyId,
-						cityId,
-						suburbId,
+						categoryId: categoryIdStr,
+						stateId: filteredLocationIds.find(location => location.type === 'state')?.id || null,
+						countyId: filteredLocationIds.find(location => location.type === 'county')?.id || null,
+						cityId: filteredLocationIds.find(location => location.type === 'city')?.id || null,
+						suburbId: filteredLocationIds.find(location => location.type === 'suburb')?.id || null,
 					}}
 				/>
 			</Suspense>

@@ -132,7 +132,14 @@ const buildCategoryTree = async (
 // Function to create a category tree
 export async function GET(req: NextRequest) {
 	const searchParams = new URL(req.url).searchParams;
-
+	console.log('Received searchParams:', {
+		languageId: searchParams.get('languageId'),
+		categoryId: searchParams.get('categoryId'),
+		stateId: searchParams.get('stateId'),
+		countyId: searchParams.get('countyId'),
+		cityId: searchParams.get('cityId'),
+		suburbId: searchParams.get('suburbId'),
+	});
 	// Extract query parameters
 	const categoryId = searchParams.get('categoryId');
 	const stateId = searchParams.get('stateId');
@@ -140,11 +147,10 @@ export async function GET(req: NextRequest) {
 	const cityId = searchParams.get('cityId');
 	const suburbId = searchParams.get('suburbId');
 
-	const stateIdValue = stateId && stateId !== '0' ? parseInt(stateId) : 1;
-	const countyIdValue = countyId && countyId !== '0' ? parseInt(countyId) : 1;
-	const cityIdValue = cityId && cityId !== '0' ? parseInt(cityId) : 1;
-	const suburbIdValue =
-		suburbId && suburbId !== '0' && suburbId !== 'null' ? parseInt(suburbId) : 1;
+	const stateIdValue = stateId !== 'null' && stateId ? parseInt(stateId) : null;
+	const countyIdValue = countyId !== 'null' && countyId ? parseInt(countyId) : null;
+	const cityIdValue = cityId !== 'null' && cityId ? parseInt(cityId) : null;
+	const suburbIdValue = suburbId !== 'null' && suburbId ? parseInt(suburbId) : null;
 
 	const languageId = parseInt(searchParams.get('languageId') ?? '1');
 
@@ -159,18 +165,21 @@ export async function GET(req: NextRequest) {
 			{ objectTypeCategories: { some: { id: parseInt(categoryId) } } },
 		];
 	}
-
-	// Add state filtering
-	if (suburbIdValue && suburbIdValue !== 1) {
+	// Prioritizujemo suburbId, a zatim prelazimo na manje specifične nivoe
+	if (suburbIdValue !== null) {
 		where.suburbId = suburbIdValue;
-	} else if (cityIdValue && cityIdValue !== 1) {
+	} else if (cityIdValue !== null) {
 		where.cityId = cityIdValue;
-	} else if (countyIdValue && countyIdValue !== 1) {
+	} else if (countyIdValue !== null) {
 		where.countyId = countyIdValue;
-	} else if (stateIdValue && stateIdValue !== 1) {
+	} else if (stateIdValue !== null) {
 		where.stateId = stateIdValue;
 	} else {
-		delete where.stateId; // Uklanjamo sve uslove za lokaciju ako nijedan nivo nije specifično prosleđen
+		// Ako ništa nije definisano, izostavi uslov za lokaciju
+		delete where.suburbId;
+		delete where.cityId;
+		delete where.countyId;
+		delete where.stateId;
 	}
 
 	try {

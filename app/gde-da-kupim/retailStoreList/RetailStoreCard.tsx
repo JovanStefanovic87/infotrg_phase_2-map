@@ -120,9 +120,17 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 
 			<div className='flex items-center gap-2'>
 				<ResultTextIconBlock
-					text={`${store.city?.label?.translations?.[0]?.translation || 'Grad nije definisan'}, ${
-						store.address
-					}, ${store.coordinates?.locationDescription}`}
+					text={`${
+						store.city?.label?.translations?.[0]?.translation
+							? `${store.city.label.translations[0].translation}, `
+							: ''
+					}${
+						store.suburb?.label?.translations?.[0]?.translation
+							? `${store.suburb.label.translations[0].translation}, `
+							: ''
+					}${store.address || 'Adresa nije definisana'}, ${
+						store.coordinates?.locationDescription || 'Opis lokacije nije dostupan'
+					}`}
 					color='text-black'>
 					<SlLocationPin />
 				</ResultTextIconBlock>

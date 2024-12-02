@@ -65,12 +65,10 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	};
 
 	const mainCategoryData = findCategoryBySlug(articleCategories, lastSegment);
-
-	const stateId = queryParams.stateId ? Number(queryParams.stateId) : 1;
-	const countyId = queryParams.countyId ? Number(queryParams.countyId) : 1;
-	const cityId = queryParams.cityId ? Number(queryParams.cityId) : 1;
-	const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : 1;
-
+	const stateId = queryParams.stateId ? Number(queryParams.stateId) : null;
+	const countyId = queryParams.countyId ? Number(queryParams.countyId) : null;
+	const cityId = queryParams.cityId ? Number(queryParams.cityId) : null;
+	const suburbId = queryParams.suburbId ? Number(queryParams.suburbId) : null;
 	const [defaultCenter, setDefaultCenter] = useState<{ lat: number; lng: number }>({
 		lat: 0,
 		lng: 0,
@@ -85,14 +83,12 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [selectedCategory, setSelectedCategory] = useState<CategoryDataForMap | null>(null);
 	const [selectedLocation, setSelectedLocation] = useState<LocationDataForMap | null>(null);
-	const [id, setId] = useState<number | null>(null);
-	const [type, setType] = useState<'county' | 'city' | 'suburb' | null>(null);
 	const retailStores = initialData.retails;
 	const isLoading = !retailStores;
 
 	const findLocation = (
 		locations: LocationDataForMap[],
-		id: number,
+		id: number | null,
 		type: string
 	): LocationDataForMap | undefined => {
 		for (const location of locations) {
@@ -106,7 +102,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				}
 			}
 		}
-		return undefined; // Nije pronađeno
+		return undefined;
 	};
 
 	const mainCounty = findLocation(locations, countyId, 'county');
@@ -121,14 +117,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const closeEditModal = () => setEditModalOpen(false);
 
 	useEffect(() => {
-		if (mainCategoryData) {
-			setSelectedCategory({
-				id: mainCategoryData.id,
-				name: mainCategoryData.name || '',
-				slug: mainCategoryData.slug,
-				parents: mainCategoryData.parents || [],
-			});
-		}
 		if (mainSuburb) {
 			setSelectedLocation({
 				id: mainSuburb.id,
@@ -154,7 +142,18 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				parents: mainCounty.parents,
 			});
 		}
-	}, [mainCategoryData, mainSuburb, mainCity, mainCounty]);
+	}, [mainSuburb, mainCity, mainCounty]);
+
+	useEffect(() => {
+		if (mainCategoryData) {
+			setSelectedCategory({
+				id: mainCategoryData.id,
+				name: mainCategoryData.name || '',
+				slug: mainCategoryData.slug,
+				parents: mainCategoryData.parents || [],
+			});
+		}
+	}, [mainCategoryData]);
 
 	const formatCategories = useCallback((categories: RawCategoryData[]): Category[] => {
 		return categories.map(category => ({

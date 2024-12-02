@@ -47,8 +47,6 @@ const EditSelectionModal: React.FC<Props> = ({
 	const currentLanguage = segments[1] || 'rs';
 	const languageId = currentLanguage === 'rs' ? 1 : 2;
 
-	console.log('currentLanguage:', currentLanguage);
-
 	const findCategoryIdBySlug = (slug: string, categories: Category[]): number | null => {
 		for (const category of categories) {
 			// Ako je slug kategorije isti kao traženi slug, vraćamo ID
@@ -73,13 +71,15 @@ const EditSelectionModal: React.FC<Props> = ({
 		slug: string,
 		locations: LocationDataForMap[]
 	): { id: number; type: string } | null => {
+		if (!slug) {
+			return null;
+		}
+
 		for (const location of locations) {
-			// Ako je slug kategorije isti kao traženi slug, vraćamo objekat sa id i type
 			if (location.slug === slug) {
 				return { id: location.id, type: location.type };
 			}
 
-			// Ako lokacija ima podlokacije (children), pozivamo rekurzivno funkciju za podlokacije
 			if (location.children && location.children.length > 0) {
 				const foundLocation = findLocationBySlug(slug, location.children);
 				if (foundLocation) {
@@ -87,13 +87,11 @@ const EditSelectionModal: React.FC<Props> = ({
 				}
 			}
 		}
-		return null; // Ako nije pronađena kategorija
+		return null;
 	};
 
 	const selectedLocationData = findLocationBySlug(locationSlug, locations);
 	const selectedLocationParams = `${selectedLocationData?.type}Id=${selectedLocationData?.id}`;
-
-	console.log('selectedLocationData:', selectedLocationData);
 
 	const findParentLocationByIdAndType = (
 		id: number,
@@ -133,48 +131,93 @@ const EditSelectionModal: React.FC<Props> = ({
 		selectedLocationParent?.slug ? selectedLocationParent?.slug + '/' : ''
 	}${locationSlug}`;
 
-	const updateLocationAndCategory = (newLocationSlug: string, newCategorySlug: string) => {
-		const segments = pathname.split('/').filter(Boolean);
+	const flattenLocations = (locations: LocationDataForMap[]): LocationDataForMap[] => {
+		const flatList: LocationDataForMap[] = [];
 
-		// Find the index of the location and category segments
-		const locationIndex = segments.findIndex(segment => segment === locationSlug);
-		const categoryIndex = segments.findIndex(segment => segment === categorySlug);
+		const flatten = (items: LocationDataForMap[]) => {
+			items.forEach(item => {
+				const { children, ...rest } = item;
+				flatList.push({ ...rest, children: undefined }); // Dodaj lokaciju bez children
+				if (children && children.length > 0) {
+					flatten(children); // Rekurzivno dodaj decu
+				}
+			});
+		};
 
-		// Replace the location and category segments with the new values
-		if (locationIndex !== -1) {
-			segments[locationIndex] = newLocationSlug;
-		}
-		if (categoryIndex !== -1) {
-			segments[categoryIndex] = newCategorySlug;
-		}
-
-		// Construct the new URL
-		const newUrl = `${baseUrl}/${segments.join('/')}`;
-		console.log('newUrl:', newUrl);
-
-		// Use router.push to change the URL without reloading the page
-		router.push(newUrl);
+		flatten(locations);
+		return flatList;
 	};
-	const [data, setData] = useState<any>(null);
-	useEffect(() => {
-		const fetchData = async () => {
-			// Fetch data based on the new category and location
+
+	const flatLocations = flattenLocations(locations);
+
+	const findLocationIdBySlug = (
+		slug: string,
+		locations: LocationDataForMap[]
+	): LocationDataForMap | null => {
+		return locations.find(location => location.slug === slug) || null;
+	};
+	const splitLocationPath = locationFullPath.split('/');
+	const newPath = findLocationIdBySlug(locationFullPath, flatLocations);
+
+	const getLocationParamsFromPath = (
+		locationPath: string[],
+		flatLocations: LocationDataForMap[]
+	): string => {
+		const params: string[] = [];
+
+		locationPath.forEach(slug => {
+			const location = flatLocations.find(loc => loc.slug === slug);
+			console.log('location:', location);
+			if (location) {
+				params.push(`${location.type}Id=${location.id}`);
+			}
+		});
+
+		return params.join('&');
+	};
+
+	const locationParams = getLocationParamsFromPath(splitLocationPath, flatLocations);
+
+	const onSave = async () => {
+		if (selectedCategory || selectedLocation) {
+			const newCategorySlug = selectedCategory?.slug || categorySlug;
+			const newLocationSlug = selectedLocation?.slug || locationSlug;
+			const newLocationFullPath = selectedLocationParent?.slug
+				? `${selectedLocationParent.slug}/${newLocationSlug}`
+				: newLocationSlug;
+			const newCategoryFullPath = parentSlug ? `${parentSlug}/${newCategorySlug}` : newCategorySlug;
+
+			const locationParams = getLocationParamsFromPath(
+				newLocationFullPath.split('/'),
+				flatLocations
+			);
+
+			// Generisanje API URL-a
+			const apiUrl = `${baseUrl}/api/filteredRetailStores?languageId=${languageId}&${locationParams}&categoryId=${findCategoryIdBySlug(
+				newCategorySlug,
+				categories
+			)}`;
+
 			try {
-				const response = await fetch(
-					`${baseUrl}/api/filteredRetailStores?languageId=${languageId}${selectedLocationParams}&categoryId=${findCategoryIdBySlug(
-						categorySlug,
-						categories
-					)}`
-				);
-				const fetchedData = await response.json();
-				setData(fetchedData); // Update state with the fetched data
+				const response = await fetch(apiUrl);
+
+				if (response.ok) {
+					console.log('Data saved successfully!');
+				} else {
+					console.error('Error saving data:', response.statusText);
+				}
 			} catch (error) {
 				console.error('Error fetching data:', error);
 			}
-		};
 
-		fetchData();
-	}, [pathname, searchParams, selectedCategory, selectedLocation]);
+			// Navigacija na novu URL adresu
+			const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationFullPath}/${newCategoryFullPath}`;
+			router.push(newUrl);
+
+			// Zatvaranje modalnog prozora
+			onClose();
+		}
+	};
 
 	return (
 		<Dialog
@@ -207,25 +250,7 @@ const EditSelectionModal: React.FC<Props> = ({
 				<div className='flex justify-end gap-4'>
 					<CloseButton onClose={onClose} />
 					<DefaultButton
-						onClick={() => {
-							// Check if a category or location is selected
-							if (selectedCategory || selectedLocation) {
-								const newCategorySlug = selectedCategory?.slug || categorySlug;
-								const newLocationSlug = selectedLocation?.slug || locationSlug;
-								const newLocationFullPath = selectedLocationParent?.slug
-									? `${selectedLocationParent.slug}/${newLocationSlug}`
-									: newLocationSlug;
-								const newCategoryFullPath = parentSlug
-									? `${parentSlug}/${newCategorySlug}`
-									: newCategorySlug;
-
-								// Construct the new URL
-								const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationFullPath}/${newCategoryFullPath}`;
-								console.log('newUrl:', newUrl);
-								router.push(newUrl);
-								onClose();
-							}
-						}}
+						onClick={onSave}
 						className='px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors'>
 						Sačuvaj
 					</DefaultButton>

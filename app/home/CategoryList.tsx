@@ -21,8 +21,8 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
 	}, []);
 
 	const defaultLocationSlugs: { [key: string]: string[] } = {
-		rs: ['srbija', 'subotica', 'buvljak-subotica'],
-		hu: ['szerbia', 'szabadka', 'szabadkai-bolhapiac'],
+		rs: ['county-srbija-rs', 'city-subotica-rs', 'suburb-buvljak-subotica-rs'],
+		hu: ['county-szerbia-hu', 'city-szabadka-hu', 'suburb-szabadkai-bolhapiac-hu'],
 	};
 
 	const getParentSlugs = (
