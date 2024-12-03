@@ -39,6 +39,7 @@ interface Props {
 }
 
 const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
+	const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 	const pathname = usePathname();
 	const mapInstance = useMap('my-map-id');
 	const locations = initialData.locations;
@@ -63,7 +64,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		}
 		return null;
 	};
-
+	console.log('mapId', mapId);
 	const mainCategoryData = findCategoryBySlug(articleCategories, lastSegment);
 	const stateId = queryParams.stateId ? Number(queryParams.stateId) : null;
 	const countyId = queryParams.countyId ? Number(queryParams.countyId) : null;
@@ -290,7 +291,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 					defaultCenter={defaultCenter}
 					defaultZoom={defaultZoom}
 					className={`${styles.mapContainer} rounded-xl shadow-lg overflow-hidden`}
-					mapId={'3b269361fc781f1f'}
+					mapId={mapId}
 					mapTypeId='satellite'
 					gestureHandling='greedy'
 					zoomControl={false}

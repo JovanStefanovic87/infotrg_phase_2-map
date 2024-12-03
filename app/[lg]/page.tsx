@@ -51,7 +51,7 @@ const Home = async () => {
 	const queryClient = new QueryClient();
 
 	// Proveri kolačiće
-	const savedLanguage = cookies().get('languageCode')?.value || 'rs';
+	const savedLanguage = cookies().get('languageCode')?.value;
 
 	// Prefetch jezika
 	await prefetchData({
@@ -62,7 +62,9 @@ const Home = async () => {
 
 	const languages = queryClient.getQueryData<Language[]>(['languages']) || [];
 
-	const languageId = languages.find(lang => lang.code === savedLanguage)?.id || 1;
+	const languageId = savedLanguage
+		? languages.find(lang => lang.code === savedLanguage)?.id || 1
+		: languages[0]?.id || 1;
 
 	// Prefetch kategorija
 	await prefetchData({

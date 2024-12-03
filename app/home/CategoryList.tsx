@@ -2,29 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { fetchedCategories } from '@/utils/helpers/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 
 interface CategoryListProps {
 	categories: any;
+	languageCode: string;
 }
 
-const CategoryList: React.FC<CategoryListProps> = ({ categories }) => {
+const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode }) => {
 	const router = useRouter();
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
-	const [languageCode, setLanguageCode] = useState('rs');
-
-	useEffect(() => {
-		const cookieLanguage = Cookies.get('languageCode') || 'rs';
-		setLanguageCode(cookieLanguage);
-	}, []);
 
 	const defaultLocationSlugs: { [key: string]: string[] } = {
 		rs: ['county-srbija-rs', 'city-subotica-rs', 'suburb-buvljak-subotica-rs'],
 		hu: ['county-szerbia-hu', 'city-szabadka-hu', 'suburb-szabadkai-bolhapiac-hu'],
 	};
-
+	console.log('languageCode:', languageCode);
 	const getParentSlugs = (
 		category: fetchedCategories,
 		categories: fetchedCategories[]

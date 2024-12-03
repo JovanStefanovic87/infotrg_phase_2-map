@@ -9,15 +9,27 @@ import LanguageSelector from '@/app/components/ui/LanguageSelector';
 import { Category } from '@/utils/helpers/types';
 
 export function generateMetadata({ params }: { params: { segments: string[] } }) {
-	const currentUrl = `https://infotrg.com/gde-da-kupim/${params.segments.join('/')}`;
+	// Prvi segment je jezik (npr. 'rs', 'hu')
+	const language = params.segments[0] || 'rs'; // Podrazumevano 'rs' ako je jezik nepoznat
+
+	// Preostali segmenti koji se koriste za putanju (kategorije, proizvodi)
+	const pathWithoutLanguage = params.segments.slice(1).join('/');
+
+	// Dinamički generišemo URL na osnovu jezika i segmenta
+	const currentUrl = `https://infotrg.com/gde-da-kupim/${pathWithoutLanguage}`;
+
+	// Kreiramo URL-ove za druge jezike
+	const languageUrls = {
+		rs: `https://infotrg.com/gde-da-kupim/rs/${pathWithoutLanguage}`,
+		hu: `https://infotrg.com/gde-da-kupim/hu/${pathWithoutLanguage}`,
+	};
+
+	// Vraćamo metadata sa višejezičnom podrškom
 	return {
-		title: 'Infotrg | Gde da kupim?',
+		title: `Infotrg | Gde da kupim? - ${language.toUpperCase()}`, // Uključujemo jezik u title
 		alternates: {
 			canonical: currentUrl,
-			languages: {
-				rs: `https://infotrg.com/gde-da-kupim/rs`,
-				hu: `https://infotrg.com/gde-da-kupim/hu`,
-			},
+			languages: languageUrls,
 		},
 	};
 }
@@ -103,20 +115,20 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 	const categorySlug = segments[segments.length - 1];
 	const categoryId = categories ? findCategoryIdBySlug(categorySlug, categories) : null;
 
-	const allLocation: any[] = queryClient.getQueryData(['locations', '']) || [];
+	const allLocations: any[] = queryClient.getQueryData(['locations', '']) || [];
 
 	// Pronalazak ID-ja lokacija na osnovu segmenata
 	const locationIds = await Promise.all(
 		segments.map(async segment => {
 			const [type, name] = segment.split('-');
 			if (['state', 'county', 'city', 'suburb'].includes(type)) {
-				const location = getLocationBySlug(segment, allLocation); // Pronađi lokaciju prema slugu
+				const location = getLocationBySlug(segment, allLocations); // Pronađi lokaciju prema slugu
 				if (location) return { type, id: location.id }; // Vratimo ID ako je pronađena lokacija
 			}
 			return null; // Ako nije tip lokacije, vratimo null
 		})
 	);
-
+	console.log('locationIds:', locationIds);
 	// Filtriramo null vrednosti i uzimamo samo validne ID-jeve
 	const filteredLocationIds = locationIds.filter(location => location !== null);
 

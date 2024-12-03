@@ -1,9 +1,10 @@
 'use client';
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PageContainer from '../components/containers/PageContainer';
 import CategoryList from './CategoryList';
 import QuickSearch from '../components/input/QuickSearch';
 import { Synonym } from '@/utils/helpers/types';
+import Cookies from 'js-cookie';
 
 interface Category {
 	id: number;
@@ -26,6 +27,13 @@ interface Props {
 }
 
 const PageContent: React.FC<Props> = ({ categories }) => {
+	const [languageCode, setLanguageCode] = useState<string>('rs');
+
+	useEffect(() => {
+		const cookieLanguage = Cookies.get('languageCode') || 'rs';
+		setLanguageCode(cookieLanguage); // Ovo se poziva samo unutar useEffect
+	}, []);
+
 	const transformCategoriesToOptions = (categories: Category[]): CategoryOption[] => {
 		const options: CategoryOption[] = [];
 
@@ -61,7 +69,7 @@ const PageContent: React.FC<Props> = ({ categories }) => {
 				onSelect={selectedOption => console.log('Selected option:', selectedOption)}
 				placeholder='Brza pretraga kategorija proizvoda...'
 			/>
-			<CategoryList categories={categories} />
+			<CategoryList categories={categories} languageCode={languageCode} />
 		</PageContainer>
 	);
 };
