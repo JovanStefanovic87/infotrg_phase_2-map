@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import BreadcrumbsContainer from '../containers/BreadcrumbsContainer';
 import { usePathname } from 'next/navigation';
+import { AiOutlineHome } from 'react-icons/ai';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -44,7 +45,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 
 	// Kreiramo breadcrumbs putanju
 	const breadcrumbPath = [
-		{ href: '/', label: 'Početna' },
+		{ href: '/', label: <AiOutlineHome className='text-xl' /> }, // Ikonica umesto teksta
 		...filteredSegments.map((segment, index) => {
 			const href = `/${filteredSegments.slice(0, index + 1).join('/')}`;
 			const label = capitalize(segment.replace(/-/g, ' '));
@@ -57,16 +58,15 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 			{breadcrumbPath.map((route, index) => (
 				<React.Fragment key={route.href}>
 					{index > 0 && <span className='mx-1 text-bgMain font-bold'>/</span>}
-					<Link href={route.href}>
-						<span
-							className={
-								index === breadcrumbPath.length - 1
-									? 'text-black font-bold'
-									: 'text-bgMain hover:text-sky-600'
-							}>
-							{truncateLabel(route.label, 10)}
-						</span>
-					</Link>
+					{index === breadcrumbPath.length - 1 ? (
+						// Poslednji segment: statičan tekst
+						<span className='text-black font-bold'>{route.label}</span>
+					) : (
+						// Ostali segmenti: klikabilni linkovi
+						<Link href={route.href}>
+							<span className='text-bgMain hover:text-sky-600'>{route.label}</span>
+						</Link>
+					)}
 				</React.Fragment>
 			))}
 		</BreadcrumbsContainer>
