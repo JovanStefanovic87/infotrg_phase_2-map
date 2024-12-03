@@ -8,14 +8,15 @@ import { AiOutlineHome } from 'react-icons/ai';
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const truncateLabel = (label: string, maxLength: number) => {
-	if (label.length > maxLength) {
-		return `${label.slice(0, maxLength)}...`;
-	}
-	return label;
-};
+const languageCodes = ['hu', 'rs'];
+const staticPages = ['gde-da-kupim']; // Definicija statičnih stranica
 
-const languageCodes = ['hu', 'en', 'rs'];
+const staticPageTranslations: { [key: string]: { [key: string]: string } } = {
+	'gde-da-kupim': {
+		hu: 'Hol vásároljak',
+		rs: 'Gde da kupim',
+	},
+}; // Mapa prevoda za statične stranice
 
 interface BreadcrumbProps {
 	initialPathname: string; // Pathname sa servera
@@ -23,7 +24,19 @@ interface BreadcrumbProps {
 
 const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	const [currentPath, setCurrentPath] = useState(initialPathname);
+	const [translations, setTranslations] = useState<{ [key: string]: string }>({});
 	const pathname = usePathname();
+
+	// Funkcija za dobijanje trenutnog jezika
+	const getActiveLanguage = (pathname: string): string => {
+		const segments = pathname.split('/').filter(Boolean); // Razbijamo URL na segmente
+		const foundLanguage = segments.find(segment => languageCodes.includes(segment.toLowerCase())); // Tražimo jezik u svim segmentima
+		return foundLanguage ? foundLanguage.toLowerCase() : 'rs'; // Ako postoji, vratimo ga, inače default je 'rs'
+	};
+
+	const activeLanguage = getActiveLanguage(currentPath);
+
+	console.log('activeLanguage:', activeLanguage);
 
 	// Ažuriraj putanju na klijentskoj strani pri promeni rute
 	useEffect(() => {
@@ -31,6 +44,34 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 			setCurrentPath(pathname);
 		}
 	}, [pathname]);
+
+	// Povlačenje prevoda za segmente
+	useEffect(() => {
+		const fetchTranslations = async () => {
+			const pathSegments = currentPath.split('/').filter(Boolean);
+
+			// Filtriramo jezike i statične stranice
+			const dynamicSegments = pathSegments.filter(
+				segment => !languageCodes.includes(segment.toLowerCase()) && !staticPages.includes(segment)
+			);
+
+			// Povlačenje prevoda za dinamičke segmente
+			const translationPromises = dynamicSegments.map(async segment => {
+				const response = await fetch(`/api/translation/${segment}`);
+				if (response.ok) {
+					const data = await response.json();
+					return { [segment]: data.translation };
+				}
+				return { [segment]: segment }; // Ako prevod ne postoji, zadrži slug
+			});
+
+			const results = await Promise.all(translationPromises);
+			const translationMap = results.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+			setTranslations(translationMap);
+		};
+
+		fetchTranslations();
+	}, [currentPath]);
 
 	if (currentPath === '/') {
 		return null; // Ako je root stranica, ne prikazuj breadcrumbs
@@ -48,7 +89,10 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 		{ href: '/', label: <AiOutlineHome className='text-xl' /> }, // Ikonica umesto teksta
 		...filteredSegments.map((segment, index) => {
 			const href = `/${filteredSegments.slice(0, index + 1).join('/')}`;
-			const label = capitalize(segment.replace(/-/g, ' '));
+			const label = staticPages.includes(segment)
+				? staticPageTranslations[segment]?.[activeLanguage] ||
+				  capitalize(segment.replace(/-/g, ' ')) // Prikaz prevoda za statične stranice
+				: translations[segment] || capitalize(segment.replace(/-/g, ' ')); // Dinamički segmenti sa prevodima
 			return { href, label };
 		}),
 	];
