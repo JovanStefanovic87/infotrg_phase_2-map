@@ -18,7 +18,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 		rs: ['county-srbija-rs', 'city-subotica-rs', 'suburb-buvljak-subotica-rs'],
 		hu: ['county-szerbia-hu', 'city-szabadka-hu', 'suburb-szabadkai-bolhapiac-hu'],
 	};
-	console.log('languageCode:', languageCode);
+
 	const getParentSlugs = (
 		category: fetchedCategories,
 		categories: fetchedCategories[]
@@ -41,9 +41,9 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 
 		// Dohvatanje podrazumevanih slugova za trenutni jezik
 		const locationSlugs = defaultLocationSlugs[languageCode] || defaultLocationSlugs.rs;
+		const lastLocationSlug = locationSlugs[locationSlugs.length - 1] || '';
 
-		// Generisanje URL-a
-		const urlPath = [...locationSlugs, ...slugs].join('/');
+		const urlPath = [...[lastLocationSlug], ...slugs].join('/');
 
 		router.push(`/gde-da-kupim/${languageCode}/${urlPath}`);
 	};

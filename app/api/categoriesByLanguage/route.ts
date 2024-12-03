@@ -4,7 +4,7 @@ import { prisma } from '@/app/lib/prisma';
 import { Category } from '@/utils/helpers/types';
 
 // Fetch all parent categories recursively for a given child ID
-const fetchParents = async (childId: number): Promise<Category[]> => {
+const fetchParents = async (childId: number, languageId: number): Promise<Category[]> => {
 	try {
 		const parentCategories = await prisma.parentCategory.findMany({
 			where: { childId },
@@ -14,7 +14,10 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 						icon: true,
 						label: {
 							include: {
-								translations: { include: { synonyms: true } },
+								translations: {
+									where: { languageId },
+									include: { synonyms: true },
+								},
 							},
 						},
 					},
@@ -29,7 +32,7 @@ const fetchParents = async (childId: number): Promise<Category[]> => {
 				slug: parent.label.translations[0]?.slug || '',
 				iconId: parent.iconId,
 				labelId: parent.labelId,
-				parents: await fetchParents(parent.id),
+				parents: await fetchParents(parent.id, languageId),
 				children: [],
 				synonyms: parent.label.translations[0]?.synonyms || [],
 				icon: parent.icon
@@ -82,7 +85,7 @@ const buildCategoryTree = async (
 				slug: category.label.translations[0]?.slug || '',
 				iconId: category.iconId,
 				labelId: category.labelId,
-				parents: await fetchParents(category.id),
+				parents: await fetchParents(category.id, languageId),
 				children: await buildCategoryTree(category.id, prefix, languageId),
 				synonyms: category.label.translations[0]?.synonyms || [],
 				icon: category.icon

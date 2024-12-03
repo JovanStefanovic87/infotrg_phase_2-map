@@ -211,7 +211,7 @@ const EditSelectionModal: React.FC<Props> = ({
 			}
 
 			// Navigacija na novu URL adresu
-			const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationFullPath}/${newCategoryFullPath}`;
+			const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationSlug}/${newCategoryFullPath}`;
 			router.push(newUrl);
 
 			// Zatvaranje modalnog prozora
