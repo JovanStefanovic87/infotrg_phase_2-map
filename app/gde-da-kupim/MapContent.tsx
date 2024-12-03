@@ -64,7 +64,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 		}
 		return null;
 	};
-	console.log('mapId', mapId);
 	const mainCategoryData = findCategoryBySlug(articleCategories, lastSegment);
 	const stateId = queryParams.stateId ? Number(queryParams.stateId) : null;
 	const countyId = queryParams.countyId ? Number(queryParams.countyId) : null;

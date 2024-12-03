@@ -167,7 +167,6 @@ const EditSelectionModal: React.FC<Props> = ({
 
 		locationPath.forEach(slug => {
 			const location = flatLocations.find(loc => loc.slug === slug);
-			console.log('location:', location);
 			if (location) {
 				params.push(`${location.type}Id=${location.id}`);
 			}

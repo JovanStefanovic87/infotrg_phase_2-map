@@ -132,15 +132,6 @@ const buildCategoryTree = async (
 // Function to create a category tree
 export async function GET(req: NextRequest) {
 	const searchParams = new URL(req.url).searchParams;
-	console.log('Received searchParams:', {
-		languageId: searchParams.get('languageId'),
-		categoryId: searchParams.get('categoryId'),
-		stateId: searchParams.get('stateId'),
-		countyId: searchParams.get('countyId'),
-		cityId: searchParams.get('cityId'),
-		suburbId: searchParams.get('suburbId'),
-	});
-	// Extract query parameters
 	const categoryId = searchParams.get('categoryId');
 	const stateId = searchParams.get('stateId');
 	const countyId = searchParams.get('countyId');

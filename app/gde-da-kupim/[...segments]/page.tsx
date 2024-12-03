@@ -128,7 +128,6 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 			return null; // Ako nije tip lokacije, vratimo null
 		})
 	);
-	console.log('locationIds:', locationIds);
 	// Filtriramo null vrednosti i uzimamo samo validne ID-jeve
 	const filteredLocationIds = locationIds.filter(location => location !== null);
 

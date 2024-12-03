@@ -1,4 +1,3 @@
-//middleware.ts
 import { NextRequestWithAuth, withAuth } from 'next-auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,61 +10,63 @@ const adminMiddleware = withAuth({
 	},
 });
 
+const validLanguages = ['rs', 'hu']; // Lista podržanih jezika
+
 export default async function middleware(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
 
-	// 1. Izuzmi statičke resurse i API rute
-	if (
-		pathname.startsWith('/_next') || // Statički fajlovi
-		pathname.startsWith('/api') || // API pozivi
-		pathname.startsWith('/favicon.ico') || // Favicon
-		pathname.startsWith('/icons') // Ikone
-	) {
+	// Ignorišemo statičke resurse i API rute
+	if (/^\/(_next|api|favicon\.ico|icons)/.test(pathname)) {
 		return NextResponse.next();
 	}
 
-	// 2. Admin middleware
+	// Admin middleware
 	if (pathname.startsWith('/admin')) {
-		return adminMiddleware(request as any as NextRequestWithAuth, {} as any);
+		return adminMiddleware(request as NextRequestWithAuth, {} as any);
 	}
 
-	// 3. Podrška za jezike
-	const validLanguages = ['rs', 'hu'];
-	const segments = pathname.split('/');
-	let urlLanguage = '';
+	// Delimo URL na segmente
+	const segments = pathname.split('/').filter(Boolean); // Uklanja prazne segmente
 
-	for (let i = 1; i < segments.length; i++) {
-		if (validLanguages.includes(segments[i])) {
-			urlLanguage = segments[i];
-			break;
-		}
-	}
-
-	// Jezik iz kolačića (ili podrazumevani 'rs')
+	// Dobijanje jezika iz kolačića
 	const cookies = request.cookies;
 	const cookieLanguage = cookies.get('languageCode')?.value || 'rs';
 
-	// Ako URL nema validan jezik, redirektuj na podrazumevani jezik
-	if (!urlLanguage) {
-		const response = NextResponse.redirect(new URL(`/${cookieLanguage}${pathname}`, request.url));
+	// Provera da li URL već sadrži validan jezik
+	const gdeDaKupimIndex = segments.indexOf('gde-da-kupim');
+	const languageIndex = gdeDaKupimIndex + 1;
+
+	// Ako "gde-da-kupim" nije u URL-u, osiguravamo da je jezik prisutan nakon root-a
+	if (gdeDaKupimIndex === -1) {
+		// Jezik treba da bude odmah nakon root-a
+		if (segments.length === 0 || !validLanguages.includes(segments[0])) {
+			const newPathname = `/${cookieLanguage}/${segments.join('/')}`;
+			const response = NextResponse.redirect(new URL(newPathname, request.url));
+			response.cookies.set('languageCode', cookieLanguage, { path: '/', maxAge: 31536000 });
+			return response;
+		}
+		return NextResponse.next();
+	}
+
+	// Ako jezik nije odmah posle "gde-da-kupim", rekonstruišemo URL
+	if (languageIndex >= segments.length || !validLanguages.includes(segments[languageIndex])) {
+		const newSegments = [
+			...segments.slice(0, gdeDaKupimIndex + 1), // Do "gde-da-kupim"
+			cookieLanguage, // Dodajemo jezik
+			...segments.slice(gdeDaKupimIndex + 1).filter(segment => !validLanguages.includes(segment)), // Ostali segmenti bez jezika
+		];
+		const newPathname = `/${newSegments.join('/')}`;
+		const response = NextResponse.redirect(new URL(newPathname, request.url));
 		response.cookies.set('languageCode', cookieLanguage, { path: '/', maxAge: 31536000 });
 		return response;
 	}
 
-	// Ako postoji razlika između jezika u URL-u i kolačića, ažuriraj kolačić
-	if (urlLanguage !== cookieLanguage) {
-		const response = NextResponse.next();
-		response.cookies.set('languageCode', urlLanguage, { path: '/', maxAge: 31536000 });
-		return response;
-	}
-
-	if (pathname.startsWith('/gde-da-kupim') && segments.length > 2) {
-		return NextResponse.next();
-	}
-
-	return NextResponse.next();
+	// Ako je jezik na pravom mestu, nastavljamo
+	const response = NextResponse.next();
+	response.headers.set('x-nextjs-url', pathname);
+	return response;
 }
 
 export const config = {
-	matcher: ['/admin/:path*', '/', '/:path*'],
+	matcher: ['/:path*'], // Važi za sve rute
 };

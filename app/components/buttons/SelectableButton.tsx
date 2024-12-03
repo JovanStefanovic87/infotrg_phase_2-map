@@ -16,7 +16,6 @@ const SelectableButton: React.FC<SelectableButtonProps> = ({
 	placeholder,
 	onClick,
 }) => {
-	console.log('selectedItem', selectedItem);
 	return (
 		<div className='flex flex-col'>
 			<div className='text-gray-700 font-medium mb-1'>{label}</div>
