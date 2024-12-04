@@ -60,6 +60,15 @@ div[data-lastpass] {
 	background-color: #718096; /* Boja prilikom hover efekta */
 }
 
+.scrollbar-hide {
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none; /* Chrome, Safari, Opera */
+}
+
 .select-none {
 	-webkit-user-select: none; /* Safari */
 	-moz-user-select: none; /* Firefox */

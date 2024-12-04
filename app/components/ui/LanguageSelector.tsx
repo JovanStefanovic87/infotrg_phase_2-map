@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import LanguageFlag from './LanguageFlag';
 
@@ -18,6 +18,7 @@ interface LanguageSelectorProps {
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLanguageChange }) => {
 	const pathname = usePathname();
 	const router = useRouter();
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	// Ekstraktujte trenutni jezik iz URL-a
 	const extractLanguageFromUrl = (): string => {
@@ -51,18 +52,29 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 		onLanguageChange?.(newLanguage);
 	};
 
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setIsDropdownOpen(false);
+			}
+		};
+
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, []);
+
 	return (
-		<div className='relative inline-block text-left'>
+		<div className='relative inline-block text-left' ref={dropdownRef}>
 			{/* Prikaz trenutno selektovanog jezika */}
 			<button
 				onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-				className='flex items-center px-4 py-2 bg-gray-200 rounded hover:bg-gray-300'>
+				className='flex items-center px-2 py-2 rounded hover:bg-gray-300 shadow-sm shadow-gray-200'>
 				<LanguageFlag code={selectedLanguage} />
-				<span className='ml-2 capitalize'>{selectedLanguage.toUpperCase()}</span>
-				<span className='ml-2'>&#x25BC;</span>
+				<span className='ml-2 text-black'>&#x25BC;</span>
 			</button>
 
-			{/* Padajući meni za izbor jezika */}
 			{isDropdownOpen && (
 				<div className='absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5'>
 					<div
@@ -75,7 +87,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 								key={lang.id}
 								onClick={() => {
 									handleLanguageChange(lang.code);
-									setIsDropdownOpen(false); // Zatvaramo dropdown
+									setIsDropdownOpen(false);
 								}}
 								className={`flex items-center px-4 py-2 text-sm ${
 									selectedLanguage === lang.code
@@ -83,7 +95,6 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 										: 'text-gray-700 hover:bg-gray-100'
 								} w-full`}>
 								<LanguageFlag code={lang.code} />
-								<span className='ml-2'>{lang.name}</span>
 							</button>
 						))}
 					</div>
