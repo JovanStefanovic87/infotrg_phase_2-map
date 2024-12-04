@@ -193,9 +193,7 @@ const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => 
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<div className='absolute flex right-0 sm:right-4 top-3 z-30'>
-				<LanguageSelector languages={serializeData(languages || [])} />
-			</div>
+			<LanguageSelector languages={serializeData(languages || [])} />
 
 			<Suspense fallback={<div>Učitavanje mape...</div>}>
 				<MapProvider

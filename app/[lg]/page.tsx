@@ -78,10 +78,8 @@ const Home = async () => {
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<div className='flex justify-end w-full pr-2'>
-				<LanguageSelector languages={languages} />
-			</div>
-			<div className='lg:-mt-8'>
+			<LanguageSelector languages={languages} />
+			<div className='mt-6 lg:-mt-8'>
 				<PageContent categories={categories} />
 			</div>
 		</HydrationBoundary>

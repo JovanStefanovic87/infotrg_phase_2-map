@@ -66,40 +66,42 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 	}, []);
 
 	return (
-		<div className='relative inline-block text-left' ref={dropdownRef}>
-			{/* Prikaz trenutno selektovanog jezika */}
-			<button
-				onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-				className='flex items-center px-2 py-2 rounded hover:bg-gray-300 shadow-sm shadow-gray-200'>
-				<LanguageFlag code={selectedLanguage} />
-				<span className='ml-2 text-black'>&#x25BC;</span>
-			</button>
+		<div className='absolute flex right-0 sm:right-4 top-3 z-30'>
+			<div className='relative inline-block text-left' ref={dropdownRef}>
+				{/* Prikaz trenutno selektovanog jezika */}
+				<button
+					onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+					className='flex items-center px-2 py-2 rounded hover:bg-gray-300 shadow-sm shadow-gray-200'>
+					<LanguageFlag code={selectedLanguage} />
+					<span className='ml-2 text-black'>&#x25BC;</span>
+				</button>
 
-			{isDropdownOpen && (
-				<div className='absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5'>
-					<div
-						className='py-1'
-						role='menu'
-						aria-orientation='vertical'
-						aria-labelledby='options-menu'>
-						{languages.map(lang => (
-							<button
-								key={lang.id}
-								onClick={() => {
-									handleLanguageChange(lang.code);
-									setIsDropdownOpen(false);
-								}}
-								className={`flex items-center px-4 py-2 text-sm ${
-									selectedLanguage === lang.code
-										? 'bg-gray-300 text-black'
-										: 'text-gray-700 hover:bg-gray-100'
-								} w-full`}>
-								<LanguageFlag code={lang.code} />
-							</button>
-						))}
+				{isDropdownOpen && (
+					<div className='absolute mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5'>
+						<div
+							className='py-1'
+							role='menu'
+							aria-orientation='vertical'
+							aria-labelledby='options-menu'>
+							{languages.map(lang => (
+								<button
+									key={lang.id}
+									onClick={() => {
+										handleLanguageChange(lang.code);
+										setIsDropdownOpen(false);
+									}}
+									className={`flex items-center px-4 py-2 text-sm ${
+										selectedLanguage === lang.code
+											? 'bg-gray-300 text-black'
+											: 'text-gray-700 hover:bg-gray-100'
+									} w-full`}>
+									<LanguageFlag code={lang.code} />
+								</button>
+							))}
+						</div>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 		</div>
 	);
 };

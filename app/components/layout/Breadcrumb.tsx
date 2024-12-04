@@ -28,6 +28,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	const [translations, setTranslations] = useState<{ [key: string]: string }>({});
 	const pathname = usePathname();
 
+	// Drag state for Breadcrumb
+	const [isDragging, setIsDragging] = useState(false);
+	const [startX, setStartX] = useState(0);
+	const [scrollLeft, setScrollLeft] = useState(0);
+
 	const getActiveLanguage = (pathname: string): string => {
 		const segments = pathname.split('/').filter(Boolean);
 		const foundLanguage = segments.find(segment => languageCodes.includes(segment.toLowerCase()));
@@ -66,9 +71,12 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 		fetchTranslations();
 	}, [currentPath]);
 
-	if (currentPath === '/') {
-		return null;
-	}
+	// Proveravamo da li je početna stranica
+	const shouldRenderBreadcrumb = !(
+		currentPath === '/' ||
+		currentPath === '/rs' ||
+		currentPath === '/hu'
+	);
 
 	const pathSegments = currentPath.split('/').filter(Boolean);
 	const filteredSegments = pathSegments.filter(
@@ -87,11 +95,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 		}),
 	];
 
-	// Drag state for Breadcrumb
-	const [isDragging, setIsDragging] = useState(false);
-	const [startX, setStartX] = useState(0);
-	const [scrollLeft, setScrollLeft] = useState(0);
-
 	const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
 		setIsDragging(true);
 		setStartX(e.pageX - e.currentTarget.offsetLeft);
@@ -109,28 +112,34 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	};
 
 	return (
-		<BreadcrumbsContainer>
-			<div
-				className='flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide whitespace-nowrap p-2'
-				aria-label='Breadcrumb'
-				onMouseDown={startDrag}
-				onMouseMove={handleDrag}
-				onMouseUp={stopDrag}
-				onMouseLeave={stopDrag}>
-				{breadcrumbPath.map((route, index) => (
-					<React.Fragment key={route.href}>
-						{index > 0 && <HiChevronRight className='text-gray-400 text-lg flex-shrink-0' />}
-						{index === breadcrumbPath.length - 1 ? (
-							<span className='text-gray-900 font-semibold'>{route.label}</span>
-						) : (
-							<Link href={route.href}>
-								<span className='text-sky-600 hover:text-sky-800 transition'>{route.label}</span>
-							</Link>
-						)}
-					</React.Fragment>
-				))}
-			</div>
-		</BreadcrumbsContainer>
+		<>
+			{shouldRenderBreadcrumb && (
+				<BreadcrumbsContainer>
+					<div
+						className='flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide whitespace-nowrap p-2'
+						aria-label='Breadcrumb'
+						onMouseDown={startDrag}
+						onMouseMove={handleDrag}
+						onMouseUp={stopDrag}
+						onMouseLeave={stopDrag}>
+						{breadcrumbPath.map((route, index) => (
+							<React.Fragment key={route.href}>
+								{index > 0 && <HiChevronRight className='text-gray-400 text-lg flex-shrink-0' />}
+								{index === breadcrumbPath.length - 1 ? (
+									<span className='text-gray-900 font-semibold'>{route.label}</span>
+								) : (
+									<Link href={route.href}>
+										<span className='text-sky-600 hover:text-sky-800 transition'>
+											{route.label}
+										</span>
+									</Link>
+								)}
+							</React.Fragment>
+						))}
+					</div>
+				</BreadcrumbsContainer>
+			)}
+		</>
 	);
 };
 
