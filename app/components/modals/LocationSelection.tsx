@@ -131,7 +131,6 @@ const LocationSelection: React.FC<Props> = ({
 							</button>
 						)}
 					</div>
-					{/* Container with animated height for expanding/collapsing */}
 					<div
 						className={`overflow-hidden transition-all duration-300 ease-in-out ${
 							isExpanded ? 'max-h-screen' : 'max-h-0'

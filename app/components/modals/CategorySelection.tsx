@@ -20,8 +20,9 @@ const CategorySelection: React.FC<Props> = ({
 	selectedItem,
 }) => {
 	const [expandedItems, setExpandedItems] = useState<number[]>([]);
+	const [searchTerm, setSearchTerm] = useState<string>(''); // Stanje za unos pretrage
+	console.log('categories', categories);
 
-	// Expand path to selected item if provided
 	useEffect(() => {
 		if (selectedItem) {
 			const parentIds = getParentIds(categories, selectedItem.id);
@@ -51,9 +52,40 @@ const CategorySelection: React.FC<Props> = ({
 		onClose();
 	};
 
+	const filterItemsForSearch = (items: any[], searchTerm: string): any[] => {
+		const normalizedSearchTerm = searchTerm.toLowerCase();
+
+		return items
+			.map(item => {
+				const normalizedSlug = item.slug.toLowerCase().replace(/-/g, ' '); // Zamenjuje '-' sa razmakom
+				const children = filterItemsForSearch(item.children || [], searchTerm);
+
+				const matchesSearch =
+					item.name.toLowerCase().includes(normalizedSearchTerm) ||
+					normalizedSlug.includes(normalizedSearchTerm) ||
+					(item.synonyms &&
+						item.synonyms.some((synonym: string) =>
+							synonym.toLowerCase().includes(normalizedSearchTerm)
+						));
+
+				// Ako trenutni item odgovara pretrazi, zadržavamo ga i sve njegove potomke
+				if (matchesSearch) {
+					return { ...item, children };
+				}
+
+				// Ako potomci odgovaraju pretrazi, zadržavamo samo njih
+				if (children.length > 0) {
+					return { ...item, children };
+				}
+
+				// Ako ni item ni njegovi potomci ne odgovaraju, uklanjamo ga
+				return null;
+			})
+			.filter(Boolean); // Uklanja `null` vrednosti
+	};
+
 	const renderItemOptions = (items: any[], isChild = false) => {
 		return items.map(item => {
-			// Check if this exact item is selected
 			const isSelected = selectedItem?.id === item.id;
 
 			return (
@@ -65,7 +97,7 @@ const CategorySelection: React.FC<Props> = ({
 						{item.icon && (
 							<Image
 								src={item.icon.url}
-								alt={item.icon.name}
+								alt={item.icon.name || 'Ikonica'}
 								width={20}
 								height={20}
 								className='mr-2'
@@ -112,14 +144,52 @@ const CategorySelection: React.FC<Props> = ({
 		});
 	};
 
+	const filteredCategories = filterItemsForSearch(categories, searchTerm);
+
+	useEffect(() => {
+		if (searchTerm) {
+			const expandedIds: any[] | ((prevState: number[]) => number[]) = [];
+
+			const collectExpandedIds = (items: any[]) => {
+				items.forEach(item => {
+					if (
+						item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+						(item.children && item.children.length > 0)
+					) {
+						expandedIds.push(item.id);
+					}
+					if (item.children) {
+						collectExpandedIds(item.children);
+					}
+				});
+			};
+
+			collectExpandedIds(categories);
+			setExpandedItems(expandedIds);
+		} else if (selectedItem) {
+			// Ako nema pretrage, otvaramo samo roditelje selektovanog elementa
+			const parentIds = getParentIds(categories, selectedItem.id);
+			setExpandedItems([...parentIds, selectedItem.id]);
+		} else {
+			setExpandedItems([]);
+		}
+	}, [searchTerm, selectedItem, categories]);
+
 	return (
 		<Dialog open={isOpen} onClose={onClose} className='fixed inset-0 z-50 overflow-y-auto'>
 			<DialogBackdrop onClick={onClose} className='fixed inset-0 bg-black bg-opacity-85' />
 			<div className='flex items-center justify-center min-h-screen px-4'>
 				<div className='relative bg-white rounded-lg shadow-lg w-full max-h-[90vh] md:max-w-2xl md:h-auto md:rounded-md mx-2 md:mx-auto overflow-hidden'>
 					<div className='p-4 text-black'>
+						<input
+							type='text'
+							value={searchTerm}
+							onChange={e => setSearchTerm(e.target.value)}
+							placeholder='Pretraži kategorije...'
+							className='w-full px-3 py-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+						/>
 						<div className='overflow-y-auto max-h-[65vh] md:max-h-96'>
-							{renderItemOptions(categories)}
+							{renderItemOptions(filteredCategories)}
 						</div>
 					</div>
 					<div className='flex justify-end p-4 border-t border-gray-200'>

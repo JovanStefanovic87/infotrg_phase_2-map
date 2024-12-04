@@ -202,13 +202,10 @@ const EditSelectionModal: React.FC<Props> = ({
 
 		try {
 			const response = await fetch(apiUrl);
-
 			if (response.ok) {
-				console.log('Data saved successfully!');
-				// Navigacija na novu URL adresu
 				const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationSlug}/${newCategoryFullPath}`;
-				router.push(newUrl); // Navigacija
-				onClose(); // Zatvaranje modala
+				router.push(newUrl);
+				onClose();
 			} else {
 				console.error('Error saving data:', response.statusText);
 				setErrorMessage('Došlo je do greške prilikom čuvanja podataka.');

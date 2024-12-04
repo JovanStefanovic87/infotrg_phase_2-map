@@ -21,12 +21,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 
 	// Ekstraktujte trenutni jezik iz URL-a
 	const extractLanguageFromUrl = (): string => {
-		const segments = pathname?.split('/') || [];
+		const otherSegments = pathname?.split('/') || [];
 		const validLanguages = languages.map(lang => lang.code); // Validni jezici
 
-		for (let i = 1; i < segments.length; i++) {
-			if (validLanguages.includes(segments[i])) {
-				return segments[i];
+		for (let i = 1; i < otherSegments.length; i++) {
+			if (validLanguages.includes(otherSegments[i])) {
+				return otherSegments[i];
 			}
 		}
 
