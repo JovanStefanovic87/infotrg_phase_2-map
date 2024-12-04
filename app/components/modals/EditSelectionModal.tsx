@@ -41,13 +41,12 @@ const EditSelectionModal: React.FC<Props> = ({
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
 	const segments = pathname.split('/').filter(Boolean);
-
 	const categorySlug = selectedCategory?.slug || '';
 	const parentSlug = selectedCategory?.parents?.[0]?.slug;
-	const categoryFullPath = `${parentSlug ? parentSlug + '/' : ''}${categorySlug}`;
 	const currentPage = segments[0] || 'gde-da-kupim';
 	const currentLanguage = segments[1] || 'rs';
 	const languageId = currentLanguage === 'rs' ? 1 : 2;
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const findCategoryIdBySlug = (slug: string, categories: Category[]): number | null => {
 		for (const category of categories) {
@@ -180,43 +179,43 @@ const EditSelectionModal: React.FC<Props> = ({
 	const locationParams = getLocationParamsFromPath(splitLocationPath, flatLocations);
 
 	const onSave = async () => {
-		if (selectedCategory || selectedLocation) {
-			const newCategorySlug = selectedCategory?.slug || categorySlug;
-			const newLocationSlug = selectedLocation?.slug || locationSlug;
-			const newLocationFullPath = selectedLocationParent?.slug
-				? `${selectedLocationParent.slug}/${newLocationSlug}`
-				: newLocationSlug;
-			const newCategoryFullPath = parentSlug ? `${parentSlug}/${newCategorySlug}` : newCategorySlug;
+		if (!selectedCategory || !selectedLocation) {
+			setErrorMessage('Morate izabrati i kategoriju i lokaciju pre nego što nastavite.');
+			return;
+		}
+		setErrorMessage(null); // Resetovanje poruke o grešci
 
-			const locationParams = getLocationParamsFromPath(
-				newLocationFullPath.split('/'),
-				flatLocations
-			);
+		const newCategorySlug = selectedCategory?.slug || categorySlug;
+		const newLocationSlug = selectedLocation?.slug || locationSlug;
+		const newLocationFullPath = selectedLocationParent?.slug
+			? `${selectedLocationParent.slug}/${newLocationSlug}`
+			: newLocationSlug;
+		const newCategoryFullPath = parentSlug ? `${parentSlug}/${newCategorySlug}` : newCategorySlug;
 
-			// Generisanje API URL-a
-			const apiUrl = `${baseUrl}/api/filteredRetailStores?languageId=${languageId}&${locationParams}&categoryId=${findCategoryIdBySlug(
-				newCategorySlug,
-				categories
-			)}`;
+		const locationParams = getLocationParamsFromPath(newLocationFullPath.split('/'), flatLocations);
 
-			try {
-				const response = await fetch(apiUrl);
+		// Generisanje API URL-a
+		const apiUrl = `${baseUrl}/api/filteredRetailStores?languageId=${languageId}&${locationParams}&categoryId=${findCategoryIdBySlug(
+			newCategorySlug,
+			categories
+		)}`;
 
-				if (response.ok) {
-					console.log('Data saved successfully!');
-				} else {
-					console.error('Error saving data:', response.statusText);
-				}
-			} catch (error) {
-				console.error('Error fetching data:', error);
+		try {
+			const response = await fetch(apiUrl);
+
+			if (response.ok) {
+				console.log('Data saved successfully!');
+				// Navigacija na novu URL adresu
+				const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationSlug}/${newCategoryFullPath}`;
+				router.push(newUrl); // Navigacija
+				onClose(); // Zatvaranje modala
+			} else {
+				console.error('Error saving data:', response.statusText);
+				setErrorMessage('Došlo je do greške prilikom čuvanja podataka.');
 			}
-
-			// Navigacija na novu URL adresu
-			const newUrl = `${baseUrl}/${currentPage}/${currentLanguage}/${newLocationSlug}/${newCategoryFullPath}`;
-			router.push(newUrl);
-
-			// Zatvaranje modalnog prozora
-			onClose();
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			setErrorMessage('Došlo je do greške prilikom komunikacije sa serverom.');
 		}
 	};
 
@@ -225,9 +224,12 @@ const EditSelectionModal: React.FC<Props> = ({
 			open={isOpen}
 			onClose={handleClose}
 			className='fixed z-50 inset-0 flex items-center justify-center'>
-			<DialogBackdrop className='fixed inset-0 bg-gray-900 opacity-85' />
+			<DialogBackdrop className='fixed inset-0 bg-gray-900 opacity-85' onClick={handleClose} />
 			<div className='relative bg-white rounded-2xl max-w-lg w-full p-8 shadow-xl transform transition-all'>
 				<div className='space-y-6 mb-8'>
+					{errorMessage && (
+						<div className='bg-red-100 text-red-700 p-4 rounded-lg'>{errorMessage}</div>
+					)}
 					<div className='flex flex-col'>
 						<SelectableButton
 							label='Izaberite kategoriju proizvoda'
