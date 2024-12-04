@@ -12,7 +12,7 @@ interface Language {
 
 interface LanguageSelectorProps {
 	languages: Language[];
-	onLanguageChange?: (newLanguage: string) => void; // Callback za promenu jezika
+	onLanguageChange?: (newLanguage: string) => void;
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLanguageChange }) => {

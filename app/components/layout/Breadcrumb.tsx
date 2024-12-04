@@ -111,7 +111,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	return (
 		<BreadcrumbsContainer>
 			<div
-				className='flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide whitespace-nowrap p-2 border-b border-gray-200'
+				className='flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide whitespace-nowrap p-2'
 				aria-label='Breadcrumb'
 				onMouseDown={startDrag}
 				onMouseMove={handleDrag}
