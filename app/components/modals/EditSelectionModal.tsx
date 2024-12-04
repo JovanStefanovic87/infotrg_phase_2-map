@@ -13,6 +13,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 interface Props {
 	isOpen: boolean;
 	onClose: () => void;
+	handleClose: () => void;
 	location: LocationDataForMap | null;
 	selectedCategory: CategoryDataForMap | null;
 	selectedLocation: LocationDataForMap | null;
@@ -25,6 +26,7 @@ interface Props {
 const EditSelectionModal: React.FC<Props> = ({
 	isOpen,
 	onClose,
+	handleClose,
 	selectedCategory,
 	selectedLocation,
 	setSelectedCategory,
@@ -221,7 +223,7 @@ const EditSelectionModal: React.FC<Props> = ({
 	return (
 		<Dialog
 			open={isOpen}
-			onClose={onClose}
+			onClose={handleClose}
 			className='fixed z-50 inset-0 flex items-center justify-center'>
 			<DialogBackdrop className='fixed inset-0 bg-gray-900 opacity-85' />
 			<div className='relative bg-white rounded-2xl max-w-lg w-full p-8 shadow-xl transform transition-all'>

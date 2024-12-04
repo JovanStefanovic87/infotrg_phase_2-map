@@ -20,7 +20,7 @@ import ErrorDisplay from '../components/modals/systemModals/ErrorDisplay';
 import RelatedCategories from './retailStoreList/RelatedCategroies';
 import CurrentSelectionPanel from './retailStoreList/CurrentSelectionPanel';
 import EditSelectionModal from '../components/modals/EditSelectionModal';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface Props {
 	initialData: {
@@ -40,6 +40,7 @@ interface Props {
 
 const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+	const router = useRouter();
 	const pathname = usePathname();
 	const mapInstance = useMap('my-map-id');
 	const locations = initialData.locations;
@@ -115,6 +116,10 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const openEditModal = () => setEditModalOpen(true);
 	1;
 	const closeEditModal = () => setEditModalOpen(false);
+	const handleClose = () => {
+		setEditModalOpen(false);
+		router.push('/');
+	};
 
 	useEffect(() => {
 		if (mainSuburb) {
@@ -264,6 +269,25 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 
 	const relatedCategories = mainCategoryData?.relatedCategories || [];
 
+	if (segments.length < 4) {
+		return (
+			<div className='flex justify-center items-center h-screen'>
+				<EditSelectionModal
+					isOpen={true}
+					onClose={closeEditModal}
+					handleClose={handleClose}
+					location={selectedLocation}
+					selectedCategory={selectedCategory}
+					selectedLocation={selectedLocation}
+					setSelectedCategory={setSelectedCategory}
+					setSelectedLocation={setSelectedLocation}
+					categories={initialData.articleCategories}
+					locations={initialData.locations}
+				/>
+			</div>
+		);
+	}
+
 	return (
 		<div className='flex flex-col gap-6'>
 			{mainCategoryData?.icon && (
@@ -276,6 +300,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 			<EditSelectionModal
 				isOpen={isEditModalOpen}
 				onClose={closeEditModal}
+				handleClose={closeEditModal}
 				location={selectedLocation}
 				selectedCategory={selectedCategory}
 				selectedLocation={selectedLocation}

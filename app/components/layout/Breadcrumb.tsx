@@ -36,8 +36,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 
 	const activeLanguage = getActiveLanguage(currentPath);
 
-	console.log('activeLanguage:', activeLanguage);
-
 	// Ažuriraj putanju na klijentskoj strani pri promeni rute
 	useEffect(() => {
 		if (pathname) {

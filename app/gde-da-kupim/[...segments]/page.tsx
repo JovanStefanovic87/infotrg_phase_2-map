@@ -131,19 +131,21 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 	// Filtriramo null vrednosti i uzimamo samo validne ID-jeve
 	const filteredLocationIds = locationIds.filter(location => location !== null);
 
-	await prefetchQueryFunction({
-		queryClient,
-		queryKey: ['retailStores', languageId],
-		url: `${baseUrl}/api/filteredRetailStores`,
-		params: {
-			languageId,
-			categoryId,
-			stateId: filteredLocationIds.find(location => location.type === 'state')?.id || null,
-			countyId: filteredLocationIds.find(location => location.type === 'county')?.id || null,
-			cityId: filteredLocationIds.find(location => location.type === 'city')?.id || null,
-			suburbId: filteredLocationIds.find(location => location.type === 'suburb')?.id || null,
-		},
-	});
+	if (segments.length > 2) {
+		await prefetchQueryFunction({
+			queryClient,
+			queryKey: ['retailStores', languageId],
+			url: `${baseUrl}/api/filteredRetailStores`,
+			params: {
+				languageId,
+				categoryId,
+				stateId: filteredLocationIds.find(location => location.type === 'state')?.id || null,
+				countyId: filteredLocationIds.find(location => location.type === 'county')?.id || null,
+				cityId: filteredLocationIds.find(location => location.type === 'city')?.id || null,
+				suburbId: filteredLocationIds.find(location => location.type === 'suburb')?.id || null,
+			},
+		});
+	}
 
 	return {
 		filteredLocationIds,
