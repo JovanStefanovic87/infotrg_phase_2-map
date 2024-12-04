@@ -1,8 +1,7 @@
 'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageContainer from '../components/containers/PageContainer';
 import CategoryList from './CategoryList';
-import QuickSearch from '../components/input/QuickSearch';
 import { Synonym } from '@/utils/helpers/types';
 import Cookies from 'js-cookie';
 
@@ -13,13 +12,6 @@ interface Category {
 	parents: Category[];
 	children: Category[];
 	synonyms: Synonym[];
-}
-
-interface CategoryOption {
-	value: string;
-	label: string;
-	parent?: string;
-	synonyms?: string[];
 }
 
 interface Props {
@@ -34,28 +26,6 @@ const PageContent: React.FC<Props> = ({ categories }) => {
 		setLanguageCode(cookieLanguage); // Ovo se poziva samo unutar useEffect
 	}, []);
 
-	const transformCategoriesToOptions = (categories: Category[]): CategoryOption[] => {
-		const options: CategoryOption[] = [];
-
-		const traverse = (category: Category, parentName: string | null = null) => {
-			options.push({
-				value: category.id.toString(),
-				label: category.name,
-				parent: parentName || undefined,
-				synonyms: category.synonyms ? category.synonyms.map(s => s.synonym) : [],
-			});
-
-			category.children.forEach(child => traverse(child, category.name));
-		};
-
-		categories.forEach(category => traverse(category));
-		return options;
-	};
-
-	const categoryOptions = useMemo(() => {
-		return categories ? transformCategoriesToOptions(categories) : [];
-	}, [categories]);
-
 	return (
 		<PageContainer bgColor='white'>
 			<div className='flex flex-col items-center p-6 mx-auto w-full'>
@@ -63,12 +33,6 @@ const PageContent: React.FC<Props> = ({ categories }) => {
 					Pronađite proizvode koji vas zanimaju i pogledajte gde se prodaju
 				</h1>
 			</div>
-
-			<QuickSearch
-				options={categoryOptions}
-				onSelect={selectedOption => console.log('Selected option:', selectedOption)}
-				placeholder='Brza pretraga kategorija proizvoda...'
-			/>
 			<CategoryList categories={categories} languageCode={languageCode} />
 		</PageContainer>
 	);

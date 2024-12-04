@@ -57,7 +57,7 @@ const CategorySelection: React.FC<Props> = ({
 
 		return items
 			.map(item => {
-				const normalizedSlug = item.slug.toLowerCase().replace(/-/g, ' '); // Zamenjuje '-' sa razmakom
+				const normalizedSlug = item.slug.toLowerCase().replace(/-/g, ' ');
 				const children = filterItemsForSearch(item.children || [], searchTerm);
 
 				const matchesSearch =
@@ -68,20 +68,17 @@ const CategorySelection: React.FC<Props> = ({
 							synonym.toLowerCase().includes(normalizedSearchTerm)
 						));
 
-				// Ako trenutni item odgovara pretrazi, zadržavamo ga i sve njegove potomke
 				if (matchesSearch) {
 					return { ...item, children };
 				}
 
-				// Ako potomci odgovaraju pretrazi, zadržavamo samo njih
 				if (children.length > 0) {
 					return { ...item, children };
 				}
 
-				// Ako ni item ni njegovi potomci ne odgovaraju, uklanjamo ga
 				return null;
 			})
-			.filter(Boolean); // Uklanja `null` vrednosti
+			.filter(Boolean);
 	};
 
 	const renderItemOptions = (items: any[], isChild = false) => {

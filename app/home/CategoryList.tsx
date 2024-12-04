@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { fetchedCategories } from '@/utils/helpers/types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { fetchedCategories, Synonym, ComboboxOption } from '@/utils/helpers/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import QuickSearch from '../components/input/QuickSearch';
 
 interface CategoryListProps {
 	categories: any;
 	languageCode: string;
+}
+
+interface Category {
+	id: number;
+	name: string;
+	iconId?: number;
+	parents: Category[];
+	children: Category[];
+	synonyms: Synonym[];
+	slug: string;
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode }) => {
@@ -13,6 +24,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
+	const [selectedOption, setSelectedOption] = useState<ComboboxOption | null>(null);
 
 	const defaultLocationSlugs: { [key: string]: string[] } = {
 		rs: ['county-srbija-rs', 'city-subotica-rs', 'suburb-buvljak-subotica-rs'],
@@ -33,7 +45,21 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 		return [...getParentSlugs(parent, categories), currentSlug];
 	};
 
+	const findCategoryById = (id: number, categories: any[]): any | undefined => {
+		for (const category of categories) {
+			if (category.id === id) {
+				return category;
+			}
+			if (category.children && category.children.length > 0) {
+				const found = findCategoryById(id, category.children);
+				if (found) return found;
+			}
+		}
+		return undefined;
+	};
+
 	const handleNavigation = (category: fetchedCategories) => {
+		console.log('category', category);
 		if (!categories) return;
 
 		// Prikupljanje slugova svih nadkategorija i podkategorije
@@ -68,60 +94,120 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 		slider.scrollLeft = scrollLeft - walk;
 	};
 
+	const transformCategoriesToOptions = (categories: Category[]): ComboboxOption[] => {
+		const options: ComboboxOption[] = [];
+
+		const traverse = (category: Category, parentName: string | null = null) => {
+			options.push({
+				value: category.id.toString(),
+				label: category.name,
+				id: category.id,
+				slug: category.slug,
+				parent: parentName || undefined,
+				synonyms: category.synonyms ? category.synonyms.map(s => s.synonym) : [],
+			});
+
+			category.children.forEach(child => traverse(child, category.name));
+		};
+
+		categories.forEach(category => traverse(category));
+		return options;
+	};
+
+	const categoryOptions = useMemo(() => {
+		return categories ? transformCategoriesToOptions(categories) : [];
+	}, [categories]);
+
 	return (
-		<div className='grid grid-cols-1 gap-6 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 bg-white'>
-			{categories && categories.length > 0 ? (
-				categories
-					.slice()
-					.sort((a: { name: string }, b: { name: any }) => a.name.localeCompare(b.name))
-					.map((category: fetchedCategories) => (
-						<div
-							key={category.id}
-							className='relative p-5 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white shadow-sm'>
+		<div>
+			<QuickSearch
+				options={categoryOptions}
+				onSelect={selectedOption => {
+					if (selectedOption) {
+						const selectedCategory = findCategoryById(
+							parseInt(selectedOption.value, 10),
+							categories
+						);
+						if (selectedCategory) {
+							console.log('Selected Category:', selectedCategory); // Proverite da li vraća ceo objekat
+							handleNavigation(selectedCategory); // Navigacija sa svim podacima kategorije
+						}
+					}
+				}}
+				placeholder='Brza pretraga kategorija proizvoda...'
+				selectedOption={selectedOption}
+				setSelectedOption={setSelectedOption}
+			/>
+			<div className='grid grid-cols-1 gap-6 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 bg-white'>
+				{categories && categories.length > 0 ? (
+					categories
+						.slice()
+						.sort((a: { name: string }, b: { name: any }) => a.name.localeCompare(b.name))
+						.map((category: fetchedCategories) => (
 							<div
-								className='flex flex-col items-center cursor-pointer space-y-3 mb-3'
-								onClick={() => handleNavigation(category)}>
-								{category.icon && (
-									<div className='shadow-inner shadow-gray-300 overflow-hidden mr-4 rounded-full p-3 hover:overflow-visible hover:rotate-3 flex-shrink-0 relative w-[80px] h-[80px] transition-all duration-200'>
-										<Image
-											src={category.icon.url}
-											alt={category.icon.name}
-											fill
-											sizes='100px'
-											quality={100}
-											className='transition-transform duration-200 ease-in-out hover:scale-105 object-contain'
-										/>
+								key={category.id}
+								className='flex flex-col justify-between relative p-5 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white shadow-sm'>
+								<div
+									className='flex flex-col items-center cursor-pointer space-y-3 mb-3'
+									onClick={() => handleNavigation(category)}>
+									{category.icon && (
+										<div className='shadow-inner shadow-gray-300 overflow-hidden rounded-full p-3 flex-shrink-0 relative w-[80px] h-[80px] transition-all duration-200'>
+											<Image
+												src={category.icon.url}
+												alt={category.icon.name}
+												fill
+												sizes='100px'
+												quality={100}
+												className='transition-transform duration-200 ease-in-out hover:scale-105 object-contain'
+											/>
+										</div>
+									)}
+									<span className='text-center text-lg font-medium text-gray-900 tracking-wide'>
+										{category.name}
+									</span>
+								</div>
+
+								{/* Children kategorije kao horizontalna lista */}
+								{category.children.length > 0 && (
+									<div className='mt-4'>
+										<h4 className='text-gray-600 font-semibold text-sm mb-2'>Podkategorije:</h4>
+										<div
+											className='flex space-x-4 overflow-x-auto scrollbar-hide custom-scrollbar'
+											onMouseDown={startDragging} // Početak drag-a
+											onMouseMove={handleDragging} // Tokom prevlačenja
+											onMouseUp={stopDragging} // Zaustavljanje prevlačenja
+											onMouseLeave={stopDragging} // Ako korisnik napusti područje
+										>
+											{category.children.map((subCategory: fetchedCategories) => (
+												<div
+													key={subCategory.id}
+													className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0 w-[120px]'
+													onClick={() => handleNavigation(subCategory)}>
+													{subCategory.icon && (
+														<div className='mb-2 rounded-full p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
+															<Image
+																src={subCategory.icon.url}
+																alt={subCategory.icon.name}
+																fill
+																sizes='60px'
+																className='object-contain transition-transform duration-200 hover:scale-110'
+															/>
+														</div>
+													)}
+													<span className='text-sm text-gray-800 text-center'>
+														{subCategory.name}
+													</span>
+												</div>
+											))}
+										</div>
 									</div>
 								)}
-								<span className='text-center text-lg font-medium text-gray-900 tracking-wide'>
-									{category.name}
-								</span>
 							</div>
-
-							{category.children.map((subCategory: fetchedCategories) => (
-								<div
-									key={subCategory.id}
-									className='flex flex-col items-center cursor-pointer p-2 rounded-lg transition-all w-20 flex-shrink-0 outline-none select-none'
-									onClick={() => handleNavigation(subCategory)}>
-									<div className='mb-1 rounded-md p-1 overflow-visible flex-shrink-0 relative w-[50px] h-[50px] transition-all duration-200 hover:overflow-visible hover:rotate-3'>
-										{subCategory.icon && (
-											<Image
-												src={subCategory.icon.url}
-												alt={subCategory.icon.name}
-												fill
-												sizes='50px'
-												className='transition-transform duration-200 hover:scale-105 ovject-contain'
-											/>
-										)}
-									</div>
-									<span className='text-xs text-gray-700 mt-1 text-center'>{subCategory.name}</span>
-								</div>
-							))}
-						</div>
-					))
-			) : (
-				<p className='text-center text-gray-500'>No categories available</p>
-			)}
+						))
+				) : (
+					<p className='text-center text-gray-500'>No categories available</p>
+				)}
+			</div>
 		</div>
 	);
 };

@@ -299,6 +299,15 @@ export interface CategoryOption {
 	label: string;
 }
 
+export interface ComboboxOption {
+	value: string;
+	label: string;
+	id: number;
+	slug: string;
+	parent?: string;
+	synonyms?: string[];
+}
+
 export interface RenderCategoryListProps {
 	categories: Category[];
 	parentId?: string | null;

@@ -37,6 +37,11 @@ div[data-lastpass] {
 	display: none;
 }
 
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: #a0aec0 #edf2f7;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;

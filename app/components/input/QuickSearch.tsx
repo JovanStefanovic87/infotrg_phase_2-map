@@ -1,21 +1,23 @@
 'use client';
 import React, { useState } from 'react';
 import { FaSearch, FaChevronRight } from 'react-icons/fa';
-
-interface ComboboxOption {
-	value: string;
-	label: string;
-	parent?: string;
-	synonyms?: string[];
-}
+import { ComboboxOption } from '@/utils/helpers/types';
 
 interface SimpleComboboxProps {
 	options: ComboboxOption[];
 	onSelect: (option: ComboboxOption | null) => void;
 	placeholder?: string;
+	selectedOption?: ComboboxOption | null;
+	setSelectedOption?: (option: ComboboxOption | null) => void;
 }
 
-const QuickSearch: React.FC<SimpleComboboxProps> = ({ options, onSelect, placeholder }) => {
+const QuickSearch: React.FC<SimpleComboboxProps> = ({
+	options,
+	onSelect,
+	placeholder,
+	selectedOption,
+	setSelectedOption,
+}) => {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -40,7 +42,10 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({ options, onSelect, placeho
 
 	const handleSelect = (option: ComboboxOption) => {
 		setSearchTerm(option.label);
-		onSelect(option);
+		if (setSelectedOption) {
+			setSelectedOption(option); // Čuvanje selektovanog objekta u state
+		}
+		onSelect(option); // Navigacija odmah nakon selekcije
 		setIsOpen(false);
 	};
 
@@ -88,28 +93,6 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({ options, onSelect, placeho
 					Ne postoji rezultat za pretragu &quot;{searchTerm}&quot;
 				</div>
 			)}
-			<style jsx>{`
-				.parent-category {
-					position: relative;
-					padding-left: 1.5rem;
-				}
-
-				.parent-category::before {
-					content: '';
-					position: absolute;
-					top: 50%;
-					left: 0;
-					transform: translateY(-50%);
-					height: 50%;
-					border-left: 1px solid rgba(128, 126, 163, 0.82);
-					border-bottom: 1px solid rgba(128, 126, 163, 0.82);
-					width: 0.5rem;
-				}
-
-				.prefix {
-					margin-right: 0.2rem;
-				}
-			`}</style>
 		</div>
 	);
 };
