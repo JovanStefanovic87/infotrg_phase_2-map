@@ -309,12 +309,14 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				categories={articleCategories}
 				locations={locations}
 			/>
-			<div id='map' className={`${styles.mapWrapper} relative`}>
+			<div
+				id='map'
+				className={`${styles.mapWrapper} relative rounded-xl shadow-md shadow-grayMedium overflow-hidden mt-4 sm:mt-2`}>
 				<Map
 					id='my-map-id'
 					defaultCenter={defaultCenter}
 					defaultZoom={defaultZoom}
-					className={`${styles.mapContainer} rounded-xl shadow-lg overflow-hidden`}
+					className={`${styles.mapContainer}`}
 					mapId={mapId}
 					mapTypeId='satellite'
 					gestureHandling='greedy'
