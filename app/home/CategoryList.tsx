@@ -6,6 +6,7 @@ import QuickSearch from '../components/input/QuickSearch';
 import H1 from '../components/text/H1';
 import H4 from '../components/text/H4';
 import H2 from '../components/text/H2';
+import homeImage from '@/public/images/home_infotrg.webp';
 
 interface CategoryListProps {
 	categories: any;
@@ -122,7 +123,14 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 	}, [categories]);
 
 	return (
-		<div>
+		<div className='pt-2'>
+			<Image
+				src={homeImage}
+				alt='Infotrg Naslovna'
+				width={1200}
+				height={600}
+				className='object-cover rounded-lg shadow-lg'
+			/>
 			<div className='flex flex-col items-center p-6 mx-auto w-full'>
 				<H1
 					title='Pronađite proizvode koji vas zanimaju i pogledajte gde se prodaju'
@@ -162,7 +170,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 									className='flex flex-col items-center cursor-pointer space-y-3 mb-3'
 									onClick={() => handleNavigation(category)}>
 									{category.icon && (
-										<div className='shadow-inner shadow-gray-300 overflow-hidden rounded-full p-3 flex-shrink-0 relative w-[80px] h-[80px] transition-all duration-200'>
+										<div className='p-3 relative w-[80px] h-[80px] transition-all duration-200'>
 											<Image
 												src={category.icon.url}
 												alt={category.icon.name}
@@ -176,23 +184,21 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 									<H2 text={category.name} color='black' size='lg' />
 								</div>
 
-								{/* Children kategorije kao horizontalna lista */}
 								{category.children.length > 0 && (
 									<div className='mt-4'>
 										<div
-											className='flex space-x-4 overflow-x-auto scrollbar-hide custom-scrollbar'
-											onMouseDown={startDragging} // Početak drag-a
-											onMouseMove={handleDragging} // Tokom prevlačenja
-											onMouseUp={stopDragging} // Zaustavljanje prevlačenja
-											onMouseLeave={stopDragging} // Ako korisnik napusti područje
-										>
+											className='flex space-x-4 overflow-x-auto scrollbar-hide'
+											onMouseDown={startDragging}
+											onMouseMove={handleDragging}
+											onMouseUp={stopDragging}
+											onMouseLeave={stopDragging}>
 											{category.children.map((subCategory: fetchedCategories) => (
 												<div
 													key={subCategory.id}
 													className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0'
 													onClick={() => handleNavigation(subCategory)}>
 													{subCategory.icon && (
-														<div className='mb-2 rounded-full p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
+														<div className='mb-2 rounded-md p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
 															<Image
 																src={subCategory.icon.url}
 																alt={subCategory.icon.name}

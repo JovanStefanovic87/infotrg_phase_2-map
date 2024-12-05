@@ -57,7 +57,7 @@ const AutoScrollCategories: React.FC<Props> = ({ categories }) => {
 		<div className='flex items-center border-b-2 mb-2'>
 			<div
 				ref={scrollContainerRef}
-				className='flex items-center overflow-x-auto whitespace-nowrap text-gray-700 cursor-pointer py-3 rounded-lg transition-colors duration-300 custom-scrollbar'
+				className='flex items-center overflow-x-auto whitespace-nowrap text-gray-700 cursor-pointer py-3 rounded-lg transition-colors duration-300'
 				onMouseEnter={stopAutoScroll}
 				onTouchStart={stopAutoScroll}
 				onMouseLeave={startAutoScroll}

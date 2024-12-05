@@ -21,7 +21,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 	const initialPathname = headersList.get('x-nextjs-url') || '/';
 	return (
 		<html lang='en'>
-			<head />
 			<body className='flex flex-col min-h-screen bg-white'>
 				<SessionProvider>
 					<QueryProvider>

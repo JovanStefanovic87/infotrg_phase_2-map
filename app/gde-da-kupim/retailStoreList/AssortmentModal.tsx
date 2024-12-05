@@ -77,7 +77,7 @@ const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose }
 				</div>
 
 				{/* Categories List */}
-				<div className='flex-1 p-4 overflow-y-auto custom-scrollbar bg-white'>
+				<div className='flex-1 p-4 overflow-y-auto bg-white'>
 					<CategoryHierarchy categories={filteredCategories} />
 				</div>
 
