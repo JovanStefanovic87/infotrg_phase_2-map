@@ -126,6 +126,7 @@ const LocationsAdmin: React.FC<Props> = ({ prefix, title }) => {
 				labelId,
 				languageId: language.id,
 				translation: name,
+				type,
 			}));
 
 			await axios.post('/api/translation', { translations });

@@ -336,14 +336,29 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 					synonyms,
 				} = translation;
 
+				// Fetch language code
+				const language = await prisma.language.findUnique({
+					where: { id: languageId },
+					select: { code: true },
+				});
+
+				if (!language) {
+					throw new Error(`Language with ID ${languageId} not found`);
+				}
+
+				// Generate slug based on translation text and language code
+				const slugBase = translationText.toLowerCase().replace(/\s+/g, '-'); // Slugify translation
+				const slug = `${slugBase}-${language.code}`;
+
 				const createdTranslation = await prisma.translation.upsert({
 					where: { id: translationId },
-					update: { translation: translationText, description },
+					update: { translation: translationText, description, slug }, // Update slug here
 					create: {
 						labelId,
 						languageId,
 						translation: translationText,
 						description,
+						slug,
 					},
 				});
 

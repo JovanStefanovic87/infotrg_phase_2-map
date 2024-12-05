@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 		const createdOrUpdatedTranslations = [];
 
 		for (const translation of translations) {
-			const { labelId, languageId, translation: translationText } = translation;
+			const { labelId, languageId, translation: translationText, type } = translation;
 
 			if (
 				typeof labelId !== 'number' ||
@@ -89,8 +89,9 @@ export async function POST(request: Request) {
 				continue;
 			}
 
-			// Generisanje sluga sa jezičkim kodom
-			const slug = slugify(`${translationText}-${language.code}`, {
+			// Generisanje sluga sa ili bez tipa
+			const slugBase = type ? `${type}-${translationText}` : translationText;
+			const slug = slugify(`${slugBase}-${language.code}`, {
 				lower: true,
 				strict: true, // Uklanja specijalne karaktere
 			});
