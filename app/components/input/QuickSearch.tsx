@@ -43,9 +43,9 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({
 	const handleSelect = (option: ComboboxOption) => {
 		setSearchTerm(option.label);
 		if (setSelectedOption) {
-			setSelectedOption(option); // Čuvanje selektovanog objekta u state
+			setSelectedOption(option);
 		}
-		onSelect(option); // Navigacija odmah nakon selekcije
+		onSelect(option);
 		setIsOpen(false);
 	};
 

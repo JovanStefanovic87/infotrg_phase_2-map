@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { fetchedCategories, Synonym, ComboboxOption } from '@/utils/helpers/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -7,6 +7,7 @@ import H1 from '../components/text/H1';
 import H4 from '../components/text/H4';
 import H2 from '../components/text/H2';
 import homeImage from '@/public/images/home_infotrg.webp';
+import { pageContentTranslations } from '@/utils/translations';
 
 interface CategoryListProps {
 	categories: any;
@@ -132,7 +133,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 			/>
 			<div className='flex flex-col items-center p-6 mx-auto w-full'>
 				<H1
-					title='Pronađite proizvode koji vas zanimaju i pogledajte gde se prodaju'
+					title={pageContentTranslations[languageCode].homePageTitle}
 					color='black'
 					size='text-lg md:text-xl'
 					pb={0}
