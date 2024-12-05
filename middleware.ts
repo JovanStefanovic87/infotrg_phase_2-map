@@ -11,12 +11,17 @@ const adminMiddleware = withAuth({
 });
 
 const validLanguages = ['rs', 'hu']; // Lista podržanih jezika
+const excludedPaths = ['ulaganje', 'posao', 'o-nama'];
 
 export default async function middleware(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
 
 	// Ignorišemo statičke resurse i API rute
-	if (/^\/(_next|api|favicon\.ico|icons)/.test(pathname)) {
+	if (
+		/^\/(_next|api|favicon\.ico|icons|images|.*\.(jpg|jpeg|png|svg|gif|webp|css|js|woff|woff2|ttf|otf|bmp))/.test(
+			pathname
+		)
+	) {
 		return NextResponse.next();
 	}
 
@@ -27,6 +32,10 @@ export default async function middleware(request: NextRequest) {
 
 	// Delimo URL na segmente
 	const segments = pathname.split('/').filter(Boolean); // Uklanja prazne segmente
+
+	if (excludedPaths.includes(segments[0])) {
+		return NextResponse.next();
+	}
 
 	// Dobijanje jezika iz kolačića
 	const cookies = request.cookies;

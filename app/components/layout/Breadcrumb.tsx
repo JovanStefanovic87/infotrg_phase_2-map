@@ -10,7 +10,20 @@ import { HiChevronRight } from 'react-icons/hi';
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const languageCodes = ['hu', 'rs'];
-const staticPages = ['gde-da-kupim'];
+const staticPages = [
+	'ulaganje',
+	'posao',
+	'o-nama',
+	'plan-i-program-poslovanja',
+	'platforma',
+	'poslovna-saradnja',
+	'tim',
+	'usluzne-delatnosti',
+	'investicioni-fond',
+	'investicioni-fondovi',
+	'investitori',
+	'kljucne-informacije',
+];
 
 const staticPageTranslations: { [key: string]: { [key: string]: string } } = {
 	'gde-da-kupim': {
@@ -27,8 +40,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	const [currentPath, setCurrentPath] = useState(initialPathname);
 	const [translations, setTranslations] = useState<{ [key: string]: string }>({});
 	const pathname = usePathname();
-
-	// Drag state for Breadcrumb
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
@@ -57,8 +68,22 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 				return;
 			}
 
+			// Proveravamo da li je URL statička stranica ili njena podstranica
+			const isStaticPage = staticPages.some(
+				page => pathSegments[0]?.toLowerCase() === page.toLowerCase()
+			);
+
+			// Ako je statička stranica ili podstranica, preskačemo prevod
+			if (isStaticPage) {
+				setTranslations({});
+				return;
+			}
+
+			// Filtriramo dinamičke segmente koji zahtevaju prevod
 			const dynamicSegments = pathSegments.filter(
-				segment => !languageCodes.includes(segment.toLowerCase()) && !staticPages.includes(segment)
+				segment =>
+					!languageCodes.includes(segment.toLowerCase()) && // Ignorisanje jezika
+					!staticPages.includes(segment.toLowerCase()) // Ignorisanje statičkih stranica
 			);
 
 			const translationPromises = dynamicSegments.map(async segment => {
