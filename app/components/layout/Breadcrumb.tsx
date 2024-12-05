@@ -23,6 +23,7 @@ const staticPages = [
 	'investicioni-fondovi',
 	'investitori',
 	'kljucne-informacije',
+	'gde-da-kupim',
 ];
 
 const staticPageTranslations: { [key: string]: { [key: string]: string } } = {

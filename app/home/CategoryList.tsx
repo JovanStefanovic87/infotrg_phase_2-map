@@ -147,7 +147,6 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 							categories
 						);
 						if (selectedCategory) {
-							console.log('Selected Category:', selectedCategory); // Proverite da li vraća ceo objekat
 							handleNavigation(selectedCategory); // Navigacija sa svim podacima kategorije
 						}
 					}

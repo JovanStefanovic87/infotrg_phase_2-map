@@ -21,13 +21,12 @@ const CategorySelection: React.FC<Props> = ({
 }) => {
 	const [expandedItems, setExpandedItems] = useState<number[]>([]);
 	const [searchTerm, setSearchTerm] = useState<string>(''); // Stanje za unos pretrage
-	console.log('categories', categories);
-
 	useEffect(() => {
 		if (selectedItem) {
 			const parentIds = getParentIds(categories, selectedItem.id);
 			setExpandedItems([...parentIds, selectedItem.id]);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedItem, categories]);
 
 	const getParentIds = (items: any[], itemId: number, path: number[] = []): number[] => {

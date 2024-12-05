@@ -248,7 +248,7 @@ const EditSelectionModal: React.FC<Props> = ({
 				</div>
 
 				<div className='flex justify-end gap-4'>
-					<CloseButton onClose={onClose} />
+					<CloseButton onClose={handleClose} />
 					<DefaultButton
 						onClick={onSave}
 						className='px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors'>
