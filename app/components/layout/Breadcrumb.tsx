@@ -50,17 +50,30 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	useEffect(() => {
 		const fetchTranslations = async () => {
 			const pathSegments = currentPath.split('/').filter(Boolean);
+
+			// Ako bilo koji segment sadrži 'admin', ne izvršavamo fetch
+			if (pathSegments.includes('admin')) {
+				setTranslations({});
+				return;
+			}
+
 			const dynamicSegments = pathSegments.filter(
 				segment => !languageCodes.includes(segment.toLowerCase()) && !staticPages.includes(segment)
 			);
 
 			const translationPromises = dynamicSegments.map(async segment => {
-				const response = await fetch(`/api/translation/${segment}`);
-				if (response.ok) {
-					const data = await response.json();
-					return { [segment]: data.translation };
+				try {
+					const response = await fetch(`/api/translation/${segment}`);
+					if (response.ok) {
+						const data = await response.json();
+						return { [segment]: data.translation };
+					}
+					console.warn(`Translation not found for segment: ${segment}`);
+					return { [segment]: segment };
+				} catch (error) {
+					console.error(`Error fetching translation for segment: ${segment}`, error);
+					return { [segment]: segment };
 				}
-				return { [segment]: segment };
 			});
 
 			const results = await Promise.all(translationPromises);
