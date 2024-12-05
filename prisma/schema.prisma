@@ -8,18 +8,19 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String   @default("User")
-  role      String   @default("user")
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  phoneNumber String?
+  password    String
+  name        String   @default("User")
+  role        String   @default("user")
+  createdAt   DateTime @default(now())
 }
 
 model Language {
   id          Int           @id @default(autoincrement())
   code        String        @unique
-  name        String
+  name        String        @unique
   createdAt   DateTime      @default(now())
   Translation Translation[] @relation("LanguageTranslations")
 
@@ -248,8 +249,6 @@ model Coordinates {
   longitude           Float
   locationDescription String?
   RetailStore         RetailStore[]
-
-  @@unique([latitude, longitude])
 }
 
 model Advertising {

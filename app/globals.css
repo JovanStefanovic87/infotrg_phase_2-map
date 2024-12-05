@@ -76,6 +76,34 @@ div[data-lastpass] {
 	user-select: none; /* Standard syntax */
 }
 
+.scrollbar-yellow {
+	scrollbar-width: thin;
+	scrollbar-color: #cec21e transparent; /* Samo scroller vidljiv, traka je providna */
+}
+
+.scrollbar-yellow::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.scrollbar-yellow::-webkit-scrollbar-track {
+	background: transparent; /* Traka scrollbar-a je providna */
+}
+
+.scrollbar-yellow::-webkit-scrollbar-thumb {
+	background-color: #c4c4c4; /* Diskretna siva boja scrollbar-a */
+	border-radius: 4px;
+}
+
+.scrollbar-yellow::-webkit-scrollbar-thumb:hover {
+	background-color: #a3a3a3; /* Tamnija siva pri hover-u */
+}
+
+/* Uklanjanje strelica sa scrollbar-a */
+.scrollbar-yellow::-webkit-scrollbar-button {
+	display: none; /* Skrivanje strelica */
+}
+
 .maxWidthCustom {
 	max-width: calc(100dvw - 80px);
 }

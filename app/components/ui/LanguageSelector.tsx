@@ -66,7 +66,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 	}, []);
 
 	return (
-		<div className='absolute flex right-0 sm:right-4 top-3 z-30'>
+		<div className='absolute flex right-0 sm:right-4 top-3 z-30 select-none'>
 			<div className='relative inline-block text-left' ref={dropdownRef}>
 				{/* Prikaz trenutno selektovanog jezika */}
 				<button

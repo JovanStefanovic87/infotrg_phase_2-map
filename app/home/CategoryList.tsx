@@ -63,7 +63,6 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 	};
 
 	const handleNavigation = (category: fetchedCategories) => {
-		console.log('category', category);
 		if (!categories) return;
 
 		// Prikupljanje slugova svih nadkategorija i podkategorije

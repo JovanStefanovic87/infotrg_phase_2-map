@@ -3,6 +3,7 @@ interface Props {
 	pb?: number | string;
 	color?: string;
 	size?: string;
+	align?: string;
 }
 
 const H1: React.FC<Props> = ({
@@ -10,10 +11,11 @@ const H1: React.FC<Props> = ({
 	pb = '1.5rem',
 	color = '#1f2937', // Tamnija podrazumevana boja za minimalistički izgled
 	size = 'text-3xl md:text-4xl',
+	align = 'center',
 }) => {
 	return (
 		<h1
-			className={`${size} font-bold text-center`}
+			className={`${size} font-bold text-${align}`}
 			style={{
 				paddingBottom: pb,
 				color: color,
