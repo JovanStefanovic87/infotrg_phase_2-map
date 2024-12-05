@@ -28,11 +28,6 @@ const PageContent: React.FC<Props> = ({ categories }) => {
 
 	return (
 		<PageContainer bgColor='white'>
-			<div className='flex flex-col items-center p-6 mx-auto w-full'>
-				<h1 className='text-ms sm:text-base lg:text-xl text-center font-bold text-blue-900 leading-snug tracking-wider uppercase text-black'>
-					Pronađite proizvode koji vas zanimaju i pogledajte gde se prodaju
-				</h1>
-			</div>
 			<CategoryList categories={categories} languageCode={languageCode} />
 		</PageContainer>
 	);

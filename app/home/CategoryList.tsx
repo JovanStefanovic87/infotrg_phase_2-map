@@ -3,6 +3,9 @@ import { fetchedCategories, Synonym, ComboboxOption } from '@/utils/helpers/type
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import QuickSearch from '../components/input/QuickSearch';
+import H1 from '../components/text/H1';
+import H4 from '../components/text/H4';
+import H2 from '../components/text/H2';
 
 interface CategoryListProps {
 	categories: any;
@@ -120,6 +123,14 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 
 	return (
 		<div>
+			<div className='flex flex-col items-center p-6 mx-auto w-full'>
+				<H1
+					title='Pronađite proizvode koji vas zanimaju i pogledajte gde se prodaju'
+					color='black'
+					size='text-lg md:text-xl'
+					pb={0}
+				/>
+			</div>
 			<QuickSearch
 				options={categoryOptions}
 				onSelect={selectedOption => {
@@ -146,7 +157,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 						.map((category: fetchedCategories) => (
 							<div
 								key={category.id}
-								className='flex flex-col justify-between relative p-5 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white shadow-sm'>
+								className='flex flex-col justify-between relative p-5 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 bg-white shadow-md'>
 								<div
 									className='flex flex-col items-center cursor-pointer space-y-3 mb-3'
 									onClick={() => handleNavigation(category)}>
@@ -162,15 +173,12 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 											/>
 										</div>
 									)}
-									<span className='text-center text-lg font-medium text-gray-900 tracking-wide'>
-										{category.name}
-									</span>
+									<H2 text={category.name} color='black' size='lg' />
 								</div>
 
 								{/* Children kategorije kao horizontalna lista */}
 								{category.children.length > 0 && (
 									<div className='mt-4'>
-										<h4 className='text-gray-600 font-semibold text-sm mb-2'>Podkategorije:</h4>
 										<div
 											className='flex space-x-4 overflow-x-auto scrollbar-hide custom-scrollbar'
 											onMouseDown={startDragging} // Početak drag-a
@@ -181,7 +189,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 											{category.children.map((subCategory: fetchedCategories) => (
 												<div
 													key={subCategory.id}
-													className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0 w-[120px]'
+													className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0'
 													onClick={() => handleNavigation(subCategory)}>
 													{subCategory.icon && (
 														<div className='mb-2 rounded-full p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
@@ -194,9 +202,12 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 															/>
 														</div>
 													)}
-													<span className='text-sm text-gray-800 text-center'>
-														{subCategory.name}
-													</span>
+													<H4
+														text={subCategory.name}
+														color='grayDarkest'
+														weight='normal'
+														align='center'
+													/>
 												</div>
 											))}
 										</div>
