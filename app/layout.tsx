@@ -1,4 +1,5 @@
 import React from 'react';
+import Script from 'next/script'; // Uvođenje next/script za bolju optimizaciju
 import Main from './components/layout/Main';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -19,8 +20,24 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
 	const headersList = headers();
 	const initialPathname = headersList.get('x-nextjs-url') || '/';
+	const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 	return (
 		<html lang='en'>
+			<head>
+				<Script
+					async
+					src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}
+					strategy='afterInteractive'
+				/>
+				<Script id='google-analytics' strategy='afterInteractive'>
+					{`
+						window.dataLayer = window.dataLayer || [];
+						function gtag(){dataLayer.push(arguments);}
+						gtag('js', new Date());
+						gtag('config', ${googleAnalyticsId});
+					`}
+				</Script>
+			</head>
 			<body className='flex flex-col min-h-screen bg-white'>
 				<SessionProvider>
 					<QueryProvider>

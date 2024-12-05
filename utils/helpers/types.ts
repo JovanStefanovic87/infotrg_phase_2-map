@@ -1,5 +1,10 @@
 import { RetailStore } from '@prisma/client';
-import exp from 'constants';
+
+declare global {
+	interface Window {
+		gtag?: (...args: any[]) => void;
+	}
+}
 
 export interface LinkData {
 	text: string;
