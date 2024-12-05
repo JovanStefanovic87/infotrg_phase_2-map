@@ -180,7 +180,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 											/>
 										</div>
 									)}
-									<H2 text={category.name} color='black' size='lg' />
+									<H2 text={category.name} color='black' size='lg' align='center' />
 								</div>
 
 								{category.children.length > 0 && (
