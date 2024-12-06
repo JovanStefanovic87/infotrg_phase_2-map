@@ -1,9 +1,9 @@
 import { RetailStore } from '@prisma/client';
 
-declare global {
-	interface Window {
-		gtag?: (...args: any[]) => void;
-	}
+export interface PageContentTranslations {
+	[key: string]: {
+		translation: string;
+	};
 }
 
 export interface LinkData {

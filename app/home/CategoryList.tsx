@@ -7,7 +7,7 @@ import H1 from '../components/text/H1';
 import H4 from '../components/text/H4';
 import H2 from '../components/text/H2';
 import homeImage from '@/public/images/home_infotrg.webp';
-import { pageContentTranslations } from '@/utils/translations';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface CategoryListProps {
 	categories: any;
@@ -25,6 +25,7 @@ interface Category {
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const router = useRouter();
 	const [isDragging, setIsDragging] = useState(false);
 	const [startX, setStartX] = useState(0);
@@ -133,7 +134,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 			/>
 			<div className='flex flex-col items-center p-6 mx-auto w-full'>
 				<H1
-					title={pageContentTranslations[languageCode].homePageTitle}
+					title={translations[languageCode].homePageTitle}
 					color='black'
 					size='text-lg md:text-xl'
 					pb={0}
@@ -148,11 +149,11 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 							categories
 						);
 						if (selectedCategory) {
-							handleNavigation(selectedCategory); // Navigacija sa svim podacima kategorije
+							handleNavigation(selectedCategory);
 						}
 					}
 				}}
-				placeholder='Brza pretraga kategorija proizvoda...'
+				placeholder={translations[languageCode].search}
 				selectedOption={selectedOption}
 				setSelectedOption={setSelectedOption}
 			/>

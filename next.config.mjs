@@ -14,6 +14,10 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'no-store, must-revalidate',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: `default-src 'self'; script-src 'self' https://www.googletagmanager.com; object-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self';`,
+          },
         ],
       },
     ];
