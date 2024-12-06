@@ -43,7 +43,6 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 	): string[] => {
 		const parent = categories.find(cat => cat.id === category.parents[0]?.id);
 
-		// Koristimo slug direktno iz kategorije
 		const currentSlug = category.slug;
 
 		if (!parent) return [currentSlug];

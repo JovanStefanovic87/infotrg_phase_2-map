@@ -116,32 +116,6 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 		}
 	}, [activeMarkers, map, setCenter, setZoom, memoizedSetDefaultCenter, memoizedSetDefaultZoom]);
 
-	const handleMapChange = useCallback(() => {
-		if (map) {
-			const center = map.getCenter();
-			const zoom = map.getZoom();
-
-			if (center && zoom !== undefined) {
-				setCenter(center.toJSON());
-				``;
-				setZoom(zoom);
-			}
-		}
-	}, [map, setCenter, setZoom]);
-
-	/* useEffect(() => {
-		if (map) {
-			map.addListener('center_changed', handleMapChange);
-			map.addListener('zoom_changed', handleMapChange);
-		}
-		return () => {
-			if (map) {
-				google.maps.event.clearListeners(map, 'center_changed');
-				google.maps.event.clearListeners(map, 'zoom_changed');
-			}
-		};
-	}, [map, handleMapChange]); */
-
 	const handleMarkerClick = (marker: {
 		position: google.maps.LatLngLiteral;
 		title: string;
@@ -176,7 +150,7 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 								position={marker.position}
 								headerDisabled
 								onCloseClick={() => setActiveMarker(null)}
-								className='w-full bg-white rounded-lg shadow-lg px-3 pt-2 md:px-5 lg:px-8 max-h-[300px] sm:max-h-[400px] md:max-h-[500px]'>
+								className='w-full bg-white rounded-lg shadow-lg px-3 pt-2 pb-4 md:px-5 lg:px-8 max-h-[300px] sm:max-h-[400px] md:max-h-[500px]'>
 								<div className='flex flex-col gap-3 text-gray-800 text-sm sm:text-base md:text-lg'>
 									{/* Skrolabilni sadržaj */}
 									<div className='absolute right-2 top-0'>
