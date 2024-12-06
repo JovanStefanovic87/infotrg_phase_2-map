@@ -15,6 +15,7 @@ export type PageContentTranslations = {
 		save: string;
 		cancel: string;
 		searchParamsFormError: string;
+		edit: string;
 	};
 };
 
@@ -35,6 +36,7 @@ export const pageContentTranslations: PageContentTranslations = {
 		save: 'Sačuvaj',
 		cancel: 'Odustani',
 		searchParamsFormError: 'Morate izabrati kategoriju i lokaciju pretrage.',
+		edit: 'Izmeni',
 	},
 	hu: {
 		homePageTitle:
@@ -53,5 +55,6 @@ export const pageContentTranslations: PageContentTranslations = {
 		save: 'Mentés',
 		cancel: 'Mégsem',
 		searchParamsFormError: 'Válassza ki a keresés kategóriáját és helyszinét.',
+		edit: 'Szerkesztés',
 	},
 };

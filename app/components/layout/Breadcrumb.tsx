@@ -62,32 +62,34 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	useEffect(() => {
 		const fetchTranslations = async () => {
 			const pathSegments = currentPath.split('/').filter(Boolean);
-
-			// Ako bilo koji segment sadrži 'admin', ne izvršavamo fetch
 			if (pathSegments.includes('admin')) {
 				setTranslations({});
 				return;
 			}
 
-			// Proveravamo da li je URL statička stranica ili njena podstranica
-			const isStaticPage = staticPages.some(
-				page => pathSegments[0]?.toLowerCase() === page.toLowerCase()
+			const languageSegmentIndex = pathSegments.findIndex(segment =>
+				languageCodes.includes(segment.toLowerCase())
+			);
+			const segmentsAfterLanguage =
+				languageSegmentIndex >= 0 ? pathSegments.slice(languageSegmentIndex + 1) : [];
+
+			const isStaticPage = staticPages.some(page =>
+				segmentsAfterLanguage.some(segment => segment.toLowerCase() === page.toLowerCase())
 			);
 
-			// Ako je statička stranica ili podstranica, preskačemo prevod
 			if (isStaticPage) {
 				setTranslations({});
 				return;
 			}
 
-			// Filtriramo dinamičke segmente koji zahtevaju prevod
 			const dynamicSegments = pathSegments.filter(
 				segment =>
-					!languageCodes.includes(segment.toLowerCase()) && // Ignorisanje jezika
-					!staticPages.includes(segment.toLowerCase()) // Ignorisanje statičkih stranica
+					!languageCodes.includes(segment.toLowerCase()) &&
+					!staticPages.includes(segment.toLowerCase())
 			);
 
 			const translationPromises = dynamicSegments.map(async segment => {
+				console.log('segment	', segment);
 				try {
 					const response = await fetch(`/api/translation/${segment}`);
 					if (response.ok) {
@@ -106,7 +108,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 			const translationMap = results.reduce((acc, curr) => ({ ...acc, ...curr }), {});
 			setTranslations(translationMap);
 		};
-
+		console.log('radi fetch');
 		fetchTranslations();
 	}, [currentPath]);
 
@@ -121,6 +123,8 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	const filteredSegments = pathSegments.filter(
 		segment => !languageCodes.includes(segment.toLowerCase())
 	);
+
+	console.log('translations', translations);
 
 	const breadcrumbPath = [
 		{ href: '/', label: <AiOutlineHome className='text-xl' /> },

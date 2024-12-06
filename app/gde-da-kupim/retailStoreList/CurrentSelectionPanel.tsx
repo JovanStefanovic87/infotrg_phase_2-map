@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
 import H1 from '@/app/components/text/H1';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	mainCategoryData: {
@@ -12,13 +13,16 @@ interface Props {
 	};
 	locationText: string;
 	openEditModal: () => void;
+	languageCode: string;
 }
 
 const CurrentSelectionPanel: React.FC<Props> = ({
 	mainCategoryData,
 	locationText,
 	openEditModal,
+	languageCode,
 }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const categoryScrollRef = useRef<HTMLDivElement | null>(null);
 	const locationScrollRef = useRef<HTMLDivElement | null>(null);
 	const isUserInteracting = useRef(false);
@@ -154,7 +158,7 @@ const CurrentSelectionPanel: React.FC<Props> = ({
 			</div>
 			<div className='absolute -bottom-5 left-0 flex justify-center w-full'>
 				<DefaultButton onClick={openEditModal} className='px-4 py-1.5 shadow-black shadow-md'>
-					Izmeni
+					{translations[languageCode].edit}
 				</DefaultButton>
 			</div>
 		</div>

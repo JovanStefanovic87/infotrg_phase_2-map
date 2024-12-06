@@ -304,6 +304,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 					mainCategoryData={mainCategoryData}
 					locationText={locationText}
 					openEditModal={openEditModal}
+					languageCode={languageCode}
 				/>
 			)}
 			<EditSelectionModal
