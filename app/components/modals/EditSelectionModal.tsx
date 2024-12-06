@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '@/app/components/buttons/DefaultButton';
 import CategorySelection from './CategorySelection';
@@ -8,7 +8,8 @@ import { TagIcon } from '@heroicons/react/24/outline';
 import CloseButton from '../buttons/CloseButton';
 import SelectableButton from '../buttons/SelectableButton';
 import { LocationDataForMap, CategoryDataForMap, Category } from '@/utils/helpers/types';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	isOpen: boolean;
@@ -21,6 +22,7 @@ interface Props {
 	setSelectedLocation: Dispatch<SetStateAction<LocationDataForMap | null>>;
 	categories: Category[];
 	locations: LocationDataForMap[];
+	languageCode: string;
 }
 
 const EditSelectionModal: React.FC<Props> = ({
@@ -33,11 +35,12 @@ const EditSelectionModal: React.FC<Props> = ({
 	setSelectedLocation,
 	categories,
 	locations,
+	languageCode,
 }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 	const router = useRouter();
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
 	const [categoryModalOpen, setCategoryModalOpen] = useState(false);
 	const [locationModalOpen, setLocationModalOpen] = useState(false);
 	const segments = pathname.split('/').filter(Boolean);
@@ -50,20 +53,18 @@ const EditSelectionModal: React.FC<Props> = ({
 
 	const findCategoryIdBySlug = (slug: string, categories: Category[]): number | null => {
 		for (const category of categories) {
-			// Ako je slug kategorije isti kao traženi slug, vraćamo ID
 			if (category.slug === slug) {
 				return category.id;
 			}
 
-			// Ako kategorija ima podkategorije (children), pozivamo rekurzivno funkciju za podkategorije
 			if (category.children && category.children.length > 0) {
 				const foundCategory = findCategoryIdBySlug(slug, category.children);
 				if (foundCategory) {
-					return foundCategory; // Vraćamo ID podkategorije ako je pronađena
+					return foundCategory;
 				}
 			}
 		}
-		return null; // Ako nije pronađena kategorija
+		return null;
 	};
 
 	const locationSlug = selectedLocation?.slug || '';
@@ -92,7 +93,6 @@ const EditSelectionModal: React.FC<Props> = ({
 	};
 
 	const selectedLocationData = findLocationBySlug(locationSlug, locations);
-	const selectedLocationParams = `${selectedLocationData?.type}Id=${selectedLocationData?.id}`;
 
 	const findParentLocationByIdAndType = (
 		id: number,
@@ -100,20 +100,17 @@ const EditSelectionModal: React.FC<Props> = ({
 		locations: LocationDataForMap[]
 	): LocationDataForMap | null => {
 		for (const location of locations) {
-			// Ako se ID i tip podudaraju, vraćamo ovu lokaciju (to je roditelj)
 			if (location.id === id && location.type === type) {
 				return location;
 			}
 
-			// Ako lokacija ima podlokacije (children), pozivamo rekurzivno funkciju za podlokacije
 			if (location.children && location.children.length > 0) {
 				for (const child of location.children) {
 					if (child.id === id && child.type === type) {
-						return location; // Ovo je roditelj
+						return location;
 					}
 				}
 
-				// Rekurzivno proveravamo podlokacije
 				const foundParent = findParentLocationByIdAndType(id, type, location.children);
 				if (foundParent) {
 					return foundParent;
@@ -121,16 +118,12 @@ const EditSelectionModal: React.FC<Props> = ({
 			}
 		}
 
-		return null; // Ako roditelj nije pronađen
+		return null;
 	};
 
 	const selectedLocationParent = selectedLocationData
 		? findParentLocationByIdAndType(selectedLocationData.id, selectedLocationData.type, locations)
 		: null;
-
-	const locationFullPath = `${
-		selectedLocationParent?.slug ? selectedLocationParent?.slug + '/' : ''
-	}${locationSlug}`;
 
 	const flattenLocations = (locations: LocationDataForMap[]): LocationDataForMap[] => {
 		const flatList: LocationDataForMap[] = [];
@@ -138,9 +131,9 @@ const EditSelectionModal: React.FC<Props> = ({
 		const flatten = (items: LocationDataForMap[]) => {
 			items.forEach(item => {
 				const { children, ...rest } = item;
-				flatList.push({ ...rest, children: undefined }); // Dodaj lokaciju bez children
+				flatList.push({ ...rest, children: undefined });
 				if (children && children.length > 0) {
-					flatten(children); // Rekurzivno dodaj decu
+					flatten(children);
 				}
 			});
 		};
@@ -150,15 +143,6 @@ const EditSelectionModal: React.FC<Props> = ({
 	};
 
 	const flatLocations = flattenLocations(locations);
-
-	const findLocationIdBySlug = (
-		slug: string,
-		locations: LocationDataForMap[]
-	): LocationDataForMap | null => {
-		return locations.find(location => location.slug === slug) || null;
-	};
-	const splitLocationPath = locationFullPath.split('/');
-	const newPath = findLocationIdBySlug(locationFullPath, flatLocations);
 
 	const getLocationParamsFromPath = (
 		locationPath: string[],
@@ -176,14 +160,12 @@ const EditSelectionModal: React.FC<Props> = ({
 		return params.join('&');
 	};
 
-	const locationParams = getLocationParamsFromPath(splitLocationPath, flatLocations);
-
 	const onSave = async () => {
 		if (!selectedCategory || !selectedLocation) {
-			setErrorMessage('Morate izabrati i kategoriju i lokaciju pre nego što nastavite.');
+			setErrorMessage(translations[languageCode].searchParamsFormError);
 			return;
 		}
-		setErrorMessage(null); // Resetovanje poruke o grešci
+		setErrorMessage(null);
 
 		const newCategorySlug = selectedCategory?.slug || categorySlug;
 		const newLocationSlug = selectedLocation?.slug || locationSlug;
@@ -194,7 +176,6 @@ const EditSelectionModal: React.FC<Props> = ({
 
 		const locationParams = getLocationParamsFromPath(newLocationFullPath.split('/'), flatLocations);
 
-		// Generisanje API URL-a
 		const apiUrl = `${baseUrl}/api/filteredRetailStores?languageId=${languageId}&${locationParams}&categoryId=${findCategoryIdBySlug(
 			newCategorySlug,
 			categories
@@ -229,30 +210,30 @@ const EditSelectionModal: React.FC<Props> = ({
 					)}
 					<div className='flex flex-col'>
 						<SelectableButton
-							label='Izaberite kategoriju proizvoda'
+							label={translations[languageCode].selectCategory}
 							selectedItem={selectedCategory || undefined}
 							icon={<TagIcon className='w-6 h-6 text-black' />}
-							placeholder='Izaberite kategoriju'
+							placeholder={translations[languageCode].select}
 							onClick={() => setCategoryModalOpen(true)}
 						/>
 					</div>
 					<div className='flex flex-col'>
 						<SelectableButton
-							label='Izaberite lokaciju pretrage'
+							label={translations[languageCode].selectLocation}
 							selectedItem={selectedLocation || undefined}
 							icon={<TagIcon className='w-6 h-6 text-black' />}
-							placeholder='Izaberite lokaciju'
+							placeholder={translations[languageCode].select}
 							onClick={() => setLocationModalOpen(true)}
 						/>
 					</div>
 				</div>
 
 				<div className='flex justify-end gap-4'>
-					<CloseButton onClose={handleClose} />
+					<CloseButton onClose={handleClose} label={translations[languageCode].cancel} />
 					<DefaultButton
 						onClick={onSave}
 						className='px-6 py-3 text-white bg-blue-700 rounded-lg hover:bg-blue-800 transition-colors'>
-						Sačuvaj
+						{translations[languageCode].save}
 					</DefaultButton>
 				</div>
 
@@ -262,6 +243,7 @@ const EditSelectionModal: React.FC<Props> = ({
 					onSelect={category => setSelectedCategory(category)}
 					categories={categories}
 					selectedItem={selectedCategory}
+					languageCode={languageCode}
 				/>
 
 				<LocationSelection
@@ -276,6 +258,7 @@ const EditSelectionModal: React.FC<Props> = ({
 					}
 					locations={locations}
 					selectedLocation={selectedLocation}
+					languageCode={languageCode}
 				/>
 			</div>
 		</Dialog>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
+import Cookies from 'js-cookie';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import {
@@ -21,6 +22,7 @@ import RelatedCategories from './retailStoreList/RelatedCategroies';
 import CurrentSelectionPanel from './retailStoreList/CurrentSelectionPanel';
 import EditSelectionModal from '../components/modals/EditSelectionModal';
 import { usePathname, useRouter } from 'next/navigation';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	initialData: {
@@ -36,12 +38,14 @@ interface Props {
 		cityId: string | null;
 		suburbId: string | null;
 	};
+	languageCode: string;
 }
 
-const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
-	const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode }) => {
 	const router = useRouter();
 	const pathname = usePathname();
+	const translations: PageContentTranslations = pageContentTranslations;
+	const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 	const mapInstance = useMap('my-map-id');
 	const locations = initialData.locations;
 	const articleCategories = initialData.articleCategories;
@@ -94,12 +98,12 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	): LocationDataForMap | undefined => {
 		for (const location of locations) {
 			if (location.id === id && location.type === type) {
-				return location; // Pronađena lokacija
+				return location;
 			}
 			if (location.children && location.children.length > 0) {
 				const result = findLocation(location.children, id, type);
 				if (result) {
-					return result; // Pronađeno u podnivoima
+					return result;
 				}
 			}
 		}
@@ -111,7 +115,10 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const mainSuburb = findLocation(locations, suburbId, 'suburb');
 
 	const locationText =
-		mainSuburb?.name || mainCity?.name || mainCounty?.name || 'Nepoznata lokacija';
+		mainSuburb?.name ||
+		mainCity?.name ||
+		mainCounty?.name ||
+		translations[languageCode].unknownLocation;
 
 	const openEditModal = () => setEditModalOpen(true);
 	1;
@@ -163,7 +170,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const formatCategories = useCallback((categories: RawCategoryData[]): Category[] => {
 		return categories.map(category => ({
 			id: category.id,
-			name: category.name || 'Nedefinisano ime',
+			name: category.name || translations[languageCode].undefinedName,
 			icon: category.icon || null,
 			iconId: category.iconId || null,
 			labelId: category.labelId || 0,
@@ -176,6 +183,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				  )
 				: [],
 		}));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	const openModalForStore = (store: GetRetailStoreApi) => {
@@ -200,7 +208,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
 			id: category.id,
-			name: category.label?.name || category.name || 'Nedefinisano ime',
+			name: category.label?.name || category.name || translations[languageCode].undefinedName,
 			iconId: category.iconId,
 			labelId: category.labelId,
 			parents: category.parents || [],
@@ -263,7 +271,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				mapContainer?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 			}, 100);
 		} else {
-			console.warn('Map or coordinates are not available');
+			console.warn(translations[languageCode].noMaporCoordinates);
 		}
 	};
 
@@ -283,6 +291,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 					setSelectedLocation={setSelectedLocation}
 					categories={initialData.articleCategories}
 					locations={initialData.locations}
+					languageCode={languageCode}
 				/>
 			</div>
 		);
@@ -308,6 +317,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 				setSelectedLocation={setSelectedLocation}
 				categories={articleCategories}
 				locations={locations}
+				languageCode={languageCode}
 			/>
 			<div
 				id='map'
@@ -378,7 +388,9 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 						))}
 					</div>
 				) : (
-					<p className='text-center text-gray-500 mt-6'>Nema dostupnih prodavnica za prikaz.</p>
+					<p className='text-center text-gray-500 mt-6'>
+						{translations[languageCode].noResultsAvailable}
+					</p>
 				)}
 				{isModalOpen && activeStore && (
 					<AssortmentModal
@@ -386,6 +398,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 						store={activeStore}
 						categories={categoryHierarchy}
 						onClose={closeModalForStore}
+						languageCode={languageCode}
 					/>
 				)}
 				{relatedCategories.length > 0 && (
@@ -396,6 +409,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams }) => {
 							parents: category.parents || [],
 							children: category.children || [],
 						}))}
+						languageCode={languageCode}
 					/>
 				)}
 			</div>

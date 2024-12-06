@@ -3,6 +3,7 @@ import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '../buttons/DefaultButton';
 import Image from 'next/image';
 import { CategoryDataForMap } from '@/utils/helpers/types';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	isOpen: boolean;
@@ -10,6 +11,7 @@ interface Props {
 	onSelect: (item: { id: number; name: string; type?: string }) => void;
 	categories: Array<{ id: number; name: string; type?: string; children?: any[] }>;
 	selectedItem: CategoryDataForMap | null;
+	languageCode: string;
 }
 
 const CategorySelection: React.FC<Props> = ({
@@ -18,9 +20,11 @@ const CategorySelection: React.FC<Props> = ({
 	onSelect,
 	categories,
 	selectedItem,
+	languageCode,
 }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const [expandedItems, setExpandedItems] = useState<number[]>([]);
-	const [searchTerm, setSearchTerm] = useState<string>(''); // Stanje za unos pretrage
+	const [searchTerm, setSearchTerm] = useState<string>('');
 	useEffect(() => {
 		if (selectedItem) {
 			const parentIds = getParentIds(categories, selectedItem.id);
@@ -163,12 +167,12 @@ const CategorySelection: React.FC<Props> = ({
 			collectExpandedIds(categories);
 			setExpandedItems(expandedIds);
 		} else if (selectedItem) {
-			// Ako nema pretrage, otvaramo samo roditelje selektovanog elementa
 			const parentIds = getParentIds(categories, selectedItem.id);
 			setExpandedItems([...parentIds, selectedItem.id]);
 		} else {
 			setExpandedItems([]);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [searchTerm, selectedItem, categories]);
 
 	return (
@@ -181,7 +185,7 @@ const CategorySelection: React.FC<Props> = ({
 							type='text'
 							value={searchTerm}
 							onChange={e => setSearchTerm(e.target.value)}
-							placeholder='Pretraži kategorije...'
+							placeholder={translations[languageCode].search}
 							className='w-full px-3 py-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
 						/>
 						<div className='overflow-y-auto max-h-[65vh] md:max-h-96'>
@@ -192,7 +196,7 @@ const CategorySelection: React.FC<Props> = ({
 						<DefaultButton
 							onClick={onClose}
 							className='px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors'>
-							Otkaži
+							{translations[languageCode].cancel}
 						</DefaultButton>
 					</div>
 				</div>

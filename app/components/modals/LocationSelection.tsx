@@ -3,6 +3,7 @@ import { Dialog, DialogBackdrop } from '@headlessui/react';
 import DefaultButton from '../buttons/DefaultButton';
 import Image from 'next/image';
 import { LocationDataForMap } from '@/utils/helpers/types';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	isOpen: boolean;
@@ -20,6 +21,7 @@ interface Props {
 		children?: any[];
 	}>;
 	selectedLocation: LocationDataForMap | null;
+	languageCode: string;
 }
 
 const LocationSelection: React.FC<Props> = ({
@@ -28,7 +30,9 @@ const LocationSelection: React.FC<Props> = ({
 	onSelect,
 	locations,
 	selectedLocation,
+	languageCode,
 }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const [expandedItems, setExpandedItems] = useState<{ id: number; type: string }[]>([]);
 
 	const getParentIds = (
@@ -55,6 +59,7 @@ const LocationSelection: React.FC<Props> = ({
 			const parentIds = getParentIds(locations, selectedLocation.id, selectedLocation.type);
 			setExpandedItems([...parentIds, { id: selectedLocation.id, type: selectedLocation.type }]);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedLocation, locations]);
 
 	const toggleItem = (itemId: number, itemType: string) => {
@@ -84,7 +89,18 @@ const LocationSelection: React.FC<Props> = ({
 			const isExpanded = expandedItems.some(
 				expandedItem => expandedItem.id === item.id && expandedItem.type === item.type
 			);
-
+			if (item.type === 'state' && !isChild) {
+				/* State is hidden */
+				return (
+					<div key={item.id}>
+						{item.children && item.children.length > 0 && (
+							<div className='pl-6 border-l border-gray-200'>
+								{renderLocationOptions(item.children, true)}
+							</div>
+						)}
+					</div>
+				);
+			}
 			return (
 				<div key={`${item.id}-${item.type}`} className={`${isChild ? 'ml-4' : ''} mb-2 pl-2`}>
 					<div
@@ -135,7 +151,7 @@ const LocationSelection: React.FC<Props> = ({
 						className={`overflow-hidden transition-all duration-300 ease-in-out ${
 							isExpanded ? 'max-h-screen' : 'max-h-0'
 						}`}>
-						{isExpanded && item.children && (
+						{item.children && item.children.length > 0 && (
 							<div className='pl-6 border-l border-gray-200'>
 								{renderLocationOptions(item.children, true)}
 							</div>
@@ -160,7 +176,7 @@ const LocationSelection: React.FC<Props> = ({
 						<DefaultButton
 							onClick={onClose}
 							className='px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors'>
-							Otkaži
+							{translations[languageCode].cancel}
 						</DefaultButton>
 					</div>
 				</div>

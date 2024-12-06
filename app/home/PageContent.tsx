@@ -23,7 +23,7 @@ const PageContent: React.FC<Props> = ({ categories }) => {
 
 	useEffect(() => {
 		const cookieLanguage = Cookies.get('languageCode') || 'rs';
-		setLanguageCode(cookieLanguage); // Ovo se poziva samo unutar useEffect
+		setLanguageCode(cookieLanguage);
 	}, []);
 
 	return (

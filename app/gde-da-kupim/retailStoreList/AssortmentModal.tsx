@@ -4,42 +4,39 @@ import FormDefaultButton from '../../components/buttons/FormDefaultButton';
 import { CategoryWithSynonyms, GetRetailStoreApi } from '@/utils/helpers/types';
 import ModalSearchInput from '@/app/components/input/ModalSearchInput';
 import fuzzysort from 'fuzzysort';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface Props {
 	isOpen: boolean;
 	store: GetRetailStoreApi | null;
 	categories: CategoryWithSynonyms[];
 	onClose: () => void;
+	languageCode: string;
 }
 
-const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose }) => {
+const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose, languageCode }) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	const [searchTerm, setSearchTerm] = useState('');
 
 	if (!isOpen || !store) return null;
 
-	// Funkcija za računanje Levenshteinove distance između dve reči
 	const searchCategoriesRecursive = (
 		categories: CategoryWithSynonyms[],
 		searchTerm: string
 	): CategoryWithSynonyms[] => {
-		// Ako nema unesenog termina, vraćamo sve kategorije
 		if (!searchTerm) return categories;
 
-		// Pretvaramo unos u mala slova za bolje rezultate pretrage
 		const normalizedSearchTerm = searchTerm.toLowerCase();
 
 		return categories
 			.map(category => {
-				// Rekurzivno pretražujemo decu trenutne kategorije
 				const matchingChildren = searchCategoriesRecursive(category.children || [], searchTerm);
 
-				// Proveravamo približno poklapanje sa nazivom kategorije i sinonimima koristeći fuzzysort
 				const nameMatches = fuzzysort.single(normalizedSearchTerm, category.name);
 				const synonymMatches = category.synonyms?.some(synonym =>
 					fuzzysort.single(normalizedSearchTerm, synonym)
 				);
 
-				// Ako postoji poklapanje u nazivu, sinonimima ili ako postoje podkategorije koje se poklapaju, vraćamo kategoriju
 				if (nameMatches || synonymMatches || matchingChildren.length > 0) {
 					return { ...category, children: matchingChildren };
 				}
@@ -73,7 +70,11 @@ const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose }
 
 				{/* Search Input */}
 				<div className='p-4 border-b border-gray-200 bg-gray-50'>
-					<ModalSearchInput searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+					<ModalSearchInput
+						searchTerm={searchTerm}
+						setSearchTerm={setSearchTerm}
+						languageCode={languageCode}
+					/>
 				</div>
 
 				{/* Categories List */}
@@ -83,7 +84,7 @@ const AssortmentModal: React.FC<Props> = ({ isOpen, store, categories, onClose }
 
 				{/* Footer */}
 				<div className='flex justify-end p-4 bg-gray-100 border-t border-gray-200'>
-					<FormDefaultButton onClick={onClose} label='Zatvori' />
+					<FormDefaultButton onClick={onClose} label={translations[languageCode].close} />
 				</div>
 			</div>
 		</div>

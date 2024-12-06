@@ -1,14 +1,22 @@
 import Image from 'next/image';
 import { Category } from '@/utils/helpers/types';
+import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
 
 interface RelatedCategoriesProps {
 	relatedCategories: Category[];
+	languageCode: string;
 }
 
-const RelatedCategories: React.FC<RelatedCategoriesProps> = ({ relatedCategories }) => {
+const RelatedCategories: React.FC<RelatedCategoriesProps> = ({
+	relatedCategories,
+	languageCode,
+}) => {
+	const translations: PageContentTranslations = pageContentTranslations;
 	return (
 		<div className='related-categories mt-6 text-black select-none'>
-			<h2 className='text-base font-semibold mb-3 text-center'>Povezane kategorije</h2>
+			<h2 className='text-base font-semibold mb-3 text-center'>
+				{translations[languageCode].relatedCategories}
+			</h2>
 			<div className='flex flex-wrap justify-center gap-3'>
 				{relatedCategories.map(category => (
 					<div

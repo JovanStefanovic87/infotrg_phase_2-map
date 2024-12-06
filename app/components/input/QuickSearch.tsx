@@ -68,7 +68,9 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({
 				<FaSearch className='h-5 w-5 text-red-500' />
 			</div>
 			{isOpen && filteredOptions.length > 0 && (
-				<div className='absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-2 shadow-lg max-h-60 overflow-y-auto'>
+				<div
+					className='absolute z-10 w-full bg-white border border-gray-200 rounded-lg mt-2 shadow-lg max-h-60 overflow-y-auto'
+					style={{ touchAction: 'pan-y' }}>
 					{filteredOptions.map(option => (
 						<div
 							key={option.value}
@@ -80,7 +82,6 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({
 							</div>
 							{option.parent && (
 								<div className='parent-category ml-6 mt-1 text-xs text-gray-500 flex items-center relative'>
-									<span className='prefix'>U</span>
 									<span>{option.parent}</span>
 								</div>
 							)}
@@ -93,6 +94,28 @@ const QuickSearch: React.FC<SimpleComboboxProps> = ({
 					Ne postoji rezultat za pretragu &quot;{searchTerm}&quot;
 				</div>
 			)}
+			<style jsx>{`
+				.parent-category {
+					position: relative;
+					padding-left: 1.5rem;
+				}
+
+				.parent-category::before {
+					content: '';
+					position: absolute;
+					top: 50%;
+					left: 0;
+					transform: translateY(-50%);
+					height: 50%;
+					border-left: 1px solid rgba(128, 126, 163, 0.82);
+					border-bottom: 1px solid rgba(128, 126, 163, 0.82);
+					width: 0.5rem;
+				}
+
+				.prefix {
+					margin-right: 0.2rem;
+				}
+			`}</style>
 		</div>
 	);
 };
