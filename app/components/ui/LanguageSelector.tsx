@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import LanguageFlag from './LanguageFlag';
 import Cookies from 'js-cookie';
@@ -22,8 +22,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	// Ekstraktujte trenutni jezik iz URL-a ili kolačića
-	const extractLanguageFromUrl = (): string => {
-		const otherSegments = pathname?.split('/') || [];
+	const extractLanguageFromUrl = useCallback(() => {
+		const otherSegments = pathname.split('/');
 		const validLanguages = languages.map(lang => lang.code);
 
 		for (let i = 1; i < otherSegments.length; i++) {
@@ -32,32 +32,34 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 			}
 		}
 
-		// Koristite js-cookie za čitanje kolačića
 		const cookieLanguage = Cookies.get('languageCode');
-		return validLanguages.includes(cookieLanguage || '') ? cookieLanguage! : 'rs';
-	};
+		return validLanguages.includes(cookieLanguage || '') ? cookieLanguage : 'rs';
+	}, [pathname, languages]); // Dodajte sve spoljne zavisnosti ovde
 
-	const [selectedLanguage, setSelectedLanguage] = useState<string>(extractLanguageFromUrl());
+	const [selectedLanguage, setSelectedLanguage] = useState<string>(
+		extractLanguageFromUrl() || 'rs'
+	);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
 	// Funkcija za promenu jezika
 	const handleLanguageChange = async (newLanguage: string) => {
 		setSelectedLanguage(newLanguage);
-
-		// Preusmerite korisnika na početnu stranu sa izabranim jezikom
-		const updatedPath = `/${newLanguage}`; // Početna stranica sa jezičkim prefiksom
-		router.push(updatedPath); // Preusmeri korisnika na početnu stranu sa novim jezikom
-
-		// Koristite js-cookie za postavljanje kolačića
 		Cookies.set('languageCode', newLanguage, {
-			expires: 365,
-			path: `/${newLanguage}`,
+			expires: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Godinu dana od danas
+			path: '/', // Globalno dostupan
 			sameSite: 'Strict',
 		});
 
-		// Pozovite callback za promenu jezika
-		onLanguageChange?.(newLanguage);
+		const updatedPath = `/${newLanguage}`; // Početna stranica sa jezičkim prefiksom
+		window.location.href = updatedPath; // Direktno preusmeravanje koje osvežava stranicu
 	};
+
+	useEffect(() => {
+		const currentLanguage = extractLanguageFromUrl();
+		if (currentLanguage && currentLanguage !== selectedLanguage) {
+			setSelectedLanguage(currentLanguage);
+		}
+	}, [extractLanguageFromUrl, selectedLanguage]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
