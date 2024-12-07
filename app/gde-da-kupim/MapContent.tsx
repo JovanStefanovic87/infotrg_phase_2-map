@@ -38,9 +38,15 @@ interface Props {
 		suburbId: string | null;
 	};
 	languageCode: string;
+	mainCategoryId: number | null;
 }
 
-const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode }) => {
+const MapContent: React.FC<Props> = ({
+	initialData,
+	queryParams,
+	languageCode,
+	mainCategoryId,
+}) => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const translations: PageContentTranslations = pageContentTranslations;
@@ -48,10 +54,6 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 	const mapInstance = useMap('my-map-id');
 	const locations = initialData.locations;
 	const articleCategories = initialData.articleCategories;
-	const categoryId =
-		queryParams.categoryId && Number(queryParams.categoryId) > 0
-			? Number(queryParams.categoryId)
-			: articleCategories[0]?.id || null;
 	const segments = pathname.split('/').filter(segment => segment);
 	const lastSegment = segments[segments.length - 1];
 	const findCategoryBySlug = (categories: Category[], slug: string): Category | null => {
@@ -68,6 +70,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 		}
 		return null;
 	};
+	console.log('categoryId', queryParams.categoryId);
 	const mainCategoryData = findCategoryBySlug(articleCategories, lastSegment);
 	const stateId = queryParams.stateId ? Number(queryParams.stateId) : null;
 	const countyId = queryParams.countyId ? Number(queryParams.countyId) : null;
@@ -204,7 +207,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 		window.open(url, '_blank');
 	};
 
-	const getDisplayedCategories = (store: GetRetailStoreApi, categoryId: number): Category[] => {
+	const getDisplayedCategories = (store: GetRetailStoreApi, mainCategoryId: number): Category[] => {
 		const formattedCategories: Category[] = store.articleCategories.map((category: any) => ({
 			id: category.id,
 			name: category.label?.name || category.name || translations[languageCode].undefinedName,
@@ -217,7 +220,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 		}));
 
 		const directSubcategories = formattedCategories.filter((category: Category) =>
-			category.parents.some((parent: SimplifiedCategory) => parent.id === categoryId)
+			category.parents.some((parent: SimplifiedCategory) => parent.id === mainCategoryId)
 		);
 
 		if (directSubcategories.length > 0) {
@@ -225,8 +228,9 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 		}
 
 		const mainCategory = formattedCategories.find(
-			(category: Category) => category.id === categoryId
+			(category: Category) => category.id === mainCategoryId
 		);
+		console.log('formattedCategories', formattedCategories);
 		return mainCategory ? [mainCategory] : [];
 	};
 
@@ -357,7 +361,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 						setDefaultZoom={value => setDefaultZoom(value)}
 						retailStores={retailStores}
 						getDisplayedCategories={getDisplayedCategories}
-						categoryId={categoryId || 0}
+						categoryId={mainCategoryId || 0}
 						map={mapInstance}
 						openModalForStore={openModalForStore}
 					/>
@@ -379,7 +383,7 @@ const MapContent: React.FC<Props> = ({ initialData, queryParams, languageCode })
 								key={store.id}
 								store={store}
 								index={index}
-								categoryId={categoryId || 0}
+								categoryId={mainCategoryId || 0}
 								centerMapOnStore={coordinates => centerMapOnStore(coordinates)}
 								handleNavigationClick={handleNavigationClick}
 								openModalForStore={openModalForStore}

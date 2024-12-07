@@ -217,6 +217,7 @@ const Map = async ({ params }: PageProps) => {
 						cityId: filteredLocationIds.find(location => location.type === 'city')?.id || null,
 						suburbId: filteredLocationIds.find(location => location.type === 'suburb')?.id || null,
 					}}
+					mainCategoryId={categoryId}
 				/>
 			</Suspense>
 		</HydrationBoundary>

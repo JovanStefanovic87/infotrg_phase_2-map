@@ -8,8 +8,6 @@ const AutoScrollCategories: React.FC<Props> = ({ categories }) => {
 	const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 	const animationFrameRef = useRef<number | null>(null);
 	const frameCounterRef = useRef(0);
-
-	// Set scroll speed parameters
 	const scrollIncrement = 0.7; // Smaller value to slow down the scroll speed
 	const frameSkip = 5; // Increase this number to slow down even more (e.g., scroll every 5th frame)
 
@@ -62,10 +60,10 @@ const AutoScrollCategories: React.FC<Props> = ({ categories }) => {
 				onTouchStart={stopAutoScroll}
 				onMouseLeave={startAutoScroll}
 				style={{ width: '100%' }}>
-				{categories.map((category, idx) => (
-					<span key={idx} className='text-sm font-semibold text-gray-900 py-1 rounded-full'>
+				{categories.map((category, id) => (
+					<span key={id} className='text-sm font-semibold text-gray-900 py-1 rounded-full'>
 						{category.name}
-						{idx < categories.length - 1 && <span className='text-gray-400 mx-1'>•</span>}
+						{id < categories.length - 1 && <span className='text-gray-400 mx-1'>•</span>}
 					</span>
 				))}
 				<span className='text-sm font-semibold text-gray-500 px-2'>...</span>

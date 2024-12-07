@@ -19,9 +19,10 @@ interface Props {
 		cityId: string | null;
 		suburbId: string | null;
 	};
+	mainCategoryId: number | null;
 }
 
-const MapProvider: React.FC<Props> = ({ initialData, queryParams }: Props) => {
+const MapProvider: React.FC<Props> = ({ initialData, queryParams, mainCategoryId }: Props) => {
 	const [languageCode, setLanguageCode] = useState<string>('rs');
 
 	useEffect(() => {
@@ -36,6 +37,7 @@ const MapProvider: React.FC<Props> = ({ initialData, queryParams }: Props) => {
 					initialData={initialData}
 					queryParams={queryParams}
 					languageCode={languageCode}
+					mainCategoryId={mainCategoryId}
 				/>
 			</PageContainer>
 		</APIProvider>
