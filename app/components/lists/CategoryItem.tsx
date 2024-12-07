@@ -54,32 +54,6 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 }) => {
 	const iconUrl = getCategoryIconUrl(category.iconId, icons);
 
-	/* const fetchRelatedCategoriesForEdit = useCallback(async () => {
-		console.log('category.relatedIds', category.relatedIds); // Dodaj ovo
-		if (category.relatedIds && category.relatedIds.length > 0) {
-			setLoading(true);
-			try {
-				await fetchRelatedCategoriesForDisplay(category.relatedIds);
-				setRelatedIds(category.relatedIds);
-			} catch (error) {
-				handleError(error, setError, setSuccessMessage);
-				setRelatedIds([]);
-			} finally {
-				setLoading(false);
-			}
-		} else {
-			setDisplayRelatedCategories([]);
-			setRelatedIds([]);
-		}
-	}, [
-		category.relatedIds,
-		fetchRelatedCategoriesForDisplay,
-		setRelatedIds,
-		setError,
-		setSuccessMessage,
-		setLoading,
-	]); */
-
 	const getCategoryName = useCallback(
 		(category: CategoryWithTranslations) => {
 			if (!category || !Array.isArray(category.translations)) {

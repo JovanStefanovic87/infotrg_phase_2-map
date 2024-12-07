@@ -1,12 +1,17 @@
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { prefetchQueryFunction } from '@/app/helpers/api/prefetch/prefetchQueryFunction';
-import { NextPage } from 'next';
 import MapProvider from '../MapProvider';
 import { Suspense } from 'react';
 import { prefixAticleCategory } from '@/app/api/prefix';
 import { cookies } from 'next/headers';
 import LanguageSelector from '@/app/components/ui/LanguageSelector';
 import { Category } from '@/utils/helpers/types';
+
+interface PageProps {
+	params: {
+		segments: string[];
+	};
+}
 
 export function generateMetadata({ params }: { params: { segments: string[] } }) {
 	// Prvi segment je jezik (npr. 'rs', 'hu')
@@ -153,7 +158,7 @@ const prefetchData = async (queryClient: QueryClient, languageCode: string, segm
 	};
 };
 
-const Map: NextPage<{ params: { segments: string[] } }> = async ({ params }) => {
+const Map = async ({ params }: PageProps) => {
 	const queryClient = new QueryClient();
 	const segments = params.segments;
 

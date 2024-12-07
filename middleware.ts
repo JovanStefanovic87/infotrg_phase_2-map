@@ -11,17 +11,39 @@ const adminMiddleware = withAuth({
 });
 
 const validLanguages = ['rs', 'hu']; // Lista podržanih jezika
-const excludedPaths = ['ulaganje', 'posao', 'o-nama'];
+const excludedPaths = ['ulaganje', 'posao', 'o-nama', 'admin'];
 
 export default async function middleware(request: NextRequest) {
 	const pathname = request.nextUrl.pathname;
 
 	// Ignorišemo statičke resurse i API rute
 	if (
-		/^\/(_next|api|favicon\.ico|icons|images|.*\.(jpg|jpeg|png|svg|gif|webp|css|js|woff|woff2|ttf|otf|bmp))/.test(
+		/^\/(_next|favicon\.ico|icons|images|.*\.(jpg|jpeg|png|svg|gif|webp|css|js|woff|woff2|ttf|otf|bmp))/.test(
 			pathname
 		)
 	) {
+		return NextResponse.next();
+	}
+
+	// Obrada OPTIONS zahteva za CORS preflight
+	if (request.method === 'OPTIONS') {
+		const response = new NextResponse(null, { status: 204 });
+		response.headers.set('Access-Control-Allow-Origin', '*'); // Dozvoljava sve origin-e (prilagoditi za produkciju)
+		response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+		response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		return response;
+	}
+
+	// Dodavanje CORS zaglavlja za API zahteve
+	if (pathname.startsWith('/api')) {
+		const response = NextResponse.next();
+		response.headers.set('Access-Control-Allow-Origin', '*'); // Dozvoljava sve origin-e (prilagoditi za produkciju)
+		response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+		response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		return response;
+	}
+
+	if (pathname.startsWith('/auth/signin')) {
 		return NextResponse.next();
 	}
 
@@ -50,9 +72,7 @@ export default async function middleware(request: NextRequest) {
 		// Jezik treba da bude odmah nakon root-a
 		if (segments.length === 0 || !validLanguages.includes(segments[0])) {
 			const newPathname = `/${cookieLanguage}/${segments.join('/')}`;
-			const response = NextResponse.redirect(new URL(newPathname, request.url));
-			response.cookies.set('languageCode', cookieLanguage, { path: '/', maxAge: 31536000 });
-			return response;
+			return NextResponse.redirect(new URL(newPathname, request.url));
 		}
 		return NextResponse.next();
 	}
@@ -66,7 +86,6 @@ export default async function middleware(request: NextRequest) {
 		];
 		const newPathname = `/${newSegments.join('/')}`;
 		const response = NextResponse.redirect(new URL(newPathname, request.url));
-		response.cookies.set('languageCode', cookieLanguage, { path: '/', maxAge: 31536000 });
 		return response;
 	}
 

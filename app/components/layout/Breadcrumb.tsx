@@ -10,20 +10,17 @@ import { HiChevronRight } from 'react-icons/hi';
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const languageCodes = ['hu', 'rs'];
-const staticPages = [
+const parentPagesWithoutTranslation = [
 	'ulaganje',
-	'posao',
 	'o-nama',
-	'plan-i-program-poslovanja',
-	'platforma',
-	'poslovna-saradnja',
-	'tim',
-	'usluzne-delatnosti',
 	'investicioni-fond',
-	'investicioni-fondovi',
-	'investitori',
-	'kljucne-informacije',
-	'gde-da-kupim',
+	'investicioni-plan-i-program',
+	'usluzne-delatnosti',
+	'plan-i-program-poslovanja',
+	'tim',
+	'poslovna-saradnja',
+	'admin',
+	'auth',
 ];
 
 const staticPageTranslations: { [key: string]: { [key: string]: string } } = {
@@ -41,9 +38,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	const [currentPath, setCurrentPath] = useState(initialPathname);
 	const [translations, setTranslations] = useState<{ [key: string]: string }>({});
 	const pathname = usePathname();
-	const [isDragging, setIsDragging] = useState(false);
-	const [startX, setStartX] = useState(0);
-	const [scrollLeft, setScrollLeft] = useState(0);
 
 	const getActiveLanguage = (pathname: string): string => {
 		const segments = pathname.split('/').filter(Boolean);
@@ -62,22 +56,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 	useEffect(() => {
 		const fetchTranslations = async () => {
 			const pathSegments = currentPath.split('/').filter(Boolean);
-			if (pathSegments.includes('admin')) {
-				setTranslations({});
-				return;
-			}
 
-			const languageSegmentIndex = pathSegments.findIndex(segment =>
-				languageCodes.includes(segment.toLowerCase())
-			);
-			const segmentsAfterLanguage =
-				languageSegmentIndex >= 0 ? pathSegments.slice(languageSegmentIndex + 1) : [];
+			// Ignorišemo podstranice roditeljskih stranica bez prevoda
+			const isChildOfParentWithoutTranslation = pathSegments.some((segment, index) => {
+				return parentPagesWithoutTranslation.includes(segment.toLowerCase()) && index > 0;
+			});
 
-			const isStaticPage = staticPages.some(page =>
-				segmentsAfterLanguage.some(segment => segment.toLowerCase() === page.toLowerCase())
-			);
-
-			if (isStaticPage) {
+			if (isChildOfParentWithoutTranslation) {
 				setTranslations({});
 				return;
 			}
@@ -85,18 +70,17 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 			const dynamicSegments = pathSegments.filter(
 				segment =>
 					!languageCodes.includes(segment.toLowerCase()) &&
-					!staticPages.includes(segment.toLowerCase())
+					!parentPagesWithoutTranslation.includes(segment.toLowerCase()) &&
+					!staticPageTranslations[segment] // Ignorišemo stranice koje imaju statične prevode
 			);
 
 			const translationPromises = dynamicSegments.map(async segment => {
-				console.log('segment	', segment);
 				try {
 					const response = await fetch(`/api/translation/${segment}`);
 					if (response.ok) {
 						const data = await response.json();
 						return { [segment]: data.translation };
 					}
-					console.warn(`Translation not found for segment: ${segment}`);
 					return { [segment]: segment };
 				} catch (error) {
 					console.error(`Error fetching translation for segment: ${segment}`, error);
@@ -108,7 +92,6 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 			const translationMap = results.reduce((acc, curr) => ({ ...acc, ...curr }), {});
 			setTranslations(translationMap);
 		};
-		console.log('radi fetch');
 		fetchTranslations();
 	}, [currentPath]);
 
@@ -124,35 +107,17 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 		segment => !languageCodes.includes(segment.toLowerCase())
 	);
 
-	console.log('translations', translations);
-
 	const breadcrumbPath = [
 		{ href: '/', label: <AiOutlineHome className='text-xl' /> },
 		...filteredSegments.map((segment, index) => {
 			const href = `/${filteredSegments.slice(0, index + 1).join('/')}`;
-			const label = staticPages.includes(segment)
-				? staticPageTranslations[segment]?.[activeLanguage] ||
-				  capitalize(segment.replace(/-/g, ' '))
-				: translations[segment] || capitalize(segment.replace(/-/g, ' '));
+			const label =
+				staticPageTranslations[segment]?.[activeLanguage] || // Koristimo statični prevod ako postoji
+				translations[segment] || // Dinamički prevod iz API-ja
+				capitalize(segment.replace(/-/g, ' ')); // Ako nema prevoda, koristimo capitalized slug
 			return { href, label };
 		}),
 	];
-
-	const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-		setIsDragging(true);
-		setStartX(e.pageX - e.currentTarget.offsetLeft);
-		setScrollLeft(e.currentTarget.scrollLeft);
-	};
-
-	const stopDrag = () => setIsDragging(false);
-
-	const handleDrag = (e: React.MouseEvent<HTMLDivElement>) => {
-		if (!isDragging) return;
-		e.preventDefault();
-		const x = e.pageX - e.currentTarget.offsetLeft;
-		const walk = (x - startX) * 1.5; // Adjust scroll speed
-		e.currentTarget.scrollLeft = scrollLeft - walk;
-	};
 
 	return (
 		<>
@@ -160,11 +125,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ initialPathname }) => {
 				<BreadcrumbsContainer>
 					<div
 						className='flex items-center space-x-2 text-sm overflow-x-auto scrollbar-hide whitespace-nowrap p-2 select-none'
-						aria-label='Breadcrumb'
-						onMouseDown={startDrag}
-						onMouseMove={handleDrag}
-						onMouseUp={stopDrag}
-						onMouseLeave={stopDrag}>
+						aria-label='Breadcrumb'>
 						{breadcrumbPath.map((route, index) => (
 							<React.Fragment key={route.href}>
 								{index > 0 && <HiChevronRight className='text-gray-400 text-lg flex-shrink-0' />}

@@ -51,7 +51,6 @@ const Home = async () => {
 	const queryClient = new QueryClient();
 
 	// Proveri kolačiće
-	const savedLanguage = cookies().get('languageCode')?.value;
 
 	// Prefetch jezika
 	await prefetchData({
@@ -60,11 +59,18 @@ const Home = async () => {
 		url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/languages`,
 	});
 
-	const languages = queryClient.getQueryData<Language[]>(['languages']) || [];
+	const savedLanguage = cookies().get('languageCode')?.value || 'rs';
+
+	const defaultLanguage = { id: 1, code: 'rs', name: 'Srpski' };
+	const languages = queryClient.getQueryData<Language[]>(['languages']) || [defaultLanguage];
 
 	const languageId = savedLanguage
 		? languages.find(lang => lang.code === savedLanguage)?.id || 1
 		: languages[0]?.id || 1;
+
+	console.log('Saved language from cookies:', savedLanguage);
+	console.log('Detected languages:', languages);
+	console.log('Selected languageId:', languageId);
 
 	// Prefetch kategorija
 	await prefetchData({

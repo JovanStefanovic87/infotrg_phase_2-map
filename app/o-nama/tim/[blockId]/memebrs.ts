@@ -57,7 +57,6 @@ const NORBERT: Omit<MemberData, 'id'> = {
 	previousEngagements:
 		'GTL export - import (elektrotehničar računara i serviser za fiskalnie kase), šteler - tehničar (Continental Contitech Fluid)',
 	infotrgEngagements: 'Od 14.10.2024. godine',
-	/* phone: '069709380', */
 	email: 'bosqeee@gmail.com',
 	image: '/images/members/avatar_norbert.webp',
 };
@@ -68,8 +67,6 @@ const ATILA: Omit<MemberData, 'id'> = {
 	profession: 'Team leader (Continental Subotica)',
 	affinities: 'Administracija, izrada dokumenata, Office paket, korišćenje AI, timski rad.',
 	infotrgEngagements: 'Od 14.10.2024. godine',
-	phone: '0655577446',
-	email: 'sekula1985@yahoo.com',
 	image: '/images/members/avatar_atila.webp',
 };
 

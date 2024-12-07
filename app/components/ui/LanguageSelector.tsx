@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import LanguageFlag from './LanguageFlag';
+import Cookies from 'js-cookie';
 
 interface Language {
 	id: number;
@@ -20,10 +21,10 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 	const router = useRouter();
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
-	// Ekstraktujte trenutni jezik iz URL-a
+	// Ekstraktujte trenutni jezik iz URL-a ili kolačića
 	const extractLanguageFromUrl = (): string => {
 		const otherSegments = pathname?.split('/') || [];
-		const validLanguages = languages.map(lang => lang.code); // Validni jezici
+		const validLanguages = languages.map(lang => lang.code);
 
 		for (let i = 1; i < otherSegments.length; i++) {
 			if (validLanguages.includes(otherSegments[i])) {
@@ -31,7 +32,9 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 			}
 		}
 
-		return 'rs'; // Podrazumevani jezik
+		// Koristite js-cookie za čitanje kolačića
+		const cookieLanguage = Cookies.get('languageCode');
+		return validLanguages.includes(cookieLanguage || '') ? cookieLanguage! : 'rs';
 	};
 
 	const [selectedLanguage, setSelectedLanguage] = useState<string>(extractLanguageFromUrl());
@@ -45,8 +48,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ languages, onLangua
 		const updatedPath = `/${newLanguage}`; // Početna stranica sa jezičkim prefiksom
 		router.push(updatedPath); // Preusmeri korisnika na početnu stranu sa novim jezikom
 
-		// Postavite kolačić sa novim jezikom
-		document.cookie = `languageCode=${newLanguage}; path=/;`;
+		// Koristite js-cookie za postavljanje kolačića
+		Cookies.set('languageCode', newLanguage, {
+			expires: 365,
+			path: `/${newLanguage}`,
+			sameSite: 'Strict',
+		});
 
 		// Pozovite callback za promenu jezika
 		onLanguageChange?.(newLanguage);

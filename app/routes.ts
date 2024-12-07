@@ -8,6 +8,12 @@ export const routes: Route[] = [
 		subRoutes: [],
 	},
 	{
+		label: 'Gde da kupim',
+		href: '/gde-da-kupim',
+		icon: '/icons/whereToBuyIcon.svg',
+		subRoutes: [],
+	},
+	{
 		label: 'O nama',
 		href: '/o-nama',
 		icon: '/icons/about.svg',

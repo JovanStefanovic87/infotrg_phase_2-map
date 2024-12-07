@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Map, useMap, ControlPosition } from '@vis.gl/react-google-maps';
-import Cookies from 'js-cookie';
 import MapMarkers from './MapMarkers';
 import styles from '../components/map/Map.module.css';
 import {
