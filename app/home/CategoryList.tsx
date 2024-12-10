@@ -191,30 +191,32 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 											onMouseMove={handleDragging}
 											onMouseUp={stopDragging}
 											onMouseLeave={stopDragging}>
-											{category.children.map((subCategory: fetchedCategories) => (
-												<div
-													key={subCategory.id}
-													className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0'
-													onClick={() => handleNavigation(subCategory)}>
-													{subCategory.icon && (
-														<div className='mb-2 rounded-md p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
-															<Image
-																src={subCategory.icon.url}
-																alt={subCategory.icon.name}
-																fill
-																sizes='60px'
-																className='object-contain transition-transform duration-200 hover:scale-110'
-															/>
-														</div>
-													)}
-													<H4
-														text={subCategory.name}
-														color='grayDarkest'
-														weight='normal'
-														align='center'
-													/>
-												</div>
-											))}
+											{category.children
+												.sort((a, b) => a.name.localeCompare(b.name)) // Sortiranje po imenu
+												.map((subCategory: fetchedCategories) => (
+													<div
+														key={subCategory.id}
+														className='flex flex-col items-center cursor-pointer p-3 rounded-lg transition-all border border-gray-200 hover:border-gray-400 hover:shadow-md bg-gray-50 flex-shrink-0'
+														onClick={() => handleNavigation(subCategory)}>
+														{subCategory.icon && (
+															<div className='mb-2 rounded-md p-2 overflow-hidden flex-shrink-0 relative w-[60px] h-[60px] transition-all duration-200'>
+																<Image
+																	src={subCategory.icon.url}
+																	alt={subCategory.icon.name}
+																	fill
+																	sizes='60px'
+																	className='object-contain transition-transform duration-200 hover:scale-110'
+																/>
+															</div>
+														)}
+														<H4
+															text={subCategory.name}
+															color='grayDarkest'
+															weight='normal'
+															align='center'
+														/>
+													</div>
+												))}
 										</div>
 									</div>
 								)}
