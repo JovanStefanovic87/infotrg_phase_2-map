@@ -313,11 +313,7 @@ const CategoriesAdmin: React.FC<Props> = ({ prefix, title }) => {
 			}))
 			.sort((a, b) => a.name.localeCompare(b.name, 'sr', { sensitivity: 'base' }));
 	};
-
-	if (isCategoriesLoading || isLanguagesLoading) {
-		return <p>Loading...</p>;
-	}
-
+	console.log('languages:', languages);
 	return (
 		<DynamicPageContainer
 			clearSuccess={() => setSuccessMessage(null)}

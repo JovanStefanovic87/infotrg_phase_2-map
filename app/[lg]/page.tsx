@@ -68,10 +68,6 @@ const Home = async () => {
 		? languages.find(lang => lang.code === savedLanguage)?.id || 1
 		: languages[0]?.id || 1;
 
-	console.log('Saved language from cookies:', savedLanguage);
-	console.log('Detected languages:', languages);
-	console.log('Selected languageId:', languageId);
-
 	// Prefetch kategorija
 	await prefetchData({
 		queryClient,

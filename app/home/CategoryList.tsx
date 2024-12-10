@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, use, useEffect } from 'react';
 import { fetchedCategories, Synonym, ComboboxOption } from '@/utils/helpers/types';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import H4 from '../components/text/H4';
 import H2 from '../components/text/H2';
 import homeImage from '@/public/images/home_infotrg.webp';
 import { pageContentTranslations, PageContentTranslations } from '@/utils/translations';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 interface CategoryListProps {
 	categories: any;
@@ -31,6 +32,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 	const [startX, setStartX] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
 	const [selectedOption, setSelectedOption] = useState<ComboboxOption | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
 	const defaultLocationSlugs: { [key: string]: string[] } = {
 		rs: ['county-srbija-rs', 'city-subotica-rs', 'suburb-buvljak-subotica-rs'],
@@ -49,6 +51,12 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 
 		return [...getParentSlugs(parent, categories), currentSlug];
 	};
+
+	useEffect(() => {
+		if (categories) {
+			setLoading(false);
+		}
+	}, [categories]);
 
 	const findCategoryById = (id: number, categories: any[]): any | undefined => {
 		for (const category of categories) {
@@ -124,6 +132,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ categories, languageCode })
 
 	return (
 		<div className='pt-2'>
+			{loading && <LoadingSpinner />}
 			<Image
 				src={homeImage}
 				alt='Infotrg Naslovna'

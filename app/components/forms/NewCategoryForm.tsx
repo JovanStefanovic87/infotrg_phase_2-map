@@ -91,18 +91,22 @@ const NewCategoryForm: React.FC<CategoryFormProps> = ({
 			</div>
 
 			{/* Input fields for translations (languageId !== 1) */}
-			{languages
-				.filter(language => language.id !== 1)
-				.map(language => (
-					<div key={language.id} className='mt-4'>
-						<LabelInputDefault
-							value={translationValues[language.id] || ''}
-							onChange={e => handleTranslationChange(language.id, e.target.value)}
-							placeholder={`Unesite naziv na ${language.name}`}
-							label={`Naziv kategrorije (${language.name})`}
-						/>
-					</div>
-				))}
+			{languages?.length ? (
+				languages
+					.filter(language => language.id !== 1)
+					.map(language => (
+						<div key={language.id} className='mt-4'>
+							<LabelInputDefault
+								value={translationValues[language.id] || ''}
+								onChange={e => handleTranslationChange(language.id, e.target.value)}
+								placeholder={`Unesite naziv na ${language.name}`}
+								label={`Naziv kategrorije (${language.name})`}
+							/>
+						</div>
+					))
+			) : (
+				<p>Loading languages...</p> // Show a loading message or a spinner if the data is still being fetched.
+			)}
 
 			<div>
 				<Label htmlFor='parentId' color='black'>
