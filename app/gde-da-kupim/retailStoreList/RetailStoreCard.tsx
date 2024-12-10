@@ -35,7 +35,7 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 			0
 		);
 	};
-
+	console.log('store.address:', store.address);
 	return (
 		<div className='p-4 bg-white border-b-8 pb-6 rounded-lg shadow-md relative'>
 			<div
@@ -128,7 +128,10 @@ const RetailStoreCard: React.FC<RetailStoreCardProps> = ({
 						store.suburb?.label?.translations?.[0]?.translation
 							? `${store.suburb.label.translations[0].translation}, `
 							: ''
-					}${store.address || 'Adresa nije definisana'}, ${
+					}${(store.address || 'Adresa nije definisana')
+						.split(',')
+						.slice(1) // Uklanja prvi deo pre prvog zareza
+						.join(', ')}, ${
 						store.coordinates?.locationDescription || 'Opis lokacije nije dostupan'
 					}`}
 					color='text-black'>

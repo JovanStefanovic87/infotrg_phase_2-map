@@ -212,7 +212,9 @@ const MapMarkers: React.FC<MapMarkersProps> = ({
 												<span className='text-black font-normal'>
 													{marker.store.city?.label?.translations?.[0]?.translation ||
 														'Grad nije definisan'}
-													, {marker.store.address}
+													,{' '}
+													{marker.store.address?.split(',').slice(1).join(', ') ||
+														'Adresa nije definisana'}
 												</span>
 											</div>
 											<div className='text-black font-normal'>{marker.description}</div>

@@ -13,6 +13,7 @@ const ResultTextIconBlock: React.FC<ResultTextIconBlockProps> = ({
 	color,
 	iconColor = 'text-grayMedium',
 }) => {
+	console.log('text:', text);
 	return (
 		<div className='flex items-center gap-2 text-sm'>
 			<span className={clsx(`${iconColor}`, 'text-lg')}>{children}</span>
